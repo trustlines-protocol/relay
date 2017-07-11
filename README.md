@@ -23,10 +23,10 @@ Returns all registered currency networks with high-level information (similar to
 ```javascript
 [
     {
-        address: '0xabef1022e1ff...'
-        name: 'Euro',
-        abbreviation: 'EUR',
-        symbol: '€' // optional
+        "address": "0xabef1022e1ff..."
+        "name": "Euro",
+        "abbreviation": "EUR",
+        "symbol": "€" // optional
     },
     ... // other currency networks
 ]
@@ -42,10 +42,10 @@ Returns detailed information of currency network (similar to `GET tokens/:addres
 ### Response
 ```javascript
 {
-    name: 'Euro',
-    abbreviation: 'EUR',
-    symbol: '€',
-    numUsers: '1000',
+    "name": "Euro",
+    "abbreviation": "EUR",
+    "symbol": "€",
+    "numUsers": "1000",
     ... // other information of currency network
 }
 ```
@@ -57,7 +57,7 @@ Returns all addresses of users in currency network (similar to `GET tokens/:toke
 
 ### Response
 ```javascript
-['0xabef1022e1ff...', '0xeef43fa1222b...', ...]
+["0xabef1022e1ff...", "0xeef43fa1222b...", ...]
 ```
 
 ## `TODO` Get user information of currency network
@@ -68,26 +68,26 @@ Returns detailed information of currency network in user context (similar to `GE
 ### Response
 ```javascript
 {
-    name: 'Euro',
-    abbreviation: 'EUR',
-    symbol: '€',
-    balance: '1000', // sum over balances of all trustlines user has in currency network
-    creditLinesGiven: '2000', // sum of all creditlines given by user in currency network
-    creditLinesReceived: '3000', // sum of all creditlines received by user in currency network
-    numTrustlines: '10' // amount of trustlines user has
+    "name": "Euro",
+    "abbreviation": "EUR",
+    "symbol": "€",
+    "balance": "1000", // sum over balances of all trustlines user has in currency network
+    "creditLinesGiven": "2000", // sum of all creditlines given by user in currency network
+    "creditLinesReceived": "3000", // sum of all creditlines received by user in currency network
+    "numTrustlines": 10 // amount of trustlines user has
 }
 ```
 
 ## `TODO` Get contacts of user
 Returns a list of addresses of all contacts of the user (similar to `GET tokens/:token_address/users/:user_address/friends`)
 
-(doesn't communicate with contracts)
+(doesn"t communicate with contracts)
 
 `GET /networks/:networkAddress/users/:userAddress/contacts`
 
 ### Response
 ```javascript
-['0xac33ffg3g...', '0xec33ffg3g...', ...]
+["0xac33ffg3g...", "0xec33ffg3g...", ...]
 ```
 
 ## `TODO` Get all trustlines of user
@@ -101,13 +101,13 @@ Returns a list of trustlines a user has in a currency network (similar to `GET t
 ```javascript
 [
     {
-        addressB: '0xb33f5gaac...', // address of user B
-        balance: '100', // balance of trustline from POV of user A
-        given: '500', // credit line given by A
-        leftGiven: '400' // given - balance
-        received: '600', // credit line received from B
-        leftReceived: '700' // received + balance
-        interestRate: '0.1' // PROBLEM: rounding in js
+        "addressB": "0xb33f5gaac...", // address of user B
+        "balance": "100", // balance of trustline from POV of user A
+        "given": "500", // credit line given by A
+        "leftGiven": "400" // given - balance
+        "received": "600", // credit line received from B
+        "leftReceived": "700" // received + balance
+        "interestRate": "0.1" // PROBLEM: rounding in js
     },
     ... // other trustlines
 ]
@@ -121,10 +121,10 @@ Return a trustline between A and B in a currency network if one exists. (similar
 ### Response
 ```javascript
 {
-    balance: '100', // balance of trustline from POV of user A
-    given: '500', // credit line given by A
-    received: '600', // credit line received from B
-    interestRate: '0.1' // PROBLEM: rounding in js
+    "balance": "100", // balance of trustline from POV of user A
+    "given": "500", // credit line given by A
+    "received": "600", // credit line received from B
+    "interestRate": "0.1" // PROBLEM: rounding in js
 }
 ```
 
@@ -135,7 +135,7 @@ Returns amount a user can spend in a currency network.
 
 ```javascript
 {
-    spendable: '1000'
+    "spendable": "1000"
 }
 ```
 
@@ -151,7 +151,7 @@ Returns amount a user can maximal send to another user, if there is one
 ### Response
 ```javascript
 {
-    spendable: '2000'
+    "spendable": "2000"
 }
 ```
 
@@ -168,8 +168,8 @@ Returns the cheapest path with calculated fees if existent (similar to `GET toke
 ### Response
 ```javascript
 {
-    path: ['0xabc123bb...', '0xeebc3bb...', ...], // addresses of users in path
-    fees: '0.12' // fees for calculated path
+    "path": ["0xabc123bb...", "0xeebc3bb...", ...], // addresses of users in path
+    "fees": "0.12" // fees for calculated path
 }
 ```
 
@@ -182,12 +182,12 @@ Returns all events
 ```javascript
 [
     {
-        blockNumber: 1,
-        event: Transfered(networkAddress, receiverAddress, amount, timestamp)
+        "blockNumber": 1,
+        "event": Transfered(networkAddress, receiverAddress, amount, timestamp)
     },
     {
-        blockNumber: 2,
-        event: CreditLineRequested(networkAddress, receiverAddress, amount, timestamp)
+        "blockNumber": 2,
+        "event": CreditLineRequested(networkAddress, receiverAddress, amount, timestamp)
     },
     ...
 ]
@@ -204,12 +204,12 @@ Stream statt WebSockets (see Twitter API) (device sleep mode)
 ```javascript
 [
     {
-        blockNumber: 5,
-        event: CreditLineAccepted()
+        "blockNumber": 5,
+        "event": CreditLineAccepted()
     },
     {
-        blockNumber: 7,
-        event: CreditLineUpdated()
+        "blockNumber": 7,
+        "event": CreditLineUpdated()
     },
     ...
 ]
@@ -223,9 +223,9 @@ Returns the transaction information
 ### Response
 ```javascript
 {
-    balance: '1000',
-    nonce: 15,
-    gasPrice: '10000'
+    "balance": "1000",
+    "nonce": 15,
+    "gasPrice": "10000"
 }
 ```
 
@@ -244,7 +244,7 @@ Remove txId as response instead compute on client
 ### Response
 ```javascript
 {
-    txId
+    "txId"
 }
 ```
 
@@ -258,15 +258,15 @@ Returns balances of user
 ### Response
 ```javascript
 {
-    EUR: {
-        available: '1000', // available trustlines money
-        onOrders: '123', // amount on orders
-        ethValue: '1.12' // exchange value
+    "EUR": {
+        "available": "1000", // available trustlines money
+        "onOrders": "123", // amount on orders
+        "ethValue": "1.12" // exchange value
     },
-    ETH: {
-        available: '123.112',
-        onOrders: '1.1112',
-        eurValue: '300'
+    "ETH": {
+        "available": "123.112",
+        "onOrders": "1.1112",
+        "eurValue": "300"
     }
 }
 ```
@@ -284,13 +284,13 @@ Returns deposit history within range `start` to `end`
 ```javascript
 [
     {
-        currency: 'ETH',
-        address: '...',
-        amount: '1.2323',
-        confirmations: 10,
-        txId: '...',
-        timestamp: 1399305798,
-        status: 'COMPLETE'
+        "currency": "ETH",
+        "address": "...",
+        "amount": "1.2323",
+        "confirmations": 10,
+        "txId": "...",
+        "timestamp": 1399305798,
+        "status": "COMPLETE"
     },
     // other deposits
 ]
@@ -309,13 +309,13 @@ Returns withdrawal history within range `start` to `end`
 ```javascript
 [
     {
-        currency: 'ETH',
-        address: '...',
-        amount: '1.2323',
-        confirmations: 10,
-        txId: '...',
-        timestamp: 1399305798,
-        status: 'COMPLETE'
+        "currency": "ETH",
+        "address": "...",
+        "amount": "1.2323",
+        "confirmations": 10,
+        "txId": "...",
+        "timestamp": 1399305798,
+        "status": "COMPLETE"
     },
     // other deposits
 ]
@@ -330,11 +330,11 @@ Returns open orders for pair NetworkCurrency_ExchangeCurrency (i.e. EUR_ETH)
 ```javascript
 [
     {
-        orderNumber: 123456,
-        type: 'SELL', // BUY or SELL
-        rate: '0.025', // exchange rate
-        amount: '100', // amount or order
-        total: '2.5' // total order price
+        "orderNumber": 123456,
+        "type": "SELL", // BUY or SELL
+        "rate": "0.025", // exchange rate
+        "amount": "100", // amount or order
+        "total": "2.5" // total order price
     },
     // other open orders
 ]
@@ -353,12 +353,12 @@ Returns trade history within range `start` and `end`
 ```javascript
 [
     {
-        orderNumber: 123456,
-        type: 'SELL', // BUY or SELL
-        rate: '0.025', // exchange rate
-        amount: '100', // amount or order
-        total: '2.5', // total order price
-        fee: '0.00002' // fee of order
+        "orderNumber": 123456,
+        "type": "SELL", // BUY or SELL
+        "rate": "0.025", // exchange rate
+        "amount": "100", // amount or order
+        "total": "2.5", // total order price
+        "fee": "0.00002" // fee of order
     },
     // other deposits
 ]
