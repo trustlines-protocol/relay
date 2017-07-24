@@ -1,6 +1,6 @@
 # RELAY API
 
-## REST API Response Format
+## Response Format
 Response format is based on some best practices. (see https://github.com/adnan-kamili/rest-api-response-format)
 
 ## Base URL
@@ -139,24 +139,13 @@ Returns amount a user can spend in a currency network.
 }
 ```
 
-## `NEW` Get sendable amount to another user
-Returns amount a user can maximal send to another user, if there is one
-
-`GET /networks/:networkAddress/users/:addressA/spendables/:addressB?maxHops=:maxHops&maxFees=:maxFees`
-
 ### Parameters
-- `maxHops` - specify maximal hops when calculating spendable (optional)
+- `ETH` - amount of money that should be transferred through path (optional)
+- `maxHops` - specify maximal hops for path (optional)
 - `maxFees` - specify maximal fees user is ready to pay (optional)
 
-### Response
-```javascript
-{
-    "spendable": "2000"
-}
-```
-
 ## `TODO` Get path
-Returns the cheapest path with calculated fees if existent (similar to `GET tokens/:token_address/users/:a_address/path/:b_address/value/:value`)
+Returns the cheapest path and maximal sendable amount with calculated fees if existent (similar to `GET tokens/:token_address/users/:a_address/path/:b_address/value/:value`)
 
 `GET /networks/:networkAddress/users/:aAddress/path/:bAddress?value=:value&maxHops=:maxHops&maxFees=:maxFees`
 
@@ -169,6 +158,7 @@ Returns the cheapest path with calculated fees if existent (similar to `GET toke
 ```javascript
 {
     "path": ["0xabc123bb...", "0xeebc3bb...", ...], // addresses of users in path
+    "maxSpendable": "1200.12",
     "fees": "0.12" // fees for calculated path
 }
 ```
@@ -176,7 +166,12 @@ Returns the cheapest path with calculated fees if existent (similar to `GET toke
 ## `TODO` Poll all events
 Returns all events
 
-`GET /networks/:networkAddress/users/:userAddress/events`
+`GET /networks/:networkAddress/users/:userAddress/events?type=:eventType&fromBlock=:fromBlock&toBlock=:toBlock`
+
+### Parameters
+- `type` - Type of event (i.e. `CreditLineUpdated`, `CreditLineAccepted`, `Transferred`)
+- `fromBlock`- Start of range for events
+- `toBlock` - End of range for events
 
 ### Response
 ```javascript
@@ -188,28 +183,6 @@ Returns all events
     {
         "blockNumber": 2,
         "event": CreditLineRequested(networkAddress, receiverAddress, amount, timestamp)
-    },
-    ...
-]
-```
-
-## `TODO` Poll events from block
-Returns events that happened after `fromBlock` (similar to `GET tokens/<token_address:token_address>/users/<address:user_address>/block/<int:from_block>/events`)
-
-`GET networks/:networkAddress/users/:userAddress/events/:fromBlock`
-
-Stream statt WebSockets (see Twitter API) (device sleep mode)
-
-### Response
-```javascript
-[
-    {
-        "blockNumber": 5,
-        "event": CreditLineAccepted()
-    },
-    {
-        "blockNumber": 7,
-        "event": CreditLineUpdated()
     },
     ...
 ]
@@ -229,7 +202,7 @@ Returns the transaction information
 }
 ```
 
-## Send transaction
+## Relay transaction
 Sends a signed transaction
 
 Remove txId as response instead compute on client
@@ -248,12 +221,27 @@ Remove txId as response instead compute on client
 }
 ```
 
+## `NEW` Get balance of externally owned account
+Returns the ETH balance of an externally owned account
+
+`GET /balances/:eoaAddress`
+
+### Response
+```javascript
+{
+    "balance": "12.1009234"
+}
+```
+
 # Exchange API
 
 ## Get balances
 Returns balances of user
 
 `GET networks/:networkAddress/users/:userAddress/exchanges/:currency`
+
+### Parameters
+- `currency` -
 
 ### Response
 ```javascript
@@ -334,7 +322,8 @@ Returns open orders for pair NetworkCurrency_ExchangeCurrency (i.e. EUR_ETH)
         "type": "SELL", // BUY or SELL
         "rate": "0.025", // exchange rate
         "amount": "100", // amount or order
-        "total": "2.5" // total order price
+        "total": "2.5", // total order price
+        "timestamp": 1399305798
     },
     // other open orders
 ]
@@ -358,8 +347,14 @@ Returns trade history within range `start` and `end`
         "rate": "0.025", // exchange rate
         "amount": "100", // amount or order
         "total": "2.5", // total order price
-        "fee": "0.00002" // fee of order
+        "fee": "0.00002", // fee of order
+        "timestamp": 1399305798
     },
     // other deposits
 ]
 ```
+
+## Place buy order
+Places a limit buy order
+
+`POST networks/:networkAddress/users/:userAddress/exchanges/:currency/`
