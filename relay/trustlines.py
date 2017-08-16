@@ -20,7 +20,7 @@ class Trustlines:
         self.currency_network_proxies = {}
         self.currency_network_graphs = {}
         self.config = {}
-        self.abis = {}
+        self.contracts = {}
         self.node = None
         self._web3 = None
 
@@ -30,7 +30,7 @@ class Trustlines:
 
     def start(self):
         self.load_config()
-        self.load_abis()
+        self.load_contracts()
         self._web3 = Web3(
             RPCProvider(
                 self.config['rpc']['host'],
@@ -51,13 +51,13 @@ class Trustlines:
         with open('config.json') as data_file:
             self.config = json.load(data_file)
 
-    def load_abis(self):
-        with open('abis.json') as data_file:
-            self.abis = json.load(data_file)
+    def load_contracts(self):
+        with open('contracts.json') as data_file:
+            self.contracts = json.load(data_file)
 
     def new_network(self, address):
         self.currency_network_graphs[address] = CurrencyNetworkGraph()
-        self.currency_network_proxies[address] = CurrencyNetwork(self._web3, self.abis['CurrencyNetwork'], address)
+        self.currency_network_proxies[address] = CurrencyNetwork(self._web3, self.contracts['CurrencyNetwork']['abi'], address)
         self._start_listen_network(address)
 
     def load_networks(self):
