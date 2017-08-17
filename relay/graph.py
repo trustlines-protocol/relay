@@ -31,78 +31,78 @@ class Account(object):
             return -self.data[balance_ab]
 
     @property
-    def trustline(self):
+    def creditline(self):
         if self.a < self.b:
-            return self.data[trustline_ab]
+            return self.data[creditline_ab]
         else:
-            return self.data[trustline_ba]
+            return self.data[creditline_ba]
 
     @property
-    def reverse_trustline(self):
+    def reverse_creditline(self):
         if self.a < self.b:
-            return self.data[trustline_ba]
+            return self.data[creditline_ba]
         else:
-            return self.data[trustline_ab]
+            return self.data[creditline_ab]
 
     @balance.setter
     def balance(self, balance):
         if self.a < self.b:
-            self.data[balance_ab] = balance
+            self.data[creditline_ab] = balance
         else:
-            self.data[balance_ab] = -balance
+            self.data[creditline_ab] = -balance
 
-    @trustline.setter
-    def trustline(self, trustline):
+    @creditline.setter
+    def creditline(self, creditline):
         if self.a < self.b:
-            self.data[trustline_ab] = trustline
+            self.data[creditline_ab] = creditline
         else:
-            self.data[trustline_ba] = trustline
+            self.data[creditline_ba] = creditline
 
-    @reverse_trustline.setter
-    def reverse_trustline(self, trustline):
+    @reverse_creditline.setter
+    def reverse_creditline(self, creditline):
         if self.a < self.b:
-            self.data[trustline_ba] = trustline
+            self.data[creditline_ba] = creditline
         else:
-            self.data[trustline_ab] = trustline
+            self.data[creditline_ab] = creditline
 
     def __repr__(self):
-        return '<Account(balance:{} trustline:{}>'.format(self.balance, self.trustline)
+        return '<Account(balance:{} creditline:{}>'.format(self.balance, self.creditline)
 
 
 class AccountSummary(object):
     """Representing an account summary"""
 
-    def __init__(self, balance, trustline_given, trustline_received):
+    def __init__(self, balance, creditline_given, creditline_received):
         self.balance = balance
-        self.trustline_given = trustline_given
-        self.trustline_received = trustline_received
+        self.creditline_given = creditline_given
+        self.creditline_received = creditline_received
 
     @property
-    def trustline_left_given(self):
-        return -self.balance + self.trustline_given
+    def creditline_left_given(self):
+        return -self.balance + self.creditline_given
 
     @property
-    def trustline_left_received(self):
-        return self.balance + self.trustline_received
+    def creditline_left_received(self):
+        return self.balance + self.creditline_received
 
     def as_dict(self):
         return {'balance': self.balance,
-                'given': self.trustline_given,
-                'received': self.trustline_received,
-                'leftGiven': self.trustline_left_given,
-                'leftReceived' : self.trustline_left_received}
+                'given': self.creditline_given,
+                'received': self.creditline_received,
+                'leftGiven': self.creditline_left_given,
+                'leftReceived' : self.creditline_left_received}
 
 
 class Friendship(object):
     """Representing Friendship to address"""
-    def __init__(self, address, trustline_ab, trustline_ba, balance_ab):
+    def __init__(self, address, creditline_ab, creditline_ba, balance_ab):
         self.address = address
-        self.trustline_ab = trustline_ab
-        self.trustline_ba = trustline_ba
+        self.creditline_ab = creditline_ab
+        self.creditline_ba = creditline_ba
         self.balance_ab = balance_ab
 
     def __repr__(self):
-        return '([{}]({},{},{})'.format(self.address, self.trustline_ab, self.trustline_ba, self.balance_ab)
+        return '([{}]({},{},{})'.format(self.address, self.creditline_ab, self.creditline_ba, self.balance_ab)
 
 
 class CurrencyNetworkGraph(object):
@@ -138,8 +138,8 @@ class CurrencyNetworkGraph(object):
 
     @property
     def total_creditlines(self):
-        return sum([edge[2] for edge in self.graph.edges_iter(data = trustline_ab)])\
-               + sum([edge[2] for edge in self.graph.edges_iter(data=trustline_ba)])
+        return sum([edge[2] for edge in self.graph.edges_iter(data = creditline_ab)])\
+               + sum([edge[2] for edge in self.graph.edges_iter(data=creditline_ba)])
 
     def get_friends(self, address):
         if address in self.graph:
@@ -147,25 +147,25 @@ class CurrencyNetworkGraph(object):
         else:
             return []
 
-    def update_trustline(self, creditor, debtor, trustline):
-        """to update the trustline, used to react on changes on the blockchain"""
+    def update_creditline(self, creditor, debtor, creditline):
+        """to update the creditline, used to react on changes on the blockchain"""
         if not self.graph.has_edge(creditor, debtor):
             self.graph.add_edge(creditor,
                                 debtor,
-                                trustline_ab=0,
-                                trustline_ba=0,
+                                creditline_ab=0,
+                                creditline_ba=0,
                                 balance_ab=0,
                                 )
         account = Account(self.graph[creditor][debtor], creditor, debtor)
-        account.trustline = trustline
+        account.creditline = creditline
 
     def update_balance(self, a, b, balance):
         """to update the balance, used to react on changes on the blockchain"""
         if not self.graph.has_edge(a, b):
             self.graph.add_edge(a,
                                 b,
-                                trustline_ab=0,
-                                trustline_ba=0,
+                                creditline_ab=0,
+                                creditline_ba=0,
                                 balance_ab=0,
                                 )
         account = Account(self.graph[a][b], a, b)
@@ -178,14 +178,14 @@ class CurrencyNetworkGraph(object):
                 account = Account(self.graph[a][b], a, b)
                 accountr = Account(self.graph[b][a], b, a)
                 account_summary.balance += account.balance
-                account_summary.trustline_given += account.trustline
-                account_summary.trustline_received += accountr.trustline
+                account_summary.creditline_given += account.creditline
+                account_summary.creditline_received += accountr.creditline
             return account_summary
         else:
             if self.graph.has_edge(a, b):
                 account = Account(self.graph[a][b], a, b)
                 accountr = Account(self.graph[b][a], b, a)
-                return AccountSummary(account.balance, account.trustline, accountr.trustline)
+                return AccountSummary(account.balance, account.creditline, accountr.creditline)
             else:
                 return AccountSummary(0, 0, 0)
 
@@ -214,8 +214,8 @@ class CurrencyNetworkGraph(object):
             writer.writerow({ 'Address A': account.a,
                               'Address B': account.b,
                               'Balance AB': account.balance,
-                              'Creditline AB': account.trustline,
-                              'Creditline BA': account.reverse_trustline})
+                              'Creditline AB': account.creditline,
+                              'Creditline BA': account.reverse_creditline})
         return output.getvalue()
 
     @staticmethod
@@ -229,16 +229,16 @@ class CurrencyNetworkGraph(object):
             # don't use Account which allocs memory
             if a < b:
                 pre_balance = data[balance_ab]
-                trustline = data[trustline_ba]
+                creditline = data[creditline_ba]
             else:
                 pre_balance = -data[balance_ab]
-                trustline = data[trustline_ab]
+                creditline = data[creditline_ab]
             post_balance = pre_balance - value
-            # assert abs(pre_balance) <= _account['trustline']
-            if -post_balance > trustline:
+            # assert abs(pre_balance) <= _account['creditline']
+            if -post_balance > creditline:
                 return None  # no valid path
             # FIXME division Zero
-            # imbalance_cost = (abs(post_balance) - abs(pre_balance)) / trustline
+            # imbalance_cost = (abs(post_balance) - abs(pre_balance)) / creditline
             imbalance_cost = 1
             # assert -1 <= imbalance_cost <= 1
             cost = hop_cost + imbalance_cost_factor * imbalance_cost
