@@ -62,14 +62,26 @@ class ContactList(Resource):
 
 class TrustlineList(Resource):
 
-    def get(self, todo_id):
-        pass
+    def __init__(self, trustlines):
+        self.trustlines = trustlines
+
+    def get(self, network_address, user_address):
+        graph = self.trustlines.currency_network_graphs[network_address]
+        friends = graph.get_friends(user_address)
+        accounts = {}
+        for friend_address in friends:
+            accounts[friend_address] = graph.get_account_sum(user_address, friend_address).as_dict()
+        return accounts
 
 
 class Trustline(Resource):
 
-    def get(self, todo_id):
-        pass
+    def __init__(self, trustlines):
+        self.trustlines = trustlines
+
+    def get(self, network_address, a_address, b_address):
+        graph = self.trustlines.currency_network_graphs[network_address]
+        return graph.get_account_sum(a_address, b_address).as_dict()
 
 
 class TransactionInfos(Resource):
