@@ -68,9 +68,12 @@ class TrustlineList(Resource):
     def get(self, network_address, user_address):
         graph = self.trustlines.currency_network_graphs[network_address]
         friends = graph.get_friends(user_address)
-        accounts = {}
+        accounts = []
         for friend_address in friends:
-            accounts[friend_address] = graph.get_account_sum(user_address, friend_address).as_dict()
+            trustline = {}
+            trustline.update({'bAddress': friend_address})
+            trustline.update(graph.get_account_sum(user_address, friend_address).as_dict())
+            accounts.append(trustline) 
         return accounts
 
 
