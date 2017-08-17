@@ -6,7 +6,7 @@ from collections import namedtuple
 from relay.logger import getLogger
 
 
-Trustline = namedtuple('Trustline', 'address creditline_ab creditline_ba interest_ab interest_ba fees_outstanding_a fees_outstanding_b mtime balance_ab')
+Trustline = namedtuple('Trustline', 'address creditline_ab creditline_ba interest_ab interest_ba fees_outstanding_a fees_outstanding_b m_time balance_ab')
 
 
 logger = getLogger('tl_helper', logging.DEBUG)
