@@ -47,9 +47,9 @@ class Account(object):
     @balance.setter
     def balance(self, balance):
         if self.a < self.b:
-            self.data[creditline_ab] = balance
+            self.data[balance_ab] = balance
         else:
-            self.data[creditline_ab] = -balance
+            self.data[balance_ab] = -balance
 
     @creditline.setter
     def creditline(self, creditline):
