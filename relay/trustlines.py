@@ -67,10 +67,10 @@ class Trustlines:
     def _start_listen_network(self, address):
         graph = self.currency_network_graphs[address]
         proxy = self.currency_network_proxies[address]
-        proxy.start_listen_on_full_sync(address, _create_on_full_sync(graph))
-        proxy.start_listen_on_balance(address, _create_on_balance(graph))
-        proxy.start_listen_on_trustline(address, _create_on_trustline(graph))
-        proxy.start_listen_on_transfer(address)
+        proxy.start_listen_on_full_sync(_create_on_full_sync(graph))
+        proxy.start_listen_on_balance(_create_on_balance(graph))
+        proxy.start_listen_on_trustline(_create_on_trustline(graph))
+        proxy.start_listen_on_transfer()
 
 
 def _create_on_balance(graph):
@@ -93,6 +93,7 @@ def _create_on_full_sync(graph):
         graph.gen_network(graph_rep)
         logger.info('Syncing whole graph done!')
 
+    return update_community
 
 if __name__ == '__main__':
     trustlines = Trustlines()

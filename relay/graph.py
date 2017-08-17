@@ -5,8 +5,13 @@ import networkx as nx
 
 from relay.dijkstra_weighted import dijkstra_path
 
-trustline_ab = 'trustline_ab'
-trustline_ba = 'trustline_ba'
+creditline_ab = 'creditline_ab'
+creditline_ba = 'creditline_ba'
+interest_ab = 'interest_ab'
+interest_ba = 'interest_ba'
+fees_outstanding_a = 'fees_outstanding_a'
+fees_outstanding_b = 'fees_outstanding_b'
+m_time = 'm_time'
 balance_ab = 'balance_ab'
 
 
@@ -113,8 +118,13 @@ class CurrencyNetworkGraph(object):
                 assert address < friendship.address
                 self.graph.add_edge(address,
                                     friendship.address,
-                                    trustline_ab=friendship.trustline_ab,
-                                    trustline_ba=friendship.trustline_ba,
+                                    creditline_ab=friendship.creditline_ab,
+                                    creditline_ba=friendship.creditline_ba,
+                                    interest_ab=friendship.interest_ab,
+                                    interest_ba=friendship.interest_ba,
+                                    fees_outstanding_a=friendship.fees_outstanding_a,
+                                    fees_outstanding_b=friendship.fees_outstanding_b,
+                                    m_time=friendship.m_time,
                                     balance_ab=friendship.balance_ab,
                                     )
 
