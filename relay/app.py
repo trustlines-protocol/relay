@@ -2,7 +2,7 @@ from flask import Flask, Blueprint
 from flask_restful import Api
 from werkzeug.routing import BaseConverter, ValidationError
 
-from relay.resources import User, Network, NetworkList, Relay, Balance, TransactionInfos, Block
+from relay.resources import User, UserList, Network, NetworkList, Relay, Balance, TransactionInfos, Block
 from relay.utils import is_address, add_0x_prefix
 
 class AddressConverter(BaseConverter):
@@ -26,6 +26,8 @@ def ApiApp(trustlines):
 
     api.add_resource(NetworkList, '/networks', resource_class_args=[trustlines])
     api.add_resource(Network, '/networks/<address:address>', resource_class_args=[trustlines])
+    api.add_resource(UserList, '/networks/<address:address>/users', resource_class_args=[trustlines])
+    api.add_resource(User, '/networks/<address:network_address>/users/<address:user_address>', resource_class_args=[trustlines])
     api.add_resource(Block, '/blocknumber', resource_class_args=[trustlines])
     api.add_resource(Balance, '/balance/<address:address>', resource_class_args=[trustlines])
 
