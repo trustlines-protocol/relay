@@ -73,7 +73,7 @@ class TrustlineList(Resource):
             trustline = {}
             trustline.update({'bAddress': friend_address})
             trustline.update(graph.get_account_sum(user_address, friend_address).as_dict())
-            accounts.append(trustline) 
+            accounts.append(trustline)
         return accounts
 
 
@@ -85,6 +85,28 @@ class Trustline(Resource):
     def get(self, network_address, a_address, b_address):
         graph = self.trustlines.currency_network_graphs[network_address]
         return graph.get_account_sum(a_address, b_address).as_dict()
+
+
+class Spendable(Resource):
+
+    def __init__(self, trustlines):
+        self.trustlines = trustlines
+
+    def get(self, network_address, a_address):
+        return {
+            'totalSpendable': self.trustlines.currency_network_proxies[network_address].spendable(a_address)
+        }
+
+
+class SpendableTo(Resource):
+
+    def __init__(self, trustlines):
+        self.trustlines = trustlines
+
+    def get(self, network_address, a_address, b_address):
+        return {
+            'spendable': self.trustlines.currency_network_proxies[network_address].spendableTo(a_address, b_address)
+        }
 
 
 class TransactionInfos(Resource):

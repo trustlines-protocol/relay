@@ -61,6 +61,12 @@ class CurrencyNetwork:
     def account(self, a_address, b_address):
         return self._proxy.call().getAccountExt(a_address, b_address)
 
+    def spendable(self, a_address):
+        return self._proxy.call().spendable(a_address)
+
+    def spendableTo(self, a_address, b_address):
+        return self._proxy.call().spendableTo(a_address, b_address)
+
     def gen_graph_representation(self):
         """Returns the trustlines network as a dict address -> list of Friendships"""
         result = {}
