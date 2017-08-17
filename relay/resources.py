@@ -53,8 +53,11 @@ class User(Resource):
 
 class ContactList(Resource):
 
-    def get(self, todo_id):
-        pass
+    def __init__(self, trustlines):
+        self.trustlines = trustlines
+
+    def get(self, network_address, user_address):
+        return self.trustlines.currency_network_graphs[network_address].get_friends(user_address)
 
 
 class TrustlineList(Resource):
