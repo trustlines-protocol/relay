@@ -124,7 +124,7 @@ class Relay(Resource):
         self.trustlines = trustlines
 
     def post(self):
-        return self.trustlines.node.relay_tx(request.form['rawTransaction'])
+        return self.trustlines.node.relay_tx(request.json['rawTransaction'])
 
 
 class Balance(Resource):

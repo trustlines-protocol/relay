@@ -35,6 +35,7 @@ def ApiApp(trustlines):
     api.add_resource(SpendableTo, '/networks/<address:network_address>/users/<address:a_address>/spendables/<address:b_address>', resource_class_args=[trustlines])
     api.add_resource(TransactionInfos, '/txinfos/<address:address>', resource_class_args=[trustlines])
     api.add_resource(Block, '/blocknumber', resource_class_args=[trustlines])
+    api.add_resource(Relay, '/relay', resource_class_args=[trustlines])
     api.add_resource(Balance, '/balance/<address:address>', resource_class_args=[trustlines])
 
     app.url_map.converters['address'] = AddressConverter
