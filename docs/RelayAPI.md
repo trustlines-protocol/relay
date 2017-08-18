@@ -133,9 +133,22 @@ Returns amount a user can spend in a currency network.
 
 `GET /networks/:networkAddress/users/:addressA/spendables`
 
+### Response
 ```javascript
 {
     "spendable": "1000"
+}
+```
+
+## `NEW` Get spendable amount to user
+Returns amount a user can spend in a currency network to another user.
+
+`GET /networks/:networkAddress/users/:addressA/spendables/:addressB`
+
+### Response
+```javascript
+{
+    "spendable": "90"
 }
 ```
 
@@ -163,8 +176,8 @@ Returns the cheapest path and maximal sendable amount with calculated fees if ex
 }
 ```
 
-## `TODO` Poll all events
-Returns all events
+## `TODO` Poll events of specific currency network
+Returns all events of a specific currency network
 
 `GET /networks/:networkAddress/users/:userAddress/events?type=:eventType&fromBlock=:fromBlock&toBlock=:toBlock`
 
@@ -185,6 +198,19 @@ Returns all events
         "event": CreditLineRequested(networkAddress, receiverAddress, amount, timestamp)
     },
     ...
+]
+```
+
+## Get all events
+Return bundled events for specific user
+
+`GET /events/:userAddress?fromBlock=:from&toBlock=:to`
+
+```javascript
+[
+  {
+
+  }
 ]
 ```
 

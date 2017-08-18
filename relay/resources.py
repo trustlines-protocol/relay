@@ -44,26 +44,69 @@ class UserList(Resource):
 
 class User(Resource):
 
-    def get(self, todo_id):
-        pass
+    def __init__(self, trustlines):
+        self.trustlines = trustlines
+
+    def get(self, network_address, user_address):
+        return self.trustlines.currency_network_graphs[network_address].get_account_sum(user_address).as_dict()
 
 
 class ContactList(Resource):
 
-    def get(self, todo_id):
-        pass
+    def __init__(self, trustlines):
+        self.trustlines = trustlines
+
+    def get(self, network_address, user_address):
+        return self.trustlines.currency_network_graphs[network_address].get_friends(user_address)
 
 
 class TrustlineList(Resource):
 
-    def get(self, todo_id):
-        pass
+    def __init__(self, trustlines):
+        self.trustlines = trustlines
+
+    def get(self, network_address, user_address):
+        graph = self.trustlines.currency_network_graphs[network_address]
+        friends = graph.get_friends(user_address)
+        accounts = []
+        for friend_address in friends:
+            trustline = {}
+            trustline.update({'bAddress': friend_address})
+            trustline.update(graph.get_account_sum(user_address, friend_address).as_dict())
+            accounts.append(trustline)
+        return accounts
 
 
 class Trustline(Resource):
 
-    def get(self, todo_id):
-        pass
+    def __init__(self, trustlines):
+        self.trustlines = trustlines
+
+    def get(self, network_address, a_address, b_address):
+        graph = self.trustlines.currency_network_graphs[network_address]
+        return graph.get_account_sum(a_address, b_address).as_dict()
+
+
+class Spendable(Resource):
+
+    def __init__(self, trustlines):
+        self.trustlines = trustlines
+
+    def get(self, network_address, a_address):
+        return {
+            'totalSpendable': self.trustlines.currency_network_proxies[network_address].spendable(a_address)
+        }
+
+
+class SpendableTo(Resource):
+
+    def __init__(self, trustlines):
+        self.trustlines = trustlines
+
+    def get(self, network_address, a_address, b_address):
+        return {
+            'spendable': self.trustlines.currency_network_proxies[network_address].spendableTo(a_address, b_address)
+        }
 
 
 class TransactionInfos(Resource):
@@ -81,7 +124,7 @@ class Relay(Resource):
         self.trustlines = trustlines
 
     def post(self):
-        return self.trustlines.node.relay_tx(request.form['rawTransaction'])
+        return self.trustlines.node.relay_tx(request.json['rawTransaction'])
 
 
 class Balance(Resource):

@@ -6,7 +6,7 @@ from collections import namedtuple
 from relay.logger import getLogger
 
 
-Trustline = namedtuple('Trustline', 'address creditline_ab creditline_ba balance_ab')
+Trustline = namedtuple('Trustline', 'address creditline_ab creditline_ba interest_ab interest_ba fees_outstanding_a fees_outstanding_b m_time balance_ab')
 
 
 logger = getLogger('tl_helper', logging.DEBUG)
@@ -50,16 +50,22 @@ class CurrencyNetwork:
 
     @property
     def users(self):
-        return list(self._proxy.call().call().users())
+        return list(self._proxy.call().getUsers())
 
     def friends(self, user_address):
-        return list(self._proxy.call().friends(user_address))
+        return list(self._proxy.call().getFriends(user_address))
 
     def trustline(self, a_address, b_address):
         return self._proxy.call().trustline(a_address, b_address)
 
     def account(self, a_address, b_address):
         return self._proxy.call().getAccountExt(a_address, b_address)
+
+    def spendable(self, a_address):
+        return self._proxy.call().spendable(a_address)
+
+    def spendableTo(self, a_address, b_address):
+        return self._proxy.call().spendableTo(a_address, b_address)
 
     def gen_graph_representation(self):
         """Returns the trustlines network as a dict address -> list of Friendships"""
@@ -68,8 +74,8 @@ class CurrencyNetwork:
             list = []
             for friend in self.friends(user):
                 if user < friend:
-                    trustline_ab, trustline_ba, balance_ab = self.account(user, friend)
-                    list.append(Trustline(friend, trustline_ab, trustline_ba, balance_ab))
+                    creditline_ab, creditline_ba, interest_ab, interest_ba, fees_outstanding_a, fees_outstanding_b, mtime, balance_ab = self.account(user, friend)
+                    list.append(Trustline(friend, creditline_ab, creditline_ba, interest_ab, interest_ba, fees_outstanding_a, fees_outstanding_b, mtime, balance_ab))
             result[user] = list
         return result
 

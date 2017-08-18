@@ -20,6 +20,7 @@ class Trustlines:
         self.currency_network_proxies = {}
         self.currency_network_graphs = {}
         self.config = {}
+        self.contracts = {}
         self.node = None
         self._web3 = None
 
@@ -29,6 +30,7 @@ class Trustlines:
 
     def start(self):
         self.load_config()
+        self.load_contracts()
         self._web3 = Web3(
             RPCProvider(
                 self.config['rpc']['host'],
@@ -49,9 +51,13 @@ class Trustlines:
         with open('config.json') as data_file:
             self.config = json.load(data_file)
 
+    def load_contracts(self):
+        with open('contracts.json') as data_file:
+            self.contracts = json.load(data_file)
+
     def new_network(self, address):
         self.currency_network_graphs[address] = CurrencyNetworkGraph()
-        self.currency_network_proxies[address] = CurrencyNetwork(self._web3, None, address)  # TODO load contract abi
+        self.currency_network_proxies[address] = CurrencyNetwork(self._web3, self.contracts['CurrencyNetwork']['abi'], address)
         self._start_listen_network(address)
 
     def load_networks(self):
@@ -61,10 +67,10 @@ class Trustlines:
     def _start_listen_network(self, address):
         graph = self.currency_network_graphs[address]
         proxy = self.currency_network_proxies[address]
-        proxy.start_listen_on_full_sync(address, _create_on_full_sync(graph))
-        proxy.start_listen_on_balance(address, _create_on_balance(graph))
-        proxy.start_listen_on_trustline(address, _create_on_trustline(graph))
-        proxy.start_listen_on_transfer(address)
+        proxy.start_listen_on_full_sync(_create_on_full_sync(graph))
+        proxy.start_listen_on_balance(_create_on_balance(graph))
+        proxy.start_listen_on_trustline(_create_on_trustline(graph))
+        proxy.start_listen_on_transfer()
 
 
 def _create_on_balance(graph):
@@ -87,6 +93,7 @@ def _create_on_full_sync(graph):
         graph.gen_network(graph_rep)
         logger.info('Syncing whole graph done!')
 
+    return update_community
 
 if __name__ == '__main__':
     trustlines = Trustlines()
