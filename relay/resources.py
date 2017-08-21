@@ -108,6 +108,17 @@ class SpendableTo(Resource):
             'spendable': self.trustlines.currency_network_proxies[network_address].spendableTo(a_address, b_address)
         }
 
+class Path(Resource):
+
+    def __init__(self, trustlines):
+        self.trustlines = trustlines
+
+    def get(self, network_address, a_address, b_address, value):
+        graph = self.trustlines.currency_network_graphs[network_address]
+        return {
+            'path': graph.find_path(a_address, b_address, value)
+        }
+
 
 class TransactionInfos(Resource):
 
