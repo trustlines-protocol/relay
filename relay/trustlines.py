@@ -70,6 +70,7 @@ class Trustlines:
         proxy.start_listen_on_full_sync(_create_on_full_sync(graph))
         proxy.start_listen_on_balance(_create_on_balance(graph))
         proxy.start_listen_on_trustline(_create_on_trustline(graph))
+        proxy.start_listen_on_trustline_request()
         proxy.start_listen_on_transfer()
 
 
@@ -82,7 +83,7 @@ def _create_on_balance(graph):
 
 def _create_on_trustline(graph):
     def update_balance(a, b, balance):
-        graph.update_trustline(a, b, balance)
+        graph.update_creditline(a, b, balance)
 
     return update_balance
 

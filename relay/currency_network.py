@@ -15,9 +15,12 @@ logger = getLogger('tl_helper', logging.DEBUG)
 # Constants
 REGISTRY = 'Registry'
 TRUSTLINE = 'Trustlines'
+TrustlineRequestEvent = 'CreditlineUpdateRequest'
 TrustlineUpdatedEvent = 'CreditlineUpdate'
 BalanceUpdatedEvent = 'BalanceUpdate'
 TransferEvent = 'Transfer'
+PathPreparedEvent = 'PathPrepared'
+ChequeCashed = 'ChequeCashed'
 
 queryBlock = 'pending'
 updateBlock = 'pending'
@@ -134,7 +137,19 @@ class CurrencyNetwork:
             function(log_entry['args']['_creditor'], log_entry['args']['_debtor'], log_entry['args']['_value'])
         self.start_listen_on(TrustlineUpdatedEvent, log)
 
+    def start_listen_on_trustline_request(self):
+        def log(log_entry):
+            pass
+        self.start_listen_on(TrustlineRequestEvent, log)
+
+    def start_listen_on_path_prepared(self):
+        def log(log_entry):
+
+
     def start_listen_on_transfer(self):
         def log(log_entry):
             pass
         self.start_listen_on(TransferEvent, log, {'fromBlock': 'pending', 'toBlock': 'pending' })
+
+    def get_filter(self, event_name, params=None):
+        return self._proxy.on(event_name, params).get(False)
