@@ -116,7 +116,8 @@ class Path(Resource):
     def get(self, network_address, a_address, b_address, value):
         graph = self.trustlines.currency_network_graphs[network_address]
         return {
-            'path': graph.find_path(a_address, b_address, value)
+            'path': graph.find_path(a_address, b_address, value),
+            'maxFee': value * 0.01 # TODO calculate in graph
         }
 
 
