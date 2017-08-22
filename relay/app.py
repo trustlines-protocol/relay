@@ -2,7 +2,7 @@ from flask import Flask, Blueprint
 from flask_restful import Api
 from werkzeug.routing import BaseConverter, ValidationError
 
-from relay.resources import User, UserList, Network, NetworkList, ContactList, TrustlineList, Trustline, Spendable, SpendableTo, Path, Relay, Balance, TransactionInfos, Block
+from relay.resources import User, UserList, Network, NetworkList, ContactList, TrustlineList, Trustline, Spendable, SpendableTo, Path, Event, Relay, Balance, TransactionInfos, Block
 from relay.utils import is_address, add_0x_prefix
 
 class AddressConverter(BaseConverter):

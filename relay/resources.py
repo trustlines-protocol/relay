@@ -1,5 +1,6 @@
 from flask import request
 from flask_restful import  Resource
+from utils import merge_two_dicts
 
 
 class NetworkList(Resource):
@@ -140,7 +141,7 @@ class Event(Resource):
         }
     	params_2 = {
             'filter': { types[request.args.get('type')][1]: user_address },
-            'fromBlock': int(request.args.get('fromBlock')
+            'fromBlock': int(request.args.get('fromBlock'))
         }
         proxy = self.trustlines.currency_network_proxies[network_address]
         list_1 = proxy.get_filter(request.args.get('type'), params_1)

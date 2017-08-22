@@ -142,10 +142,6 @@ class CurrencyNetwork:
             pass
         self.start_listen_on(TrustlineRequestEvent, log)
 
-    def start_listen_on_path_prepared(self):
-        def log(log_entry):
-
-
     def start_listen_on_transfer(self):
         def log(log_entry):
             pass
