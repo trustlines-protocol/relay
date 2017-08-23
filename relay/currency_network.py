@@ -137,11 +137,6 @@ class CurrencyNetwork:
             function(log_entry['args']['_creditor'], log_entry['args']['_debtor'], log_entry['args']['_value'])
         self.start_listen_on(TrustlineUpdatedEvent, log)
 
-    def start_listen_on_trustline_request(self):
-        def log(log_entry):
-            pass
-        self.start_listen_on(TrustlineRequestEvent, log)
-
     def start_listen_on_transfer(self):
         def log(log_entry):
             pass
@@ -171,6 +166,6 @@ class CurrencyNetwork:
     def get_all_events(self, user_address, fromBlock=0):
         event_types = ['Transfer', 'BalanceUpdate', 'CreditlineUpdateRequest', 'CreditlineUpdate', 'PathPrepared', 'ChequeCashed']
         all_events = []
-        for type in event_types:
+        for type in event_types: # FIXME takes too long. web3.py currently doesn't support getAll() to retrieve all events
             all_events = all_events + self.get_event(type, user_address, fromBlock)
         return all_events

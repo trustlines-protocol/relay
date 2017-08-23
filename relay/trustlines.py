@@ -77,7 +77,6 @@ class Trustlines:
         proxy.start_listen_on_full_sync(_create_on_full_sync(graph))
         proxy.start_listen_on_balance(_create_on_balance(graph))
         proxy.start_listen_on_trustline(_create_on_trustline(graph))
-        proxy.start_listen_on_trustline_request()
         proxy.start_listen_on_transfer()
 
 
