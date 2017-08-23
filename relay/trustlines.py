@@ -64,6 +64,13 @@ class Trustlines:
         for address in self.config['tokens']:
             self.new_network(address)
 
+    def get_networks_of_user(self, user_address):
+        networks_of_user = []
+        for network_address in self.networks:
+            if user_address in self.currency_network_graphs[network_address].users:
+                networks_of_user.append(network_address)
+        return networks_of_user
+
     def _start_listen_network(self, address):
         graph = self.currency_network_graphs[address]
         proxy = self.currency_network_proxies[address]

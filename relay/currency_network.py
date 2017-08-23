@@ -147,5 +147,30 @@ class CurrencyNetwork:
             pass
         self.start_listen_on(TransferEvent, log, {'fromBlock': 'pending', 'toBlock': 'pending' })
 
-    def get_filter(self, event_name, params=None):
-        return self._proxy.on(event_name, params).get(False)
+    def get_event(self, event_name, user_address, from_block=0):
+    	types = {
+    	    'Transfer': ['_from', '_to'],
+            'BalanceUpdate': ['_from', '_to'],
+    	    'CreditlineUpdateRequest': ['_creditor', '_debtor'],
+    	    'CreditlineUpdate': ['_creditor', '_debtor'],
+    	    'PathPrepared': ['_sender', '_receiver'],
+    	    'ChequeCashed': ['_sender', '_receiver'],
+    	}
+        params_1 = {
+            'filter': { types[event_name][0]: user_address },
+            'fromBlock': from_block
+        }
+        params_2 = {
+            'filter': { types[event_name][1]: user_address },
+            'fromBlock': from_block
+        }
+        list_1 = self._proxy.on(event_name, params_1).get(False)
+        list_2 = self._proxy.on(event_name, params_2).get(False)
+        return list_1 + list_2
+
+    def get_all_events(self, user_address, fromBlock=0):
+        event_types = ['Transfer', 'BalanceUpdate', 'CreditlineUpdateRequest', 'CreditlineUpdate', 'PathPrepared', 'ChequeCashed']
+        all_events = []
+        for type in event_types:
+            all_events = all_events + self.get_event(type, user_address, fromBlock)
+        return all_events

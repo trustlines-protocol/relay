@@ -109,6 +109,7 @@ class SpendableTo(Resource):
             'spendable': self.trustlines.currency_network_proxies[network_address].spendableTo(a_address, b_address)
         }
 
+
 class Path(Resource):
 
     def __init__(self, trustlines):
@@ -121,33 +122,43 @@ class Path(Resource):
             'maxFee': value * 0.01 # TODO calculate in graph
         }
 
+
 class Event(Resource):
 
     def __init__(self, trustlines):
 	self.trustlines = trustlines
 
     def get(self, network_address, user_address):
-    	types = {
-    	    'Transfer': ['_from', '_to'],
-            'BalanceUpdate': ['_from', '_to'],
-    	    'CreditlineUpdateRequest': ['_creditor', '_debtor'],
-    	    'CreditlineUpdate': ['_creditor', '_debtor'],
-    	    'PathPrepared': ['_sender', '_receiver'],
-    	    'ChequeCashed': ['_sender', '_receiver'],
-    	}
-    	params_1 = {
-            'filter': { types[request.args.get('type')][0]: user_address },
-            'fromBlock': int(request.args.get('fromBlock'))
-        }
-    	params_2 = {
-            'filter': { types[request.args.get('type')][1]: user_address },
-            'fromBlock': int(request.args.get('fromBlock'))
-        }
         proxy = self.trustlines.currency_network_proxies[network_address]
-        list_1 = proxy.get_filter(request.args.get('type'), params_1)
-        list_2 = proxy.get_filter(request.args.get('type'), params_2)
-    	return sorted([merge_two_dicts(event.get('args'), {'blockNumber': event.get('blockNumber'), 'event': event.get('event'), 'transactionHash': event.get('transactionHash')})
-            for event in list_1 + list_2], key=lambda x: x.get('blockNumber', 0))
+        fromBlock = int(request.args.get('fromBlock', 0))
+        if request.args.get('type') is not None:
+            events = proxy.get_event(request.args.get('type'), user_address, fromBlock)
+            return sorted([merge_two_dicts(event.get('args'), {'blockNumber': event.get('blockNumber'), 'event': event.get('event'), 'transactionHash': event.get('transactionHash')})
+                for event in events], key=lambda x: x.get('blockNumber', 0))
+        else:
+            events = proxy.get_all_events(user_address, fromBlock)
+            return sorted([merge_two_dicts(event.get('args'), {'blockNumber': event.get('blockNumber'), 'event': event.get('event'), 'transactionHash': event.get('transactionHash')})
+                for event in events], key=lambda x: x.get('blockNumber', 0))
+
+
+class EventList(Resource):
+
+    def __init_(self, trustlines):
+        self.trustlines = trustlines
+
+    def get(self, user_address):
+        events = []
+        type = request.args.get('type', None)
+        fromBlock = int(request.args.get('fromBlock', 0))
+        networks = self.trustlines.get_networks_of_user(user_address)
+        for network_address in networks:
+            proxy = self.trustlines.currency_network_proxies[network_address]
+            if type is None:
+                events = events + proxy.get_event(type, user_address, fromBlock)
+            else:
+                events = events + proxy.get_all_events(user_address, fromBlock)
+        return sorted([merge_two_dicts(event.get('args'), {'blockNumber': event.get('blockNumber'), 'event': event.get('event'), 'transactionHash': event.get('transactionHash'), 'networkAddress': event.get('address')})
+            for event in events], key=lambda x: x.get('blockNumber', 0))
 
 
 class TransactionInfos(Resource):

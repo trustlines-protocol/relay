@@ -2,7 +2,7 @@ from flask import Flask, Blueprint
 from flask_restful import Api
 from werkzeug.routing import BaseConverter, ValidationError
 
-from relay.resources import User, UserList, Network, NetworkList, ContactList, TrustlineList, Trustline, Spendable, SpendableTo, Path, Event, Relay, Balance, TransactionInfos, Block
+from relay.resources import User, UserList, Network, NetworkList, ContactList, TrustlineList, Trustline, Spendable, SpendableTo, Path, Event, EventList, Relay, Balance, TransactionInfos, Block
 from relay.utils import is_address, add_0x_prefix
 
 class AddressConverter(BaseConverter):
@@ -35,10 +35,10 @@ def ApiApp(trustlines):
     api.add_resource(SpendableTo, '/networks/<address:network_address>/users/<address:a_address>/spendables/<address:b_address>', resource_class_args=[trustlines])
     api.add_resource(Path, '/networks/<address:network_address>/users/<address:a_address>/path/<address:b_address>/<int:value>', resource_class_args=[trustlines])
     api.add_resource(Event, '/networks/<address:network_address>/users/<address:user_address>/events', resource_class_args=[trustlines])
-    api.add_resource(TransactionInfos, '/txinfos/<address:address>', resource_class_args=[trustlines])
-    api.add_resource(Block, '/blocknumber', resource_class_args=[trustlines])
+    api.add_resource(EventList, '/users/<address:user_address>/events', resource_class_args=[trustlines])
+    api.add_resource(TransactionInfos, '/users/<address:user_address>/txinfos', resource_class_args=[trustlines])
+    api.add_resource(Balance, '/users/<address:user_address>/balance', resource_class_args=[trustlines])
     api.add_resource(Relay, '/relay', resource_class_args=[trustlines])
-    api.add_resource(Balance, '/balance/<address:address>', resource_class_args=[trustlines])
 
     app.url_map.converters['address'] = AddressConverter
     app.register_blueprint(api_bp)
