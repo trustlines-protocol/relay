@@ -201,10 +201,23 @@ Returns all events of a specific currency network
 ]
 ```
 
+## Get externally owned user
+Return user information of a externally owned address
+
+`GET /users/:userAddress`
+
+```javascript
+{
+  "proxyAddress": "0x...",
+  "balance": "123.45555",
+  "networks": ["0x...", "0x...", ...]
+}
+```
+
 ## Get all events
 Return bundled events for specific user
 
-`GET /events/:userAddress?fromBlock=:from&toBlock=:to`
+`GET /users/:userAddress/events?fromBlock=:from&toBlock=:to`
 
 ```javascript
 [
@@ -217,7 +230,7 @@ Return bundled events for specific user
 ## Get transaction infos
 Returns the transaction information
 
-`GET /txinfos/:userAddress`
+`GET /users/:userAddress/txinfos`
 
 ### Response
 ```javascript
@@ -225,6 +238,18 @@ Returns the transaction information
     "balance": "1000",
     "nonce": 15,
     "gasPrice": "10000"
+}
+```
+
+## `NEW` Get balance of externally owned account
+Returns the ETH balance of an externally owned account
+
+`GET /users/:userAddress/balance`
+
+### Response
+```javascript
+{
+    "balance": "12.1009234"
 }
 ```
 
@@ -244,18 +269,6 @@ Remove txId as response instead compute on client
 ```javascript
 {
     "txId"
-}
-```
-
-## `NEW` Get balance of externally owned account
-Returns the ETH balance of an externally owned account
-
-`GET /balances/:eoaAddress`
-
-### Response
-```javascript
-{
-    "balance": "12.1009234"
 }
 ```
 
