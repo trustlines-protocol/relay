@@ -143,7 +143,7 @@ class Event(Resource):
 
 class EventList(Resource):
 
-    def __init_(self, trustlines):
+    def __init__(self, trustlines):
         self.trustlines = trustlines
 
     def get(self, user_address):
@@ -153,7 +153,7 @@ class EventList(Resource):
         networks = self.trustlines.get_networks_of_user(user_address)
         for network_address in networks:
             proxy = self.trustlines.currency_network_proxies[network_address]
-            if type is None:
+            if type is not None:
                 events = events + proxy.get_event(type, user_address, fromBlock)
             else:
                 events = events + proxy.get_all_events(user_address, fromBlock)
