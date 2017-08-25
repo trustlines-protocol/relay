@@ -154,12 +154,12 @@ class CurrencyNetwork:
         params_1 = {
             'filter': { types[event_name][0]: user_address },
             'fromBlock': from_block,
-            'toBlock': 'pending'
+            # 'toBlock': 'pending' FIXME causes time out
         }
         params_2 = {
             'filter': { types[event_name][1]: user_address },
             'fromBlock': from_block,
-            'toBlock': 'pending'
+            # 'toBlock': 'pending' FIXME causes time out
         }
         list_1 = self._proxy.on(event_name, params_1).get(False)
         list_2 = self._proxy.on(event_name, params_2).get(False)
