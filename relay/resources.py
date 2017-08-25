@@ -1,6 +1,6 @@
 from flask import request
 from flask_restful import  Resource
-from utils import merge_two_dicts
+from utils import merge_two_dicts, trim_args
 
 
 class NetworkList(Resource):
@@ -133,12 +133,18 @@ class Event(Resource):
         fromBlock = int(request.args.get('fromBlock', 0))
         if request.args.get('type') is not None:
             events = proxy.get_event(request.args.get('type'), user_address, fromBlock)
-            return sorted([merge_two_dicts(event.get('args'), {'blockNumber': event.get('blockNumber'), 'event': event.get('event'), 'transactionHash': event.get('transactionHash')})
-                for event in events], key=lambda x: x.get('blockNumber', 0))
         else:
             events = proxy.get_all_events(user_address, fromBlock)
-            return sorted([merge_two_dicts(event.get('args'), {'blockNumber': event.get('blockNumber'), 'event': event.get('event'), 'transactionHash': event.get('transactionHash')})
-                for event in events], key=lambda x: x.get('blockNumber', 0))
+        return sorted([
+            merge_two_dicts(
+                trim_args(event.get('args')),
+                {
+                    'blockNumber': event.get('blockNumber'),
+                    'event': event.get('event'),
+                    'transactionHash': event.get('transactionHash'),
+                    'status': 'pending' if event.get('blockNumber') is None else 'confirmed'
+                }
+            ) for event in events], key=lambda x: x.get('blockNumber', 0))
 
 
 class EventList(Resource):
@@ -157,8 +163,17 @@ class EventList(Resource):
                 events = events + proxy.get_event(type, user_address, fromBlock)
             else:
                 events = events + proxy.get_all_events(user_address, fromBlock)
-        return sorted([merge_two_dicts(event.get('args'), {'blockNumber': event.get('blockNumber'), 'event': event.get('event'), 'transactionHash': event.get('transactionHash'), 'networkAddress': event.get('address')})
-            for event in events], key=lambda x: x.get('blockNumber', 0))
+        return sorted([
+            merge_two_dicts(
+                trim_args(event.get('args')),
+                {
+                    'blockNumber': event.get('blockNumber'),
+                    'event': event.get('event'),
+                    'transactionHash': event.get('transactionHash'),
+                    'networkAddress': event.get('address'),
+                    'status': 'pending' if event.get('blockNumber') is None else 'confirmed'
+                }
+            ) for event in events], key=lambda x: x.get('blockNumber', 0))
 
 
 class TransactionInfos(Resource):
