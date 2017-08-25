@@ -166,8 +166,8 @@ class TransactionInfos(Resource):
     def __init__(self, trustlines):
         self.trustlines = trustlines
 
-    def get(self, address):
-        return self.trustlines.node.get_tx_infos(address)
+    def get(self, user_address):
+        return self.trustlines.node.get_tx_infos(user_address)
 
 
 class Relay(Resource):
@@ -184,9 +184,9 @@ class Balance(Resource):
     def __init__(self, trustlines):
         self.trustlines = trustlines
 
-    def get(self, address):
+    def get(self, user_address):
         return {
-            'balance': self.trustlines.node.balance(address)
+            'balance': self.trustlines.node.balance(user_address)
         }
 
 
