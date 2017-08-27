@@ -1,6 +1,17 @@
-from flask import request
-from flask_restful import  Resource
-from utils import merge_two_dicts, trim_args
+import tempfile
+
+from flask import request, send_file, make_response
+from flask.views import MethodView
+from flask_restful import Resource
+from webargs import fields, ValidationError
+from webargs.flaskparser import use_args
+
+from relay.utils import is_address,  merge_two_dicts, trim_args
+
+
+def validate_address(address):
+    if not is_address(address):
+        raise ValidationError('Not a valid address')
 
 
 class NetworkList(Resource):
@@ -110,23 +121,10 @@ class SpendableTo(Resource):
         }
 
 
-class Path(Resource):
-
-    def __init__(self, trustlines):
-        self.trustlines = trustlines
-
-    def get(self, network_address, a_address, b_address, value):
-        graph = self.trustlines.currency_network_graphs[network_address]
-        return {
-            'path': graph.find_path(a_address, b_address, value),
-            'maxFee': value * 0.01 # TODO calculate in graph
-        }
-
-
 class Event(Resource):
 
     def __init__(self, trustlines):
-	self.trustlines = trustlines
+        self.trustlines = trustlines
 
     def get(self, network_address, user_address):
         proxy = self.trustlines.currency_network_proxies[network_address]
@@ -214,3 +212,74 @@ class Block(Resource):
         return {
             'blocknumber': self.trustlines.node.blocknumber
         }
+
+
+class RequestEther(Resource):
+
+    def __init__(self, trustlines):
+        self.trustlines = trustlines
+
+    def post(self):
+        address = request.json['address']
+        return {
+            'txhash': self.trustlines.node.send_ether(address)
+        }
+
+
+class Path(Resource):
+
+    def __init__(self, trustlines):
+        self.trustlines = trustlines
+
+    args = {
+        'value': fields.Int(required=False, missing=1),
+        'maxHops': fields.Int(required=False, missing=None),
+        'maxFees': fields.Int(required=False, missing=None),
+        'from': fields.Str(required=True, validate=validate_address),
+        'to': fields.Str(required=True, validate=validate_address)
+    }
+
+    @use_args(args)
+    def post(self, args, address):
+        cost, path = self.trustlines.currency_network_graphs[address].find_path(
+            source=args['from'],
+            target=args['to'],
+            value=args['value'],
+            max_fees=args['maxFees'],
+            max_hops=args['maxHops'])
+
+        #gas = self.trustlines.currency_network_proxies[address].estimate_gas_for_transfer(
+        #    args['from'],
+        #    args['to'],
+        #    args['value'],
+        #    cost*2,
+        #    path)
+        return {'path': path,
+                'estimatedGas': 0,
+                'fees': cost}
+
+
+class GraphImage(MethodView):
+
+    def __init__(self, trustlines):
+        self.trustlines = trustlines
+
+    def get(self, address):
+        filename = tempfile.mktemp(".gif")
+        self.trustlines.currency_network_graphs[address].draw(filename)
+        return send_file(filename, mimetype='image/gif')
+
+
+class GraphDump(MethodView):
+
+    def __init__(self, trustlines):
+        self.trustlines = trustlines
+
+    def get(self, address):
+        response = make_response(self.trustlines.currency_network_graphs[address].dump())
+        cd = 'attachment; filename=networkdump.csv'
+        response.headers['Content-Disposition'] = cd
+        response.mimetype = 'text/csv'
+        return response
+
+
