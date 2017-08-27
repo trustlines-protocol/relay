@@ -21,3 +21,13 @@ class Node:
 
     def balance(self, address):
         return self._web3.eth.getBalance(address)
+
+    def send_ether(self, address):
+        if self._web3.eth.getBalance(address) == 0:
+            return self._web3.eth.sendTransaction({
+                'from': self._web3.eth.coinbase,
+                'to': address,
+                'value': 1000000000000000000
+            })
+        else:
+            return None
