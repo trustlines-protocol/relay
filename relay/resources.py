@@ -140,7 +140,8 @@ class Event(Resource):
                     'blockNumber': event.get('blockNumber'),
                     'event': event.get('event'),
                     'transactionHash': event.get('transactionHash'),
-                    'status': 'pending' if event.get('blockNumber') is None else 'confirmed'
+                    'status': self.trustlines.node.get_block_status(event.get('blockNumber')),
+                    'timestamp': self.trustlines.node.get_block_time(event.get('blockNumber'))
                 }
             ) for event in events], key=lambda x: x.get('blockNumber', 0))
 
@@ -169,7 +170,8 @@ class EventList(Resource):
                     'event': event.get('event'),
                     'transactionHash': event.get('transactionHash'),
                     'networkAddress': event.get('address'),
-                    'status': 'pending' if event.get('blockNumber') is None else 'confirmed'
+                    'status': self.trustlines.node.get_block_status(event.get('blockNumber')),
+                    'timestamp': self.trustlines.node.get_block_time(event.get('blockNumber'))
                 }
             ) for event in events], key=lambda x: x.get('blockNumber', 0))
 
@@ -281,5 +283,3 @@ class GraphDump(MethodView):
         response.headers['Content-Disposition'] = cd
         response.mimetype = 'text/csv'
         return response
-
-
