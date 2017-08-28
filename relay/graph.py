@@ -211,7 +211,7 @@ class CurrencyNetworkGraph(object):
                               'Creditline BA': account.reverse_creditline})
         return output.getvalue()
 
-    def _cost_func_fast_reverse(b, a, data, value):
+    def _cost_func_fast_reverse(self, b, a, data, value):
         # this func should be as fast as possible, as it's called often
         # don't use Account which allocs memory
         if a < b:
