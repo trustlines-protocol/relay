@@ -3,7 +3,8 @@ import io
 
 import networkx as nx
 
-from relay.dijkstra_weighted import dijkstra_path
+from relay.dijkstra_weighted import find_path
+from relay.fees import new_balance, imbalance_fee
 
 creditline_ab = 'creditline_ab'
 creditline_ba = 'creditline_ba'
@@ -14,6 +15,7 @@ fees_outstanding_b = 'fees_outstanding_b'
 m_time = 'm_time'
 balance_ab = 'balance_ab'
 
+factor = 100
 
 class Account(object):
     """account from the view of a"""
@@ -93,16 +95,7 @@ class AccountSummary(object):
                 'leftReceived' : self.creditline_left_received}
 
 
-class Friendship(object):
-    """Representing Friendship to address"""
-    def __init__(self, address, creditline_ab, creditline_ba, balance_ab):
-        self.address = address
-        self.creditline_ab = creditline_ab
-        self.creditline_ba = creditline_ba
-        self.balance_ab = balance_ab
 
-    def __repr__(self):
-        return '([{}]({},{},{})'.format(self.address, self.creditline_ab, self.creditline_ba, self.balance_ab)
 
 
 class CurrencyNetworkGraph(object):
@@ -205,7 +198,7 @@ class CurrencyNetworkGraph(object):
         a.draw(filename)
 
     def dump(self):
-        output = io.BytesIO()
+        output = io.StringIO()
         fieldnames = ['Address A', 'Address B', 'Balance AB', 'Creditline AB', 'Creditline BA']
         writer = csv.DictWriter(output, fieldnames=fieldnames)
         writer.writeheader()
@@ -218,74 +211,58 @@ class CurrencyNetworkGraph(object):
                               'Creditline BA': account.reverse_creditline})
         return output.getvalue()
 
-    @staticmethod
-    def _get_path_cost_function(value, hop_cost=1, imbalance_cost_factor=.5):
-        """
-        goal: from all possible paths, choose from the shortes the one which rebalances the best
-        """
+    def _cost_func_fast_reverse(self, b, a, data, value):
+        # this func should be as fast as possible, as it's called often
+        # don't use Account which allocs memory
+        if a < b:
+            pre_balance = data[balance_ab]
+            creditline = data[creditline_ba]
+        else:
+            pre_balance = -data[balance_ab]
+            creditline = data[creditline_ab]
+        post_balance = new_balance(factor, pre_balance, value)
+        assert post_balance <= pre_balance
+        if -post_balance > creditline:
+            return None  # no valid path
+        cost = imbalance_fee(factor, pre_balance, value)
+        assert cost >= 0
+        return cost
 
-        def cost_func_fast(a, b, data):
-            # this func should be as fast as possible, as it's called often
-            # don't use Account which allocs memory
-            if a < b:
-                pre_balance = data[balance_ab]
-                creditline = data[creditline_ba]
-            else:
-                pre_balance = -data[balance_ab]
-                creditline = data[creditline_ab]
-            post_balance = pre_balance - value
-            # assert abs(pre_balance) <= _account['creditline']
-            if -post_balance > creditline:
-                return None  # no valid path
-            # FIXME division Zero
-            # imbalance_cost = (abs(post_balance) - abs(pre_balance)) / creditline
-            imbalance_cost = 1
-            # assert -1 <= imbalance_cost <= 1
-            cost = hop_cost + imbalance_cost_factor * imbalance_cost
-            # assert cost > 0
-            return cost
-
-        return cost_func_fast
-
-    def find_path(self, source, target, value):
+    def find_path(self, source, target, value=None, max_hops=None, max_fees=None):
         """
         find path between source and target
         the shortest path is found based on
             - the number of hops
             - the imbalance it adds or reduces in the accounts
         """
-
+        if value is None:
+            value = 1
         try:
-            path = dijkstra_path(self.graph, source, target, self._get_path_cost_function(value))
+            cost, path = find_path(self.graph, target, source, self._cost_func_fast_reverse, value, max_hops=max_hops, max_fees=max_fees)
         except (nx.NetworkXNoPath, KeyError): # key error for if source or target is not in graph
-            path = []
-        return path
-
-    def calc_path_cost(self, path, value):
-        path = list(path)  # copy
-        cost_func = self._get_path_cost_function(value)
-        cost = 0
-        source = path.pop(0)
-        while path:
-            target = path.pop(0)
-            cost += cost_func(source, target, self.graph.edge[source][target]) or 0  # FIXME
-            source = target
-        return cost
+            cost, path = 0, []
+        return cost, list(reversed(path))
 
     def transfer(self, source, target, value):
         """simulate transfer off chain"""
         account = Account(self.graph[source][target], source, target)
-        account.balance -= value
+        fee = imbalance_fee(factor, account.balance, value)
+        account.balance = new_balance(factor, account.balance, value)
+        return fee
 
     def mediated_transfer(self, source, target, value):
         """simulate mediated transfer off chain"""
-        path = self.find_path(source, target, value)
+        cost, path = self.find_path(source, target, value)
         assert path[0] == source
         assert path[-1] == target
-        cost = self.calc_path_cost(path, value)
-        source = path.pop(0)
+        path = list(reversed(path))
+        fees = 0
+        target = path.pop(0)
         while len(path):
-            target = path.pop(0)
-            self.transfer(source, target, value)
-            source = target
+            source = path.pop(0)
+            fee = self.transfer(source, target, value)
+            value += fee
+            fees += fee
+            target = source
+        assert fees == cost
         return cost

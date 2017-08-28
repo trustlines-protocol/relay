@@ -6,8 +6,11 @@ from collections import namedtuple
 from relay.logger import getLogger
 
 
-Trustline = namedtuple('Trustline', 'address creditline_ab creditline_ba interest_ab interest_ba fees_outstanding_a fees_outstanding_b m_time balance_ab')
+class Trustline(namedtuple('Trustline', 'address creditline_ab creditline_ba balance_ab interest_ab interest_ba fees_outstanding_a fees_outstanding_b m_time')):
+    __slots__ = ()
 
+    def __new__(cls, address, creditline_ab=0, creditline_ba=0, balance_ab=0, interest_ab=0, interest_ba=0, fees_outstanding_a=0,  fees_outstanding_b=0, m_time=0):
+        return super().__new__(cls, address, creditline_ab, creditline_ba, balance_ab, interest_ab, interest_ba, fees_outstanding_a, fees_outstanding_b, m_time)
 
 logger = getLogger('tl_helper', logging.DEBUG)
 
@@ -143,7 +146,7 @@ class CurrencyNetwork:
         self.start_listen_on(TransferEvent, log, {'fromBlock': 'pending', 'toBlock': 'pending' })
 
     def get_event(self, event_name, user_address, from_block=0):
-    	types = {
+        types = {
     	    'Transfer': ['_from', '_to'],
             'BalanceUpdate': ['_from', '_to'],
     	    'CreditlineUpdateRequest': ['_creditor', '_debtor'],
@@ -171,3 +174,14 @@ class CurrencyNetwork:
         for type in event_types: # FIXME takes too long. web3.py currently doesn't support getAll() to retrieve all events
             all_events = all_events + self.get_event(type, user_address, fromBlock)
         return all_events
+
+    # <- for testing sender key has to be unlocked
+    def update_trustline(self, sender, receiver, value):
+        self._proxy.transact({'from': sender}).updateCreditline(receiver, value)
+
+    def mediated_transfer(self, sender, receiver, value, path):
+        self._proxy.transact({'from': sender}).mediatedTransfer(receiver, value, path)
+    # -> for testing
+
+    def estimate_gas_for_transfer(self, sender, receiver, value, max_fee, path):
+        return self._proxy.estimateGas({'from': sender}).transfer(receiver, value, max_fee, path)
