@@ -10,7 +10,7 @@ class Trustline(namedtuple('Trustline', 'address creditline_ab creditline_ba bal
     __slots__ = ()
 
     def __new__(cls, address, creditline_ab=0, creditline_ba=0, balance_ab=0, interest_ab=0, interest_ba=0, fees_outstanding_a=0,  fees_outstanding_b=0, m_time=0):
-        return super().__new__(cls, address, creditline_ab, creditline_ba, balance_ab, interest_ab, interest_ba, fees_outstanding_a, fees_outstanding_b, m_time)
+        return super(Trustline, cls).__new__(cls, address, creditline_ab, creditline_ba, balance_ab, interest_ab, interest_ba, fees_outstanding_a, fees_outstanding_b, m_time)
 
 logger = getLogger('tl_helper', logging.DEBUG)
 
