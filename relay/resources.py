@@ -6,7 +6,7 @@ from flask_restful import Resource
 from webargs import fields, ValidationError
 from webargs.flaskparser import use_args
 
-from relay.utils import is_address,  merge_two_dicts, trim_args
+from relay.utils import is_address,  merge_two_dicts, trim_args, get_event_direction
 
 
 def validate_address(address):
@@ -133,17 +133,15 @@ class Event(Resource):
             events = proxy.get_event(request.args.get('type'), user_address, fromBlock)
         else:
             events = proxy.get_all_events(user_address, fromBlock)
-        return sorted([
-            merge_two_dicts(
-                trim_args(event.get('args')),
-                {
-                    'blockNumber': event.get('blockNumber'),
-                    'event': event.get('event'),
-                    'transactionHash': event.get('transactionHash'),
-                    'status': self.trustlines.node.get_block_status(event.get('blockNumber')),
-                    'timestamp': self.trustlines.node.get_block_time(event.get('blockNumber'))
-                }
-            ) for event in events], key=lambda x: x.get('blockNumber', 0))
+        return sorted([{'blockNumber': event.get('blockNumber'),
+                        'type': event.get('event'),
+                        'transactionId': event.get('transactionHash'),
+                        'networkAddress': event.get('address'),
+                        'status': self.trustlines.node.get_block_status(event.get('blockNumber')),
+                        'timestamp': self.trustlines.node.get_block_time(event.get('blockNumber')),
+                        'direction': get_event_direction(event, user_address)[0],
+                        'address': get_event_direction(event, user_address)[1]} for event in events], key=lambda x: x.get('blockNumber', 0))
+
 
 
 class EventList(Resource):
@@ -162,18 +160,14 @@ class EventList(Resource):
                 events = events + proxy.get_event(type, user_address, fromBlock)
             else:
                 events = events + proxy.get_all_events(user_address, fromBlock)
-        return sorted([
-            merge_two_dicts(
-                trim_args(event.get('args')),
-                {
-                    'blockNumber': event.get('blockNumber'),
-                    'event': event.get('event'),
-                    'transactionHash': event.get('transactionHash'),
-                    'networkAddress': event.get('address'),
-                    'status': self.trustlines.node.get_block_status(event.get('blockNumber')),
-                    'timestamp': self.trustlines.node.get_block_time(event.get('blockNumber'))
-                }
-            ) for event in events], key=lambda x: x.get('blockNumber', 0))
+        return sorted([{'blockNumber': event.get('blockNumber'),
+                        'type': event.get('event'),
+                        'transactionId': event.get('transactionHash'),
+                        'networkAddress': event.get('address'),
+                        'status': self.trustlines.node.get_block_status(event.get('blockNumber')),
+                        'timestamp': self.trustlines.node.get_block_time(event.get('blockNumber')),
+                        'direction': get_event_direction(event, user_address)[0],
+                        'address': get_event_direction(event, user_address)[1]} for event in events], key=lambda x: x.get('blockNumber', 0))
 
 
 class TransactionInfos(Resource):
