@@ -83,7 +83,7 @@ class TrustlineList(Resource):
         accounts = []
         for friend_address in friends:
             trustline = {}
-            trustline.update({'bAddress': friend_address})
+            trustline.update({'address': friend_address})
             trustline.update(graph.get_account_sum(user_address, friend_address).as_dict())
             accounts.append(trustline)
         return accounts
