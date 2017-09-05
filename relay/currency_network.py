@@ -148,10 +148,8 @@ class CurrencyNetwork:
     def get_event(self, event_name, user_address, from_block=0):
         types = {
     	    'Transfer': ['_from', '_to'],
-            'BalanceUpdate': ['_from', '_to'],
     	    'CreditlineUpdateRequest': ['_creditor', '_debtor'],
     	    'CreditlineUpdate': ['_creditor', '_debtor'],
-    	    'PathPrepared': ['_sender', '_receiver'],
     	    'ChequeCashed': ['_sender', '_receiver'],
     	}
         params_1 = {
@@ -169,7 +167,7 @@ class CurrencyNetwork:
         return list_1 + list_2
 
     def get_all_events(self, user_address, fromBlock=0):
-        event_types = ['Transfer', 'BalanceUpdate', 'CreditlineUpdateRequest', 'CreditlineUpdate', 'PathPrepared', 'ChequeCashed']
+        event_types = ['Transfer', 'CreditlineUpdateRequest', 'CreditlineUpdate', 'ChequeCashed']
         all_events = []
         for type in event_types: # FIXME takes too long. web3.py currently doesn't support getAll() to retrieve all events
             all_events = all_events + self.get_event(type, user_address, fromBlock)
