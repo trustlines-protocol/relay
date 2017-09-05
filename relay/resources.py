@@ -139,6 +139,7 @@ class Event(Resource):
                         'networkAddress': event.get('address'),
                         'status': self.trustlines.node.get_block_status(event.get('blockNumber')),
                         'timestamp': self.trustlines.node.get_block_time(event.get('blockNumber')),
+                        'amount': event.get('args').get('_value'),
                         'direction': get_event_direction(event, user_address)[0],
                         'address': get_event_direction(event, user_address)[1]} for event in events], key=lambda x: x.get('blockNumber', 0))
 
@@ -167,6 +168,7 @@ class EventList(Resource):
                         'status': self.trustlines.node.get_block_status(event.get('blockNumber')),
                         'timestamp': self.trustlines.node.get_block_time(event.get('blockNumber')),
                         'direction': get_event_direction(event, user_address)[0],
+                        'amount': event.get('args').get('_value'),
                         'address': get_event_direction(event, user_address)[1]} for event in events], key=lambda x: x.get('blockNumber', 0))
 
 
