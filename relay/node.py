@@ -20,7 +20,8 @@ class Node:
         return self._web3.eth.blockNumber
 
     def balance(self, address):
-        return self._web3.eth.getBalance(address)
+        wei = int(self._web3.eth.getBalance(address), 0)
+        return str(self._web3.fromWei(wei, 'ether'))
 
     def send_ether(self, address):
         if self._web3.eth.getBalance(address) == 0:
