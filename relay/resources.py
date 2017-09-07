@@ -96,7 +96,10 @@ class Trustline(Resource):
 
     def get(self, network_address, a_address, b_address):
         graph = self.trustlines.currency_network_graphs[network_address]
-        return graph.get_account_sum(a_address, b_address).as_dict()
+        trustline = {}
+        trustline.update({'address': b_address})
+        trustline.update(graph.get_account_sum(a_address, b_address).as_dict())
+        return trustline
 
 
 class Spendable(Resource):
