@@ -6,11 +6,15 @@ from collections import namedtuple
 from relay.logger import getLogger
 
 
-class Trustline(namedtuple('Trustline', 'address creditline_ab creditline_ba interest_ab interest_ba fees_outstanding_a fees_outstanding_b m_time balance_ab')):
+class Trustline(namedtuple('Trustline',
+                           ['address', 'creditline_ab', 'creditline_ba', 'interest_ab', 'interest_ba',
+                            'fees_outstanding_a', 'fees_outstanding_b', 'm_time', 'balance_ab'])):
     __slots__ = ()
 
-    def __new__(cls, address, creditline_ab=0, creditline_ba=0, interest_ab=0, interest_ba=0, fees_outstanding_a=0,  fees_outstanding_b=0, m_time=0, balance_ab=0):
-        return super(Trustline, cls).__new__(cls, address, creditline_ab, creditline_ba, interest_ab, interest_ba, fees_outstanding_a, fees_outstanding_b, m_time, balance_ab)
+    def __new__(cls, address, creditline_ab=0, creditline_ba=0, interest_ab=0, interest_ba=0, fees_outstanding_a=0,
+                fees_outstanding_b=0, m_time=0, balance_ab=0):
+        return super(Trustline, cls).__new__(cls, address, creditline_ab, creditline_ba, interest_ab, interest_ba,
+                                             fees_outstanding_a, fees_outstanding_b, m_time, balance_ab)
 
 logger = getLogger('tl_helper', logging.DEBUG)
 
@@ -25,7 +29,7 @@ TransferEvent = 'Transfer'
 PathPreparedEvent = 'PathPrepared'
 ChequeCashed = 'ChequeCashed'
 
-queryBlock = 'pending'
+queryBlock = 'latest'
 updateBlock = 'pending'
 
 sync_interval = 300 # 5min
@@ -33,6 +37,7 @@ reconnect_interval = 3 # 3s
 
 
 class CurrencyNetwork:
+    event_types = ['Transfer', 'CreditlineUpdateRequest', 'CreditlineUpdate', 'ChequeCashed']
 
     def __init__(self, web3, abi, address):
         self._web3 = web3
@@ -143,43 +148,34 @@ class CurrencyNetwork:
     def start_listen_on_transfer(self):
         def log(log_entry):
             pass
-        self.start_listen_on(TransferEvent, log, {'fromBlock': 'pending', 'toBlock': 'pending' })
+        self.start_listen_on(TransferEvent, log, {'fromBlock': 'pending', 'toBlock': 'pending'})
 
-    def get_event(self, event_name, user_address, from_block=0):
+    def get_events(self, event_name, user_address, from_block=0):
         types = {
-    	    'Transfer': ['_from', '_to'],
-    	    'CreditlineUpdateRequest': ['_creditor', '_debtor'],
-    	    'CreditlineUpdate': ['_creditor', '_debtor'],
-    	    'ChequeCashed': ['_sender', '_receiver'],
-    	}
+            'Transfer': ['_from', '_to'],
+            'CreditlineUpdateRequest': ['_creditor', '_debtor'],
+            'CreditlineUpdate': ['_creditor', '_debtor'],
+            'ChequeCashed': ['_sender', '_receiver'],
+        }
         params_1 = {
             'filter': { types[event_name][0]: user_address },
             'fromBlock': from_block,
-            # 'toBlock': 'pending' FIXME causes time out
+            'toBlock': queryBlock
         }
         params_2 = {
             'filter': { types[event_name][1]: user_address },
             'fromBlock': from_block,
-            # 'toBlock': 'pending' FIXME causes time out
+            'toBlock': queryBlock
         }
-        list_1 = self._proxy.on(event_name, params_1).get(False)
-        list_2 = self._proxy.on(event_name, params_2).get(False)
+        list_1 = self._proxy.pastEvents(event_name, params_1).get(False)
+        list_2 = self._proxy.pastEvents(event_name, params_2).get(False)
         return list_1 + list_2
 
     def get_all_events(self, user_address, fromBlock=0):
-        event_types = ['Transfer', 'CreditlineUpdateRequest', 'CreditlineUpdate', 'ChequeCashed']
         all_events = []
-        for type in event_types: # FIXME takes too long. web3.py currently doesn't support getAll() to retrieve all events
-            all_events = all_events + self.get_event(type, user_address, fromBlock)
+        for type in CurrencyNetwork.event_types: # FIXME takes too long. web3.py currently doesn't support getAll() to retrieve all events
+            all_events = all_events + self.get_events(type, user_address, fromBlock)
         return all_events
-
-    # <- for testing sender key has to be unlocked
-    def update_trustline(self, sender, receiver, value):
-        self._proxy.transact({'from': sender}).updateCreditline(receiver, value)
-
-    def mediated_transfer(self, sender, receiver, value, path):
-        self._proxy.transact({'from': sender}).mediatedTransfer(receiver, value, path)
-    # -> for testing
 
     def estimate_gas_for_transfer(self, sender, receiver, value, max_fee, path):
         return self._proxy.estimateGas({'from': sender}).transfer(receiver, value, max_fee, path)

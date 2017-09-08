@@ -5,8 +5,10 @@ from flask.views import MethodView
 from flask_restful import Resource
 from webargs import fields, ValidationError
 from webargs.flaskparser import use_args
+from marshmallow import validate
 
 from relay.utils import is_address,  merge_two_dicts, trim_args, get_event_direction
+from relay.currency_network import CurrencyNetwork
 
 
 def validate_address(address):
@@ -129,11 +131,20 @@ class Event(Resource):
     def __init__(self, trustlines):
         self.trustlines = trustlines
 
-    def get(self, network_address, user_address):
+    args = {
+        'fromBlock': fields.Int(required=False, missing=0),
+        'type': fields.Str(required=False,
+                           validate=validate.OneOf(CurrencyNetwork.event_types),
+                           missing=None)
+    }
+
+    @use_args(args)
+    def get(self, args, network_address, user_address):
         proxy = self.trustlines.currency_network_proxies[network_address]
-        fromBlock = int(request.args.get('fromBlock', 0))
-        if request.args.get('type') is not None:
-            events = proxy.get_event(request.args.get('type'), user_address, fromBlock)
+        fromBlock = args['fromBlock']
+        type = args['type']
+        if type is not None:
+            events = proxy.get_events(type, user_address, fromBlock)
         else:
             events = proxy.get_all_events(user_address, fromBlock)
         return sorted([{'blockNumber': event.get('blockNumber'),
@@ -147,21 +158,28 @@ class Event(Resource):
                         'address': get_event_direction(event, user_address)[1]} for event in events], key=lambda x: x.get('blockNumber', 0))
 
 
-
 class EventList(Resource):
 
     def __init__(self, trustlines):
         self.trustlines = trustlines
 
-    def get(self, user_address):
+    args = {
+        'fromBlock': fields.Int(required=False, missing=0),
+        'type': fields.Str(required=False,
+                           validate=validate.OneOf(CurrencyNetwork.event_types),
+                           missing=None)
+    }
+
+    @use_args(args)
+    def get(self, args, user_address):
         events = []
-        type = request.args.get('type', None)
-        fromBlock = int(request.args.get('fromBlock', 0))
-        networks = self.trustlines.get_networks_of_user(user_address)
+        type = args['type']
+        fromBlock = args['fromBlock']
+        networks = self.trustlines.networks
         for network_address in networks:
             proxy = self.trustlines.currency_network_proxies[network_address]
             if type is not None:
-                events = events + proxy.get_event(type, user_address, fromBlock)
+                events = events + proxy.get_events(type, user_address, fromBlock)
             else:
                 events = events + proxy.get_all_events(user_address, fromBlock)
         return sorted([{'blockNumber': event.get('blockNumber'),
@@ -249,14 +267,14 @@ class Path(Resource):
             max_fees=args['maxFees'],
             max_hops=args['maxHops'])
 
-        #gas = self.trustlines.currency_network_proxies[address].estimate_gas_for_transfer(
-        #    args['from'],
-        #    args['to'],
-        #    args['value'],
-        #    cost*2,
-        #    path)
+        gas = self.trustlines.currency_network_proxies[address].estimate_gas_for_transfer(
+            args['from'],
+            args['to'],
+            args['value'],
+            cost*2,
+            path[1:])
         return {'path': path,
-                'estimatedGas': 0,
+                'estimatedGas': gas,
                 'fees': cost}
 
 
