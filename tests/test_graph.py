@@ -12,24 +12,24 @@ G = '0x10'
 
 @pytest.fixture
 def friendsdict():
-    return {A: [Trustline(B, 100, 150, 0),
-                Trustline(E, 500, 550, 0)],
-            B: [Trustline(C, 200, 250, 0)],
-            C: [Trustline(D, 300, 350, 0)],
-            D: [Trustline(E, 400, 450, 0)],
+    return {A: [Trustline(B, 100, 150),
+                Trustline(E, 500, 550)],
+            B: [Trustline(C, 200, 250)],
+            C: [Trustline(D, 300, 350)],
+            D: [Trustline(E, 400, 450)],
             }
 
 
 @pytest.fixture
 def simplefriendsdict():
-    return {A: [Trustline(B, 5, 0, 0)]
+    return {A: [Trustline(B, 5, 0)]
             }
 
 
 @pytest.fixture
 def balances_friendsdict():
-    return {A: [Trustline(B, 20, 30 , 10)],
-            B: [Trustline(C, 200, 250, -20)]
+    return {A: [Trustline(B, 20, 30 , balance_ab=10)],
+            B: [Trustline(C, 200, 250, balance_ab=-20)]
             }
 
 

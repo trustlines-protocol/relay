@@ -17,6 +17,7 @@ balance_ab = 'balance_ab'
 
 factor = 100
 
+
 class Account(object):
     """account from the view of a"""
 
@@ -151,9 +152,6 @@ class AccountSummary(object):
                 'leftReceived' : self.creditline_left_received}
 
 
-
-
-
 class CurrencyNetworkGraph(object):
     """The whole graph of a Token Network"""
 
@@ -183,11 +181,11 @@ class CurrencyNetworkGraph(object):
 
     @property
     def money_created(self):
-        return sum([abs(edge[2]) for edge in self.graph.edges_iter(data = balance_ab)])
+        return sum([abs(edge[2]) for edge in self.graph.edges_iter(data=balance_ab)])
 
     @property
     def total_creditlines(self):
-        return sum([edge[2] for edge in self.graph.edges_iter(data = creditline_ab)])\
+        return sum([edge[2] for edge in self.graph.edges_iter(data=creditline_ab)])\
                + sum([edge[2] for edge in self.graph.edges_iter(data=creditline_ba)])
 
     def get_friends(self, address):
