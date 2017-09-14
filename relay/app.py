@@ -41,6 +41,7 @@ def ApiApp(trustlines):
     api.add_resource(EventList, '/users/<address:user_address>/events', resource_class_args=[trustlines])
     api.add_resource(TransactionInfos, '/users/<address:user_address>/txinfos', resource_class_args=[trustlines])
     api.add_resource(Balance, '/users/<address:user_address>/balance', resource_class_args=[trustlines])
+    api.add_resource(Block, '/blocknumber', resource_class_args=[trustlines])
     api.add_resource(Relay, '/relay', resource_class_args=[trustlines])
     api.add_resource(RequestEther, '/request-ether', resource_class_args=[trustlines])
     api.add_resource(Path, '/networks/<address:address>/path-info', resource_class_args=[trustlines])

@@ -17,6 +17,7 @@ balance_ab = 'balance_ab'
 
 factor = 100
 
+
 class Account(object):
     """account from the view of a"""
 
@@ -46,6 +47,34 @@ class Account(object):
         else:
             return self.data[creditline_ab]
 
+    @property
+    def interest(self):
+        if self.a < self.b:
+            return self.data[interest_ab]
+        else:
+            return self.data[interest_ba]
+
+    @property
+    def reverse_interest(self):
+        if self.a < self.b:
+            return self.data[interest_ba]
+        else:
+            return self.data[interest_ab]
+
+    @property
+    def fees_outstanding(self):
+        if self.a < self.b:
+            return self.data[fees_outstanding_a]
+        else:
+            return self.data[fees_outstanding_b]
+
+    @property
+    def reverse_fees_outstanding(self):
+        if self.a < self.b:
+            return self.data[fees_outstanding_b]
+        else:
+            return self.data[fees_outstanding_a]
+
     @balance.setter
     def balance(self, balance):
         if self.a < self.b:
@@ -66,6 +95,34 @@ class Account(object):
             self.data[creditline_ba] = creditline
         else:
             self.data[creditline_ab] = creditline
+
+    @interest.setter
+    def interest(self, interest):
+        if self.a < self.b:
+            self.data[interest_ab] = interest
+        else:
+            self.data[interest_ba] = interest
+
+    @reverse_interest.setter
+    def reverse_interest(self, interest):
+        if self.a < self.b:
+            self.data[interest_ba] = interest
+        else:
+            self.data[interest_ab] = interest
+
+    @fees_outstanding.setter
+    def fees_outstanding(self, fees):
+        if self.a < self.b:
+            self.data[fees_outstanding_a] = fees
+        else:
+            self.data[fees_outstanding_b] = fees
+
+    @reverse_fees_outstanding.setter
+    def reverse_fees_outstanding(self, fees):
+        if self.a < self.b:
+            self.data[fees_outstanding_b] = fees
+        else:
+            self.data[fees_outstanding_a] = fees
 
     def __repr__(self):
         return '<Account(balance:{} creditline:{}>'.format(self.balance, self.creditline)
@@ -93,9 +150,6 @@ class AccountSummary(object):
                 'received': self.creditline_received,
                 'leftGiven': self.creditline_left_given,
                 'leftReceived' : self.creditline_left_received}
-
-
-
 
 
 class CurrencyNetworkGraph(object):
@@ -127,11 +181,11 @@ class CurrencyNetworkGraph(object):
 
     @property
     def money_created(self):
-        return sum([abs(edge[2]) for edge in self.graph.edges_iter(data = balance_ab)])
+        return sum([abs(edge[2]) for edge in self.graph.edges_iter(data=balance_ab)])
 
     @property
     def total_creditlines(self):
-        return sum([edge[2] for edge in self.graph.edges_iter(data = creditline_ab)])\
+        return sum([edge[2] for edge in self.graph.edges_iter(data=creditline_ab)])\
                + sum([edge[2] for edge in self.graph.edges_iter(data=creditline_ba)])
 
     def get_friends(self, address):
@@ -147,8 +201,12 @@ class CurrencyNetworkGraph(object):
                                 debtor,
                                 creditline_ab=0,
                                 creditline_ba=0,
-                                balance_ab=0,
-                                )
+                                interest_ab=0,
+                                interest_ba=0,
+                                fees_outstanding_a=0,
+                                fees_outstanding_b=0,
+                                m_time=0,
+                                balance_ab=0)
         account = Account(self.graph[creditor][debtor], creditor, debtor)
         account.creditline = creditline
 
@@ -159,8 +217,12 @@ class CurrencyNetworkGraph(object):
                                 b,
                                 creditline_ab=0,
                                 creditline_ba=0,
-                                balance_ab=0,
-                                )
+                                interest_ab=0,
+                                interest_ba=0,
+                                fees_outstanding_a=0,
+                                fees_outstanding_b=0,
+                                m_time=0,
+                                balance_ab=0)
         account = Account(self.graph[a][b], a, b)
         account.balance = balance
 
