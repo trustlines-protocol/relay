@@ -16,12 +16,10 @@ class Trustline(namedtuple('Trustline',
         return super(Trustline, cls).__new__(cls, address, creditline_ab, creditline_ba, interest_ab, interest_ba,
                                              fees_outstanding_a, fees_outstanding_b, m_time, balance_ab)
 
-logger = getLogger('tl_helper', logging.DEBUG)
+logger = getLogger('currency network', logging.DEBUG)
 
 
 # Constants
-REGISTRY = 'Registry'
-TRUSTLINE = 'Trustlines'
 TrustlineRequestEvent = 'CreditlineUpdateRequest'
 TrustlineUpdatedEvent = 'CreditlineUpdate'
 BalanceUpdatedEvent = 'BalanceUpdate'
@@ -32,7 +30,6 @@ ChequeCashed = 'ChequeCashed'
 queryBlock = 'latest'
 updateBlock = 'pending'
 
-sync_interval = 300 # 5min
 reconnect_interval = 3 # 3s
 
 
@@ -95,7 +92,7 @@ class CurrencyNetwork:
             try:
                 filter = self._proxy.on(eventname, params)
                 filter.watch(function)
-                logger.info('Connected to filter for {}'.format(eventname))
+                logger.info('Connected to filter for {}:{}'.format(self.address, eventname))
                 return filter
             except socket.timeout as err:
                 logger.warning('Timeout in filter creation, try to reconnect: ' + str(err))
@@ -120,7 +117,7 @@ class CurrencyNetwork:
         filter = self._watch_filter(eventname, function, params)
         filter.link_exception(on_exception)
 
-    def start_listen_on_full_sync(self, function):
+    def start_listen_on_full_sync(self, function, sync_interval):
         def sync():
             while True:
                 try:

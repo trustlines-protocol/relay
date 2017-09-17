@@ -4,10 +4,7 @@ flask_cors
 webargs
 gevent
 web3[gevent]
-py-solc
 ethereum
 networkx
 pygraphviz
 pysha3
-pytest
-

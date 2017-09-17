@@ -1,8 +1,10 @@
 import json
 import logging
 
+import gevent
 from web3 import Web3, RPCProvider
 from gevent.wsgi import WSGIServer
+from gevent import sleep
 
 from relay.node import Node
 from relay.graph import CurrencyNetworkGraph
@@ -29,6 +31,7 @@ class Trustlines:
         return self.currency_network_proxies.keys()
 
     def start(self):
+        logger.info('Starting relay server')
         self.load_config()
         self.load_contracts()
         self._web3 = Web3(
@@ -39,9 +42,8 @@ class Trustlines:
             )
         )
         self.node = Node(self._web3)
-        self.load_networks()
+        self._start_listen_on_new_networks()
         ipport = ('', 5000)
-        logger.info('Starting server')
         app = ApiApp(self)
         http_server = WSGIServer(ipport, app, log=None)
         logger.info('Server is running on {}'.format(ipport))
@@ -56,12 +58,17 @@ class Trustlines:
             self.contracts = json.load(data_file)
 
     def new_network(self, address):
+        if address in self.networks:
+            return
+        logger.info('New network: {}'.format(address))
         self.currency_network_graphs[address] = CurrencyNetworkGraph()
         self.currency_network_proxies[address] = CurrencyNetwork(self._web3, self.contracts['CurrencyNetwork']['abi'], address)
         self._start_listen_network(address)
 
     def load_networks(self):
-        for address in self.config['tokens']:
+        with open('networks') as f:
+            networks = f.read().splitlines()
+        for address in networks:
             self.new_network(address)
 
     def get_networks_of_user(self, user_address):
@@ -74,10 +81,18 @@ class Trustlines:
     def _start_listen_network(self, address):
         graph = self.currency_network_graphs[address]
         proxy = self.currency_network_proxies[address]
-        proxy.start_listen_on_full_sync(_create_on_full_sync(graph))
+        proxy.start_listen_on_full_sync(_create_on_full_sync(graph), self.config.get('syncInterval', 300))
         proxy.start_listen_on_balance(_create_on_balance(graph))
         proxy.start_listen_on_trustline(_create_on_trustline(graph))
         proxy.start_listen_on_transfer()
+
+    def _start_listen_on_new_networks(self):
+        def listen():
+            while True:
+                self.load_networks()
+                sleep(self.config.get('updateNetworksInterval', 120))
+
+        gevent.Greenlet.spawn(listen)
 
 
 def _create_on_balance(graph):
