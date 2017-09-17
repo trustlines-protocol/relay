@@ -13,6 +13,10 @@ def test_both_imbalance_fee():
     assert imbalance_fee(50, 250, 500) == 6
 
 
+def test_from_negative_imbalance_fee():
+    assert imbalance_fee(50, -250, 250) == 6
+
+
 def test_add_more_imbalance_fee():
     assert imbalance_fee(100, -250, 500) == 6
 
@@ -31,6 +35,10 @@ def test_new_balance_decrease():
 
 def test_new_balance_both():
     assert new_balance(20, 250, 500) == -263
+
+
+def test_new_balance_from_negative():
+    assert new_balance(50, -250, 250) == -506
 
 
 

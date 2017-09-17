@@ -5,5 +5,6 @@
     "port": 8545,
     "ssl": false
   },
-  "tokens": []
+  "syncInterval": 300,
+  "updateNetworksInterval": 120
 }
