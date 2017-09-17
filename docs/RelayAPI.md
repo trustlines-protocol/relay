@@ -179,37 +179,89 @@ Returns the cheapest path and maximal sendable amount with calculated fees if ex
 ## `TODO` Poll events of specific currency network
 Returns all events of a specific currency network
 
-`GET /networks/:networkAddress/users/:userAddress/events?type=:eventType&fromBlock=:fromBlock&toBlock=:toBlock`
+`GET /networks/:networkAddress/users/:userAddress/events?type=:eventType&fromBlock=:fromBlock`
 
 ### Parameters
-- `type` - Type of event (i.e. `CreditLineUpdated`, `CreditLineAccepted`, `Transferred`)
+- `type` - Type of event (i.e. `CreditineUpdate`, `Transfer`, `BalanceUpdate`)
 - `fromBlock`- Start of range for events
 - `toBlock` - End of range for events
 
 ### Response
 ```javascript
 [
-    {
-        "blockNumber": 1,
-        "event": Transfered(networkAddress, receiverAddress, amount, timestamp)
-    },
-    {
-        "blockNumber": 2,
-        "event": CreditLineRequested(networkAddress, receiverAddress, amount, timestamp)
-    },
-    ...
+  {
+    "blockNumber": 370,
+    "event": "CreditlineUpdateRequest",
+    "transactionHash": "0x...",
+    "_creditor": "0x...",
+    "_debtor": "0x...",
+    "_value": 123
+  },
+  {
+    "blockNumber": 834,
+    "event": "CreditlineUpdate",
+    "transactionHash": "0x...",
+    "_creditor": "0x...",
+    "_debtor": "0x...",
+    "_value": 123
+  },
+  {
+    "blockNumber": 1383,
+    "event": "BalanceUpdate",
+    "transactionHash": "0x...",
+    "_from": "0x...",
+    "_to": "0x...",
+    "_value": 10
+  }
 ]
+```
+
+## Get externally owned user
+Return user information of a externally owned address
+
+`GET /users/:userAddress`
+
+```javascript
+{
+  "proxyAddress": "0x...",
+  "balance": "123.45555",
+  "networks": ["0x...", "0x...", ...]
+}
 ```
 
 ## Get all events
 Return bundled events for specific user
 
-`GET /events/:userAddress?fromBlock=:from&toBlock=:to`
+`GET /users/:userAddress/events?fromBlock=:from`
 
 ```javascript
 [
   {
-
+    "blockNumber": 370,
+    "networkAddress": "0x...",
+    "event": "CreditlineUpdateRequest",
+    "transactionHash": "0x...",
+    "_creditor": "0x...",
+    "_debtor": "0x...",
+    "_value": 123
+  },
+  {
+    "blockNumber": 834,
+    "networkAddress": "0x...",
+    "event": "CreditlineUpdate",
+    "transactionHash": "0x...",
+    "_creditor": "0x...",
+    "_debtor": "0x...",
+    "_value": 123
+  },
+  {
+    "blockNumber": 1383,
+    "networkAddress": "0x...",
+    "event": "BalanceUpdate",
+    "transactionHash": "0x...",
+    "_from": "0x...",
+    "_to": "0x...",
+    "_value": 10
   }
 ]
 ```
@@ -217,7 +269,7 @@ Return bundled events for specific user
 ## Get transaction infos
 Returns the transaction information
 
-`GET /txinfos/:userAddress`
+`GET /users/:userAddress/txinfos`
 
 ### Response
 ```javascript
@@ -225,6 +277,18 @@ Returns the transaction information
     "balance": "1000",
     "nonce": 15,
     "gasPrice": "10000"
+}
+```
+
+## `NEW` Get balance of externally owned account
+Returns the ETH balance of an externally owned account
+
+`GET /users/:userAddress/balance`
+
+### Response
+```javascript
+{
+    "balance": "12.1009234"
 }
 ```
 
@@ -244,18 +308,6 @@ Remove txId as response instead compute on client
 ```javascript
 {
     "txId"
-}
-```
-
-## `NEW` Get balance of externally owned account
-Returns the ETH balance of an externally owned account
-
-`GET /balances/:eoaAddress`
-
-### Response
-```javascript
-{
-    "balance": "12.1009234"
 }
 ```
 

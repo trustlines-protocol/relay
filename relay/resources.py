@@ -1,5 +1,19 @@
-from flask import request
-from flask_restful import  Resource
+import tempfile
+
+from flask import request, send_file, make_response
+from flask.views import MethodView
+from flask_restful import Resource
+from webargs import fields, ValidationError
+from webargs.flaskparser import use_args
+from marshmallow import validate
+
+from relay.utils import is_address,  merge_two_dicts, trim_args, get_event_direction
+from relay.currency_network import CurrencyNetwork
+
+
+def validate_address(address):
+    if not is_address(address):
+        raise ValidationError('Not a valid address')
 
 
 class NetworkList(Resource):
@@ -71,7 +85,7 @@ class TrustlineList(Resource):
         accounts = []
         for friend_address in friends:
             trustline = {}
-            trustline.update({'bAddress': friend_address})
+            trustline.update({'address': friend_address})
             trustline.update(graph.get_account_sum(user_address, friend_address).as_dict())
             accounts.append(trustline)
         return accounts
@@ -84,7 +98,10 @@ class Trustline(Resource):
 
     def get(self, network_address, a_address, b_address):
         graph = self.trustlines.currency_network_graphs[network_address]
-        return graph.get_account_sum(a_address, b_address).as_dict()
+        trustline = {}
+        trustline.update({'address': b_address})
+        trustline.update(graph.get_account_sum(a_address, b_address).as_dict())
+        return trustline
 
 
 class Spendable(Resource):
@@ -109,13 +126,80 @@ class SpendableTo(Resource):
         }
 
 
+class Event(Resource):
+
+    def __init__(self, trustlines):
+        self.trustlines = trustlines
+
+    args = {
+        'fromBlock': fields.Int(required=False, missing=0),
+        'type': fields.Str(required=False,
+                           validate=validate.OneOf(CurrencyNetwork.event_types),
+                           missing=None)
+    }
+
+    @use_args(args)
+    def get(self, args, network_address, user_address):
+        proxy = self.trustlines.currency_network_proxies[network_address]
+        fromBlock = args['fromBlock']
+        type = args['type']
+        if type is not None:
+            events = proxy.get_events(type, user_address, fromBlock)
+        else:
+            events = proxy.get_all_events(user_address, fromBlock)
+        return sorted([{'blockNumber': event.get('blockNumber'),
+                        'type': event.get('event'),
+                        'transactionId': event.get('transactionHash'),
+                        'networkAddress': event.get('address'),
+                        'status': self.trustlines.node.get_block_status(event.get('blockNumber')),
+                        'timestamp': self.trustlines.node.get_block_time(event.get('blockNumber')),
+                        'amount': event.get('args').get('_value'),
+                        'direction': get_event_direction(event, user_address)[0],
+                        'address': get_event_direction(event, user_address)[1]} for event in events], key=lambda x: x.get('blockNumber', 0))
+
+
+class EventList(Resource):
+
+    def __init__(self, trustlines):
+        self.trustlines = trustlines
+
+    args = {
+        'fromBlock': fields.Int(required=False, missing=0),
+        'type': fields.Str(required=False,
+                           validate=validate.OneOf(CurrencyNetwork.event_types),
+                           missing=None)
+    }
+
+    @use_args(args)
+    def get(self, args, user_address):
+        events = []
+        type = args['type']
+        fromBlock = args['fromBlock']
+        networks = self.trustlines.networks
+        for network_address in networks:
+            proxy = self.trustlines.currency_network_proxies[network_address]
+            if type is not None:
+                events = events + proxy.get_events(type, user_address, fromBlock)
+            else:
+                events = events + proxy.get_all_events(user_address, fromBlock)
+        return sorted([{'blockNumber': event.get('blockNumber'),
+                        'type': event.get('event'),
+                        'transactionId': event.get('transactionHash'),
+                        'networkAddress': event.get('address'),
+                        'status': self.trustlines.node.get_block_status(event.get('blockNumber')),
+                        'timestamp': self.trustlines.node.get_block_time(event.get('blockNumber')),
+                        'direction': get_event_direction(event, user_address)[0],
+                        'amount': event.get('args').get('_value'),
+                        'address': get_event_direction(event, user_address)[1]} for event in events], key=lambda x: x.get('blockNumber', 0))
+
+
 class TransactionInfos(Resource):
 
     def __init__(self, trustlines):
         self.trustlines = trustlines
 
-    def get(self, address):
-        return self.trustlines.node.get_tx_infos(address)
+    def get(self, user_address):
+        return self.trustlines.node.get_tx_infos(user_address)
 
 
 class Relay(Resource):
@@ -132,9 +216,9 @@ class Balance(Resource):
     def __init__(self, trustlines):
         self.trustlines = trustlines
 
-    def get(self, address):
+    def get(self, user_address):
         return {
-            'balance': self.trustlines.node.balance(address)
+            'balance': self.trustlines.node.balance(user_address)
         }
 
 
@@ -147,3 +231,72 @@ class Block(Resource):
         return {
             'blocknumber': self.trustlines.node.blocknumber
         }
+
+
+class RequestEther(Resource):
+
+    def __init__(self, trustlines):
+        self.trustlines = trustlines
+
+    def post(self):
+        address = request.json['address']
+        return {
+            'txhash': self.trustlines.node.send_ether(address)
+        }
+
+
+class Path(Resource):
+
+    def __init__(self, trustlines):
+        self.trustlines = trustlines
+
+    args = {
+        'value': fields.Int(required=False, missing=1),
+        'maxHops': fields.Int(required=False, missing=None),
+        'maxFees': fields.Int(required=False, missing=None),
+        'from': fields.Str(required=True, validate=validate_address),
+        'to': fields.Str(required=True, validate=validate_address)
+    }
+
+    @use_args(args)
+    def post(self, args, address):
+        cost, path = self.trustlines.currency_network_graphs[address].find_path(
+            source=args['from'],
+            target=args['to'],
+            value=args['value'],
+            max_fees=args['maxFees'],
+            max_hops=args['maxHops'])
+
+        gas = self.trustlines.currency_network_proxies[address].estimate_gas_for_transfer(
+            args['from'],
+            args['to'],
+            args['value'],
+            cost*2,
+            path[1:])
+        return {'path': path,
+                'estimatedGas': gas,
+                'fees': cost}
+
+
+class GraphImage(MethodView):
+
+    def __init__(self, trustlines):
+        self.trustlines = trustlines
+
+    def get(self, address):
+        filename = tempfile.mktemp(".gif")
+        self.trustlines.currency_network_graphs[address].draw(filename)
+        return send_file(filename, mimetype='image/gif')
+
+
+class GraphDump(MethodView):
+
+    def __init__(self, trustlines):
+        self.trustlines = trustlines
+
+    def get(self, address):
+        response = make_response(self.trustlines.currency_network_graphs[address].dump())
+        cd = 'attachment; filename=networkdump.csv'
+        response.headers['Content-Disposition'] = cd
+        response.mimetype = 'text/csv'
+        return response

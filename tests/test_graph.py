@@ -1,6 +1,8 @@
 import pytest
 
-from relay.graph import Friendship, CurrencyNetworkGraph
+from relay.graph import CurrencyNetworkGraph
+from relay.currency_network import Trustline
+
 
 addresses = ['0x0A', '0x0B', '0x0C', '0x0D', '0x0E']
 A, B, C, D, E = addresses
@@ -10,30 +12,30 @@ G = '0x10'
 
 @pytest.fixture
 def friendsdict():
-    return {A: [Friendship(B, 100, 150, 0),
-                Friendship(E, 500, 550, 0)],
-            B: [Friendship(C, 200, 250, 0)],
-            C: [Friendship(D, 300, 350, 0)],
-            D: [Friendship(E, 400, 450, 0)],
+    return {A: [Trustline(B, 100, 150),
+                Trustline(E, 500, 550)],
+            B: [Trustline(C, 200, 250)],
+            C: [Trustline(D, 300, 350)],
+            D: [Trustline(E, 400, 450)],
             }
 
 
 @pytest.fixture
 def simplefriendsdict():
-    return {A: [Friendship(B, 5, 0 , 0)]
+    return {A: [Trustline(B, 5, 0)]
             }
 
 
 @pytest.fixture
 def balances_friendsdict():
-    return {A: [Friendship(B, 20, 30 , 10)],
-            B: [Friendship(C, 200, 250, -20)]
+    return {A: [Trustline(B, 20, 30 , balance_ab=10)],
+            B: [Trustline(C, 200, 250, balance_ab=-20)]
             }
 
 
 @pytest.fixture
 def unsymnetricfriendsdict():
-    return {A: [Friendship(B, 2, 5 , 0)]
+    return {A: [Trustline(B, 2, 5 , 0)]
             }
 
 
@@ -81,23 +83,23 @@ def test_account(community_with_trustlines):
     community = community_with_trustlines
     account = community.get_account_sum(D, C)
     assert account.balance == 0
-    assert account.trustline_given == 350
-    assert account.trustline_received == 300
+    assert account.creditline_given == 350
+    assert account.creditline_received == 300
 
 
 def test_account_sum(community_with_trustlines):
     community = community_with_trustlines
     account = community.get_account_sum(A)
     assert account.balance == 0
-    assert account.trustline_given == 600
-    assert account.trustline_received == 700
+    assert account.creditline_given == 600
+    assert account.creditline_received == 700
 
 
 def test_update_trustline(community_with_trustlines):
     community = community_with_trustlines
-    assert community.get_account_sum(B, A).trustline_received == 100
-    community.update_trustline(A, B, 200)
-    assert community.get_account_sum(B, A).trustline_received == 200
+    assert community.get_account_sum(B, A).creditline_received == 100
+    community.update_creditline(A, B, 200)
+    assert community.get_account_sum(B, A).creditline_received == 200
 
 
 def test_update_balance(community_with_trustlines):
@@ -111,108 +113,127 @@ def test_update_balance(community_with_trustlines):
 def test_transfer(community_with_trustlines):
     community = community_with_trustlines
     assert community.get_account_sum(B).balance == 0
-    community.transfer(A, B, 20)
-    assert community.get_account_sum(B).balance == 20
+    community.transfer(A, B, 100)
+    assert community.get_account_sum(B).balance == 100 + 2
 
 
 def test_mediated_transfer(community_with_trustlines):
     community = community_with_trustlines
-    community.mediated_transfer(A, C, 100)
-    assert community.get_account_sum(A).balance == -100
-    assert community.get_account_sum(B).balance == 0
-    assert community.get_account_sum(C).balance == 100
-    assert community.get_account_sum(A, B).balance == -100
-    assert community.get_account_sum(B, C).balance == -100
+    community.mediated_transfer(A, C, 50)
+    assert community.get_account_sum(A).balance == -50 + -2
+    assert community.get_account_sum(B).balance == 0 + 1
+    assert community.get_account_sum(C).balance == 50 + 1
+    assert community.get_account_sum(A, B).balance == -50 + -2
+    assert community.get_account_sum(B, C).balance == -50 + -1
 
 
 def test_spent(community_with_trustlines):
     community = community_with_trustlines
-    assert community.get_account_sum(A).trustline_left_received == 700
+    assert community.get_account_sum(A).creditline_left_received == 700
     community.transfer(A, B, 70)
-    assert community.get_account_sum(A).trustline_left_received == 630
+    assert community.get_account_sum(A).creditline_left_received == 630 - 1
     community.transfer(E, A, 20)
-    assert community.get_account_sum(A).trustline_left_received == 650
+    assert community.get_account_sum(A).creditline_left_received == 650
 
 
 def test_path(community_with_trustlines):
     community = community_with_trustlines
-    path = community.find_path(A, B, 10)
+    cost, path = community.find_path(A, B, 10)
     assert path == [A, B]
-    path = community.find_path(A, D, 10)
+    assert cost == 1
+    cost, path = community.find_path(A, D, 10)
     assert path == [A, E, D]
+    assert cost == 2
 
 
 def test_no_path(community_with_trustlines):
     community = community_with_trustlines
-    community.update_trustline(F, G, 100)
-    path = community.find_path(G, F, 100)
+    community.update_creditline(F, G, 100)
+    cost, path = community.find_path(G, F, 10)
     assert path == [G, F]
-    path = community.find_path(A, G, 10)  # no path at all
+    cost, path = community.find_path(A, G, 10)  # no path at all
     assert path == []
 
 
 def test_no_capacity(community_with_trustlines):
     community = community_with_trustlines
-    path = community.find_path(A, E, 550)
+    cost, path = community.find_path(A, E, 544)
     assert path == [A, E]
-    path = community.find_path(A, E, 551)
+    cost, path = community.find_path(A, E, 545)
     assert path == []
-    path = community.find_path(E, A, 500)
+    cost, path = community.find_path(E, A, 495)
     assert path == [E, A]
-    path = community.find_path(E, A, 501)
+    cost, path = community.find_path(E, A, 496)
     assert path == []
 
 
 def test_no_direction(community_with_trustlines):
     community = community_with_trustlines
-    community.update_trustline(F, G, 100)
-    path = community.find_path(G, F, 10)
+    community.update_creditline(F, G, 100)
+    cost, path = community.find_path(G, F, 10)
     assert path == [G, F]
-    path = community.find_path(F, G, 10)  # no trustline in this direction
+    cost, path = community.find_path(F, G, 10)  # no creditline in this direction
+    assert path == []
+
+
+def test_max_hops(community_with_trustlines):
+    community = community_with_trustlines
+    cost, path = community.find_path(A, D, 10)
+    assert path == [A, E, D]
+    cost, path = community.find_path(A, D, 10, max_hops=1)
+    assert path == []
+
+
+def test_max_fees(community_with_trustlines):
+    community = community_with_trustlines
+    cost, path = community.find_path(A, D, 110)
+    assert path == [A, E, D]
+    assert cost == 4
+    cost, path = community.find_path(A, D, 110, max_fees=3)
     assert path == []
 
 
 def test_send_back(simple_community):
     community = simple_community
     assert community.get_account_sum(A, B).balance == 0
-    assert community.find_path(A, B, 1) == []
-    assert community.find_path(B, A, 1) == [B, A]
-    assert community.mediated_transfer(B, A, 1)
-    assert community.get_account_sum(A, B).balance == 1
-    assert community.find_path(A, B, 1) == [A, B]
-    assert community.find_path(B, A, 1) == [B, A]
-    assert community.mediated_transfer(A, B, 1)
-    assert community.get_account_sum(A, B).balance == 0
+    assert community.find_path(A, B, 1)[1] == []
+    assert community.find_path(B, A, 1)[1] == [B, A]
+    assert community.mediated_transfer(B, A, 1) == 1
+    assert community.get_account_sum(A, B).balance == 1 + 1
+    assert community.find_path(A, B, 1)[1] == [A, B]
+    assert community.find_path(B, A, 1)[1] == [B, A]
+    assert community.mediated_transfer(A, B, 1) == 0
+    assert community.get_account_sum(A, B).balance == 0 + 1
 
 
 def test_send_more(unsymmetric_community):
     community = unsymmetric_community
     assert community.get_account_sum(A, B).balance == 0
-    assert community.get_account_sum(A, B).trustline_left_received == 5
-    assert community.get_account_sum(B, A).trustline_left_received == 2
-    assert community.find_path(A, B, 5) == [A, B]
-    assert community.find_path(B, A, 2) == [B, A]
-    assert community.mediated_transfer(A, B, 3)
+    assert community.get_account_sum(A, B).creditline_left_received == 5
+    assert community.get_account_sum(B, A).creditline_left_received == 2
+    assert community.find_path(A, B, 4)[1] == [A, B]
+    assert community.find_path(B, A, 1)[1] == [B, A]
+    assert community.mediated_transfer(A, B, 2) == 1
     assert community.get_account_sum(B, A).balance == 3
-    assert community.get_account_sum(B, A).trustline_left_received == 5
-    assert community.find_path(A, B, 2) == [A, B]
-    assert community.find_path(B, A, 5) == [B, A]
-    assert community.mediated_transfer(B, A, 5)
+    assert community.get_account_sum(B, A).creditline_left_received == 5
+    assert community.find_path(A, B, 1)[1] == [A, B]
+    assert community.find_path(B, A, 4)[1] == [B, A]
+    assert community.mediated_transfer(B, A, 4)
     assert community.get_account_sum(A, B).balance == 2
 
 
 def test_send_more_nopath(unsymmetric_community):
     community = unsymmetric_community
     assert community.get_account_sum(A, B).balance == 0
-    assert community.get_account_sum(A, B).trustline_left_received == 5
-    assert community.get_account_sum(B, A).trustline_left_received == 2
-    assert community.find_path(A, B, 5.1) == []
-    assert community.find_path(B, A, 2.1) == []
+    assert community.get_account_sum(A, B).creditline_left_received == 5
+    assert community.get_account_sum(B, A).creditline_left_received == 2
+    assert community.find_path(A, B, 5)[1] == []
+    assert community.find_path(B, A, 3)[1] == []
     assert community.mediated_transfer(A, B, 3)
-    assert community.get_account_sum(B, A).balance == 3
-    assert community.get_account_sum(B, A).trustline_left_received == 5
-    assert community.find_path(A, B, 2.1) == []
-    assert community.find_path(B, A, 5.1) == []
+    assert community.get_account_sum(B, A).balance == 4
+    assert community.get_account_sum(B, A).creditline_left_received == 6
+    assert community.find_path(A, B, 3)[1] == []
+    assert community.find_path(B, A, 6)[1] == []
     assert community.mediated_transfer(B, A, 5)
     assert community.get_account_sum(A, B).balance == 2
 
