@@ -110,9 +110,7 @@ class Spendable(Resource):
         self.trustlines = trustlines
 
     def get(self, network_address, a_address):
-        return {
-            'totalSpendable': self.trustlines.currency_network_proxies[network_address].spendable(a_address)
-        }
+        return self.trustlines.currency_network_proxies[network_address].spendable(a_address)
 
 
 class SpendableTo(Resource):
@@ -121,9 +119,7 @@ class SpendableTo(Resource):
         self.trustlines = trustlines
 
     def get(self, network_address, a_address, b_address):
-        return {
-            'spendable': self.trustlines.currency_network_proxies[network_address].spendableTo(a_address, b_address)
-        }
+        return self.trustlines.currency_network_proxies[network_address].spendableTo(a_address, b_address)
 
 
 class Event(Resource):
@@ -217,9 +213,7 @@ class Balance(Resource):
         self.trustlines = trustlines
 
     def get(self, user_address):
-        return {
-            'balance': self.trustlines.node.balance(user_address)
-        }
+        return self.trustlines.node.balance(user_address)
 
 
 class Block(Resource):
@@ -228,9 +222,7 @@ class Block(Resource):
         self.trustlines = trustlines
 
     def get(self):
-        return {
-            'blocknumber': self.trustlines.node.blocknumber
-        }
+        return self.trustlines.node.blocknumber
 
 
 class RequestEther(Resource):
@@ -240,9 +232,7 @@ class RequestEther(Resource):
 
     def post(self):
         address = request.json['address']
-        return {
-            'txhash': self.trustlines.node.send_ether(address)
-        }
+        return self.trustlines.node.send_ether(address)
 
 
 class Path(Resource):

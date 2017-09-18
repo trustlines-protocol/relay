@@ -35,7 +35,7 @@ def ApiApp(trustlines):
     api.add_resource(ContactList, '/networks/<address:network_address>/users/<address:user_address>/contacts', resource_class_args=[trustlines])
     api.add_resource(TrustlineList, '/networks/<address:network_address>/users/<address:user_address>/trustlines', resource_class_args=[trustlines])
     api.add_resource(Trustline, '/networks/<address:network_address>/users/<address:a_address>/trustlines/<address:b_address>', resource_class_args=[trustlines])
-    api.add_resource(Spendable, '/networks/<address:network_address>/users/<address:a_address>/spendables', resource_class_args=[trustlines])
+    api.add_resource(Spendable, '/networks/<address:network_address>/users/<address:a_address>/spendable', resource_class_args=[trustlines])
     api.add_resource(SpendableTo, '/networks/<address:network_address>/users/<address:a_address>/spendables/<address:b_address>', resource_class_args=[trustlines])
     api.add_resource(Event, '/networks/<address:network_address>/users/<address:user_address>/events', resource_class_args=[trustlines])
     api.add_resource(EventList, '/users/<address:user_address>/events', resource_class_args=[trustlines])
