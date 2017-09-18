@@ -20,7 +20,7 @@ class Node:
         return self._web3.eth.blockNumber
 
     def balance(self, address):
-        wei = int(self._web3.eth.getBalance(address), 0)
+        wei = self._web3.eth.getBalance(address)
         return str(self._web3.fromWei(wei, 'ether'))
 
     def send_ether(self, address):
@@ -40,7 +40,7 @@ class Node:
         current_block_number = self._web3.eth.blockNumber
         if block_number is None:
             return 'sent'
-        elif (current_block_number - block_number) <  5:
+        elif (current_block_number - block_number) < 5:
             return 'pending'
         else:
             return 'confirmed'

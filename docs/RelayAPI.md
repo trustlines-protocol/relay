@@ -10,7 +10,7 @@ Response format is based on some best practices. (see https://github.com/adnan-k
 In case of an error, the response of the relay API will have the following format:
 ```javascript
 {
-    "error": "<errorMessage>"
+    "message": "<errorMessage>"
 }
 ```
 
@@ -42,6 +42,7 @@ Returns detailed information of currency network
     "name": "Euro",
     "abbreviation": "EUR",
     "symbol": "€",
+    "decimals": 4,
     "numUsers": "1000",
     ... // TODO other information of currency network
 }
@@ -127,27 +128,18 @@ Returns amount a user can spend in a currency network.
 
 ### Response
 ```javascript
-{
-  "spendable": "1000"
-}
+1000
 ```
 
 ## Get spendable amount to user
 Returns amount a user can spend in a currency network to another user.
 
-`GET /networks/:networkAddress/users/:addressA/spendable/:addressB`
+`GET /networks/:networkAddress/users/:addressA/spendables/:addressB`
 
 ### Response
 ```javascript
-{
-  "spendable": "90"
-}
+90
 ```
-
-### Parameters
-- `ETH` - amount of money that should be transferred through path (optional)
-- `maxHops` - specify maximal hops for path (optional)
-- `maxFees` - specify maximal fees user is ready to pay (optional)
 
 ## Get path
 Returns the cheapest path and maximal sendable amount with calculated fees if existent
@@ -237,9 +229,7 @@ Returns the ETH balance of an externally owned account
 
 ### Response
 ```javascript
-{
-    "balance": "12.1009234"
-}
+"12.1009234"
 ```
 
 ## Relay transaction
@@ -256,14 +246,12 @@ Remove txId as response instead compute on client
 
 ### Response
 ```javascript
-{
-    "txId"
-}
+"txId"
 ```
 
 # Exchange API
 
-## Get balances
+## `TODO` Get balances
 Returns balances of user
 
 `GET networks/:networkAddress/users/:userAddress/exchanges/:currency`
@@ -287,7 +275,7 @@ Returns balances of user
 }
 ```
 
-## Get deposits
+## `TODO` Get deposits
 Returns deposit history within range `start` to `end`
 
 `GET networks/:networkAddress/users/:userAddress/exchanges/:currency/deposits?start=:start&end=:end`
@@ -312,7 +300,7 @@ Returns deposit history within range `start` to `end`
 ]
 ```
 
-## Get withdrawals
+## `TODO` Get withdrawals
 Returns withdrawal history within range `start` to `end`
 
 `GET networks/:networkAddress/users/:userAddress/exchanges/:currency/withdrawals?start=:start&end=:end`
@@ -337,7 +325,7 @@ Returns withdrawal history within range `start` to `end`
 ]
 ```
 
-## Get open orders
+## `TODO` Get open orders
 Returns open orders for pair NetworkCurrency_ExchangeCurrency (i.e. EUR_ETH)
 
 `GET networks/:networkAddress/users/:userAddress/exchanges/:currency/openorders`
@@ -357,7 +345,7 @@ Returns open orders for pair NetworkCurrency_ExchangeCurrency (i.e. EUR_ETH)
 ]
 ```
 
-## Get trade history
+## `TODO` Get trade history
 Returns trade history within range `start` and `end`
 
 `GET networks/:networkAddress/users/:userAddress/exchanges/:currency/orders?start=:startTimestamp&end=:endTimestamp`
@@ -382,7 +370,7 @@ Returns trade history within range `start` and `end`
 ]
 ```
 
-## Place buy order
+## `TODO` Place buy order
 Places a limit buy order
 
 `POST networks/:networkAddress/users/:userAddress/exchanges/:currency/`
