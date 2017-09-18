@@ -15,27 +15,24 @@ In case of an error, the response of the relay API will have the following forma
 ```
 
 ## `TODO` Get all currency networks
-Returns all registered currency networks with high-level information (similar to `GET tokens/`)
+Returns all registered currency networks with high-level information
 
 `GET /networks`
 
 ### Response
 ```javascript
 [
-    {
-        "address": "0xabef1022e1ff..."
-        "name": "Euro",
-        "abbreviation": "EUR",
-        "symbol": "€" // optional
-    },
-    ... // other currency networks
+  {
+    "address": "0xabef1022e1ff..."
+    "name": "Euro",
+    "abbreviation": "EUR"
+  },
+  ... // other currency networks
 ]
 ```
-### Used Contract
-Registry Contract
 
-## `TODO` Get detailed information of currency network
-Returns detailed information of currency network (similar to `GET tokens/:address`)
+## Get detailed information of currency network
+Returns detailed information of currency network
 
 `GET /networks/:address`
 
@@ -46,12 +43,12 @@ Returns detailed information of currency network (similar to `GET tokens/:addres
     "abbreviation": "EUR",
     "symbol": "€",
     "numUsers": "1000",
-    ... // other information of currency network
+    ... // TODO other information of currency network
 }
 ```
 
-## `TODO` Get users in currency network
-Returns all addresses of users in currency network (similar to `GET tokens/:token_address/users`)
+## Get users in currency network
+Returns all addresses of users in currency network
 
 `GET /networks/:networkAddress/users`
 
@@ -61,27 +58,23 @@ Returns all addresses of users in currency network (similar to `GET tokens/:toke
 ```
 
 ## `TODO` Get user information of currency network
-Returns detailed information of currency network in user context (similar to `GET tokens/:token_address/users/:user_address`)
+Returns detailed information of currency network in user context
 
 `GET /networks/:networkAddress/users/:userAddress`
 
 ### Response
 ```javascript
 {
-    "name": "Euro",
-    "abbreviation": "EUR",
-    "symbol": "€",
     "balance": "1000", // sum over balances of all trustlines user has in currency network
-    "creditLinesGiven": "2000", // sum of all creditlines given by user in currency network
-    "creditLinesReceived": "3000", // sum of all creditlines received by user in currency network
-    "numTrustlines": 10 // amount of trustlines user has
+    "given": "2000", // sum of all creditlines given by user in currency network
+    "received": "3000", // sum of all creditlines received by user in currency network
+    "leftGiven": "1000", // given - balance
+    "leftReceived": "4000" // received + balance
 }
 ```
 
-## `TODO` Get contacts of user
-Returns a list of addresses of all contacts of the user (similar to `GET tokens/:token_address/users/:user_address/friends`)
-
-(doesn"t communicate with contracts)
+## Get contacts of user
+Returns a list of addresses an user has trustlines with
 
 `GET /networks/:networkAddress/users/:userAddress/contacts`
 
@@ -90,65 +83,64 @@ Returns a list of addresses of all contacts of the user (similar to `GET tokens/
 ["0xac33ffg3g...", "0xec33ffg3g...", ...]
 ```
 
-## `TODO` Get all trustlines of user
-Returns a list of trustlines a user has in a currency network (similar to `GET tokens/:token_address/users/:user_address/accounts`)
-
-**PROBLEM: rounding decimal numbers in javascript (how does web3 do it?)**
+## Get all trustlines of user
+Returns a list of trustlines an user has in a specific currency network
 
 `GET /networks/:networkAddress/users/:userAddress/trustlines`
 
 ### Response
 ```javascript
 [
-    {
-        "addressB": "0xb33f5gaac...", // address of user B
-        "balance": "100", // balance of trustline from POV of user A
-        "given": "500", // credit line given by A
-        "leftGiven": "400" // given - balance
-        "received": "600", // credit line received from B
-        "leftReceived": "700" // received + balance
-        "interestRate": "0.1" // PROBLEM: rounding in js
-    },
-    ... // other trustlines
+  {
+    "address": "0xb33f5gaac...", // address of user B
+    "balance": "100", // balance of trustline from POV of user A
+    "given": "500", // credit line given by A
+    "leftGiven": "400" // given - balance
+    "received": "600", // credit line received from B
+    "leftReceived": "700" // received + balance
+    "interestRate": "0.1" // TODO PROBLEM: rounding in js
+  },
+  ... // other trustlines
 ]
 ```
 
-## `TODO` Get trustline to user
-Return a trustline between A and B in a currency network if one exists. (similar to `GET tokens/:token_address/users/:a_address/accounts/:b_address`)
+## Get trustline to user
+Return a trustline between A and B in a currency network if one exists.
 
 `GET /networks/:networkAddress/users/:userAddressA/trustlines/:userAddressB`
 
 ### Response
 ```javascript
 {
-    "balance": "100", // balance of trustline from POV of user A
-    "given": "500", // credit line given by A
-    "received": "600", // credit line received from B
-    "interestRate": "0.1" // PROBLEM: rounding in js
+  "address": "0x...", // address of user B
+  "balance": "100", // balance of trustline from POV of user A
+  "given": "500", // credit line given by A
+  "received": "600", // credit line received from B
+  "interestRate": "0.1" // PROBLEM: rounding in js
 }
 ```
 
-## `NEW` Get total spendable amount
+## Get total spendable amount
 Returns amount a user can spend in a currency network.
 
-`GET /networks/:networkAddress/users/:addressA/spendables`
+`GET /networks/:networkAddress/users/:addressA/spendable`
 
 ### Response
 ```javascript
 {
-    "spendable": "1000"
+  "spendable": "1000"
 }
 ```
 
-## `NEW` Get spendable amount to user
+## Get spendable amount to user
 Returns amount a user can spend in a currency network to another user.
 
-`GET /networks/:networkAddress/users/:addressA/spendables/:addressB`
+`GET /networks/:networkAddress/users/:addressA/spendable/:addressB`
 
 ### Response
 ```javascript
 {
-    "spendable": "90"
+  "spendable": "90"
 }
 ```
 
@@ -157,8 +149,8 @@ Returns amount a user can spend in a currency network to another user.
 - `maxHops` - specify maximal hops for path (optional)
 - `maxFees` - specify maximal fees user is ready to pay (optional)
 
-## `TODO` Get path
-Returns the cheapest path and maximal sendable amount with calculated fees if existent (similar to `GET tokens/:token_address/users/:a_address/path/:b_address/value/:value`)
+## Get path
+Returns the cheapest path and maximal sendable amount with calculated fees if existent
 
 `GET /networks/:networkAddress/users/:aAddress/path/:bAddress?value=:value&maxHops=:maxHops&maxFees=:maxFees`
 
@@ -171,12 +163,12 @@ Returns the cheapest path and maximal sendable amount with calculated fees if ex
 ```javascript
 {
     "path": ["0xabc123bb...", "0xeebc3bb...", ...], // addresses of users in path
-    "maxSpendable": "1200.12",
+    "estimatedGas": "12000000",
     "fees": "0.12" // fees for calculated path
 }
 ```
 
-## `TODO` Poll events of specific currency network
+## Poll events of specific currency network
 Returns all events of a specific currency network
 
 `GET /networks/:networkAddress/users/:userAddress/events?type=:eventType&fromBlock=:fromBlock`
@@ -191,32 +183,27 @@ Returns all events of a specific currency network
 [
   {
     "blockNumber": 370,
-    "event": "CreditlineUpdateRequest",
-    "transactionHash": "0x...",
-    "_creditor": "0x...",
-    "_debtor": "0x...",
-    "_value": 123
+    "type": "CreditlineUpdateRequest", // "CreditineUpdate" | "CreditlineUpdateRequest" | "Transfer" | "ChequeCashed"
+    "transactionId": "0x...", // transaction hash
+    "networkAddress": "0x...", // address of currency network where event was emitted
+    "status": "confirmed", // "sent" | "pending" | "confirmed"
+    "timestamp": 1505727230, // UNIX timestamp
+    "amount": "123",
+    "direction": "sent", // "sent" or "received"
+    "address": "0x..." // address of counterparty
   },
-  {
-    "blockNumber": 834,
-    "event": "CreditlineUpdate",
-    "transactionHash": "0x...",
-    "_creditor": "0x...",
-    "_debtor": "0x...",
-    "_value": 123
-  },
-  {
-    "blockNumber": 1383,
-    "event": "BalanceUpdate",
-    "transactionHash": "0x...",
-    "_from": "0x...",
-    "_to": "0x...",
-    "_value": 10
-  }
+  // more events
 ]
 ```
 
-## Get externally owned user
+## Poll all events of user
+Returns all events of user in all currency networks he is in
+
+`GET /networks/:networkAddress/users/:userAddress/events?type=:eventType&fromBlock=:fromBlock`
+
+### Parameters and Response same as above
+
+## `TODO` Get externally owned user
 Return user information of a externally owned address
 
 `GET /users/:userAddress`
@@ -227,43 +214,6 @@ Return user information of a externally owned address
   "balance": "123.45555",
   "networks": ["0x...", "0x...", ...]
 }
-```
-
-## Get all events
-Return bundled events for specific user
-
-`GET /users/:userAddress/events?fromBlock=:from`
-
-```javascript
-[
-  {
-    "blockNumber": 370,
-    "networkAddress": "0x...",
-    "event": "CreditlineUpdateRequest",
-    "transactionHash": "0x...",
-    "_creditor": "0x...",
-    "_debtor": "0x...",
-    "_value": 123
-  },
-  {
-    "blockNumber": 834,
-    "networkAddress": "0x...",
-    "event": "CreditlineUpdate",
-    "transactionHash": "0x...",
-    "_creditor": "0x...",
-    "_debtor": "0x...",
-    "_value": 123
-  },
-  {
-    "blockNumber": 1383,
-    "networkAddress": "0x...",
-    "event": "BalanceUpdate",
-    "transactionHash": "0x...",
-    "_from": "0x...",
-    "_to": "0x...",
-    "_value": 10
-  }
-]
 ```
 
 ## Get transaction infos
