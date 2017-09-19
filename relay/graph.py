@@ -149,7 +149,7 @@ class AccountSummary(object):
                 'given': self.creditline_given,
                 'received': self.creditline_received,
                 'leftGiven': self.creditline_left_given,
-                'leftReceived' : self.creditline_left_received}
+                'leftReceived': self.creditline_left_received}
 
 
 class CurrencyNetworkGraph(object):
@@ -266,11 +266,11 @@ class CurrencyNetworkGraph(object):
         writer.writeheader()
         for u, v, d in self.graph.edges(data=True):
             account = Account(d, u, v)
-            writer.writerow({ 'Address A': account.a,
-                              'Address B': account.b,
-                              'Balance AB': account.balance,
-                              'Creditline AB': account.creditline,
-                              'Creditline BA': account.reverse_creditline})
+            writer.writerow({'Address A': account.a,
+                             'Address B': account.b,
+                             'Balance AB': account.balance,
+                             'Creditline AB': account.creditline,
+                             'Creditline BA': account.reverse_creditline})
         return output.getvalue()
 
     def _cost_func_fast_reverse(self, b, a, data, value):
@@ -300,8 +300,13 @@ class CurrencyNetworkGraph(object):
         if value is None:
             value = 1
         try:
-            cost, path = find_path(self.graph, target, source, self._cost_func_fast_reverse, value, max_hops=max_hops, max_fees=max_fees)
-        except (nx.NetworkXNoPath, KeyError): # key error for if source or target is not in graph
+            cost, path = find_path(self.graph,
+                                   target, source,
+                                   self._cost_func_fast_reverse,
+                                   value,
+                                   max_hops=max_hops,
+                                   max_fees=max_fees)
+        except (nx.NetworkXNoPath, KeyError):  # key error for if source or target is not in graph
             cost, path = 0, []
         return cost, list(reversed(path))
 

@@ -2,18 +2,17 @@ import json
 import logging
 
 import gevent
-from web3 import Web3, RPCProvider
-from gevent.wsgi import WSGIServer
 from gevent import sleep
+from gevent.wsgi import WSGIServer
+from web3 import Web3, RPCProvider
 
-from relay.node import Node
-from relay.graph import CurrencyNetworkGraph
+from relay.api.app import ApiApp
 from relay.currency_network import CurrencyNetwork
-from relay.logger import getLogger
-from relay.app import ApiApp
+from relay.graph import CurrencyNetworkGraph
+from relay.logger import get_logger
+from relay.node import Node
 
-
-logger = getLogger('trustlines', logging.DEBUG)
+logger = get_logger('trustlines', logging.DEBUG)
 
 
 class Trustlines:
@@ -62,7 +61,9 @@ class Trustlines:
             return
         logger.info('New network: {}'.format(address))
         self.currency_network_graphs[address] = CurrencyNetworkGraph()
-        self.currency_network_proxies[address] = CurrencyNetwork(self._web3, self.contracts['CurrencyNetwork']['abi'], address)
+        self.currency_network_proxies[address] = CurrencyNetwork(self._web3,
+                                                                 self.contracts['CurrencyNetwork']['abi'],
+                                                                 address)
         self._start_listen_network(address)
 
     def load_networks(self):

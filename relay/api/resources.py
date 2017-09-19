@@ -7,7 +7,7 @@ from webargs import fields, ValidationError
 from webargs.flaskparser import use_args
 from marshmallow import validate
 
-from relay.utils import is_address,  merge_two_dicts, trim_args, get_event_direction
+from relay.utils import is_address, get_event_direction
 from relay.currency_network import CurrencyNetwork
 
 
@@ -151,7 +151,8 @@ class Event(Resource):
                         'timestamp': self.trustlines.node.get_block_time(event.get('blockNumber')),
                         'amount': event.get('args').get('_value'),
                         'direction': get_event_direction(event, user_address)[0],
-                        'address': get_event_direction(event, user_address)[1]} for event in events], key=lambda x: x.get('blockNumber', 0))
+                        'address': get_event_direction(event, user_address)[1]} for event in events],
+                      key=lambda x: x.get('blockNumber', 0))
 
 
 class EventList(Resource):
@@ -186,7 +187,8 @@ class EventList(Resource):
                         'timestamp': self.trustlines.node.get_block_time(event.get('blockNumber')),
                         'direction': get_event_direction(event, user_address)[0],
                         'amount': event.get('args').get('_value'),
-                        'address': get_event_direction(event, user_address)[1]} for event in events], key=lambda x: x.get('blockNumber', 0))
+                        'address': get_event_direction(event, user_address)[1]} for event in events],
+                      key=lambda x: x.get('blockNumber', 0))
 
 
 class TransactionInfos(Resource):
