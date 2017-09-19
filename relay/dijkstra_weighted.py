@@ -115,4 +115,3 @@ def find_path(G, source, target, get_fee, value, max_hops=None, max_fees=None):
     except KeyError:
         raise nx.NetworkXNoPath(
             "node %s not reachable from %s" % (source, target))
-

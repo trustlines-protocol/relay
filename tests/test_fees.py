@@ -39,7 +39,3 @@ def test_new_balance_both():
 
 def test_new_balance_from_negative():
     assert new_balance(50, -250, 250) == -506
-
-
-
-

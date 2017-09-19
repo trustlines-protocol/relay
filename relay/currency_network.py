@@ -3,7 +3,7 @@ import gevent
 import socket
 from collections import namedtuple
 
-from relay.logger import getLogger
+from relay.logger import get_logger
 
 
 class Trustline(namedtuple('Trustline',
@@ -16,7 +16,8 @@ class Trustline(namedtuple('Trustline',
         return super(Trustline, cls).__new__(cls, address, creditline_ab, creditline_ba, interest_ab, interest_ba,
                                              fees_outstanding_a, fees_outstanding_b, m_time, balance_ab)
 
-logger = getLogger('currency network', logging.DEBUG)
+
+logger = get_logger('currency network', logging.DEBUG)
 
 
 # Constants
@@ -30,7 +31,7 @@ ChequeCashed = 'ChequeCashed'
 queryBlock = 'latest'
 updateBlock = 'pending'
 
-reconnect_interval = 3 # 3s
+reconnect_interval = 3  # 3s
 
 
 class CurrencyNetwork:
@@ -82,8 +83,23 @@ class CurrencyNetwork:
             list = []
             for friend in self.friends(user):
                 if user < friend:
-                    creditline_ab, creditline_ba, interest_ab, interest_ba, fees_outstanding_a, fees_outstanding_b, mtime, balance_ab = self.account(user, friend)
-                    list.append(Trustline(friend, creditline_ab, creditline_ba, interest_ab, interest_ba, fees_outstanding_a, fees_outstanding_b, mtime, balance_ab))
+                    (creditline_ab,
+                     creditline_ba,
+                     interest_ab,
+                     interest_ba,
+                     fees_outstanding_a,
+                     fees_outstanding_b,
+                     mtime,
+                     balance_ab) = self.account(user, friend)
+                    list.append(Trustline(friend,
+                                          creditline_ab,
+                                          creditline_ba,
+                                          interest_ab,
+                                          interest_ba,
+                                          fees_outstanding_a,
+                                          fees_outstanding_b,
+                                          mtime,
+                                          balance_ab))
             result[user] = list
         return result
 
@@ -155,12 +171,12 @@ class CurrencyNetwork:
             'ChequeCashed': ['_sender', '_receiver'],
         }
         params_1 = {
-            'filter': { types[event_name][0]: user_address },
+            'filter': {types[event_name][0]: user_address},
             'fromBlock': from_block,
             'toBlock': queryBlock
         }
         params_2 = {
-            'filter': { types[event_name][1]: user_address },
+            'filter': {types[event_name][1]: user_address},
             'fromBlock': from_block,
             'toBlock': queryBlock
         }
@@ -168,10 +184,11 @@ class CurrencyNetwork:
         list_2 = self._proxy.pastEvents(event_name, params_2).get(False)
         return list_1 + list_2
 
-    def get_all_events(self, user_address, fromBlock=0):
+    def get_all_events(self, user_address, from_block=0):
         all_events = []
-        for type in CurrencyNetwork.event_types: # FIXME takes too long. web3.py currently doesn't support getAll() to retrieve all events
-            all_events = all_events + self.get_events(type, user_address, fromBlock)
+        for type in CurrencyNetwork.event_types:    # FIXME takes too long.
+                                                    # web3.py currently doesn't support getAll() to retrieve all events
+            all_events = all_events + self.get_events(type, user_address, from_block)
         return all_events
 
     def estimate_gas_for_transfer(self, sender, receiver, value, max_fee, path):

@@ -28,14 +28,14 @@ def simplefriendsdict():
 
 @pytest.fixture
 def balances_friendsdict():
-    return {A: [Trustline(B, 20, 30 , balance_ab=10)],
+    return {A: [Trustline(B, 20, 30, balance_ab=10)],
             B: [Trustline(C, 200, 250, balance_ab=-20)]
             }
 
 
 @pytest.fixture
 def unsymnetricfriendsdict():
-    return {A: [Trustline(B, 2, 5 , 0)]
+    return {A: [Trustline(B, 2, 5, 0)]
             }
 
 
