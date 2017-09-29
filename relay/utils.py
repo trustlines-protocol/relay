@@ -19,7 +19,7 @@ def trim_args(args):
     return trimmed_args
 
 
-def get_event_direction(event, user_address):
+def get_event_from_to(event):
     types = {
         'Transfer': ['_from', '_to'],
         'BalanceUpdate': ['_from', '_to'],
@@ -28,9 +28,14 @@ def get_event_direction(event, user_address):
         'PathPrepared': ['_sender', '_receiver'],
         'ChequeCashed': ['_sender', '_receiver'],
     }
-    _from = types[event.get('event')][0]
-    _to = types[event.get('event')][1]
-    if event.get('args')[_from] == user_address:
-        return ('sent', event.get('args')[_to])
+    _from = event.get('args')[types[event.get('event')][0]]
+    _to = event.get('args')[types[event.get('event')][1]]
+    return _from, _to
+
+
+def get_event_direction(event, user_address):
+    _from, _to = get_event_from_to(event)
+    if _from == user_address:
+        return ('sent', _to)
     else:
-        return ('received', event.get('args')[_from])
+        return ('received', _from)

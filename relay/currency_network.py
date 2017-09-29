@@ -163,7 +163,14 @@ class CurrencyNetwork:
             pass
         self.start_listen_on(TransferEvent, log, {'fromBlock': 'pending', 'toBlock': 'pending'})
 
-    def get_events(self, event_name, user_address, from_block=0):
+    def get_events(self, event_name, user_address=None, from_block=0):
+        if user_address is None:
+            params = {
+                'fromBlock': from_block,
+                'toBlock': queryBlock
+            }
+            return self._proxy.pastEvents(event_name, params).get(False)
+
         types = {
             'Transfer': ['_from', '_to'],
             'CreditlineUpdateRequest': ['_creditor', '_debtor'],
@@ -184,7 +191,7 @@ class CurrencyNetwork:
         list_2 = self._proxy.pastEvents(event_name, params_2).get(False)
         return list_1 + list_2
 
-    def get_all_events(self, user_address, from_block=0):
+    def get_all_events(self, user_address=None, from_block=0):
         all_events = []
         for type in CurrencyNetwork.event_types:    # FIXME takes too long.
                                                     # web3.py currently doesn't support getAll() to retrieve all events

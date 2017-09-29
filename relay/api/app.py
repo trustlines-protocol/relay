@@ -5,8 +5,8 @@ from webargs.flaskparser import parser, abort
 from werkzeug.routing import BaseConverter, ValidationError
 
 from relay.api.resources import GraphDump, GraphImage, RequestEther, User, UserList, Network, NetworkList, \
-    ContactList, TrustlineList, Trustline, Spendable, SpendableTo, Path, Event, EventList, Relay, Balance,\
-    TransactionInfos, Block
+    ContactList, TrustlineList, Trustline, Spendable, SpendableTo, Path, UserEventsNetwork, UserEvents, Relay, Balance,\
+    TransactionInfos, Block, EventsNetwork
 from relay.utils import is_address
 
 
@@ -34,8 +34,9 @@ def ApiApp(trustlines):
         api.add_resource(resource, url, resource_class_args=[trustlines])
 
     add_resource(NetworkList, '/networks')
-    add_resource(Network, '/networks/<address:address>')
-    add_resource(UserList, '/networks/<address:address>/users')
+    add_resource(Network, '/networks/<address:network_address>')
+    add_resource(UserList, '/networks/<address:network_address>/users')
+    add_resource(EventsNetwork, '/networks/<address:network_address>/events')
     add_resource(User, '/networks/<address:network_address>/users/<address:user_address>')
     add_resource(ContactList, '/networks/<address:network_address>/users/<address:user_address>/contacts')
     add_resource(TrustlineList, '/networks/<address:network_address>/users/<address:user_address>/trustlines')
@@ -44,10 +45,10 @@ def ApiApp(trustlines):
     add_resource(Spendable, '/networks/<address:network_address>/users/<address:a_address>/spendable')
     add_resource(SpendableTo,
                  '/networks/<address:network_address>/users/<address:a_address>/spendables/<address:b_address>')
-    add_resource(Event, '/networks/<address:network_address>/users/<address:user_address>/events')
+    add_resource(UserEventsNetwork, '/networks/<address:network_address>/users/<address:user_address>/events')
     add_resource(Path, '/networks/<address:address>/path-info')
 
-    add_resource(EventList, '/users/<address:user_address>/events')
+    add_resource(UserEvents, '/users/<address:user_address>/events')
     add_resource(TransactionInfos, '/users/<address:user_address>/txinfos')
     add_resource(Balance, '/users/<address:user_address>/balance')
 
