@@ -181,12 +181,12 @@ class CurrencyNetworkGraph(object):
 
     @property
     def money_created(self):
-        return sum([abs(edge[2]) for edge in self.graph.edges_iter(data=balance_ab)])
+        return sum([abs(edge[2]) for edge in self.graph.edges(data=balance_ab)])
 
     @property
     def total_creditlines(self):
-        return sum([edge[2] for edge in self.graph.edges_iter(data=creditline_ab)])\
-               + sum([edge[2] for edge in self.graph.edges_iter(data=creditline_ba)])
+        return sum([edge[2] for edge in self.graph.edges(data=creditline_ab)])\
+               + sum([edge[2] for edge in self.graph.edges(data=creditline_ba)])
 
     def get_friends(self, address):
         if address in self.graph:
