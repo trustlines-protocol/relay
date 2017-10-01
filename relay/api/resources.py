@@ -246,6 +246,7 @@ class Relay(Resource):
 
         return transaction_id
 
+
 class Balance(Resource):
 
     def __init__(self, trustlines):

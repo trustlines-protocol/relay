@@ -5,8 +5,8 @@ from webargs.flaskparser import parser, abort
 from werkzeug.routing import BaseConverter, ValidationError
 
 from relay.api.resources import GraphDump, GraphImage, RequestEther, User, UserList, Network, NetworkList, \
-    ContactList, TrustlineList, Trustline, Spendable, SpendableTo, Path, UserEventsNetwork, UserEvents, Relay, Balance,\
-    TransactionInfos, Block, EventsNetwork
+    ContactList, TrustlineList, Trustline, Spendable, SpendableTo, Path, UserEventsNetwork, UserEvents, Relay, \
+    Balance, TransactionInfos, Block, EventsNetwork
 from relay.utils import is_address
 
 
