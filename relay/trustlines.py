@@ -112,9 +112,7 @@ def _create_on_trustline(graph):
 
 def _create_on_full_sync(graph):
     def update_community(graph_rep):
-        logger.info('Syncing whole graph.. ')
         graph.gen_network(graph_rep)
-        logger.info('Syncing whole graph done!')
 
     return update_community
 

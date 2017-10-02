@@ -1,13 +1,13 @@
 import tempfile
 
-from flask import request, send_file, make_response
+from flask import request, send_file, make_response, abort
 from flask.views import MethodView
 from flask_restful import Resource
 from webargs import fields, ValidationError
 from webargs.flaskparser import use_args
 from marshmallow import validate
 
-from relay.utils import is_address, get_event_direction
+from relay.utils import is_address, get_event_direction, get_event_from_to
 from relay.currency_network import CurrencyNetwork
 
 
@@ -37,13 +37,13 @@ class Network(Resource):
     def __init__(self, trustlines):
         self.trustlines = trustlines
 
-    def get(self, address):
+    def get(self, network_address):
         return {
-            'address': address,
-            'name': self.trustlines.currency_network_proxies[address].name,
-            'abbreviation': self.trustlines.currency_network_proxies[address].symbol,
-            'decimals': self.trustlines.currency_network_proxies[address].decimals,
-            'numUsers': len(self.trustlines.currency_network_proxies[address].users)
+            'address': network_address,
+            'name': self.trustlines.currency_network_proxies[network_address].name,
+            'abbreviation': self.trustlines.currency_network_proxies[network_address].symbol,
+            'decimals': self.trustlines.currency_network_proxies[network_address].decimals,
+            'numUsers': len(self.trustlines.currency_network_proxies[network_address].users)
         }
 
 
@@ -52,8 +52,8 @@ class UserList(Resource):
     def __init__(self, trustlines):
         self.trustlines = trustlines
 
-    def get(self, address):
-        return self.trustlines.currency_network_proxies[address].users
+    def get(self, network_address):
+        return self.trustlines.currency_network_proxies[network_address].users
 
 
 class User(Resource):
@@ -122,7 +122,7 @@ class SpendableTo(Resource):
         return self.trustlines.currency_network_proxies[network_address].spendableTo(a_address, b_address)
 
 
-class Event(Resource):
+class UserEventsNetwork(Resource):
 
     def __init__(self, trustlines):
         self.trustlines = trustlines
@@ -137,12 +137,12 @@ class Event(Resource):
     @use_args(args)
     def get(self, args, network_address, user_address):
         proxy = self.trustlines.currency_network_proxies[network_address]
-        fromBlock = args['fromBlock']
+        from_block = args['fromBlock']
         type = args['type']
         if type is not None:
-            events = proxy.get_events(type, user_address, fromBlock)
+            events = proxy.get_events(type, user_address, from_block=from_block)
         else:
-            events = proxy.get_all_events(user_address, fromBlock)
+            events = proxy.get_all_events(user_address, from_block=from_block)
         return sorted([{'blockNumber': event.get('blockNumber'),
                         'type': event.get('event'),
                         'transactionId': event.get('transactionHash'),
@@ -155,7 +155,7 @@ class Event(Resource):
                       key=lambda x: x.get('blockNumber', 0))
 
 
-class EventList(Resource):
+class UserEvents(Resource):
 
     def __init__(self, trustlines):
         self.trustlines = trustlines
@@ -171,14 +171,14 @@ class EventList(Resource):
     def get(self, args, user_address):
         events = []
         type = args['type']
-        fromBlock = args['fromBlock']
+        from_block = args['fromBlock']
         networks = self.trustlines.networks
         for network_address in networks:
             proxy = self.trustlines.currency_network_proxies[network_address]
             if type is not None:
-                events = events + proxy.get_events(type, user_address, fromBlock)
+                events = events + proxy.get_events(type, user_address, from_block=from_block)
             else:
-                events = events + proxy.get_all_events(user_address, fromBlock)
+                events = events + proxy.get_all_events(user_address, from_block=from_block)
         return sorted([{'blockNumber': event.get('blockNumber'),
                         'type': event.get('event'),
                         'transactionId': event.get('transactionHash'),
@@ -188,6 +188,39 @@ class EventList(Resource):
                         'direction': get_event_direction(event, user_address)[0],
                         'amount': event.get('args').get('_value'),
                         'address': get_event_direction(event, user_address)[1]} for event in events],
+                      key=lambda x: x.get('blockNumber', 0))
+
+
+class EventsNetwork(Resource):
+
+    def __init__(self, trustlines):
+        self.trustlines = trustlines
+
+    args = {
+        'fromBlock': fields.Int(required=False, missing=0),
+        'type': fields.Str(required=False,
+                           validate=validate.OneOf(CurrencyNetwork.event_types),
+                           missing=None)
+    }
+
+    @use_args(args)
+    def get(self, args, network_address):
+        proxy = self.trustlines.currency_network_proxies[network_address]
+        from_block = args['fromBlock']
+        type = args['type']
+        if type is not None:
+            events = proxy.get_events(type, from_block=from_block)
+        else:
+            events = proxy.get_all_events(from_block=from_block)
+        return sorted([{'blockNumber': event.get('blockNumber'),
+                        'type': event.get('event'),
+                        'transactionId': event.get('transactionHash'),
+                        'networkAddress': event.get('address'),
+                        'status': self.trustlines.node.get_block_status(event.get('blockNumber')),
+                        'timestamp': self.trustlines.node.get_block_time(event.get('blockNumber')),
+                        'amount': event.get('args').get('_value'),
+                        'from': get_event_from_to(event)[0],
+                        'to': get_event_from_to(event)[1]} for event in events],
                       key=lambda x: x.get('blockNumber', 0))
 
 
@@ -206,7 +239,12 @@ class Relay(Resource):
         self.trustlines = trustlines
 
     def post(self):
-        return self.trustlines.node.relay_tx(request.json['rawTransaction'])
+        try:
+            transaction_id = self.trustlines.node.relay_tx(request.json['rawTransaction'])
+        except ValueError:  # should mean error in relaying the transaction
+            abort(409, 'There was an error while relaying this transaction')
+
+        return transaction_id
 
 
 class Balance(Resource):
@@ -259,12 +297,21 @@ class Path(Resource):
             max_fees=args['maxFees'],
             max_hops=args['maxHops'])
 
-        gas = self.trustlines.currency_network_proxies[address].estimate_gas_for_transfer(
-            args['from'],
-            args['to'],
-            args['value'],
-            cost*2,
-            path[1:])
+        if path:
+            try:
+                gas = self.trustlines.currency_network_proxies[address].estimate_gas_for_transfer(
+                    args['from'],
+                    args['to'],
+                    args['value'],
+                    cost*2,
+                    path[1:])
+            except ValueError as e:  # should mean out of gas, so path was not right.
+                gas = 0
+                path = []
+                cost = 0
+        else:
+            gas = 0
+
         return {'path': path,
                 'estimatedGas': gas,
                 'fees': cost}
