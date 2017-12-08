@@ -2,6 +2,7 @@ language: python
 python:
   - "3.6"
 install:
+  - curl -L -o $HOME/bin/solc https://github.com/ethereum/solidity/releases/download/v0.4.16/solc-static-linux && chmod +x $HOME/bin/solc
   - pip install -r requirements.txt
 script:
   - flake8
