@@ -56,8 +56,6 @@ def accounts(web3):
     for i in range(len(accounts), 5):
         web3.personal.newAccount(password='123')
     accounts = web3.personal.listAccounts[1:6]
-    #for account in accounts:
-     #   assert web3.personal.unlockAccount(account, '123')
     assert len(accounts) == 5
     return accounts
 
@@ -65,11 +63,11 @@ def accounts(web3):
 @pytest.fixture(scope='session')
 def trustlines(accounts):
     return [(accounts[0], accounts[1], 100, 150),
-                  (accounts[1], accounts[2], 200, 250),
-                  (accounts[2], accounts[3], 300, 350),
-                  (accounts[3], accounts[4], 400, 450),
-                  (accounts[0], accounts[4], 500, 550)
-                  ]  # (A, B, clAB, clBA)
+            (accounts[1], accounts[2], 200, 250),
+            (accounts[2], accounts[3], 300, 350),
+            (accounts[3], accounts[4], 400, 450),
+            (accounts[0], accounts[4], 500, 550)
+            ]  # (A, B, clAB, clBA)
 
 
 @pytest.fixture(scope='session')
@@ -91,7 +89,6 @@ def testnetwork2_address():
 @pytest.fixture()
 def testnetwork3_address():
     return deploy_test_network('testrpclocal')
-
 
 
 @pytest.fixture(scope='session')
@@ -251,13 +248,3 @@ def test_listen_on_transfer(fresh_currency_network, accounts):
 
     assert len(events) == 1
     assert events[0] == (accounts[1], accounts[0], 10)
-
-
-
-
-
-
-
-
-
-
