@@ -2,11 +2,18 @@ language: python
 python:
   - "3.6"
 install:
-  - pip install -r requirements-dev.txt
+  - pip install -r requirements.txt
 script:
   - flake8
-  - python -m pytest tests/
+  - coverage run --source=relay -m py.test tests
+  - docker build -t relay .
+after_success:
+  - coverage report
 branches:
   only:
   - master
   - develop
+services:
+  - docker
+env:
+  - THREADING_BACKEND=gevent

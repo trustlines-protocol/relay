@@ -1,5 +1,7 @@
 import json
 import logging
+import os
+import sys
 
 import gevent
 from gevent import sleep
@@ -53,7 +55,7 @@ class Trustlines:
             self.config = json.load(data_file)
 
     def load_contracts(self):
-        with open('contracts.json') as data_file:
+        with open(os.path.join(sys.prefix, 'trustlines-contracts', 'build', 'contracts.json')) as data_file:
             self.contracts = json.load(data_file)
 
     def new_network(self, address):
@@ -84,7 +86,7 @@ class Trustlines:
         proxy = self.currency_network_proxies[address]
         proxy.start_listen_on_full_sync(_create_on_full_sync(graph), self.config.get('syncInterval', 300))
         proxy.start_listen_on_balance(_create_on_balance(graph))
-        proxy.start_listen_on_trustline(_create_on_trustline(graph))
+        proxy.start_listen_on_creditline(_create_on_trustline(graph))
         proxy.start_listen_on_transfer()
 
     def _start_listen_on_new_networks(self):

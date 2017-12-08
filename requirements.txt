@@ -3,8 +3,13 @@ flask_restful
 flask_cors
 webargs
 gevent
-web3[gevent]
-ethereum==2.0.4  # dependency problem with 2.0.5
+web3[gevent]==3.11.1
+ethereum==1.6.1
 networkx>=2.0
 pygraphviz
 pysha3
+pytest
+flake8
+coverage
+eth-testrpc
+git+https://github.com/trustlines-network/contracts.git@develop
