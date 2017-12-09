@@ -39,6 +39,7 @@ class CurrencyNetworkProxy(CurrencyNetwork):
 @pytest.fixture(autouse=True, scope='session')
 def blockchain():
     p = subprocess.Popen('testrpc-py')
+    gevent.sleep(3)  # give it some time to set up
     yield
     p.terminate()
 
