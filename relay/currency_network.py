@@ -21,8 +21,8 @@ logger = get_logger('currency network', logging.DEBUG)
 
 
 # Constants
-TrustlineRequestEvent = 'CreditlineUpdateRequest'
-TrustlineUpdatedEvent = 'CreditlineUpdate'
+CreditlineRequestEvent = 'CreditlineUpdateRequest'
+CreditlineUpdatedEvent = 'CreditlineUpdate'
 BalanceUpdatedEvent = 'BalanceUpdate'
 TransferEvent = 'Transfer'
 PathPreparedEvent = 'PathPrepared'
@@ -35,7 +35,7 @@ reconnect_interval = 3  # 3s
 
 
 class CurrencyNetwork:
-    event_types = ['Transfer', 'CreditlineUpdateRequest', 'CreditlineUpdate', 'ChequeCashed']
+    event_types = [TransferEvent, CreditlineRequestEvent, CreditlineUpdatedEvent]
 
     def __init__(self, web3, abi, address):
         self._web3 = web3
@@ -64,11 +64,8 @@ class CurrencyNetwork:
     def friends(self, user_address):
         return list(self._proxy.call().getFriends(user_address))
 
-    def trustline(self, a_address, b_address):
-        return self._proxy.call().trustline(a_address, b_address)
-
     def account(self, a_address, b_address):
-        return self._proxy.call().getAccountExt(a_address, b_address)
+        return self._proxy.call().getAccount(a_address, b_address)
 
     def spendable(self, a_address):
         return self._proxy.call().spendable(a_address)
@@ -148,20 +145,20 @@ class CurrencyNetwork:
 
         gevent.Greenlet.spawn(sync)
 
-    def start_listen_on_balance(self, function):
+    def start_listen_on_balance(self, f):
         def log(log_entry):
-            function(log_entry['args']['_from'], log_entry['args']['_to'], log_entry['args']['_value'])
+            f(log_entry['args']['_from'], log_entry['args']['_to'], log_entry['args']['_value'])
         self.start_listen_on(BalanceUpdatedEvent, log)
 
-    def start_listen_on_trustline(self, function):
+    def start_listen_on_creditline(self, f):
         def log(log_entry):
-            function(log_entry['args']['_creditor'], log_entry['args']['_debtor'], log_entry['args']['_value'])
-        self.start_listen_on(TrustlineUpdatedEvent, log)
+            f(log_entry['args']['_creditor'], log_entry['args']['_debtor'], log_entry['args']['_value'])
+        self.start_listen_on(CreditlineUpdatedEvent, log)
 
-    def start_listen_on_transfer(self):
+    def start_listen_on_transfer(self, f):
         def log(log_entry):
-            pass
-        self.start_listen_on(TransferEvent, log, {'fromBlock': 'pending', 'toBlock': 'pending'})
+            f(log_entry['args']['_from'], log_entry['args']['_to'], log_entry['args']['_value'])
+        self.start_listen_on(TransferEvent, log)
 
     def get_events(self, event_name, user_address=None, from_block=0):
         if user_address is None:
@@ -172,10 +169,9 @@ class CurrencyNetwork:
             return self._proxy.pastEvents(event_name, params).get(False)
 
         types = {
-            'Transfer': ['_from', '_to'],
-            'CreditlineUpdateRequest': ['_creditor', '_debtor'],
-            'CreditlineUpdate': ['_creditor', '_debtor'],
-            'ChequeCashed': ['_sender', '_receiver'],
+            TransferEvent: ['_from', '_to'],
+            CreditlineRequestEvent: ['_creditor', '_debtor'],
+            CreditlineUpdatedEvent: ['_creditor', '_debtor'],
         }
         params_1 = {
             'filter': {types[event_name][0]: user_address},
