@@ -18,3 +18,9 @@ services:
   - docker
 env:
   - THREADING_BACKEND=gevent
+notifications:
+  webhooks:
+    urls:
+      - secure: "GQq5gi4oaDgJ6QQvNb1xnGMHlTzY38g/IePsURExefZi4AXUlaCbJOmR+XVZv+Dhz4GzSZ+BQ7WoWRZTu2wvyn/b/00JSieBmyMMobGSaNE1wjSdDTVTYnZV3TQgoHvlSQWpEPiuTFPVsvvbTkJgf2n5vtv+MsvkZHTHjsjtM4GC7Xi0ykzqiREsJlBf+mwqz5gsu7kVANeTtsBPBPEDM4ELhm5exa/fvvsw5N/9nmfFWkOTtZvVx03vacTJowZB2mIczmq6amdQ76ZwPAuzXsVTAT/vivBEEFm0Enicki2k3rj7JKdG+x2uerVsRGUHF3AbvI0Jcb/KOx7YtCgxU4KUDy0b6DdRn4uN72g3lt5eMhaOF9NP9DMIp0+4PSSQQRubuKgnHR5u40hbc2cz/sVaprrq4I+mTiubwaAwjD4AXMYOAqwTJ8DYwxHE1qo94w/bJ/FvNn+L0aTR/cWb0r002RDIGT0NPGm43Q3Me1VPA4o71bO/erllorvo5wuBRsPCHQinXBe9a1FVnkSd+MSxx5DXSG3p5HJnhKJTJLrJDLtDGVVVD8YOZEZDly4pli/27yAgoD6OcIaWdk0yGcPvzLaYgu4W8fdA1E6BTKnqq04lylUEeXKpXBzogeL1nlZBTxG6sIrVVSmXTTAH1Kt5I7kAiXt07V9o8kLmZAY="
+    on_success: change
+    on_failure: always
