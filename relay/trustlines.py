@@ -7,6 +7,7 @@ import gevent
 from gevent import sleep
 from gevent.wsgi import WSGIServer
 from web3 import Web3, RPCProvider
+from eth_utils import to_checksum_address, is_checksum_address
 
 from relay.api.app import ApiApp
 from relay.currency_network import CurrencyNetwork
@@ -59,6 +60,7 @@ class Trustlines:
             self.contracts = json.load(data_file)
 
     def new_network(self, address):
+        assert is_checksum_address(address)
         if address in self.networks:
             return
         logger.info('New network: {}'.format(address))
@@ -72,9 +74,10 @@ class Trustlines:
         with open('networks') as f:
             networks = f.read().splitlines()
         for address in networks:
-            self.new_network(address)
+            self.new_network(to_checksum_address(address))
 
     def get_networks_of_user(self, user_address):
+        assert is_checksum_address(user_address)
         networks_of_user = []
         for network_address in self.networks:
             if user_address in self.currency_network_graphs[network_address].users:
@@ -82,6 +85,7 @@ class Trustlines:
         return networks_of_user
 
     def _start_listen_network(self, address):
+        assert is_checksum_address(address)
         graph = self.currency_network_graphs[address]
         proxy = self.currency_network_proxies[address]
         proxy.start_listen_on_full_sync(_create_on_full_sync(graph), self.config.get('syncInterval', 300))

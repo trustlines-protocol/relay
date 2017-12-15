@@ -3,12 +3,13 @@ flask_restful
 flask_cors
 webargs
 gevent
-web3[gevent]==3.11.1
+web3[gevent]
 ethereum==1.6.1
+eth-utils
 networkx>=2.0
 pygraphviz
 pysha3
-pytest
+pytest==3.2.5
 flake8
 coverage
 eth-testrpc
