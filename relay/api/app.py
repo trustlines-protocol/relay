@@ -3,11 +3,11 @@ from flask_cors import CORS
 from flask_restful import Api
 from webargs.flaskparser import parser, abort
 from werkzeug.routing import BaseConverter, ValidationError
+from eth_utils import is_address, to_checksum_address, is_checksum_address
 
 from relay.api.resources import GraphDump, GraphImage, RequestEther, User, UserList, Network, NetworkList, \
     ContactList, TrustlineList, Trustline, Spendable, SpendableTo, Path, UserEventsNetwork, UserEvents, Relay, \
     Balance, TransactionInfos, Block, EventsNetwork
-from relay.utils import is_address
 
 
 class AddressConverter(BaseConverter):
@@ -15,12 +15,12 @@ class AddressConverter(BaseConverter):
     def to_python(self, value):
         if not is_address(value):
             raise ValidationError()
-        return value
+        return to_checksum_address(value)
 
     def to_url(self, value):
-        if not is_address(value):
-            raise ValueError("Not a valid address")
-        return value
+        if not is_checksum_address(value):
+            raise ValueError("Not a valid checksum address")
+        return
 
 
 def ApiApp(trustlines):
@@ -71,4 +71,4 @@ def handle_request_parsing_error(err):
     """webargs error handler that uses Flask-RESTful's abort function to return
     a JSON error response to the client.
     """
-    abort(422, message=str(err.messages))
+    abort(422, message='Validation errors in your request', error=err.messages)
