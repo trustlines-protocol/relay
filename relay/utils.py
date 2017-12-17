@@ -1,8 +1,4 @@
-import re
-
-
-def is_address(address):
-    return re.match(r"0x[0-9a-f]{40}", str(address)) is not None
+import web3
 
 
 def merge_two_dicts(x, y):
@@ -39,3 +35,7 @@ def get_event_direction(event, user_address):
         return ('sent', _to)
     else:
         return ('received', _from)
+
+
+def sha3(text):
+    return web3.Web3.sha3(text=text)

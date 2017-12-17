@@ -6,14 +6,20 @@ from flask_restful import Resource
 from webargs import fields, ValidationError
 from webargs.flaskparser import use_args
 from marshmallow import validate
+from eth_utils import is_address, to_checksum_address
 
-from relay.utils import is_address, get_event_direction, get_event_from_to
+from relay.utils import get_event_direction, get_event_from_to, sha3
 from relay.currency_network import CurrencyNetwork
 
 
 def validate_address(address):
     if not is_address(address):
         raise ValidationError('Not a valid address')
+
+
+def abort_if_unknown_network(trustlines, network_address):
+    if network_address not in trustlines.networks:
+        abort(404, 'Unkown network: {}'.format(network_address))
 
 
 class NetworkList(Resource):
@@ -38,6 +44,7 @@ class Network(Resource):
         self.trustlines = trustlines
 
     def get(self, network_address):
+        abort_if_unknown_network(self.trustlines, network_address)
         return {
             'address': network_address,
             'name': self.trustlines.currency_network_proxies[network_address].name,
@@ -53,6 +60,7 @@ class UserList(Resource):
         self.trustlines = trustlines
 
     def get(self, network_address):
+        abort_if_unknown_network(self.trustlines, network_address)
         return self.trustlines.currency_network_proxies[network_address].users
 
 
@@ -62,6 +70,7 @@ class User(Resource):
         self.trustlines = trustlines
 
     def get(self, network_address, user_address):
+        abort_if_unknown_network(self.trustlines, network_address)
         return self.trustlines.currency_network_graphs[network_address].get_account_sum(user_address).as_dict()
 
 
@@ -71,24 +80,31 @@ class ContactList(Resource):
         self.trustlines = trustlines
 
     def get(self, network_address, user_address):
+        abort_if_unknown_network(self.trustlines, network_address)
         return self.trustlines.currency_network_graphs[network_address].get_friends(user_address)
 
 
-class TrustlineList(Resource):
+class TrustlineDao(object):
+    def __init__(self, network_address, a_address, b_address, account_sum):
+        self.network_address = network_address
+        self.a_address = a_address
+        self.b_address = b_address
+        self.account_sum = account_sum
 
-    def __init__(self, trustlines):
-        self.trustlines = trustlines
+    @property
+    def id(self):
+        if self.a_address < self.b_address:
+            return sha3(self.network_address + self.a_address + self.b_address)
+        else:
+            return sha3(self.network_address + self.b_address + self.a_address)
 
-    def get(self, network_address, user_address):
-        graph = self.trustlines.currency_network_graphs[network_address]
-        friends = graph.get_friends(user_address)
-        accounts = []
-        for friend_address in friends:
-            trustline = {}
-            trustline.update({'address': friend_address})
-            trustline.update(graph.get_account_sum(user_address, friend_address).as_dict())
-            accounts.append(trustline)
-        return accounts
+    def as_dict(self):
+        trustline = {
+            'address': self.b_address,
+            'id': self.id
+        }
+        trustline.update(self.account_sum.as_dict())
+        return trustline
 
 
 class Trustline(Resource):
@@ -97,11 +113,29 @@ class Trustline(Resource):
         self.trustlines = trustlines
 
     def get(self, network_address, a_address, b_address):
+        abort_if_unknown_network(self.trustlines, network_address)
         graph = self.trustlines.currency_network_graphs[network_address]
-        trustline = {}
-        trustline.update({'address': b_address})
-        trustline.update(graph.get_account_sum(a_address, b_address).as_dict())
-        return trustline
+        trustline = TrustlineDao(network_address, a_address, b_address, graph.get_account_sum(a_address, b_address))
+        return trustline.as_dict()
+
+
+class TrustlineList(Resource):
+
+    def __init__(self, trustlines):
+        self.trustlines = trustlines
+
+    def get(self, network_address, user_address):
+        abort_if_unknown_network(self.trustlines, network_address)
+        graph = self.trustlines.currency_network_graphs[network_address]
+        friends = graph.get_friends(user_address)
+        accounts = []
+        for friend_address in friends:
+            trustline = TrustlineDao(network_address,
+                                     user_address,
+                                     friend_address,
+                                     graph.get_account_sum(user_address, friend_address))
+            accounts.append(trustline.as_dict())
+        return accounts
 
 
 class Spendable(Resource):
@@ -110,6 +144,7 @@ class Spendable(Resource):
         self.trustlines = trustlines
 
     def get(self, network_address, a_address):
+        abort_if_unknown_network(self.trustlines, network_address)
         return self.trustlines.currency_network_proxies[network_address].spendable(a_address)
 
 
@@ -119,6 +154,7 @@ class SpendableTo(Resource):
         self.trustlines = trustlines
 
     def get(self, network_address, a_address, b_address):
+        abort_if_unknown_network(self.trustlines, network_address)
         return self.trustlines.currency_network_proxies[network_address].spendableTo(a_address, b_address)
 
 
@@ -136,6 +172,7 @@ class UserEventsNetwork(Resource):
 
     @use_args(args)
     def get(self, args, network_address, user_address):
+        abort_if_unknown_network(self.trustlines, network_address)
         proxy = self.trustlines.currency_network_proxies[network_address]
         from_block = args['fromBlock']
         type = args['type']
@@ -205,6 +242,7 @@ class EventsNetwork(Resource):
 
     @use_args(args)
     def get(self, args, network_address):
+        abort_if_unknown_network(self.trustlines, network_address)
         proxy = self.trustlines.currency_network_proxies[network_address]
         from_block = args['fromBlock']
         type = args['type']
@@ -238,9 +276,14 @@ class Relay(Resource):
     def __init__(self, trustlines):
         self.trustlines = trustlines
 
-    def post(self):
+    args = {
+        'rawTransaction': fields.String(required=True),
+    }
+
+    @use_args(args)
+    def post(self, args):
         try:
-            transaction_id = self.trustlines.node.relay_tx(request.json['rawTransaction'])
+            transaction_id = self.trustlines.node.relay_tx(args['rawTransaction'])
         except ValueError:  # should mean error in relaying the transaction
             abort(409, 'There was an error while relaying this transaction')
 
@@ -289,20 +332,28 @@ class Path(Resource):
     }
 
     @use_args(args)
-    def post(self, args, address):
-        cost, path = self.trustlines.currency_network_graphs[address].find_path(
-            source=args['from'],
-            target=args['to'],
-            value=args['value'],
-            max_fees=args['maxFees'],
-            max_hops=args['maxHops'])
+    def post(self, args, network_address):
+        abort_if_unknown_network(self.trustlines, network_address)
+
+        source = to_checksum_address(args['from'])
+        target = to_checksum_address(args['to'])
+        value = args['value']
+        max_fees = args['maxFees']
+        max_hops = args['maxHops']
+
+        cost, path = self.trustlines.currency_network_graphs[network_address].find_path(
+            source=source,
+            target=target,
+            value=value,
+            max_fees=max_fees,
+            max_hops=max_hops)
 
         if path:
             try:
-                gas = self.trustlines.currency_network_proxies[address].estimate_gas_for_transfer(
-                    args['from'],
-                    args['to'],
-                    args['value'],
+                gas = self.trustlines.currency_network_proxies[network_address].estimate_gas_for_transfer(
+                    source,
+                    target,
+                    value,
                     cost*2,
                     path[1:])
             except ValueError as e:  # should mean out of gas, so path was not right.

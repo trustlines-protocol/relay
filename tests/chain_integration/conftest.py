@@ -29,10 +29,6 @@ def web3():
 @pytest.fixture(scope='session')
 def accounts(web3):
     # first account is coinbase and is not used for testing accounts
-    accounts = web3.personal.listAccounts[1:]
-    # if there are not enough accounts, create new
-    for i in range(len(accounts), 5):
-        web3.personal.newAccount(password='123')
     accounts = web3.personal.listAccounts[1:6]
     assert len(accounts) == 5
     return [to_checksum_address(account) for account in accounts]

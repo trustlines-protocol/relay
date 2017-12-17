@@ -91,7 +91,6 @@ class Trustlines:
         proxy.start_listen_on_full_sync(_create_on_full_sync(graph), self.config.get('syncInterval', 300))
         proxy.start_listen_on_balance(_create_on_balance(graph))
         proxy.start_listen_on_creditline(_create_on_trustline(graph))
-        proxy.start_listen_on_transfer()
 
     def _start_listen_on_new_networks(self):
         def listen():
