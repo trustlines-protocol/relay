@@ -2,7 +2,7 @@ flask
 flask_restful
 flask_cors
 webargs
-gevent
+gevent==1.1.1
 web3[gevent]
 ethereum==1.6.1
 eth-utils
@@ -14,3 +14,4 @@ flake8
 coverage
 eth-testrpc
 git+https://github.com/trustlines-network/contracts.git@develop
+cytoolz==0.8.2

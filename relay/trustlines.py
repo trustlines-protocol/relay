@@ -122,6 +122,10 @@ def _create_on_full_sync(graph):
     return update_community
 
 
-if __name__ == '__main__':
+def main():
     trustlines = Trustlines()
     trustlines.start()
+
+
+if __name__ == '__main__':
+    main()
