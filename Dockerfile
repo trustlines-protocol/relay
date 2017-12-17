@@ -13,10 +13,9 @@ WORKDIR /relay
 RUN pip install -r requirements.txt
 
 ENV THREADING_BACKEND gevent
-ENV PYTHONPATH /relay
 
 COPY . /relay
 
-WORKDIR /relay/relay
+RUN pip install .
 
-ENTRYPOINT ["python", "trustlines.py"]
+ENTRYPOINT ["tl-relay"]
