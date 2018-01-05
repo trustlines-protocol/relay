@@ -46,7 +46,7 @@ def ApiApp(trustlines):
     add_resource(SpendableTo,
                  '/networks/<address:network_address>/users/<address:a_address>/spendables/<address:b_address>')
     add_resource(UserEventsNetwork, '/networks/<address:network_address>/users/<address:user_address>/events')
-    add_resource(Path, '/networks/<address:address>/path-info')
+    add_resource(Path, '/networks/<address:network_address>/path-info')
 
     add_resource(UserEvents, '/users/<address:user_address>/events')
     add_resource(TransactionInfos, '/users/<address:user_address>/txinfos')
