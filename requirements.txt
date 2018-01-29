@@ -14,3 +14,4 @@ flake8
 coverage
 eth-testrpc
 git+https://github.com/trustlines-network/contracts.git@develop
+sqlalchemy
