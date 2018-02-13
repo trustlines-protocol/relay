@@ -8,9 +8,9 @@ import gevent
 from web3 import Web3, HTTPProvider
 from web3.utils.transactions import wait_for_transaction_receipt
 from eth_utils import to_checksum_address
-from tlcontracts.deploy import deploy_test_network
+from tlcontracts.deploy import deploy_test_network, deploy_networks
 
-from relay.currency_network import CurrencyNetwork
+from relay.blockchain.currency_network_proxy import CurrencyNetworkProxy
 
 
 @pytest.fixture(autouse=True, scope='session')
@@ -28,13 +28,12 @@ def web3():
 
 @pytest.fixture(scope='session')
 def accounts(web3):
-    # first account is coinbase and is not used for testing accounts
-    accounts = web3.personal.listAccounts[1:6]
+    accounts = web3.personal.listAccounts[0:5]
     assert len(accounts) == 5
     return [to_checksum_address(account) for account in accounts]
 
 
-class CurrencyNetworkProxy(CurrencyNetwork):
+class CurrencyNetworkProxy(CurrencyNetworkProxy):
 
     def setup_trustlines(self, trustlines):
         for (A, B, clAB, clBA) in trustlines:
@@ -64,10 +63,28 @@ def trustlines(accounts):
             ]  # (A, B, clAB, clBA)
 
 
+NETWORKS = [("Euro", "EUR", 2), ("US Dollar", "USD", 2), ("TestCoin", "T", 6)]
+
+
 @pytest.fixture(scope='session')
-def abi():
+def contracts():
     with open(os.path.join(sys.prefix, 'trustlines-contracts', 'build', 'contracts.json')) as data_file:
-        return json.load(data_file)['CurrencyNetwork']['abi']
+        return json.load(data_file)
+
+
+@pytest.fixture(scope='session')
+def currency_network_abi(contracts):
+    return contracts['CurrencyNetwork']['abi']
+
+
+@pytest.fixture(scope='session')
+def exchange_abi(contracts):
+    return contracts['Exchange']['abi']
+
+
+@pytest.fixture(scope='session')
+def token_abi(contracts):
+    return contracts['Token']['abi']
 
 
 @pytest.fixture(scope='session')
@@ -85,19 +102,48 @@ def testnetwork3_address():
     return deploy_test_network('testrpclocal').address
 
 
+@pytest.fixture()
+def testnetworks(accounts):
+    maker, taker, *rest = accounts
+    currency_network_contracts, exchange_contract, unw_eth_contract = deploy_networks('testrpclocal', NETWORKS)
+
+    unw_eth_contract.transact({'from': taker, 'value': 200}).deposit()
+
+    currency_network = currency_network_contracts[0]
+    currency_network.transact({'from': taker}).updateCreditline(maker, 300)
+    currency_network.transact({'from': maker}).acceptCreditline(taker, 300)
+
+    return currency_network_contracts, exchange_contract, unw_eth_contract
+
+
+@pytest.fixture()
+def exchange_address(testnetworks):
+    return testnetworks[1].address
+
+
+@pytest.fixture()
+def unw_eth_address(testnetworks):
+    return testnetworks[2].address
+
+
+@pytest.fixture()
+def network_addresses_with_exchange(testnetworks):
+    return [network.address for network in testnetworks[0]]
+
+
 @pytest.fixture(scope='session')
-def currency_network(web3, abi, testnetwork1_address):
+def currency_network(web3, currency_network_abi, testnetwork1_address):
     """this currency network is not reset for speed reasons,
        only use it for constant tests"""
-    currency_network = CurrencyNetworkProxy(web3, abi, testnetwork1_address)
+    currency_network = CurrencyNetworkProxy(web3, currency_network_abi, testnetwork1_address)
     return currency_network
 
 
 @pytest.fixture(scope='session')
-def currency_network_with_trustlines(web3, abi, testnetwork2_address, trustlines):
+def currency_network_with_trustlines(web3, currency_network_abi, testnetwork2_address, trustlines):
     """this currency network is not reset for speed reasons,
         only use it for constant tests"""
-    currency_network = CurrencyNetworkProxy(web3, abi, testnetwork2_address)
+    currency_network = CurrencyNetworkProxy(web3, currency_network_abi, testnetwork2_address)
 
     currency_network.setup_trustlines(trustlines)
 
@@ -105,10 +151,10 @@ def currency_network_with_trustlines(web3, abi, testnetwork2_address, trustlines
 
 
 @pytest.fixture()
-def fresh_currency_network(web3, abi, testnetwork3_address, trustlines):
+def fresh_currency_network(web3, currency_network_abi, testnetwork3_address, trustlines):
     """this currency network is reset on every use which is very slow,
             only use it if you need it"""
-    currency_network = CurrencyNetworkProxy(web3, abi, testnetwork3_address)
+    currency_network = CurrencyNetworkProxy(web3, currency_network_abi, testnetwork3_address)
 
     return currency_network
 
@@ -124,3 +170,19 @@ def currency_network_with_events(fresh_currency_network, accounts):
     fresh_currency_network.accept_creditline(accounts[4], accounts[0], 25)
 
     return fresh_currency_network
+
+
+@pytest.fixture()
+def address_oracle(testnetworks):
+
+    class AddressOracle():
+
+        def is_currency_network(self, address):
+            return address in [network.address for network in testnetworks[0]]
+
+        def is_trusted_token(self, address):
+            print(address)
+            print(testnetworks[2].address)
+            return address == testnetworks[2].address
+
+    return AddressOracle()

@@ -1,12 +1,11 @@
-
 import pytest
 
-from relay.graph import CurrencyNetworkGraph
+from relay.network_graph.graph import CurrencyNetworkGraph
 
 
 @pytest.fixture()
 def community_with_trustlines(currency_network_with_trustlines):
-    community = CurrencyNetworkGraph()
+    community = CurrencyNetworkGraph(100)
     community.gen_network(currency_network_with_trustlines.gen_graph_representation())
     return community
 

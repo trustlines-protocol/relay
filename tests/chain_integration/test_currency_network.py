@@ -1,6 +1,6 @@
 import gevent
 
-from relay.currency_network import CreditlineUpdatedEvent, CreditlineRequestEvent, TransferEvent
+from relay.blockchain.currency_network_proxy import CreditlineUpdatedEvent, CreditlineRequestEvent, TransferEvent
 
 
 def context_switch():
@@ -60,14 +60,14 @@ def test_gen_graph_representation(currency_network_with_trustlines, accounts):
 
 def test_number_of_get_events(currency_network_with_events, accounts):
     currency_network = currency_network_with_events
-    assert len(currency_network.get_events(CreditlineUpdatedEvent, user_address=accounts[0])) == 3
-    assert len(currency_network.get_events(CreditlineRequestEvent, user_address=accounts[0])) == 3
-    assert len(currency_network.get_events(TransferEvent, user_address=accounts[0])) == 1
+    assert len(currency_network.get_network_events(CreditlineUpdatedEvent, user_address=accounts[0])) == 3
+    assert len(currency_network.get_network_events(CreditlineRequestEvent, user_address=accounts[0])) == 3
+    assert len(currency_network.get_network_events(TransferEvent, user_address=accounts[0])) == 1
 
 
 def test_number_of_get_all_events(currency_network_with_events, accounts):
     currency_network = currency_network_with_events
-    assert len(currency_network.get_all_events(user_address=accounts[0])) == 7
+    assert len(currency_network.get_all_network_events(user_address=accounts[0])) == 7
 
 
 def test_listen_on_creditline_update(fresh_currency_network, accounts):

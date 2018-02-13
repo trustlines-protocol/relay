@@ -1,6 +1,8 @@
 
 
 def imbalance_fee(factor, pre_balance, value):
+    if factor == 0:
+        return 0
     imbalance_generated = value
     if pre_balance > 0:
         imbalance_generated = value - pre_balance

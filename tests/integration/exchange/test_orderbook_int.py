@@ -1,6 +1,7 @@
 import pytest
 
-from relay.exchange.exchange import OrderBook
+from relay.exchange.orderbook import OrderBook
+from relay.blockchain.exchange_proxy import DummyExchangeProxy
 
 
 @pytest.fixture()
@@ -8,7 +9,7 @@ def orderbook(engine, addresses):
     orderbook = OrderBook()
     orderbook.connect_db(engine)
     A, *rest = addresses
-    orderbook.add_exchange_address(A)
+    orderbook.add_exchange(DummyExchangeProxy(A))
     return orderbook
 
 
