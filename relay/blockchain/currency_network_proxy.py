@@ -1,8 +1,10 @@
 import logging
-import gevent
 import socket
 from collections import namedtuple
 
+import gevent
+
+from .proxy import Proxy, reconnect_interval
 from relay.logger import get_logger
 
 
@@ -28,26 +30,16 @@ TransferEvent = 'Transfer'
 PathPreparedEvent = 'PathPrepared'
 ChequeCashed = 'ChequeCashed'
 
-queryBlock = 'latest'
-updateBlock = 'pending'
 
-reconnect_interval = 3  # 3s
-
-
-class CurrencyNetwork:
+class CurrencyNetworkProxy(Proxy):
     event_types = [TransferEvent, CreditlineRequestEvent, CreditlineUpdatedEvent]
 
     def __init__(self, web3, abi, address):
-        self._web3 = web3
-        self._proxy = web3.eth.contract(abi=abi, address=address)
+        super().__init__(web3, abi, address)
 
     @property
     def name(self):
         return self._proxy.call().name().strip('\0')
-
-    @property
-    def address(self):
-        return self._proxy.address
 
     @property
     def decimals(self):
@@ -100,36 +92,6 @@ class CurrencyNetwork:
             result[user] = list
         return result
 
-    def _watch_filter(self, eventname, function, params=None):
-        while True:
-            try:
-                filter = self._proxy.on(eventname, params)
-                filter.watch(function)
-                logger.info('Connected to filter for {}:{}'.format(self.address, eventname))
-                return filter
-            except socket.timeout as err:
-                logger.warning('Timeout in filter creation, try to reconnect: ' + str(err))
-                gevent.sleep(reconnect_interval)
-            except socket.error as err:
-                logger.warning('Socketerror in filter creation, try to reconnect:' + str(err))
-                gevent.sleep(reconnect_interval)
-            except ValueError as err:
-                logger.warning('ValueError in filter creation, try to reconnect:' + str(err))
-                gevent.sleep(reconnect_interval)
-
-    def start_listen_on(self, eventname, function, params=None):
-        def on_exception(filter):
-            logger.warning('Filter {} disconnected, trying to reconnect'.format(filter.filter_id))
-            gevent.sleep(reconnect_interval)
-            filter = self._watch_filter(eventname, function, params)
-            filter.link_exception(on_exception)
-        if params is None:
-            params = {}
-        params.setdefault('fromBlock', updateBlock)
-        params.setdefault('toBlock', updateBlock)
-        filter = self._watch_filter(eventname, function, params)
-        filter.link_exception(on_exception)
-
     def start_listen_on_full_sync(self, function, sync_interval):
         def sync():
             while True:
@@ -160,38 +122,27 @@ class CurrencyNetwork:
             f(log_entry['args']['_from'], log_entry['args']['_to'], log_entry['args']['_value'])
         self.start_listen_on(TransferEvent, log)
 
-    def get_events(self, event_name, user_address=None, from_block=0):
+    def get_network_events(self, event_name, user_address=None, from_block=0):
         if user_address is None:
-            params = {
-                'fromBlock': from_block,
-                'toBlock': queryBlock
-            }
-            return self._proxy.pastEvents(event_name, params).get(False)
+            return self.get_events(event_name, from_block=from_block)
 
         types = {
             TransferEvent: ['_from', '_to'],
             CreditlineRequestEvent: ['_creditor', '_debtor'],
             CreditlineUpdatedEvent: ['_creditor', '_debtor'],
         }
-        params_1 = {
-            'filter': {types[event_name][0]: user_address},
-            'fromBlock': from_block,
-            'toBlock': queryBlock
-        }
-        params_2 = {
-            'filter': {types[event_name][1]: user_address},
-            'fromBlock': from_block,
-            'toBlock': queryBlock
-        }
-        list_1 = self._proxy.pastEvents(event_name, params_1).get(False)
-        list_2 = self._proxy.pastEvents(event_name, params_2).get(False)
+        filter1 = {types[event_name][0]: user_address}
+        filter2 = {types[event_name][1]: user_address}
+
+        list_1 = self.get_events(event_name, filter_=filter1, from_block=from_block)
+        list_2 = self.get_events(event_name, filter_=filter2, from_block=from_block)
         return list_1 + list_2
 
-    def get_all_events(self, user_address=None, from_block=0):
+    def get_all_network_events(self, user_address=None, from_block=0):
         all_events = []
-        for type in CurrencyNetwork.event_types:    # FIXME takes too long.
+        for type in CurrencyNetworkProxy.event_types:    # FIXME takes too long.
                                                     # web3.py currently doesn't support getAll() to retrieve all events
-            all_events = all_events + self.get_events(type, user_address, from_block)
+            all_events = all_events + self.get_network_events(type, user_address, from_block)
         return all_events
 
     def estimate_gas_for_transfer(self, sender, receiver, value, max_fee, path):

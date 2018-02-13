@@ -3,8 +3,8 @@ import io
 
 import networkx as nx
 
-from relay.dijkstra_weighted import find_path
-from relay.fees import new_balance, imbalance_fee
+from .dijkstra_weighted import find_path
+from .fees import new_balance, imbalance_fee
 
 creditline_ab = 'creditline_ab'
 creditline_ba = 'creditline_ba'
@@ -14,8 +14,6 @@ fees_outstanding_a = 'fees_outstanding_a'
 fees_outstanding_b = 'fees_outstanding_b'
 m_time = 'm_time'
 balance_ab = 'balance_ab'
-
-factor = 100
 
 
 class Account(object):
@@ -155,7 +153,8 @@ class AccountSummary(object):
 class CurrencyNetworkGraph(object):
     """The whole graph of a Token Network"""
 
-    def __init__(self):
+    def __init__(self, capacity_imbalance_fee_divisor=0):
+        self.capacity_imbalance_fee_divisor = capacity_imbalance_fee_divisor
         self.graph = nx.Graph()
 
     def gen_network(self, friendsdict):
@@ -282,11 +281,11 @@ class CurrencyNetworkGraph(object):
         else:
             pre_balance = -data[balance_ab]
             creditline = data[creditline_ab]
-        post_balance = new_balance(factor, pre_balance, value)
+        post_balance = new_balance(self.capacity_imbalance_fee_divisor, pre_balance, value)
         assert post_balance <= pre_balance
         if -post_balance > creditline:
             return None  # no valid path
-        cost = imbalance_fee(factor, pre_balance, value)
+        cost = imbalance_fee(self.capacity_imbalance_fee_divisor, pre_balance, value)
         assert cost >= 0
         return cost
 
@@ -313,8 +312,8 @@ class CurrencyNetworkGraph(object):
     def transfer(self, source, target, value):
         """simulate transfer off chain"""
         account = Account(self.graph[source][target], source, target)
-        fee = imbalance_fee(factor, account.balance, value)
-        account.balance = new_balance(factor, account.balance, value)
+        fee = imbalance_fee(self.capacity_imbalance_fee_divisor, account.balance, value)
+        account.balance = new_balance(self.capacity_imbalance_fee_divisor, account.balance, value)
         return fee
 
     def mediated_transfer(self, source, target, value):

@@ -28,6 +28,17 @@ def test_get_orders(orders: Sequence[Order], orderbook_db: OrderBookDB, addresse
     assert len(orders_result) == 3
 
 
+def test_same_order_not_added(order: Order, orderbook_db: OrderBookDB, addresses: Sequence[str]):
+    A, B, C, D = addresses
+
+    orderbook_db.add_order(order)
+    orderbook_db.add_order(order)
+
+    orders_result = orderbook_db.get_orderbook_by_tokenpair((C, D))
+
+    assert len(orders_result) == 1
+
+
 def test_get_orders_order(orders: Sequence[Order], orderbook_db: OrderBookDB, addresses: Sequence[str]):
     A, B, C, D = addresses
     o1, o2, o3, o4, o5 = orders

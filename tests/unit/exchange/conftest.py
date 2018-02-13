@@ -23,8 +23,8 @@ def invalid_signature_order(addresses):
         expiration_timestamp_in_sec=123,
         salt=123,
         v=27,
-        r=(123).to_bytes(32, byteorder='big'),
-        s=(345).to_bytes(32, byteorder='big'))
+        r=(18).to_bytes(32, byteorder='big'),
+        s=(2748).to_bytes(32, byteorder='big'))
 
 
 @pytest.fixture()

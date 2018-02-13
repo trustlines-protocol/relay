@@ -12,7 +12,6 @@ Base = declarative_base()
 
 class OrderORM(Base):
     __tablename__ = 'orders'
-    id = Column(Integer, primary_key=True)
     exchange_address = Column(String)
     maker_address = Column(String)
     taker_address = Column(String)
@@ -21,6 +20,8 @@ class OrderORM(Base):
     fee_recipient = Column(String)
     maker_token_amount = Column(Integer)
     taker_token_amount = Column(Integer)
+    available_maker_token_amount = Column(Integer)
+    available_taker_token_amount = Column(Integer)
     price = Column(Float)
     maker_fee = Column(Integer)
     taker_fee = Column(Integer)
@@ -29,7 +30,7 @@ class OrderORM(Base):
     v = Column(Integer)
     r = Column(String)
     s = Column(String)
-    msg_hash = Column(String)
+    msg_hash = Column(String, primary_key=True)
 
     @classmethod
     def from_order(cls, order: Order) -> 'OrderORM':
@@ -42,6 +43,8 @@ class OrderORM(Base):
             fee_recipient=order.fee_recipient,
             maker_token_amount=order.maker_token_amount,
             taker_token_amount=order.taker_token_amount,
+            available_maker_token_amount=order.available_maker_token_amount,
+            available_taker_token_amount=order.available_taker_token_amount,
             price=order.price,
             maker_fee=order.maker_fee,
             taker_fee=order.taker_fee,
@@ -63,6 +66,8 @@ class OrderORM(Base):
             fee_recipient=self.fee_recipient,
             maker_token_amount=self.maker_token_amount,
             taker_token_amount=self.taker_token_amount,
+            available_maker_token_amount=self.available_maker_token_amount,
+            available_taker_token_amount=self.available_taker_token_amount,
             maker_fee=self.maker_fee,
             taker_fee=self.taker_fee,
             expiration_timestamp_in_sec=self.expiration_timestamp_in_sec,
@@ -81,16 +86,18 @@ class OrderBookDB(object):
         self.session = Session()
 
     def add_order(self, order: Order):
-        order_orm = OrderORM.from_order(order)
-        self.session.add(order_orm)
-        self.session.commit()
+        order_orm = self.session.query(OrderORM).get(order.hash().hex())
+        if order_orm is None:
+            order_orm = OrderORM.from_order(order)
+            self.session.add(order_orm)
+            self.session.commit()
 
     def add_orders(self, orders: Sequence[Order]):
-        self.session.add_all([OrderORM.from_order(order) for order in orders])
-        self.session.commit()
+        for order in orders:
+            self.add_order(order)
 
     def get_order_by_hash(self, order_hash: bytes) -> Order:
-        order_orm = self.session.query(OrderORM).filter_by(msg_hash=order_hash.hex()).first()
+        order_orm = self.session.query(OrderORM).get(order_hash.hex())
         return order_orm.to_order()
 
     def get_orderbook_by_tokenpair(self, token_pair: Tuple[str, str], desc_price: bool = False) -> Sequence[Order]:
@@ -113,4 +120,13 @@ class OrderBookDB(object):
     def delete_old_orders(self, timestamp: int):
         self.session.query(OrderORM).filter(OrderORM.expiration_timestamp_in_sec < timestamp)\
                                     .delete(synchronize_session=False)
+        self.session.commit()
+
+    def order_filled(self, order_hash: bytes, filled_maker_token_amount: int, filled_taker_token_amount: int):
+        order_orm = self.session.query(OrderORM).filter_by(msg_hash=order_hash.hex()).first()
+        order_orm.available_maker_token_amount -= filled_maker_token_amount
+        order_orm.available_taker_token_amount -= filled_taker_token_amount
+
+        if order_orm.to_order().is_filled():
+            self.session.delete(order_orm)
         self.session.commit()

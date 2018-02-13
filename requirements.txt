@@ -2,7 +2,7 @@ flask
 flask_restful
 flask_cors
 webargs
-gevent==1.1.1
+gevent==1.1.2
 web3[gevent]
 ethereum==1.6.1
 eth-utils
