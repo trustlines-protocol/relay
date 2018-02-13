@@ -72,17 +72,17 @@ def abi():
 
 @pytest.fixture(scope='session')
 def testnetwork1_address():
-    return deploy_test_network('testrpclocal')
+    return deploy_test_network('testrpclocal').address
 
 
 @pytest.fixture(scope='session')
 def testnetwork2_address():
-    return deploy_test_network('testrpclocal')
+    return deploy_test_network('testrpclocal').address
 
 
 @pytest.fixture()
 def testnetwork3_address():
-    return deploy_test_network('testrpclocal')
+    return deploy_test_network('testrpclocal').address
 
 
 @pytest.fixture(scope='session')
