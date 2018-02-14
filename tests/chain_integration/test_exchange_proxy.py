@@ -172,6 +172,3 @@ def test_listen_on_cancel(order_token, exchange_proxy, testnetworks, accounts):
     assert log1[0].encode('Latin-1') == order.hash()  # encoding because of bug in web3
     assert log1[1] == 50
     assert log1[2] == 100
-
-
-

@@ -4,6 +4,7 @@ from sqlalchemy import create_engine
 from relay.blockchain.exchange_proxy import ExchangeProxy
 from relay.exchange.orderbook import OrderBookGreenlet
 
+
 @pytest.fixture()
 def engine():
     return create_engine('sqlite:///:memory:')
