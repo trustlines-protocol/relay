@@ -70,4 +70,3 @@ class Proxy(object):
             # web3.py currently doesn't support getAll() to retrieve all events
             all_events = all_events + self.get_events(type, from_block)
         return all_events
-

@@ -1,5 +1,5 @@
 from eth_utils import is_checksum_address
-from eth_keys.exceptions import BadSignature
+
 from tlcontracts.signing import keccak256, eth_sign, eth_validate
 
 
