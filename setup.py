@@ -82,7 +82,7 @@ setup(
                       'flask_restful',
                       'flask_cors',
                       'webargs',
-                      'gevent==1.1.1',
+                      'gevent==1.1.2',
                       'web3[gevent]',
                       'ethereum==1.6.1',
                       'eth-utils',
@@ -115,7 +115,7 @@ setup(
     # pip to create the appropriate form of executable for the target platform.
     entry_points={
         'console_scripts': [
-            'tl-relay=relay.trustlines:main',
+            'tl-relay=relay.main:main',
         ],
     },
 )

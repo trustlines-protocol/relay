@@ -3,18 +3,13 @@ import tempfile
 from flask import request, send_file, make_response, abort
 from flask.views import MethodView
 from flask_restful import Resource
-from webargs import fields, ValidationError
+from webargs import fields
 from webargs.flaskparser import use_args
 from marshmallow import validate
-from eth_utils import is_address, to_checksum_address
 
 from relay.utils import get_event_direction, get_event_from_to, sha3
-from relay.currency_network import CurrencyNetwork
-
-
-def validate_address(address):
-    if not is_address(address):
-        raise ValidationError('Not a valid address')
+from relay.blockchain.currency_network_proxy import CurrencyNetworkProxy
+from relay.api import fields as custom_fields
 
 
 def abort_if_unknown_network(trustlines, network_address):
@@ -166,7 +161,7 @@ class UserEventsNetwork(Resource):
     args = {
         'fromBlock': fields.Int(required=False, missing=0),
         'type': fields.Str(required=False,
-                           validate=validate.OneOf(CurrencyNetwork.event_types),
+                           validate=validate.OneOf(CurrencyNetworkProxy.event_types),
                            missing=None)
     }
 
@@ -177,9 +172,9 @@ class UserEventsNetwork(Resource):
         from_block = args['fromBlock']
         type = args['type']
         if type is not None:
-            events = proxy.get_events(type, user_address, from_block=from_block)
+            events = proxy.get_network_events(type, user_address, from_block=from_block)
         else:
-            events = proxy.get_all_events(user_address, from_block=from_block)
+            events = proxy.get_all_network_events(user_address, from_block=from_block)
         return sorted([{'blockNumber': event.get('blockNumber'),
                         'type': event.get('event'),
                         'transactionId': event.get('transactionHash'),
@@ -200,7 +195,7 @@ class UserEvents(Resource):
     args = {
         'fromBlock': fields.Int(required=False, missing=0),
         'type': fields.Str(required=False,
-                           validate=validate.OneOf(CurrencyNetwork.event_types),
+                           validate=validate.OneOf(CurrencyNetworkProxy.event_types),
                            missing=None)
     }
 
@@ -213,9 +208,9 @@ class UserEvents(Resource):
         for network_address in networks:
             proxy = self.trustlines.currency_network_proxies[network_address]
             if type is not None:
-                events = events + proxy.get_events(type, user_address, from_block=from_block)
+                events = events + proxy.get_network_eventsevents(type, user_address, from_block=from_block)
             else:
-                events = events + proxy.get_all_events(user_address, from_block=from_block)
+                events = events + proxy.get_all_network_events(user_address, from_block=from_block)
         return sorted([{'blockNumber': event.get('blockNumber'),
                         'type': event.get('event'),
                         'transactionId': event.get('transactionHash'),
@@ -236,7 +231,7 @@ class EventsNetwork(Resource):
     args = {
         'fromBlock': fields.Int(required=False, missing=0),
         'type': fields.Str(required=False,
-                           validate=validate.OneOf(CurrencyNetwork.event_types),
+                           validate=validate.OneOf(CurrencyNetworkProxy.event_types),
                            missing=None)
     }
 
@@ -327,16 +322,16 @@ class Path(Resource):
         'value': fields.Int(required=False, missing=1),
         'maxHops': fields.Int(required=False, missing=None),
         'maxFees': fields.Int(required=False, missing=None),
-        'from': fields.Str(required=True, validate=validate_address),
-        'to': fields.Str(required=True, validate=validate_address)
+        'from': custom_fields.Address(required=True),
+        'to': custom_fields.Address(required=True)
     }
 
     @use_args(args)
     def post(self, args, network_address):
         abort_if_unknown_network(self.trustlines, network_address)
 
-        source = to_checksum_address(args['from'])
-        target = to_checksum_address(args['to'])
+        source = args['from']
+        target = args['to']
         value = args['value']
         max_fees = args['maxFees']
         max_hops = args['maxHops']
