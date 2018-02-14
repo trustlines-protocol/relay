@@ -1,4 +1,4 @@
-from network_graph.fees import imbalance_fee, new_balance
+from relay.network_graph.fees import imbalance_fee, new_balance
 
 
 def test_increase_imbalance_fee():

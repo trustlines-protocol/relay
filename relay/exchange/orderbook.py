@@ -3,7 +3,7 @@ from typing import Tuple, Sequence, Iterable
 
 import gevent
 
-from blockchain.exchange_proxy import ExchangeProxy
+from relay.blockchain.exchange_proxy import ExchangeProxy
 from relay.constants import NULL_ADDRESS
 from .exchange_db import OrderBookDB
 from .order import Order

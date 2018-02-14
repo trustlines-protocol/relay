@@ -1,7 +1,7 @@
 import pytest
-from relay.currency_network import Trustline
 
-from network_graph.graph import CurrencyNetworkGraph
+from relay.blockchain.currency_network_proxy import Trustline
+from relay.network_graph.graph import CurrencyNetworkGraph
 
 addresses = ['0x0A', '0x0B', '0x0C', '0x0D', '0x0E']
 A, B, C, D, E = addresses
