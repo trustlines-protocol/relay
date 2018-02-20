@@ -5,9 +5,10 @@ from webargs.flaskparser import parser, abort
 from werkzeug.routing import BaseConverter, ValidationError
 from eth_utils import is_address, to_checksum_address, is_checksum_address
 
-from relay.api.resources import GraphDump, GraphImage, RequestEther, User, UserList, Network, NetworkList, \
+from .resources import GraphDump, GraphImage, RequestEther, User, UserList, Network, NetworkList, \
     ContactList, TrustlineList, Trustline, Spendable, SpendableTo, Path, UserEventsNetwork, UserEvents, Relay, \
     Balance, TransactionInfos, Block, EventsNetwork
+from .exchange.resources import OrderBook, OrderSubmission, ExchangeAddresses, UnwEthAddresses
 
 
 class AddressConverter(BaseConverter):
@@ -55,6 +56,11 @@ def ApiApp(trustlines):
     add_resource(Block, '/blocknumber')
     add_resource(Relay, '/relay')
     add_resource(RequestEther, '/request-ether')
+
+    add_resource(OrderBook, '/exchange/orderbook')
+    add_resource(OrderSubmission, '/exchange/order')
+    add_resource(ExchangeAddresses, '/exchange/exchanges')
+    add_resource(UnwEthAddresses, '/exchange/eth')
 
     api_bp.add_url_rule('/networks/<address:address>/image', view_func=GraphImage.as_view('image', trustlines))
     api_bp.add_url_rule('/networks/<address:address>/dump', view_func=GraphDump.as_view('dump', trustlines))
