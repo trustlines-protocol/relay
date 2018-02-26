@@ -1,0 +1,8 @@
+.cache
+.git
+.idea
+env
+.travis
+addresses.json
+tests
+docker

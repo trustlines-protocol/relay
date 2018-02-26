@@ -67,3 +67,5 @@ target/
 
 # webstorm, pycharm ide
 .idea
+
+addresses.json

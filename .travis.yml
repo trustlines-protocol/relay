@@ -9,6 +9,8 @@ script:
   - mypy --ignore-missing-imports relay
   - coverage run --source=relay -m py.test tests
   - docker build -t relay .
+  - ./.travis/build_smoketest.sh
+  - ./.travis/smoketest.sh
 after_success:
   - coverage report
 branches:
