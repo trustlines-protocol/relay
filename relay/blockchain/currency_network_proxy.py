@@ -25,6 +25,8 @@ logger = get_logger('currency network', logging.DEBUG)
 # Constants
 CreditlineRequestEvent = 'CreditlineUpdateRequest'
 CreditlineUpdatedEvent = 'CreditlineUpdate'
+TrustlineRequestEvent = 'TrustlineUpdateRequest'
+TrustlineUpdatedEvent = 'TrustlineUpdate'
 BalanceUpdatedEvent = 'BalanceUpdate'
 TransferEvent = 'Transfer'
 PathPreparedEvent = 'PathPrepared'
@@ -32,7 +34,11 @@ ChequeCashed = 'ChequeCashed'
 
 
 class CurrencyNetworkProxy(Proxy):
-    event_types = [TransferEvent, CreditlineRequestEvent, CreditlineUpdatedEvent]
+    event_types = [TransferEvent,
+                   CreditlineRequestEvent,
+                   CreditlineUpdatedEvent,
+                   TrustlineUpdatedEvent,
+                   TrustlineRequestEvent]
 
     def __init__(self, web3, abi, address):
         super().__init__(web3, abi, address)
@@ -113,9 +119,19 @@ class CurrencyNetworkProxy(Proxy):
         self.start_listen_on(BalanceUpdatedEvent, log)
 
     def start_listen_on_creditline(self, f):
-        def log(log_entry):
+        def log_creditline(log_entry):
             f(log_entry['args']['_creditor'], log_entry['args']['_debtor'], log_entry['args']['_value'])
-        self.start_listen_on(CreditlineUpdatedEvent, log)
+
+        self.start_listen_on(CreditlineUpdatedEvent, log_creditline)
+
+    def start_listen_on_trustline(self, f):
+        def log_trustline(log_entry):
+            f(log_entry['args']['_creditor'],
+              log_entry['args']['_debtor'],
+              log_entry['args']['_creditlineGiven'],
+              log_entry['args']['_creditlineReceived'])
+
+        self.start_listen_on(TrustlineUpdatedEvent, log_trustline)
 
     def start_listen_on_transfer(self, f):
         def log(log_entry):
@@ -130,6 +146,8 @@ class CurrencyNetworkProxy(Proxy):
             TransferEvent: ['_from', '_to'],
             CreditlineRequestEvent: ['_creditor', '_debtor'],
             CreditlineUpdatedEvent: ['_creditor', '_debtor'],
+            TrustlineRequestEvent: ['_creditor', '_debtor'],
+            TrustlineUpdatedEvent: ['_creditor', '_debtor'],
         }
         filter1 = {types[event_name][0]: user_address}
         filter2 = {types[event_name][1]: user_address}

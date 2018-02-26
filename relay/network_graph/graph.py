@@ -209,6 +209,23 @@ class CurrencyNetworkGraph(object):
         account = Account(self.graph[creditor][debtor], creditor, debtor)
         account.creditline = creditline
 
+    def update_trustline(self, creditor, debtor, creditline_given, creditline_received):
+        """to update the creditlines, used to react on changes on the blockchain"""
+        if not self.graph.has_edge(creditor, debtor):
+            self.graph.add_edge(creditor,
+                                debtor,
+                                creditline_ab=0,
+                                creditline_ba=0,
+                                interest_ab=0,
+                                interest_ba=0,
+                                fees_outstanding_a=0,
+                                fees_outstanding_b=0,
+                                m_time=0,
+                                balance_ab=0)
+        account = Account(self.graph[creditor][debtor], creditor, debtor)
+        account.creditline = creditline_given
+        account.reverse_creditline = creditline_received
+
     def update_balance(self, a, b, balance):
         """to update the balance, used to react on changes on the blockchain"""
         if not self.graph.has_edge(a, b):
