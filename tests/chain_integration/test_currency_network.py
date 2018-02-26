@@ -123,3 +123,20 @@ def test_listen_on_transfer(fresh_currency_network, accounts):
 
     assert len(events) == 1
     assert events[0] == (accounts[1], accounts[0], 10)
+
+
+def test_listen_on_trustline_update(fresh_currency_network, accounts):
+    currency_network = fresh_currency_network
+    events = []
+
+    def f(from_, to, given, received):
+        events.append((from_, to, given, received))
+
+    currency_network.start_listen_on_trustline(f)
+    context_switch()
+    currency_network.update_trustline(accounts[0], accounts[1], 25, 50)
+    currency_network.update_trustline(accounts[1], accounts[0], 50, 25)
+    gevent.sleep(1)
+
+    assert len(events) == 1
+    assert events[0] == (accounts[1], accounts[0], 50, 25)

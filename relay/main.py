@@ -130,9 +130,7 @@ class TrustlinesRelay:
         assert is_checksum_address(address)
         graph = self.currency_network_graphs[address]
         proxy = self.currency_network_proxies[address]
-        proxy.start_listen_on_full_sync(_create_on_full_sync(graph), self.config.get('syncInterval', 300))
-        proxy.start_listen_on_balance(_create_on_balance(graph))
-        proxy.start_listen_on_creditline(_create_on_trustline(graph))
+        link_graph(proxy, graph, full_sync_interval=self.config.get('syncInterval', 300))
 
     def _start_listen_on_new_addresses(self):
         def listen():
@@ -143,6 +141,14 @@ class TrustlinesRelay:
         gevent.Greenlet.spawn(listen)
 
 
+def link_graph(proxy, graph, full_sync_interval=None):
+    if full_sync_interval is not None:
+        proxy.start_listen_on_full_sync(_create_on_full_sync(graph), full_sync_interval)
+    proxy.start_listen_on_balance(_create_on_balance(graph))
+    proxy.start_listen_on_creditline(_create_on_creditline(graph))
+    proxy.start_listen_on_trustline(_create_on_trustline(graph))
+
+
 def _create_on_balance(graph):
     def update_balance(a, b, balance):
         graph.update_balance(a, b, balance)
@@ -150,11 +156,18 @@ def _create_on_balance(graph):
     return update_balance
 
 
-def _create_on_trustline(graph):
-    def update_balance(a, b, balance):
-        graph.update_creditline(a, b, balance)
+def _create_on_creditline(graph):
+    def update_creditline(a, b, creditline):
+        graph.update_creditline(a, b, creditline)
 
-    return update_balance
+    return update_creditline
+
+
+def _create_on_trustline(graph):
+    def update_trustline(a, b, creditline_given, creditline_received):
+        graph.update_trustline(a, b, creditline_given, creditline_received)
+
+    return update_trustline
 
 
 def _create_on_full_sync(graph):

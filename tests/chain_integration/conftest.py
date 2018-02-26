@@ -48,6 +48,10 @@ class CurrencyNetworkProxy(CurrencyNetworkProxy):
         txid = self._proxy.transact({"from": from_}).acceptCreditline(to, value)
         wait_for_transaction_receipt(self._web3, txid)
 
+    def update_trustline(self, from_, to, creditline_given, creditline_received):
+        txid = self._proxy.transact({"from": from_}).updateTrustline(to, creditline_given, creditline_received)
+        wait_for_transaction_receipt(self._web3, txid)
+
     def transfer(self, from_, to, value, max_fee, path):
         txid = self._proxy.transact({"from": from_}).transfer(to, value, max_fee, path)
         wait_for_transaction_receipt(self._web3, txid)
