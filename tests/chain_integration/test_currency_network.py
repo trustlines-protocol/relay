@@ -1,6 +1,10 @@
 import gevent
 
-from relay.blockchain.currency_network_proxy import CreditlineUpdatedEvent, CreditlineRequestEvent, TransferEvent
+from relay.blockchain.currency_network_events import (
+    CreditlineUpdateEventType,
+    CreditlineRequestEventType,
+    TransferEventType
+)
 
 
 def context_switch():
@@ -60,9 +64,27 @@ def test_gen_graph_representation(currency_network_with_trustlines, accounts):
 
 def test_number_of_get_events(currency_network_with_events, accounts):
     currency_network = currency_network_with_events
-    assert len(currency_network.get_network_events(CreditlineUpdatedEvent, user_address=accounts[0])) == 3
-    assert len(currency_network.get_network_events(CreditlineRequestEvent, user_address=accounts[0])) == 3
-    assert len(currency_network.get_network_events(TransferEvent, user_address=accounts[0])) == 1
+    assert len(currency_network.get_network_events(CreditlineUpdateEventType, user_address=accounts[0])) == 3
+    assert len(currency_network.get_network_events(CreditlineRequestEventType, user_address=accounts[0])) == 3
+    assert len(currency_network.get_network_events(TransferEventType, user_address=accounts[0])) == 1
+
+
+def test_get_events(currency_network_with_events, accounts):
+    currency_network = currency_network_with_events
+    creditline_update_events = currency_network.get_network_events(CreditlineUpdateEventType, user_address=accounts[0])
+    e1, e2, e3 = creditline_update_events
+    assert (e1.other_party, e2.other_party, e3.other_party) == (accounts[1], accounts[2], accounts[4])
+
+
+def test_get_transfer_event(currency_network_with_events, accounts):
+    currency_network = currency_network_with_events
+    transfer_event = currency_network.get_network_events(TransferEventType, user_address=accounts[0])[0]
+    assert transfer_event.value == 10
+    assert transfer_event.to == accounts[0]
+    assert transfer_event.from_ == accounts[1]
+    assert transfer_event.user == accounts[0]
+    assert transfer_event.other_party == accounts[1]
+    assert transfer_event.direction == 'received'
 
 
 def test_number_of_get_all_events(currency_network_with_events, accounts):

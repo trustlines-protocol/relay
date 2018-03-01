@@ -1,9 +1,10 @@
 import logging
+import math
+
 import gevent
 import socket
 
 from relay.logger import get_logger
-
 
 logger = get_logger('proxy', logging.DEBUG)
 
@@ -15,7 +16,7 @@ reconnect_interval = 3  # 3s
 
 
 class Proxy(object):
-    event_types = []
+    event_builders = {}
 
     def __init__(self, web3, abi, address):
         self._web3 = web3
@@ -53,6 +54,9 @@ class Proxy(object):
         filter.link_exception(on_exception)
 
     def get_events(self, event_name, filter_=None, from_block=0):
+        if event_name not in self.event_builders.keys():
+            raise ValueError('Unknown eventname {}'.format(event_name))
+
         if filter_ is None:
             filter_ = {}
 
@@ -62,11 +66,30 @@ class Proxy(object):
             'toBlock': queryBlock
         }
         list = self._proxy.pastEvents(event_name, params).get(False)
-        return list
+        return sorted_events(self._build_events(list))
 
-    def get_all_network_events(self, filter_=None, from_block=0):
+    def get_all_events(self, filter_=None, from_block=0):
         all_events = []
-        for type in self.event_types:  # FIXME takes too long.
+        for type in self.event_builders.keys():  # FIXME takes too long.
             # web3.py currently doesn't support getAll() to retrieve all events
-            all_events = all_events + self.get_events(type, from_block)
-        return all_events
+            all_events = all_events + self.get_events(type, filter_=filter_, from_block=from_block)
+        return sorted_events(all_events)
+
+    def _build_events(self, events):
+        current_blocknumber = self._web3.eth.blockNumber
+
+        def build_event(event):
+            event_type = event.get('event')
+            blocknumber = event.get('blockNumber')
+            timestamp = self._web3.eth.getBlock(blocknumber).timestamp
+            return self.event_builders[event_type](event, current_blocknumber, timestamp)
+
+        return [build_event(event) for event in events]
+
+
+def sorted_events(events):
+    def key(event):
+        if event.blocknumber is None:
+            return math.inf
+        return event.blocknumber
+    return sorted(events, key=key)

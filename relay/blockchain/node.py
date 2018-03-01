@@ -33,14 +33,5 @@ class Node:
         else:
             return None
 
-    def get_block_time(self, block_number):
+    def get_block_timestamp(self, block_number):
         return self._web3.eth.getBlock(block_number).timestamp
-
-    def get_block_status(self, block_number=None):
-        current_block_number = self._web3.eth.blockNumber
-        if block_number is None:
-            return 'sent'
-        elif (current_block_number - block_number) < 5:
-            return 'pending'
-        else:
-            return 'confirmed'
