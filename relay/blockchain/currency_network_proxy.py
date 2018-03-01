@@ -4,8 +4,17 @@ from collections import namedtuple
 
 import gevent
 
-from .proxy import Proxy, reconnect_interval
+from .proxy import Proxy, reconnect_interval, sorted_events
 from relay.logger import get_logger
+
+from .currency_network_events import (
+    TransferEventType,
+    CreditlineUpdateEventType,
+    TrustlineUpdateEventType,
+    BalanceUpdateEventType,
+    from_to_types,
+    event_builders,
+)
 
 
 class Trustline(namedtuple('Trustline',
@@ -22,23 +31,10 @@ class Trustline(namedtuple('Trustline',
 logger = get_logger('currency network', logging.DEBUG)
 
 
-# Constants
-CreditlineRequestEvent = 'CreditlineUpdateRequest'
-CreditlineUpdatedEvent = 'CreditlineUpdate'
-TrustlineRequestEvent = 'TrustlineUpdateRequest'
-TrustlineUpdatedEvent = 'TrustlineUpdate'
-BalanceUpdatedEvent = 'BalanceUpdate'
-TransferEvent = 'Transfer'
-PathPreparedEvent = 'PathPrepared'
-ChequeCashed = 'ChequeCashed'
-
-
 class CurrencyNetworkProxy(Proxy):
-    event_types = [TransferEvent,
-                   CreditlineRequestEvent,
-                   CreditlineUpdatedEvent,
-                   TrustlineUpdatedEvent,
-                   TrustlineRequestEvent]
+
+    event_builders = event_builders
+    event_types = list(event_builders.keys())
 
     def __init__(self, web3, abi, address):
         super().__init__(web3, abi, address)
@@ -116,13 +112,13 @@ class CurrencyNetworkProxy(Proxy):
     def start_listen_on_balance(self, f):
         def log(log_entry):
             f(log_entry['args']['_from'], log_entry['args']['_to'], log_entry['args']['_value'])
-        self.start_listen_on(BalanceUpdatedEvent, log)
+        self.start_listen_on(BalanceUpdateEventType, log)
 
     def start_listen_on_creditline(self, f):
         def log_creditline(log_entry):
             f(log_entry['args']['_creditor'], log_entry['args']['_debtor'], log_entry['args']['_value'])
 
-        self.start_listen_on(CreditlineUpdatedEvent, log_creditline)
+        self.start_listen_on(CreditlineUpdateEventType, log_creditline)
 
     def start_listen_on_trustline(self, f):
         def log_trustline(log_entry):
@@ -131,37 +127,34 @@ class CurrencyNetworkProxy(Proxy):
               log_entry['args']['_creditlineGiven'],
               log_entry['args']['_creditlineReceived'])
 
-        self.start_listen_on(TrustlineUpdatedEvent, log_trustline)
+        self.start_listen_on(TrustlineUpdateEventType, log_trustline)
 
     def start_listen_on_transfer(self, f):
         def log(log_entry):
             f(log_entry['args']['_from'], log_entry['args']['_to'], log_entry['args']['_value'])
-        self.start_listen_on(TransferEvent, log)
+        self.start_listen_on(TransferEventType, log)
 
     def get_network_events(self, event_name, user_address=None, from_block=0):
         if user_address is None:
-            return self.get_events(event_name, from_block=from_block)
+            result = self.get_events(event_name, from_block=from_block)
+        else:
 
-        types = {
-            TransferEvent: ['_from', '_to'],
-            CreditlineRequestEvent: ['_creditor', '_debtor'],
-            CreditlineUpdatedEvent: ['_creditor', '_debtor'],
-            TrustlineRequestEvent: ['_creditor', '_debtor'],
-            TrustlineUpdatedEvent: ['_creditor', '_debtor'],
-        }
-        filter1 = {types[event_name][0]: user_address}
-        filter2 = {types[event_name][1]: user_address}
+            filter1 = {from_to_types[event_name][0]: user_address}
+            filter2 = {from_to_types[event_name][1]: user_address}
 
-        list_1 = self.get_events(event_name, filter_=filter1, from_block=from_block)
-        list_2 = self.get_events(event_name, filter_=filter2, from_block=from_block)
-        return list_1 + list_2
+            list_1 = self.get_events(event_name, filter_=filter1, from_block=from_block)
+            list_2 = self.get_events(event_name, filter_=filter2, from_block=from_block)
+            result = list_1 + list_2
+            for event in result:
+                event.user = user_address
+        return sorted_events(result)
 
     def get_all_network_events(self, user_address=None, from_block=0):
         all_events = []
-        for type in CurrencyNetworkProxy.event_types:    # FIXME takes too long.
+        for type in self.event_builders.keys():    # FIXME takes too long.
                                                     # web3.py currently doesn't support getAll() to retrieve all events
             all_events = all_events + self.get_network_events(type, user_address, from_block)
-        return all_events
+        return sorted_events(all_events)
 
     def estimate_gas_for_transfer(self, sender, receiver, value, max_fee, path):
         return self._proxy.estimateGas({'from': sender}).transfer(receiver, value, max_fee, path)

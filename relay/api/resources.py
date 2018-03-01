@@ -7,9 +7,10 @@ from webargs import fields
 from webargs.flaskparser import use_args
 from marshmallow import validate
 
-from relay.utils import get_event_direction, get_event_from_to, sha3
+from relay.utils import sha3
 from relay.blockchain.currency_network_proxy import CurrencyNetworkProxy
 from relay.api import fields as custom_fields
+from .schemas import CurrencyNetworkEventSchema, UserCurrencyNetworkEventSchema
 
 
 def abort_if_unknown_network(trustlines, network_address):
@@ -175,16 +176,7 @@ class UserEventsNetwork(Resource):
             events = proxy.get_network_events(type, user_address, from_block=from_block)
         else:
             events = proxy.get_all_network_events(user_address, from_block=from_block)
-        return sorted([{'blockNumber': event.get('blockNumber'),
-                        'type': event.get('event'),
-                        'transactionId': event.get('transactionHash'),
-                        'networkAddress': event.get('address'),
-                        'status': self.trustlines.node.get_block_status(event.get('blockNumber')),
-                        'timestamp': self.trustlines.node.get_block_time(event.get('blockNumber')),
-                        'amount': event.get('args').get('_value'),
-                        'direction': get_event_direction(event, user_address)[0],
-                        'address': get_event_direction(event, user_address)[1]} for event in events],
-                      key=lambda x: x.get('blockNumber', 0))
+        return UserCurrencyNetworkEventSchema().dump(events, many=True)
 
 
 class UserEvents(Resource):
@@ -208,19 +200,10 @@ class UserEvents(Resource):
         for network_address in networks:
             proxy = self.trustlines.currency_network_proxies[network_address]
             if type is not None:
-                events = events + proxy.get_network_eventsevents(type, user_address, from_block=from_block)
+                events = events + proxy.get_network_events(type, user_address, from_block=from_block)
             else:
                 events = events + proxy.get_all_network_events(user_address, from_block=from_block)
-        return sorted([{'blockNumber': event.get('blockNumber'),
-                        'type': event.get('event'),
-                        'transactionId': event.get('transactionHash'),
-                        'networkAddress': event.get('address'),
-                        'status': self.trustlines.node.get_block_status(event.get('blockNumber')),
-                        'timestamp': self.trustlines.node.get_block_time(event.get('blockNumber')),
-                        'direction': get_event_direction(event, user_address)[0],
-                        'amount': event.get('args').get('_value'),
-                        'address': get_event_direction(event, user_address)[1]} for event in events],
-                      key=lambda x: x.get('blockNumber', 0))
+        return UserCurrencyNetworkEventSchema().dump(events, many=True)
 
 
 class EventsNetwork(Resource):
@@ -245,16 +228,7 @@ class EventsNetwork(Resource):
             events = proxy.get_events(type, from_block=from_block)
         else:
             events = proxy.get_all_events(from_block=from_block)
-        return sorted([{'blockNumber': event.get('blockNumber'),
-                        'type': event.get('event'),
-                        'transactionId': event.get('transactionHash'),
-                        'networkAddress': event.get('address'),
-                        'status': self.trustlines.node.get_block_status(event.get('blockNumber')),
-                        'timestamp': self.trustlines.node.get_block_time(event.get('blockNumber')),
-                        'amount': event.get('args').get('_value'),
-                        'from': get_event_from_to(event)[0],
-                        'to': get_event_from_to(event)[1]} for event in events],
-                      key=lambda x: x.get('blockNumber', 0))
+        return CurrencyNetworkEventSchema().dump(events, many=True)
 
 
 class TransactionInfos(Resource):
@@ -368,9 +342,10 @@ class GraphImage(MethodView):
     def __init__(self, trustlines):
         self.trustlines = trustlines
 
-    def get(self, address):
+    def get(self, network_address):
+        abort_if_unknown_network(self.trustlines, network_address)
         filename = tempfile.mktemp(".gif")
-        self.trustlines.currency_network_graphs[address].draw(filename)
+        self.trustlines.currency_network_graphs[network_address].draw(filename)
         return send_file(filename, mimetype='image/gif')
 
 
@@ -379,8 +354,9 @@ class GraphDump(MethodView):
     def __init__(self, trustlines):
         self.trustlines = trustlines
 
-    def get(self, address):
-        response = make_response(self.trustlines.currency_network_graphs[address].dump())
+    def get(self, network_address):
+        abort_if_unknown_network(self.trustlines, network_address)
+        response = make_response(self.trustlines.currency_network_graphs[network_address].dump())
         cd = 'attachment; filename=networkdump.csv'
         response.headers['Content-Disposition'] = cd
         response.mimetype = 'text/csv'
