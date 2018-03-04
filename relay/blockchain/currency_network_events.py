@@ -90,7 +90,8 @@ event_builders = {
     CreditlineRequestEventType: CreditlineRequestEvent,
     CreditlineUpdateEventType: CreditlineUpdateEvent,
     TrustlineUpdateEventType: TrustlineUpdateEvent,
-    TrustlineRequestEventType: TrustlineRequestEvent
+    TrustlineRequestEventType: TrustlineRequestEvent,
+    BalanceUpdateEventType: BalanceUpdateEvent,
 }
 
 

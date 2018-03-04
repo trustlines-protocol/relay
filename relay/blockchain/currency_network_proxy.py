@@ -8,10 +8,12 @@ from .proxy import Proxy, reconnect_interval, sorted_events
 from relay.logger import get_logger
 
 from .currency_network_events import (
-    TransferEventType,
     CreditlineUpdateEventType,
+    CreditlineRequestEventType,
     TrustlineUpdateEventType,
+    TrustlineRequestEventType,
     BalanceUpdateEventType,
+    TransferEventType,
     from_to_types,
     event_builders,
 )
@@ -35,6 +37,12 @@ class CurrencyNetworkProxy(Proxy):
 
     event_builders = event_builders
     event_types = list(event_builders.keys())
+
+    standard_event_types = [TransferEventType,
+                            CreditlineRequestEventType,
+                            CreditlineUpdateEventType,
+                            TrustlineRequestEventType,
+                            TrustlineUpdateEventType]
 
     def __init__(self, web3, abi, address):
         super().__init__(web3, abi, address)
@@ -139,7 +147,7 @@ class CurrencyNetworkProxy(Proxy):
 
     def get_all_network_events(self, user_address=None, from_block=0):
         all_events = []
-        for type in self.event_builders.keys():    # FIXME takes too long.
+        for type in self.standard_event_types:    # FIXME takes too long.
                                                     # web3.py currently doesn't support getAll() to retrieve all events
             all_events = all_events + self.get_network_events(type, user_address, from_block)
         return sorted_events(all_events)

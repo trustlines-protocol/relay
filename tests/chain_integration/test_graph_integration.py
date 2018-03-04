@@ -2,7 +2,42 @@ import pytest
 import gevent
 
 from relay.network_graph.graph import CurrencyNetworkGraph
-from relay.main import link_graph
+
+
+def link_graph(proxy, graph, full_sync_interval=None):
+    if full_sync_interval is not None:
+        proxy.start_listen_on_full_sync(_create_on_full_sync(graph), full_sync_interval)
+    proxy.start_listen_on_balance(_create_on_balance(graph))
+    proxy.start_listen_on_creditline(_create_on_creditline(graph))
+    proxy.start_listen_on_trustline(_create_on_trustline(graph))
+
+
+def _create_on_balance(graph):
+    def update_balance(event):
+        graph.update_balance(event.from_, event.to, event.value)
+
+    return update_balance
+
+
+def _create_on_creditline(graph):
+    def update_creditline(event):
+        graph.update_creditline(event.from_, event.to, event.value)
+
+    return update_creditline
+
+
+def _create_on_trustline(graph):
+    def update_trustline(event):
+        graph.update_trustline(event.from_, event.to, event.given, event.received)
+
+    return update_trustline
+
+
+def _create_on_full_sync(graph):
+    def update_community(graph_rep):
+        graph.gen_network(graph_rep)
+
+    return update_community
 
 
 @pytest.fixture()
