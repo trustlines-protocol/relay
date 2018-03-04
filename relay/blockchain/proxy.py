@@ -18,6 +18,7 @@ reconnect_interval = 3  # 3s
 
 class Proxy(object):
     event_builders = {}
+    standard_event_types = []
 
     def __init__(self, web3, abi, address):
         self._web3 = web3
@@ -71,7 +72,7 @@ class Proxy(object):
 
     def get_all_events(self, filter_=None, from_block=0):
         all_events = []
-        for type in self.event_builders.keys():  # FIXME takes too long.
+        for type in self.standard_event_types:  # FIXME takes too long.
             # web3.py currently doesn't support getAll() to retrieve all events
             all_events = all_events + self.get_events(type, filter_=filter_, from_block=from_block)
         return sorted_events(all_events)

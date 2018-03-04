@@ -96,8 +96,8 @@ def test_listen_on_creditline_update(fresh_currency_network, accounts):
     currency_network = fresh_currency_network
     events = []
 
-    def f(from_, to, value):
-        events.append((from_, to, value))
+    def f(event):
+        events.append(event)
 
     currency_network.start_listen_on_creditline(f)
     context_switch()
@@ -106,15 +106,17 @@ def test_listen_on_creditline_update(fresh_currency_network, accounts):
     gevent.sleep(1)
 
     assert len(events) == 1
-    assert events[0] == (accounts[0], accounts[1], 25)
+    assert events[0].from_ == accounts[0]
+    assert events[0].to == accounts[1]
+    assert events[0].value == 25
 
 
 def test_listen_on_balance_update(fresh_currency_network, accounts):
     currency_network = fresh_currency_network
     events = []
 
-    def f(from_, to, value):
-        events.append((from_, to, value))
+    def f(event):
+        events.append(event)
 
     currency_network.start_listen_on_balance(f)
     context_switch()
@@ -124,17 +126,17 @@ def test_listen_on_balance_update(fresh_currency_network, accounts):
     gevent.sleep(1)
 
     assert len(events) == 1
-    assert (events[0][0] == accounts[0] or events[0][0] == accounts[1])
-    assert (events[0][1] == accounts[0] or events[0][1] == accounts[1])
-    assert (-12 < events[0][2] < 12)  # because there might be fees
+    assert (events[0].from_ == accounts[0] or events[0].from_ == accounts[1])
+    assert (events[0].to == accounts[0] or events[0].to == accounts[1])
+    assert (-12 < events[0].value < 12)  # because there might be fees
 
 
 def test_listen_on_transfer(fresh_currency_network, accounts):
     currency_network = fresh_currency_network
     events = []
 
-    def f(from_, to, value):
-        events.append((from_, to, value))
+    def f(event):
+        events.append(event)
 
     currency_network.start_listen_on_transfer(f)
     context_switch()
@@ -144,15 +146,17 @@ def test_listen_on_transfer(fresh_currency_network, accounts):
     gevent.sleep(1)
 
     assert len(events) == 1
-    assert events[0] == (accounts[1], accounts[0], 10)
+    assert events[0].from_ == accounts[1]
+    assert events[0].to == accounts[0]
+    assert events[0].value == 10
 
 
 def test_listen_on_trustline_update(fresh_currency_network, accounts):
     currency_network = fresh_currency_network
     events = []
 
-    def f(from_, to, given, received):
-        events.append((from_, to, given, received))
+    def f(event):
+        events.append(event)
 
     currency_network.start_listen_on_trustline(f)
     context_switch()
@@ -161,4 +165,7 @@ def test_listen_on_trustline_update(fresh_currency_network, accounts):
     gevent.sleep(1)
 
     assert len(events) == 1
-    assert events[0] == (accounts[1], accounts[0], 50, 25)
+    assert events[0].from_ == accounts[0]
+    assert events[0].to == accounts[1]
+    assert events[0].given == 25
+    assert events[0].received == 50
