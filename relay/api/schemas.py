@@ -4,6 +4,8 @@ from .fields import Address, BigInteger
 
 
 class EventSchema(Schema):
+    class Meta:
+        strict = True
     timestamp = fields.Integer()
 
 

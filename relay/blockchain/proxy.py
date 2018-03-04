@@ -1,5 +1,6 @@
 import logging
 import math
+import time
 
 import gevent
 import socket
@@ -77,14 +78,22 @@ class Proxy(object):
 
     def _build_events(self, events):
         current_blocknumber = self._web3.eth.blockNumber
+        return [self._build_event(event, current_blocknumber) for event in events]
 
-        def build_event(event):
-            event_type = event.get('event')
-            blocknumber = event.get('blockNumber')
+    def _build_event(self, event, current_blocknumber=None):
+        event_type = event.get('event')
+        blocknumber = event.get('blockNumber')
+        if current_blocknumber is None:
+            current_blocknumber = blocknumber
+        timestamp = self._get_block_timestamp(blocknumber)
+        return self.event_builders[event_type](event, current_blocknumber, timestamp)
+
+    def _get_block_timestamp(self, blocknumber):
+        if blocknumber is not None:
             timestamp = self._web3.eth.getBlock(blocknumber).timestamp
-            return self.event_builders[event_type](event, current_blocknumber, timestamp)
-
-        return [build_event(event) for event in events]
+        else:
+            timestamp = time.time()
+        return timestamp
 
 
 def sorted_events(events):

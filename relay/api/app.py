@@ -1,6 +1,7 @@
 from flask import Flask, Blueprint
 from flask_cors import CORS
 from flask_restful import Api
+from flask_sockets import Sockets
 from webargs.flaskparser import parser, abort
 from werkzeug.routing import BaseConverter, ValidationError
 from eth_utils import is_address, to_checksum_address, is_checksum_address
@@ -8,6 +9,7 @@ from eth_utils import is_address, to_checksum_address, is_checksum_address
 from .resources import GraphDump, GraphImage, RequestEther, User, UserList, Network, NetworkList, \
     ContactList, TrustlineList, Trustline, Spendable, SpendableTo, Path, UserEventsNetwork, UserEvents, Relay, \
     Balance, TransactionInfos, Block, EventsNetwork
+from .streams.app import WebSocketRPCHandler
 from .exchange.resources import OrderBook, OrderSubmission, ExchangeAddresses, UnwEthAddresses
 
 
@@ -26,9 +28,11 @@ class AddressConverter(BaseConverter):
 
 def ApiApp(trustlines):
     app = Flask(__name__)
+    sockets = Sockets(app)
     Api(app, catch_all_404s=True)
     CORS(app)
     api_bp = Blueprint('api', __name__, url_prefix='/api/v1')
+    sockets_bp = Blueprint('api', __name__, url_prefix='/api/v1/streams')
     api = Api(api_bp)
 
     def add_resource(resource, url):
@@ -65,8 +69,11 @@ def ApiApp(trustlines):
     api_bp.add_url_rule('/networks/<address:address>/image', view_func=GraphImage.as_view('image', trustlines))
     api_bp.add_url_rule('/networks/<address:address>/dump', view_func=GraphDump.as_view('dump', trustlines))
 
+    sockets_bp.add_url_rule('/events', 'stream', view_func=WebSocketRPCHandler(trustlines))
+
     app.url_map.converters['address'] = AddressConverter
     app.register_blueprint(api_bp)
+    sockets.register_blueprint(sockets_bp)
 
     return app
 

@@ -54,6 +54,10 @@ class TransferEvent(ValueEvent):
     pass
 
 
+class BalanceUpdateEvent(ValueEvent):
+    pass
+
+
 class CreditlineUpdateEvent(ValueEvent):
     pass
 
@@ -96,4 +100,5 @@ from_to_types = {
     CreditlineUpdateEventType: ['_creditor', '_debtor'],
     TrustlineRequestEventType: ['_creditor', '_debtor'],
     TrustlineUpdateEventType: ['_creditor', '_debtor'],
+    BalanceUpdateEventType: ['_from',  '_to'],
 }

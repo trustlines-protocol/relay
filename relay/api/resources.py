@@ -46,7 +46,7 @@ class Network(Resource):
             'name': self.trustlines.currency_network_proxies[network_address].name,
             'abbreviation': self.trustlines.currency_network_proxies[network_address].symbol,
             'decimals': self.trustlines.currency_network_proxies[network_address].decimals,
-            'numUsers': len(self.trustlines.currency_network_proxies[network_address].users)
+            'numUsers': len(self.trustlines.currency_network_graphs[network_address].users)
         }
 
 
@@ -176,7 +176,7 @@ class UserEventsNetwork(Resource):
             events = proxy.get_network_events(type, user_address, from_block=from_block)
         else:
             events = proxy.get_all_network_events(user_address, from_block=from_block)
-        return UserCurrencyNetworkEventSchema().dump(events, many=True)
+        return UserCurrencyNetworkEventSchema().dump(events, many=True).data
 
 
 class UserEvents(Resource):
@@ -203,7 +203,7 @@ class UserEvents(Resource):
                 events = events + proxy.get_network_events(type, user_address, from_block=from_block)
             else:
                 events = events + proxy.get_all_network_events(user_address, from_block=from_block)
-        return UserCurrencyNetworkEventSchema().dump(events, many=True)
+        return UserCurrencyNetworkEventSchema().dump(events, many=True).data
 
 
 class EventsNetwork(Resource):
@@ -228,7 +228,7 @@ class EventsNetwork(Resource):
             events = proxy.get_events(type, from_block=from_block)
         else:
             events = proxy.get_all_events(from_block=from_block)
-        return CurrencyNetworkEventSchema().dump(events, many=True)
+        return CurrencyNetworkEventSchema().dump(events, many=True).data
 
 
 class TransactionInfos(Resource):
