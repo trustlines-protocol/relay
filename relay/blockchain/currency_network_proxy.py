@@ -38,18 +38,9 @@ class CurrencyNetworkProxy(Proxy):
 
     def __init__(self, web3, abi, address):
         super().__init__(web3, abi, address)
-
-    @property
-    def name(self):
-        return self._proxy.call().name().strip('\0')
-
-    @property
-    def decimals(self):
-        return self._proxy.call().decimals()
-
-    @property
-    def symbol(self):
-        return self._proxy.call().symbol().strip('\0')
+        self.name = self._proxy.call().name().strip('\0')
+        self.decimals = self._proxy.call().decimals()
+        self.symbol = self._proxy.call().symbol().strip('\0')
 
     @property
     def users(self):
@@ -111,27 +102,24 @@ class CurrencyNetworkProxy(Proxy):
 
     def start_listen_on_balance(self, f):
         def log(log_entry):
-            f(log_entry['args']['_from'], log_entry['args']['_to'], log_entry['args']['_value'])
+            f(self._build_event(log_entry))
         self.start_listen_on(BalanceUpdateEventType, log)
 
     def start_listen_on_creditline(self, f):
         def log_creditline(log_entry):
-            f(log_entry['args']['_creditor'], log_entry['args']['_debtor'], log_entry['args']['_value'])
+            f(self._build_event(log_entry))
 
         self.start_listen_on(CreditlineUpdateEventType, log_creditline)
 
     def start_listen_on_trustline(self, f):
         def log_trustline(log_entry):
-            f(log_entry['args']['_creditor'],
-              log_entry['args']['_debtor'],
-              log_entry['args']['_creditlineGiven'],
-              log_entry['args']['_creditlineReceived'])
+            f(self._build_event(log_entry))
 
         self.start_listen_on(TrustlineUpdateEventType, log_trustline)
 
     def start_listen_on_transfer(self, f):
         def log(log_entry):
-            f(log_entry['args']['_from'], log_entry['args']['_to'], log_entry['args']['_value'])
+            f(self._build_event(log_entry))
         self.start_listen_on(TransferEventType, log)
 
     def get_network_events(self, event_name, user_address=None, from_block=0):

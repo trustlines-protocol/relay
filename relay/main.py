@@ -2,11 +2,14 @@ import json
 import logging
 import os
 import sys
+from collections import defaultdict
+from copy import deepcopy
 
 import gevent
 from eth_utils import is_checksum_address, to_checksum_address
 from gevent import sleep
 from gevent.wsgi import WSGIServer
+from geventwebsocket.handler import WebSocketHandler
 from sqlalchemy import create_engine
 from web3 import Web3, RPCProvider
 
@@ -17,6 +20,7 @@ from .network_graph.graph import CurrencyNetworkGraph
 from .api.app import ApiApp
 from .exchange.orderbook import OrderBookGreenlet
 from .logger import get_logger
+from .streams import Subject
 
 logger = get_logger('trustlines', logging.DEBUG)
 
@@ -26,6 +30,7 @@ class TrustlinesRelay:
     def __init__(self):
         self.currency_network_proxies = {}
         self.currency_network_graphs = {}
+        self.subjects = defaultdict(Subject)
         self.config = {}
         self.contracts = {}
         self.node = None
@@ -63,7 +68,7 @@ class TrustlinesRelay:
         self._start_listen_on_new_addresses()
         ipport = ('', 5000)
         app = ApiApp(self)
-        http_server = WSGIServer(ipport, app, log=None)
+        http_server = WSGIServer(ipport, app, log=None, handler_class=WebSocketHandler)
         logger.info('Server is running on {}'.format(ipport))
         http_server.serve_forever()
 
@@ -130,7 +135,11 @@ class TrustlinesRelay:
         assert is_checksum_address(address)
         graph = self.currency_network_graphs[address]
         proxy = self.currency_network_proxies[address]
-        link_graph(proxy, graph, full_sync_interval=self.config.get('syncInterval', 300))
+        proxy.start_listen_on_full_sync(_create_on_full_sync(graph), self.config.get('syncInterval', 300))
+        proxy.start_listen_on_balance(self._on_balance_update)
+        proxy.start_listen_on_creditline(self._on_creditline_update)
+        proxy.start_listen_on_trustline(self._on_trustline_update)
+        proxy.start_listen_on_transfer(self._on_transfer)
 
     def _start_listen_on_new_addresses(self):
         def listen():
@@ -140,34 +149,38 @@ class TrustlinesRelay:
 
         gevent.Greenlet.spawn(listen)
 
+    def _on_balance_update(self, balance_update_event):
+        graph = self.currency_network_graphs[balance_update_event.network_address]
+        graph.update_balance(balance_update_event.from_,
+                             balance_update_event.to,
+                             balance_update_event.value)
+        self._publish_event(balance_update_event)
 
-def link_graph(proxy, graph, full_sync_interval=None):
-    if full_sync_interval is not None:
-        proxy.start_listen_on_full_sync(_create_on_full_sync(graph), full_sync_interval)
-    proxy.start_listen_on_balance(_create_on_balance(graph))
-    proxy.start_listen_on_creditline(_create_on_creditline(graph))
-    proxy.start_listen_on_trustline(_create_on_trustline(graph))
+    def _on_creditline_update(self, creditline_update_event):
+        graph = self.currency_network_graphs[creditline_update_event.network_address]
+        graph.update_creditline(creditline_update_event.from_,
+                                creditline_update_event.to,
+                                creditline_update_event.value)
+        self._publish_event(creditline_update_event)
 
+    def _on_transfer(self, transfer_event):
+        self._publish_event(transfer_event)
 
-def _create_on_balance(graph):
-    def update_balance(a, b, balance):
-        graph.update_balance(a, b, balance)
+    def _on_trustline_update(self, trustline_update_event):
+        graph = self.currency_network_graphs[trustline_update_event.network_address]
+        graph.update_trustline(trustline_update_event.from_,
+                               trustline_update_event.to,
+                               trustline_update_event.given,
+                               trustline_update_event.received,
+                               )
+        self._publish_event(trustline_update_event)
 
-    return update_balance
-
-
-def _create_on_creditline(graph):
-    def update_creditline(a, b, creditline):
-        graph.update_creditline(a, b, creditline)
-
-    return update_creditline
-
-
-def _create_on_trustline(graph):
-    def update_trustline(a, b, creditline_given, creditline_received):
-        graph.update_trustline(a, b, creditline_given, creditline_received)
-
-    return update_trustline
+    def _publish_event(self, event):
+        event2 = deepcopy(event)
+        event.user = event.from_
+        event2.user = event2.to
+        self.subjects[event.user].publish(event)
+        self.subjects[event2.user].publish(event2)
 
 
 def _create_on_full_sync(graph):
