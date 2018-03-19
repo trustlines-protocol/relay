@@ -6,6 +6,7 @@ from tinyrpc import BadRequestError
 from relay.streams import Client, DisconnectedError
 from .rpc_protocol import validating_rpc_caller
 from ..schemas import UserCurrencyNetworkEventSchema
+from relay.blockchain.events import Event
 from relay.logger import get_logger
 
 logger = get_logger('websockets', logging.DEBUG)
@@ -52,7 +53,12 @@ class RPCWebSocketClient(Client):
         self.rpc = rpc_protocol
 
     def send(self, id, event):
-        event = UserCurrencyNetworkEventSchema().dump(event).data
+        if isinstance(event, str) or isinstance(event, dict):
+            event = event
+        elif isinstance(event, Event):
+            event = UserCurrencyNetworkEventSchema().dump(event).data
+        else:
+            raise ValueError('Unexpected Type: ' + type(event))
         request = self.rpc.create_request('subscription_' + str(id), args={'event': event}, one_way=True)
         try:
             self.ws.send(request.serialize())

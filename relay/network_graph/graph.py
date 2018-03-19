@@ -139,6 +139,10 @@ class AccountSummary(object):
         return -self.balance + self.creditline_given
 
     @property
+    def available(self):
+        return self.creditline_left_received
+
+    @property
     def creditline_left_received(self):
         return self.balance + self.creditline_received
 
