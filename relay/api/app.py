@@ -9,8 +9,9 @@ from eth_utils import is_address, to_checksum_address, is_checksum_address
 from .resources import GraphDump, GraphImage, RequestEther, User, UserList, Network, NetworkList, \
     ContactList, TrustlineList, Trustline, Spendable, SpendableTo, Path, UserEventsNetwork, UserEvents, Relay, \
     Balance, TransactionInfos, Block, EventsNetwork
-from .streams.app import WebSocketRPCHandler
+from .streams.app import WebSocketRPCHandler, MessagingWebSocketRPCHandler
 from .exchange.resources import OrderBook, OrderSubmission, ExchangeAddresses, UnwEthAddresses
+from .messaging.resources import PostMessage
 
 
 class AddressConverter(BaseConverter):
@@ -66,10 +67,13 @@ def ApiApp(trustlines):
     add_resource(ExchangeAddresses, '/exchange/exchanges')
     add_resource(UnwEthAddresses, '/exchange/eth')
 
+    add_resource(PostMessage, '/messages/<address:user_address>')
+
     api_bp.add_url_rule('/networks/<address:address>/image', view_func=GraphImage.as_view('image', trustlines))
     api_bp.add_url_rule('/networks/<address:address>/dump', view_func=GraphDump.as_view('dump', trustlines))
 
     sockets_bp.add_url_rule('/events', 'stream', view_func=WebSocketRPCHandler(trustlines))
+    sockets_bp.add_url_rule('/messages', 'stream', view_func=MessagingWebSocketRPCHandler(trustlines))
 
     app.url_map.converters['address'] = AddressConverter
     app.register_blueprint(api_bp)

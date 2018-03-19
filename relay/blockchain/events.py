@@ -1,7 +1,4 @@
-class Event(object):
-
-    def __init__(self, timestamp):
-        self.timestamp = timestamp
+from ..events import Event
 
 
 class BlockchainEvent(Event):

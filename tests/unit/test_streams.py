@@ -1,9 +1,9 @@
 import pytest
 
-from relay.streams import Client, Subject, DisconnectedError
+from relay.streams import Client, Subject, MessagingSubject, DisconnectedError
 
 
-class TestClient(Client):
+class LogClient(Client):
 
     def __init__(self):
         self.events = []
@@ -20,8 +20,13 @@ def subject():
 
 
 @pytest.fixture()
+def messaging_subject():
+    return MessagingSubject()
+
+
+@pytest.fixture()
 def client():
-    return TestClient()
+    return LogClient()
 
 
 def test_subscription(subject, client):
@@ -49,3 +54,31 @@ def test_auto_unsubscribe(subject, client):
     assert client.events == []
     assert subscribtion.closed
     assert len(subject.subscriptions) == 0
+
+
+def test_subscription_after_puplish(messaging_subject, client):
+    assert not messaging_subject.publish(event='test')
+    subscribtion = messaging_subject.subscribe(client)
+    assert messaging_subject.get_missed_messages() == ['test']
+    assert not subscribtion.closed
+
+
+def test_subscription_after_resubscribe(messaging_subject, client):
+    messaging_subject.publish(event='test')
+    subscribtion = messaging_subject.subscribe(client)
+    messaging_subject.get_missed_messages()
+    subscribtion.unsubscribe()
+    client.events.clear()
+    messaging_subject.subscribe(client)
+    assert messaging_subject.get_missed_messages() == []
+    assert client.events == []
+
+
+def test_subscription_both(messaging_subject, client):
+    assert not messaging_subject.publish(event='test1')
+    subscribtion = messaging_subject.subscribe(client)
+    assert messaging_subject.publish(event='test2')
+    id = subscribtion.id
+    assert messaging_subject.get_missed_messages() == ['test1']
+    assert client.events == [(id, 'test2')]
+    assert not subscribtion.closed

@@ -20,7 +20,8 @@ from .network_graph.graph import CurrencyNetworkGraph
 from .api.app import ApiApp
 from .exchange.orderbook import OrderBookGreenlet
 from .logger import get_logger
-from .streams import Subject
+from .streams import Subject, MessagingSubject
+from .events import NetworkBalanceEvent, NetworkAvailableEvent
 
 logger = get_logger('trustlines', logging.DEBUG)
 
@@ -31,6 +32,7 @@ class TrustlinesRelay:
         self.currency_network_proxies = {}
         self.currency_network_graphs = {}
         self.subjects = defaultdict(Subject)
+        self.messaging = defaultdict(MessagingSubject)
         self.config = {}
         self.contracts = {}
         self.node = None
@@ -154,17 +156,21 @@ class TrustlinesRelay:
         graph.update_balance(balance_update_event.from_,
                              balance_update_event.to,
                              balance_update_event.value)
-        self._publish_event(balance_update_event)
+        self._publish_blockchain_event(balance_update_event)
+        self._publish_network_balance_event(balance_update_event.from_, balance_update_event.network_address)
+        self._publish_network_balance_event(balance_update_event.to, balance_update_event.network_address)
 
     def _on_creditline_update(self, creditline_update_event):
         graph = self.currency_network_graphs[creditline_update_event.network_address]
         graph.update_creditline(creditline_update_event.from_,
                                 creditline_update_event.to,
                                 creditline_update_event.value)
-        self._publish_event(creditline_update_event)
+        self._publish_blockchain_event(creditline_update_event)
+        self._publish_network_available_event(creditline_update_event.from_, creditline_update_event.network_address)
+        self._publish_network_available_event(creditline_update_event.to, creditline_update_event.network_address)
 
     def _on_transfer(self, transfer_event):
-        self._publish_event(transfer_event)
+        self._publish_blockchain_event(transfer_event)
 
     def _on_trustline_update(self, trustline_update_event):
         graph = self.currency_network_graphs[trustline_update_event.network_address]
@@ -173,14 +179,31 @@ class TrustlinesRelay:
                                trustline_update_event.given,
                                trustline_update_event.received,
                                )
-        self._publish_event(trustline_update_event)
+        self._publish_blockchain_event(trustline_update_event)
+        self._publish_network_available_event(trustline_update_event.from_, trustline_update_event.network_address)
+        self._publish_network_available_event(trustline_update_event.to, trustline_update_event.network_address)
 
-    def _publish_event(self, event):
+    def _publish_blockchain_event(self, event):
         event2 = deepcopy(event)
         event.user = event.from_
         event2.user = event2.to
+        self._publish_user_event(event)
+        self._publish_user_event(event2)
+
+    def _publish_user_event(self, event):
+        assert event.user is not None
         self.subjects[event.user].publish(event)
-        self.subjects[event2.user].publish(event2)
+
+    def _publish_network_balance_event(self, user, network_address):
+        graph = self.currency_network_graphs[network_address]
+        balance = graph.get_account_sum(user).balance
+        self._publish_user_event(NetworkBalanceEvent(network_address, user, balance))
+
+    def _publish_network_available_event(self, user, network_address):
+        graph = self.currency_network_graphs[network_address]
+        available = graph.get_account_sum(user).available
+        self._publish_user_event(
+            NetworkAvailableEvent(network_address, user, available))
 
 
 def _create_on_full_sync(graph):

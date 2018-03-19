@@ -32,9 +32,13 @@ class Subject():
         self.subscriptions.remove(subscription)
 
     def publish(self, event):
-        logger.debug('Sent event to {} subscribers'.format(len(self.subscriptions)))
+        if self.subscriptions:
+            logger.debug('Sent event to {} subscribers'.format(len(self.subscriptions)))
+        result = 0
         for subscription in self.subscriptions:
-            subscription.notify(event)
+            if subscription.notify(event):
+                result += 1
+        return result
 
     @staticmethod
     def _create_id():
@@ -52,9 +56,30 @@ class Subscription():
         if not self.closed:
             try:
                 self.client.send(self.id, event)
+                return True
             except DisconnectedError:
                 self.unsubscribe()
+
+        return False
 
     def unsubscribe(self):
         self.closed = True
         self.subject.unsubscribe(self)
+
+
+class MessagingSubject(Subject):
+
+    def __init__(self):
+        super().__init__()
+        self.events = []
+
+    def get_missed_messages(self):
+        events = self.events
+        self.events = []
+        return events
+
+    def publish(self, event):
+        result = super().publish(event)
+        if result == 0:
+            self.events.append(event)
+        return result
