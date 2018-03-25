@@ -1,11 +1,16 @@
 import logging
 import math
 import time
+from typing import List, Dict, Callable, Any  # noqa: F401
 
 import gevent
 import socket
 
+from .events import BlockchainEvent
+
+
 from relay.logger import get_logger
+
 
 logger = get_logger('proxy', logging.DEBUG)
 
@@ -17,15 +22,15 @@ reconnect_interval = 3  # 3s
 
 
 class Proxy(object):
-    event_builders = {}
-    standard_event_types = []
+    event_builders = {}  # type: Dict[str, Callable[[Any, int, int], BlockchainEvent]]
+    standard_event_types = []  # type: List[str]
 
-    def __init__(self, web3, abi, address):
+    def __init__(self, web3, abi, address: str) -> None:
         self._web3 = web3
         self._proxy = web3.eth.contract(abi=abi, address=address)
         self.address = address
 
-    def _watch_filter(self, eventname, function, params=None):
+    def _watch_filter(self, eventname: str, function, params=None):
         while True:
             try:
                 filter = self._proxy.on(eventname, params)
@@ -42,7 +47,7 @@ class Proxy(object):
                 logger.warning('ValueError in filter creation, try to reconnect:' + str(err))
                 gevent.sleep(reconnect_interval)
 
-    def start_listen_on(self, eventname, function, params=None):
+    def start_listen_on(self, eventname: str, function, params=None) -> None:
         def on_exception(filter):
             logger.warning('Filter {} disconnected, trying to reconnect'.format(filter.filter_id))
             gevent.sleep(reconnect_interval)
@@ -55,7 +60,7 @@ class Proxy(object):
         filter = self._watch_filter(eventname, function, params)
         filter.link_exception(on_exception)
 
-    def get_events(self, event_name, filter_=None, from_block=0):
+    def get_events(self, event_name, filter_=None, from_block=0) -> List[BlockchainEvent]:
         if event_name not in self.event_builders.keys():
             raise ValueError('Unknown eventname {}'.format(event_name))
 
@@ -70,26 +75,26 @@ class Proxy(object):
         list = self._proxy.pastEvents(event_name, params).get(False)
         return sorted_events(self._build_events(list))
 
-    def get_all_events(self, filter_=None, from_block=0):
-        all_events = []
+    def get_all_events(self, filter_=None, from_block: int=0) -> List[BlockchainEvent]:
+        all_events = []  # type: List[BlockchainEvent]
         for type in self.standard_event_types:  # FIXME takes too long.
             # web3.py currently doesn't support getAll() to retrieve all events
             all_events = all_events + self.get_events(type, filter_=filter_, from_block=from_block)
         return sorted_events(all_events)
 
-    def _build_events(self, events):
+    def _build_events(self, events: List[Any]):
         current_blocknumber = self._web3.eth.blockNumber
         return [self._build_event(event, current_blocknumber) for event in events]
 
-    def _build_event(self, event, current_blocknumber=None):
-        event_type = event.get('event')
-        blocknumber = event.get('blockNumber')
+    def _build_event(self, event: Any, current_blocknumber: int = None) -> BlockchainEvent:
+        event_type = event.get('event')  # type: str
+        blocknumber = event.get('blockNumber')  # type: int
         if current_blocknumber is None:
             current_blocknumber = blocknumber
-        timestamp = self._get_block_timestamp(blocknumber)
+        timestamp = self._get_block_timestamp(blocknumber)  # type: int
         return self.event_builders[event_type](event, current_blocknumber, timestamp)
 
-    def _get_block_timestamp(self, blocknumber):
+    def _get_block_timestamp(self, blocknumber: int) -> int:
         if blocknumber is not None:
             timestamp = self._web3.eth.getBlock(blocknumber).timestamp
         else:
@@ -97,7 +102,7 @@ class Proxy(object):
         return timestamp
 
 
-def sorted_events(events):
+def sorted_events(events: List[BlockchainEvent]) -> List[BlockchainEvent]:
     def key(event):
         if event.blocknumber is None:
             return math.inf

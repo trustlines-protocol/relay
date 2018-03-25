@@ -1,4 +1,4 @@
-import web3
+import web3  # type: ignore
 
 
 def merge_two_dicts(x, y):
@@ -15,5 +15,5 @@ def trim_args(args):
     return trimmed_args
 
 
-def sha3(text):
+def sha3(text: str) -> str:
     return web3.Web3.sha3(text=text)

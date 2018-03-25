@@ -31,54 +31,19 @@ class Account(object):
         else:
             return -self.data[balance_ab]
 
-    @property
-    def creditline(self):
-        if self.a < self.b:
-            return self.data[creditline_ab]
-        else:
-            return self.data[creditline_ba]
-
-    @property
-    def reverse_creditline(self):
-        if self.a < self.b:
-            return self.data[creditline_ba]
-        else:
-            return self.data[creditline_ab]
-
-    @property
-    def interest(self):
-        if self.a < self.b:
-            return self.data[interest_ab]
-        else:
-            return self.data[interest_ba]
-
-    @property
-    def reverse_interest(self):
-        if self.a < self.b:
-            return self.data[interest_ba]
-        else:
-            return self.data[interest_ab]
-
-    @property
-    def fees_outstanding(self):
-        if self.a < self.b:
-            return self.data[fees_outstanding_a]
-        else:
-            return self.data[fees_outstanding_b]
-
-    @property
-    def reverse_fees_outstanding(self):
-        if self.a < self.b:
-            return self.data[fees_outstanding_b]
-        else:
-            return self.data[fees_outstanding_a]
-
     @balance.setter
     def balance(self, balance):
         if self.a < self.b:
             self.data[balance_ab] = balance
         else:
             self.data[balance_ab] = -balance
+
+    @property
+    def creditline(self):
+        if self.a < self.b:
+            return self.data[creditline_ab]
+        else:
+            return self.data[creditline_ba]
 
     @creditline.setter
     def creditline(self, creditline):
@@ -87,12 +52,26 @@ class Account(object):
         else:
             self.data[creditline_ba] = creditline
 
+    @property
+    def reverse_creditline(self):
+        if self.a < self.b:
+            return self.data[creditline_ba]
+        else:
+            return self.data[creditline_ab]
+
     @reverse_creditline.setter
     def reverse_creditline(self, creditline):
         if self.a < self.b:
             self.data[creditline_ba] = creditline
         else:
             self.data[creditline_ab] = creditline
+
+    @property
+    def interest(self):
+        if self.a < self.b:
+            return self.data[interest_ab]
+        else:
+            return self.data[interest_ba]
 
     @interest.setter
     def interest(self, interest):
@@ -101,6 +80,13 @@ class Account(object):
         else:
             self.data[interest_ba] = interest
 
+    @property
+    def reverse_interest(self):
+        if self.a < self.b:
+            return self.data[interest_ba]
+        else:
+            return self.data[interest_ab]
+
     @reverse_interest.setter
     def reverse_interest(self, interest):
         if self.a < self.b:
@@ -108,12 +94,26 @@ class Account(object):
         else:
             self.data[interest_ab] = interest
 
+    @property
+    def fees_outstanding(self):
+        if self.a < self.b:
+            return self.data[fees_outstanding_a]
+        else:
+            return self.data[fees_outstanding_b]
+
     @fees_outstanding.setter
     def fees_outstanding(self, fees):
         if self.a < self.b:
             self.data[fees_outstanding_a] = fees
         else:
             self.data[fees_outstanding_b] = fees
+
+    @property
+    def reverse_fees_outstanding(self):
+        if self.a < self.b:
+            return self.data[fees_outstanding_b]
+        else:
+            return self.data[fees_outstanding_a]
 
     @reverse_fees_outstanding.setter
     def reverse_fees_outstanding(self, fees):

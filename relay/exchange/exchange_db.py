@@ -6,11 +6,10 @@ from sqlalchemy.orm import sessionmaker
 
 from .order import Order
 
-
 Base = declarative_base()
 
 
-class OrderORM(Base):
+class OrderORM(Base):  # type: ignore
     __tablename__ = 'orders'
     exchange_address = Column(String)
     maker_address = Column(String)
@@ -80,19 +79,19 @@ class OrderORM(Base):
 
 class OrderBookDB(object):
 
-    def __init__(self, engine):
+    def __init__(self, engine) -> None:
         Session = sessionmaker(bind=engine)
         Base.metadata.create_all(engine)
         self.session = Session()
 
-    def add_order(self, order: Order):
+    def add_order(self, order: Order) -> None:
         order_orm = self.session.query(OrderORM).get(order.hash().hex())
         if order_orm is None:
             order_orm = OrderORM.from_order(order)
             self.session.add(order_orm)
             self.session.commit()
 
-    def add_orders(self, orders: Sequence[Order]):
+    def add_orders(self, orders: Sequence[Order]) -> None:
         for order in orders:
             self.add_order(order)
 
@@ -108,21 +107,21 @@ class OrderBookDB(object):
                                 OrderORM.expiration_timestamp_in_sec))
         return [order_orm.to_order() for order_orm in orders_orm]
 
-    def delete_order_by_hash(self, order_hash: bytes):
+    def delete_order_by_hash(self, order_hash: bytes) -> None:
         self.session.query(OrderORM).filter_by(msg_hash=order_hash.hex()).delete(synchronize_session=False)
         self.session.commit()
 
-    def delete_orders_by_hash(self, order_hashes: Sequence[bytes]):
+    def delete_orders_by_hash(self, order_hashes: Sequence[bytes]) -> None:
         for order_hash in order_hashes:
             self.session.query(OrderORM).filter_by(msg_hash=order_hash.hex()).delete(synchronize_session=False)
         self.session.commit()
 
-    def delete_old_orders(self, timestamp: int):
+    def delete_old_orders(self, timestamp: int) -> None:
         self.session.query(OrderORM).filter(OrderORM.expiration_timestamp_in_sec < timestamp)\
                                     .delete(synchronize_session=False)
         self.session.commit()
 
-    def order_filled(self, order_hash: bytes, filled_maker_token_amount: int, filled_taker_token_amount: int):
+    def order_filled(self, order_hash: bytes, filled_maker_token_amount: int, filled_taker_token_amount: int) -> None:
         order_orm = self.session.query(OrderORM).filter_by(msg_hash=order_hash.hex()).first()
         order_orm.available_maker_token_amount -= filled_maker_token_amount
         order_orm.available_taker_token_amount -= filled_taker_token_amount

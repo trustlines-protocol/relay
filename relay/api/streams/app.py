@@ -5,9 +5,10 @@ from tinyrpc.protocols.jsonrpc import JSONRPCProtocol
 
 from .rpc_methods import subscribe, messaging_subscribe, get_missed_messages
 from .transport import RPCWebSocketApplication
+from relay.main import TrustlinesRelay
 
 
-def WebSocketRPCHandler(trustlines):
+def WebSocketRPCHandler(trustlines: TrustlinesRelay):
 
     dispatcher = RPCDispatcher()
     dispatcher.add_method(partial(subscribe, trustlines), 'subscribe')
@@ -20,7 +21,7 @@ def WebSocketRPCHandler(trustlines):
     return handle
 
 
-def MessagingWebSocketRPCHandler(trustlines):
+def MessagingWebSocketRPCHandler(trustlines: TrustlinesRelay):
 
     dispatcher = RPCDispatcher()
     dispatcher.add_method(partial(messaging_subscribe, trustlines), 'listen')
