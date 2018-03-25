@@ -24,7 +24,7 @@ class Order(object):
         s: bytes,
         available_maker_token_amount: int = None,
         available_taker_token_amount: int = None
-    ):
+    ) -> None:
         self.exchange_address = exchange_address
         self.maker_address = maker_address
         self.taker_address = taker_address
@@ -51,7 +51,7 @@ class Order(object):
             self.available_taker_token_amount = available_taker_token_amount
 
     @property
-    def price(self):
+    def price(self) -> float:
         return self.taker_token_amount / self.maker_token_amount
 
     def validate(self) -> bool:
@@ -72,7 +72,7 @@ class Order(object):
     def is_filled(self) -> bool:
         return self.available_maker_token_amount <= 0 or self.available_taker_token_amount <= 0
 
-    def update_token_amount(self, filled_maker_amount: int, filled_taker_amount: int):
+    def update_token_amount(self, filled_maker_amount: int, filled_taker_amount: int) -> None:
         self.available_maker_token_amount -= filled_maker_amount
         self.available_taker_token_amount -= filled_taker_amount
 
@@ -92,7 +92,7 @@ class Order(object):
             self.salt
         )
 
-    def __eq__(self, other):
+    def __eq__(self, other: object) -> bool:
         if isinstance(other, Order):
             return self.hash() == other.hash()
         else:
@@ -114,7 +114,7 @@ class SignableOrder(Order):
             taker_fee: int,
             expiration_timestamp_in_sec: int,
             salt: int
-    ):
+    ) -> None:
         super().__init__(exchange_address,
                          maker_address,
                          taker_address,
@@ -131,7 +131,7 @@ class SignableOrder(Order):
                          r=b'',
                          s=b'')
 
-    def sign(self, key):
+    def sign(self, key) -> None:
         v, r, s = eth_sign(self.hash(), key)
         self.v = v
         self.r = r

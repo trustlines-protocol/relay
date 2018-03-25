@@ -43,7 +43,7 @@ class OrderBook(object):
         return order.exchange_address in self._exchange_proxies.keys()
 
     def validate_timestamp(self, order: Order) -> bool:
-        return not order.is_expired(current_timestamp_in_sec=time.time())
+        return not order.is_expired(current_timestamp_in_sec=int(time.time()))
 
     def add_order(self, order: Order) -> None:
         if not self.validate(order):

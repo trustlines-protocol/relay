@@ -1,6 +1,7 @@
 import logging
 import socket
 from collections import namedtuple
+from typing import List, Dict
 
 import gevent
 
@@ -8,6 +9,8 @@ from .proxy import Proxy, reconnect_interval, sorted_events
 from relay.logger import get_logger
 
 from .currency_network_events import (
+    BlockchainEvent,
+    CurrencyNetworkEvent,
     CreditlineUpdateEventType,
     CreditlineRequestEventType,
     TrustlineUpdateEventType,
@@ -44,29 +47,29 @@ class CurrencyNetworkProxy(Proxy):
                             TrustlineRequestEventType,
                             TrustlineUpdateEventType]
 
-    def __init__(self, web3, abi, address):
+    def __init__(self, web3, abi, address: str) -> None:
         super().__init__(web3, abi, address)
-        self.name = self._proxy.call().name().strip('\0')
-        self.decimals = self._proxy.call().decimals()
-        self.symbol = self._proxy.call().symbol().strip('\0')
+        self.name = self._proxy.call().name().strip('\0')  # type: str
+        self.decimals = self._proxy.call().decimals()  # typ: str
+        self.symbol = self._proxy.call().symbol().strip('\0')  # type: str
 
     @property
-    def users(self):
+    def users(self) -> List[str]:
         return list(self._proxy.call().getUsers())
 
-    def friends(self, user_address):
+    def friends(self, user_address: str) -> List[str]:
         return list(self._proxy.call().getFriends(user_address))
 
-    def account(self, a_address, b_address):
+    def account(self, a_address: str, b_address: str):
         return self._proxy.call().getAccount(a_address, b_address)
 
-    def spendable(self, a_address):
+    def spendable(self, a_address: str):
         return self._proxy.call().spendable(a_address)
 
-    def spendableTo(self, a_address, b_address):
+    def spendableTo(self, a_address: str, b_address: str):
         return self._proxy.call().spendableTo(a_address, b_address)
 
-    def gen_graph_representation(self):
+    def gen_graph_representation(self) -> Dict[str, List[Trustline]]:
         """Returns the trustlines network as a dict address -> list of Friendships"""
         result = {}
         for user in self.users:
@@ -93,7 +96,7 @@ class CurrencyNetworkProxy(Proxy):
             result[user] = list
         return result
 
-    def start_listen_on_full_sync(self, function, sync_interval):
+    def start_listen_on_full_sync(self, function, sync_interval: float):
         def sync():
             while True:
                 try:
@@ -108,29 +111,29 @@ class CurrencyNetworkProxy(Proxy):
 
         gevent.Greenlet.spawn(sync)
 
-    def start_listen_on_balance(self, f):
+    def start_listen_on_balance(self, f) -> None:
         def log(log_entry):
             f(self._build_event(log_entry))
         self.start_listen_on(BalanceUpdateEventType, log)
 
-    def start_listen_on_creditline(self, f):
+    def start_listen_on_creditline(self, f) -> None:
         def log_creditline(log_entry):
             f(self._build_event(log_entry))
 
         self.start_listen_on(CreditlineUpdateEventType, log_creditline)
 
-    def start_listen_on_trustline(self, f):
+    def start_listen_on_trustline(self, f) -> None:
         def log_trustline(log_entry):
             f(self._build_event(log_entry))
 
         self.start_listen_on(TrustlineUpdateEventType, log_trustline)
 
-    def start_listen_on_transfer(self, f):
+    def start_listen_on_transfer(self, f) -> None:
         def log(log_entry):
             f(self._build_event(log_entry))
         self.start_listen_on(TransferEventType, log)
 
-    def get_network_events(self, event_name, user_address=None, from_block=0):
+    def get_network_events(self, event_name: str, user_address: str=None, from_block: int=0) -> List[BlockchainEvent]:
         if user_address is None:
             result = self.get_events(event_name, from_block=from_block)
         else:
@@ -142,11 +145,14 @@ class CurrencyNetworkProxy(Proxy):
             list_2 = self.get_events(event_name, filter_=filter2, from_block=from_block)
             result = list_1 + list_2
             for event in result:
-                event.user = user_address
+                if isinstance(event, CurrencyNetworkEvent):
+                    event.user = user_address
+                else:
+                    raise ValueError('Expected a CurrencyNetworkEvent')
         return sorted_events(result)
 
-    def get_all_network_events(self, user_address=None, from_block=0):
-        all_events = []
+    def get_all_network_events(self, user_address: str = None, from_block: int = 0) -> List[BlockchainEvent]:
+        all_events = []  # type: List[BlockchainEvent]
         for type in self.standard_event_types:    # FIXME takes too long.
                                                     # web3.py currently doesn't support getAll() to retrieve all events
             all_events = all_events + self.get_network_events(type, user_address, from_block)

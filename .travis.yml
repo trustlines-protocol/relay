@@ -6,6 +6,7 @@ install:
   - pip install -r requirements.txt
 script:
   - flake8
+  - mypy --ignore-missing-imports relay
   - coverage run --source=relay -m py.test tests
   - docker build -t relay .
 after_success:

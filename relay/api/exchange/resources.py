@@ -4,6 +4,7 @@ from webargs import fields as webfields
 from webargs.flaskparser import abort
 from eth_utils import to_checksum_address
 
+from relay.main import TrustlinesRelay
 from relay.api import fields
 from relay.exchange.order import Order
 from relay.exchange.orderbook import OrderInvalidException
@@ -33,7 +34,7 @@ def order_as_dict(order: Order):
 
 class OrderBook(Resource):
 
-    def __init__(self, trustlines):
+    def __init__(self, trustlines: TrustlinesRelay) -> None:
         self.trustlines = trustlines
 
     args = {
@@ -55,7 +56,7 @@ class OrderBook(Resource):
 
 
 class OrderSubmission(Resource):
-    def __init__(self, trustlines):
+    def __init__(self, trustlines: TrustlinesRelay) -> None:
         self.trustlines = trustlines
 
     args = {

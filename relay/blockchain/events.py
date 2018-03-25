@@ -3,7 +3,7 @@ from ..events import Event
 
 class BlockchainEvent(Event):
 
-    def __init__(self, web3_event, current_blocknumber, timestamp):
+    def __init__(self, web3_event, current_blocknumber: int, timestamp: int) -> None:
         super().__init__(timestamp)
         self._web3_event = web3_event
         self.blocknumber = web3_event.get('blockNumber', None)
@@ -12,7 +12,7 @@ class BlockchainEvent(Event):
         self.type = web3_event.get('event')
 
     @property
-    def status(self):
+    def status(self) -> str:
         if self.blocknumber is None:
             return 'sent'
         elif (self._current_blocknumber - self.blocknumber) < 5:

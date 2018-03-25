@@ -1,4 +1,5 @@
 import tempfile
+from typing import List  # noqa: F401
 
 from flask import request, send_file, make_response, abort
 from flask.views import MethodView
@@ -9,8 +10,10 @@ from marshmallow import validate
 
 from relay.utils import sha3
 from relay.blockchain.currency_network_proxy import CurrencyNetworkProxy
+from relay.blockchain.events import BlockchainEvent  # noqa: F401
 from relay.api import fields as custom_fields
 from .schemas import CurrencyNetworkEventSchema, UserCurrencyNetworkEventSchema
+from relay.main import TrustlinesRelay
 
 
 def abort_if_unknown_network(trustlines, network_address):
@@ -20,7 +23,7 @@ def abort_if_unknown_network(trustlines, network_address):
 
 class NetworkList(Resource):
 
-    def __init__(self, trustlines):
+    def __init__(self, trustlines: TrustlinesRelay) -> None:
         self.trustlines = trustlines
 
     def get(self):
@@ -36,10 +39,10 @@ class NetworkList(Resource):
 
 class Network(Resource):
 
-    def __init__(self, trustlines):
+    def __init__(self, trustlines: TrustlinesRelay) -> None:
         self.trustlines = trustlines
 
-    def get(self, network_address):
+    def get(self, network_address: str):
         abort_if_unknown_network(self.trustlines, network_address)
         return {
             'address': network_address,
@@ -52,36 +55,36 @@ class Network(Resource):
 
 class UserList(Resource):
 
-    def __init__(self, trustlines):
+    def __init__(self, trustlines: TrustlinesRelay) -> None:
         self.trustlines = trustlines
 
-    def get(self, network_address):
+    def get(self, network_address: str):
         abort_if_unknown_network(self.trustlines, network_address)
         return self.trustlines.currency_network_proxies[network_address].users
 
 
 class User(Resource):
 
-    def __init__(self, trustlines):
+    def __init__(self, trustlines: TrustlinesRelay) -> None:
         self.trustlines = trustlines
 
-    def get(self, network_address, user_address):
+    def get(self, network_address: str, user_address: str):
         abort_if_unknown_network(self.trustlines, network_address)
         return self.trustlines.currency_network_graphs[network_address].get_account_sum(user_address).as_dict()
 
 
 class ContactList(Resource):
 
-    def __init__(self, trustlines):
+    def __init__(self, trustlines: TrustlinesRelay) -> None:
         self.trustlines = trustlines
 
-    def get(self, network_address, user_address):
+    def get(self, network_address: str, user_address: str):
         abort_if_unknown_network(self.trustlines, network_address)
         return self.trustlines.currency_network_graphs[network_address].get_friends(user_address)
 
 
 class TrustlineDao(object):
-    def __init__(self, network_address, a_address, b_address, account_sum):
+    def __init__(self, network_address: str, a_address: str, b_address: str, account_sum: str) -> None:
         self.network_address = network_address
         self.a_address = a_address
         self.b_address = b_address
@@ -105,7 +108,7 @@ class TrustlineDao(object):
 
 class Trustline(Resource):
 
-    def __init__(self, trustlines):
+    def __init__(self, trustlines: TrustlinesRelay) -> None:
         self.trustlines = trustlines
 
     def get(self, network_address, a_address, b_address):
@@ -117,10 +120,10 @@ class Trustline(Resource):
 
 class TrustlineList(Resource):
 
-    def __init__(self, trustlines):
+    def __init__(self, trustlines: TrustlinesRelay) -> None:
         self.trustlines = trustlines
 
-    def get(self, network_address, user_address):
+    def get(self, network_address: str, user_address: str):
         abort_if_unknown_network(self.trustlines, network_address)
         graph = self.trustlines.currency_network_graphs[network_address]
         friends = graph.get_friends(user_address)
@@ -136,17 +139,17 @@ class TrustlineList(Resource):
 
 class Spendable(Resource):
 
-    def __init__(self, trustlines):
+    def __init__(self, trustlines: TrustlinesRelay) -> None:
         self.trustlines = trustlines
 
-    def get(self, network_address, a_address):
+    def get(self, network_address: str, a_address: str):
         abort_if_unknown_network(self.trustlines, network_address)
         return self.trustlines.currency_network_proxies[network_address].spendable(a_address)
 
 
 class SpendableTo(Resource):
 
-    def __init__(self, trustlines):
+    def __init__(self, trustlines: TrustlinesRelay) -> None:
         self.trustlines = trustlines
 
     def get(self, network_address, a_address, b_address):
@@ -156,7 +159,7 @@ class SpendableTo(Resource):
 
 class UserEventsNetwork(Resource):
 
-    def __init__(self, trustlines):
+    def __init__(self, trustlines: TrustlinesRelay) -> None:
         self.trustlines = trustlines
 
     args = {
@@ -167,7 +170,7 @@ class UserEventsNetwork(Resource):
     }
 
     @use_args(args)
-    def get(self, args, network_address, user_address):
+    def get(self, args, network_address: str, user_address: str):
         abort_if_unknown_network(self.trustlines, network_address)
         proxy = self.trustlines.currency_network_proxies[network_address]
         from_block = args['fromBlock']
@@ -181,7 +184,7 @@ class UserEventsNetwork(Resource):
 
 class UserEvents(Resource):
 
-    def __init__(self, trustlines):
+    def __init__(self, trustlines: TrustlinesRelay) -> None:
         self.trustlines = trustlines
 
     args = {
@@ -192,8 +195,8 @@ class UserEvents(Resource):
     }
 
     @use_args(args)
-    def get(self, args, user_address):
-        events = []
+    def get(self, args, user_address: str):
+        events = []  # type: List[BlockchainEvent]
         type = args['type']
         from_block = args['fromBlock']
         networks = self.trustlines.networks
@@ -208,7 +211,7 @@ class UserEvents(Resource):
 
 class EventsNetwork(Resource):
 
-    def __init__(self, trustlines):
+    def __init__(self, trustlines: TrustlinesRelay) -> None:
         self.trustlines = trustlines
 
     args = {
@@ -219,7 +222,7 @@ class EventsNetwork(Resource):
     }
 
     @use_args(args)
-    def get(self, args, network_address):
+    def get(self, args, network_address: str):
         abort_if_unknown_network(self.trustlines, network_address)
         proxy = self.trustlines.currency_network_proxies[network_address]
         from_block = args['fromBlock']
@@ -233,16 +236,16 @@ class EventsNetwork(Resource):
 
 class TransactionInfos(Resource):
 
-    def __init__(self, trustlines):
+    def __init__(self, trustlines: TrustlinesRelay) -> None:
         self.trustlines = trustlines
 
-    def get(self, user_address):
+    def get(self, user_address: str):
         return self.trustlines.node.get_tx_infos(user_address)
 
 
 class Relay(Resource):
 
-    def __init__(self, trustlines):
+    def __init__(self, trustlines: TrustlinesRelay) -> None:
         self.trustlines = trustlines
 
     args = {
@@ -261,16 +264,16 @@ class Relay(Resource):
 
 class Balance(Resource):
 
-    def __init__(self, trustlines):
+    def __init__(self, trustlines: TrustlinesRelay) -> None:
         self.trustlines = trustlines
 
-    def get(self, user_address):
+    def get(self, user_address: str):
         return self.trustlines.node.balance(user_address)
 
 
 class Block(Resource):
 
-    def __init__(self, trustlines):
+    def __init__(self, trustlines: TrustlinesRelay) -> None:
         self.trustlines = trustlines
 
     def get(self):
@@ -279,7 +282,7 @@ class Block(Resource):
 
 class RequestEther(Resource):
 
-    def __init__(self, trustlines):
+    def __init__(self, trustlines: TrustlinesRelay) -> None:
         self.trustlines = trustlines
 
     def post(self):
@@ -289,7 +292,7 @@ class RequestEther(Resource):
 
 class Path(Resource):
 
-    def __init__(self, trustlines):
+    def __init__(self, trustlines: TrustlinesRelay) -> None:
         self.trustlines = trustlines
 
     args = {
@@ -301,7 +304,7 @@ class Path(Resource):
     }
 
     @use_args(args)
-    def post(self, args, network_address):
+    def post(self, args, network_address: str):
         abort_if_unknown_network(self.trustlines, network_address)
 
         source = args['from']
@@ -339,10 +342,10 @@ class Path(Resource):
 
 class GraphImage(MethodView):
 
-    def __init__(self, trustlines):
+    def __init__(self, trustlines: TrustlinesRelay) -> None:
         self.trustlines = trustlines
 
-    def get(self, network_address):
+    def get(self, network_address: str):
         abort_if_unknown_network(self.trustlines, network_address)
         filename = tempfile.mktemp(".gif")
         self.trustlines.currency_network_graphs[network_address].draw(filename)
@@ -351,10 +354,10 @@ class GraphImage(MethodView):
 
 class GraphDump(MethodView):
 
-    def __init__(self, trustlines):
+    def __init__(self, trustlines: TrustlinesRelay) -> None:
         self.trustlines = trustlines
 
-    def get(self, network_address):
+    def get(self, network_address: str):
         abort_if_unknown_network(self.trustlines, network_address)
         response = make_response(self.trustlines.currency_network_graphs[network_address].dump())
         cd = 'attachment; filename=networkdump.csv'

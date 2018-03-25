@@ -3,6 +3,9 @@ from marshmallow import fields, Schema, ValidationError
 from .rpc_protocol import check_args
 from ..fields import Address
 
+from relay.main import TrustlinesRelay
+from relay.streams import Client
+
 
 class SubscribeSchema(Schema):
     class Meta:
@@ -12,7 +15,7 @@ class SubscribeSchema(Schema):
 
 
 @check_args(SubscribeSchema())
-def subscribe(trustlines, client, event, user):
+def subscribe(trustlines: TrustlinesRelay, client: Client, event: str, user: str):
     if event == 'all':
         subscriber = trustlines.subjects[user].subscribe(client)
     else:
@@ -28,7 +31,7 @@ class MessagingSchema(Schema):
 
 
 @check_args(MessagingSchema())
-def messaging_subscribe(trustlines, client, type, user):
+def messaging_subscribe(trustlines: TrustlinesRelay, client: Client, type: str, user: str):
     if type == 'all':
         subscriber = trustlines.messaging[user].subscribe(client)
     else:
@@ -37,7 +40,7 @@ def messaging_subscribe(trustlines, client, type, user):
 
 
 @check_args(MessagingSchema())
-def get_missed_messages(trustlines, client, type, user):
+def get_missed_messages(trustlines: TrustlinesRelay, client: Client, type: str, user: str):
     if type == 'all':
         messages = trustlines.messaging[user].get_missed_messages()
     else:

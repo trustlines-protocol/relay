@@ -6,14 +6,14 @@ CancelEvent = 'LogCancel'
 
 
 class ExchangeProxy(Proxy):
-
     def __init__(
             self,
             web3,
             exchange_abi,
             token_abi,
             address: str,
-            address_oracle):
+            address_oracle
+    ) -> None:
         super().__init__(web3, exchange_abi, address)
         self._token_abi = token_abi
         self._address_oracle = address_oracle
@@ -64,7 +64,7 @@ class ExchangeProxy(Proxy):
 
 class DummyExchangeProxy():
 
-    def __init__(self, exchange_address: str):
+    def __init__(self, exchange_address: str) -> None:
         self.address = exchange_address
 
     def validate(self, order: Order) -> bool:
