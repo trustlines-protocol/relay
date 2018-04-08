@@ -21,6 +21,9 @@ class CurrencyNetworkEventSchema(BlockchainEventSchema):
     amount = BigInteger(attribute='value')
     given = BigInteger()
     received = BigInteger()
+    balance = BigInteger()
+    leftGiven = BigInteger(attribute='left_given')
+    leftReceived = BigInteger(attribute='left_received')
     from_ = Address(dump_to='from', load_from='from')
     to = Address()
 
