@@ -1,30 +1,52 @@
 import time
 
+from relay.network_graph.graph import AccountSummary
+
 
 class Event(object):
 
-    def __init__(self, timestamp):
+    def __init__(self, timestamp: int) -> None:
         self.timestamp = timestamp
 
 
-class NetworkValueEvent(Event):
+class AccountEvent(Event):
 
     def __init__(self,
-                 network_address,
-                 user,
-                 value,
-                 timestamp=None):
+                 network_address: str,
+                 user: str,
+                 account_summary: AccountSummary,
+                 timestamp: int = None) -> None:
         if timestamp is None:
             timestamp = int(time.time())
         super().__init__(timestamp)
         self.user = user
-        self.value = value
+        self.balance = account_summary.balance
+        self.given = account_summary.creditline_given
+        self.received = account_summary.creditline_received
+        self.left_given = account_summary.creditline_left_given
+        self.left_received = account_summary.creditline_left_received
         self.network_address = network_address
 
 
-class NetworkBalanceEvent(NetworkValueEvent):
+class BalanceEvent(AccountEvent):
+
+    type = 'BalanceUpdate'
+
+    def __init__(self,
+                 network_address: str,
+                 from_: str,
+                 to: str,
+                 account_summary: AccountSummary,
+                 timestamp: int = None) -> None:
+        super().__init__(network_address,
+                         from_,
+                         account_summary,
+                         timestamp)
+        self.from_ = from_
+        self.to = to
+        self.other_party = to
+
+
+class NetworkBalanceEvent(AccountEvent):
+
     type = 'NetworkBalance'
-
-
-class NetworkAvailableEvent(NetworkValueEvent):
-    type = 'NetworkAvailable'

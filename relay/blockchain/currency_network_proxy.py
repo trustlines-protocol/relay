@@ -122,11 +122,23 @@ class CurrencyNetworkProxy(Proxy):
 
         self.start_listen_on(CreditlineUpdateEventType, log_creditline)
 
+    def start_listen_on_creditline_request(self, f) -> None:
+        def log_creditline_request(log_entry):
+            f(self._build_event(log_entry))
+
+        self.start_listen_on(CreditlineRequestEventType, log_creditline_request)
+
     def start_listen_on_trustline(self, f) -> None:
         def log_trustline(log_entry):
             f(self._build_event(log_entry))
 
         self.start_listen_on(TrustlineUpdateEventType, log_trustline)
+
+    def start_listen_on_trustline_request(self, f) -> None:
+        def log_trustline_request(log_entry):
+            f(self._build_event(log_entry))
+
+        self.start_listen_on(TrustlineRequestEventType, log_trustline_request)
 
     def start_listen_on_transfer(self, f) -> None:
         def log(log_entry):
