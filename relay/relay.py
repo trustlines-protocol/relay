@@ -4,7 +4,7 @@ import os
 import sys
 from collections import defaultdict
 from copy import deepcopy
-from typing import Dict, Iterable, List
+from typing import Dict, Iterable, List  # noqa: F401
 
 import gevent
 from eth_utils import is_checksum_address, to_checksum_address
@@ -221,4 +221,3 @@ def _create_on_full_sync(graph):
         graph.gen_network(graph_rep)
 
     return update_community
-
