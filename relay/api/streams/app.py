@@ -5,7 +5,7 @@ from tinyrpc.protocols.jsonrpc import JSONRPCProtocol
 
 from .rpc_methods import subscribe, messaging_subscribe, get_missed_messages
 from .transport import RPCWebSocketApplication
-from relay.main import TrustlinesRelay
+from relay.relay import TrustlinesRelay
 
 
 def WebSocketRPCHandler(trustlines: TrustlinesRelay):

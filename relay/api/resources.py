@@ -13,7 +13,7 @@ from relay.blockchain.currency_network_proxy import CurrencyNetworkProxy
 from relay.blockchain.events import BlockchainEvent  # noqa: F401
 from relay.api import fields as custom_fields
 from .schemas import CurrencyNetworkEventSchema, UserCurrencyNetworkEventSchema
-from relay.main import TrustlinesRelay
+from relay.relay import TrustlinesRelay
 
 
 def abort_if_unknown_network(trustlines, network_address):

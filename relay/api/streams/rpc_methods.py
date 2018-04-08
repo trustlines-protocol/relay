@@ -3,7 +3,7 @@ from marshmallow import fields, Schema, ValidationError
 from .rpc_protocol import check_args
 from ..fields import Address
 
-from relay.main import TrustlinesRelay
+from relay.relay import TrustlinesRelay
 from relay.streams import Client
 
 
