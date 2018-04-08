@@ -17,6 +17,8 @@ branches:
   only:
   - master
   - develop
+cache:
+  - pip
 services:
   - docker
 env:

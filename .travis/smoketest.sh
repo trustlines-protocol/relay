@@ -6,7 +6,7 @@ TEST_FILE="$DIR/../smoketest/smoketest.py"
 
 cat docker/addresses.json
 docker-compose -f "$COMPOSE_FILE" up -d
-sleep 30
+sleep 60
 docker-compose -f "$COMPOSE_FILE" logs | cat
 cat docker/addresses.json
 python -m pytest $TEST_FILE
