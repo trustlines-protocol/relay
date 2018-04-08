@@ -3,7 +3,7 @@ flask_restful
 flask_cors
 webargs
 gevent==1.1.2
-web3[gevent]
+web3[gevent]<4
 ethereum==1.6.1
 networkx>=2.0
 pygraphviz
