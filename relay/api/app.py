@@ -31,7 +31,7 @@ def ApiApp(trustlines):
     app = Flask(__name__)
     sockets = Sockets(app)
     Api(app, catch_all_404s=True)
-    CORS(app)
+    CORS(app, send_wildcard=True)
     api_bp = Blueprint('api', __name__, url_prefix='/api/v1')
     sockets_bp = Blueprint('api', __name__, url_prefix='/api/v1/streams')
     api = Api(api_bp)
