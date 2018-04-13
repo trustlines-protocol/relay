@@ -4,6 +4,7 @@ import time
 from typing import List, Dict, Callable, Any  # noqa: F401
 
 import gevent
+import itertools
 import socket
 
 from .events import BlockchainEvent
@@ -76,11 +77,12 @@ class Proxy(object):
         return sorted_events(self._build_events(list))
 
     def get_all_events(self, filter_=None, from_block: int=0) -> List[BlockchainEvent]:
-        all_events = []  # type: List[BlockchainEvent]
-        for type in self.standard_event_types:  # FIXME takes too long.
-            # web3.py currently doesn't support getAll() to retrieve all events
-            all_events = all_events + self.get_events(type, filter_=filter_, from_block=from_block)
-        return sorted_events(all_events)
+        events = [gevent.spawn(self.get_events,
+                               type,
+                               filter_=filter_,
+                               from_block=from_block) for type in self.standard_event_types]
+        gevent.joinall(events, timeout=5)
+        return sorted_events(list(itertools.chain.from_iterable([event.value for event in events])))
 
     def _build_events(self, events: List[Any]):
         current_blocknumber = self._web3.eth.blockNumber
