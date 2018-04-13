@@ -4,6 +4,7 @@ from collections import namedtuple
 from typing import List, Dict
 
 import gevent
+import itertools
 
 from .proxy import Proxy, reconnect_interval, sorted_events
 from relay.logger import get_logger
@@ -153,9 +154,13 @@ class CurrencyNetworkProxy(Proxy):
             filter1 = {from_to_types[event_name][0]: user_address}
             filter2 = {from_to_types[event_name][1]: user_address}
 
-            list_1 = self.get_events(event_name, filter_=filter1, from_block=from_block)
-            list_2 = self.get_events(event_name, filter_=filter2, from_block=from_block)
-            result = list_1 + list_2
+            events = [
+                gevent.spawn(self.get_events, event_name, filter1, from_block),
+                gevent.spawn(self.get_events, event_name, filter2, from_block)
+            ]
+            gevent.joinall(events, timeout=2)
+            result = list(itertools.chain.from_iterable([event.value for event in events]))
+            
             for event in result:
                 if isinstance(event, CurrencyNetworkEvent):
                     event.user = user_address
@@ -164,11 +169,12 @@ class CurrencyNetworkProxy(Proxy):
         return sorted_events(result)
 
     def get_all_network_events(self, user_address: str = None, from_block: int = 0) -> List[BlockchainEvent]:
-        all_events = []  # type: List[BlockchainEvent]
-        for type in self.standard_event_types:    # FIXME takes too long.
-                                                    # web3.py currently doesn't support getAll() to retrieve all events
-            all_events = all_events + self.get_network_events(type, user_address, from_block)
-        return sorted_events(all_events)
+        events = [gevent.spawn(self.get_network_events,
+                               type,
+                               user_address=user_address,
+                               from_block=from_block) for type in self.standard_event_types]
+        gevent.joinall(events, timeout=5)
+        return sorted_events(list(itertools.chain.from_iterable([event.value for event in events])))
 
     def estimate_gas_for_transfer(self, sender, receiver, value, max_fee, path):
         return self._proxy.estimateGas({'from': sender}).transfer(receiver, value, max_fee, path)
