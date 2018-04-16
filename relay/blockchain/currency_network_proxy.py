@@ -160,7 +160,7 @@ class CurrencyNetworkProxy(Proxy):
             ]
             gevent.joinall(events, timeout=2)
             result = list(itertools.chain.from_iterable([event.value for event in events]))
-            
+
             for event in result:
                 if isinstance(event, CurrencyNetworkEvent):
                     event.user = user_address
