@@ -198,7 +198,7 @@ class UserEvents(Resource):
 
     @use_args(args)
     def get(self, args, user_address: str):
-        events = []  # type: List[BlockchainEvent]
+        events = []
         type = args['type']
         from_block = args['fromBlock']
         networks = self.trustlines.networks
@@ -211,8 +211,8 @@ class UserEvents(Resource):
                                            from_block=from_block))
             else:
                 events.append(gevent.spawn(proxy.get_all_network_events,
-                              user_address=user_address,
-                              from_block=from_block))
+                                           user_address=user_address,
+                                           from_block=from_block))
         gevent.joinall(events, timeout=5)
         flattened_events = list(itertools.chain.from_iterable([event.value for event in events]))
         return UserCurrencyNetworkEventSchema().dump(flattened_events, many=True).data
