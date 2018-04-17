@@ -79,6 +79,7 @@ def find_path(G, source, target, get_fee, value, max_hops=None, max_fees=None):
     push = heappush
     pop = heappop
     dist = {}  # dictionary of final distances
+    dist_hop = {}  # dictionary of final distances in terms of hops
     seen = {source: value}
     c = count()
     fringe = []  # use heapq with (distance,label) tuples
@@ -88,6 +89,7 @@ def find_path(G, source, target, get_fee, value, max_hops=None, max_fees=None):
         if v in dist:
             continue  # already searched this node.
         dist[v] = d
+        dist_hop[v] = n
         if v == target:
             break
 
@@ -103,7 +105,7 @@ def find_path(G, source, target, get_fee, value, max_hops=None, max_fees=None):
                 if n + 1 > max_hops:
                     continue
             if u in dist:
-                if vu_dist < dist[u]:
+                if n+1 == dist_hop[u] and vu_dist < dist[u]:
                     raise ValueError('Contradictory paths found:',
                                      'negative weights?')
             elif u not in seen or vu_dist < seen[u]:
