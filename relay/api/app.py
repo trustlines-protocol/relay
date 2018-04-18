@@ -12,7 +12,7 @@ from .resources import GraphDump, GraphImage, RequestEther, User, UserList, Netw
 from .streams.app import WebSocketRPCHandler, MessagingWebSocketRPCHandler
 from .exchange.resources import OrderBook, OrderSubmission, ExchangeAddresses, UnwEthAddresses
 from .messaging.resources import PostMessage
-from .tokens.resources import TokenAddresses
+from .tokens.resources import TokenAddresses, TokenBalance
 
 
 class AddressConverter(BaseConverter):
@@ -69,6 +69,7 @@ def ApiApp(trustlines):
     add_resource(UnwEthAddresses, '/exchange/eth')
 
     add_resource(TokenAddresses, '/tokens')
+    add_resource(TokenBalance, '/tokens/<address:token_address>/users/<address:user_address>/balance')
 
     add_resource(PostMessage, '/messages/<address:user_address>')
 
