@@ -11,11 +11,9 @@ CancelEvent = 'LogCancel'
 
 
 class UnwEthProxy(Proxy):
-    def __init__(
-            self,
-            web3,
-            unw_eth_abi,
-            address: str
-    ) -> None:
+
+    def __init__(self, web3, unw_eth_abi, address: str) -> None:
         super().__init__(web3, unw_eth_abi, address)
 
+    def balance_of(self, user_address: str):
+        return self._proxy.call().balanceOf(user_address)
