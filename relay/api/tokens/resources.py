@@ -15,6 +15,6 @@ class TokenAddresses(Resource):
         self.trustlines = trustlines
 
     def get(self):
-        # TODO return self.trustlines.tokens
-        return [self.trustlines.unw_eth]
+        return self.trustlines.unw_eth
+
 
