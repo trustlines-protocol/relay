@@ -15,6 +15,7 @@ from web3 import Web3, RPCProvider
 from .blockchain.exchange_proxy import ExchangeProxy
 from .blockchain.currency_network_proxy import CurrencyNetworkProxy
 from .blockchain.node import Node
+from .blockchain.token_proxy import TokenProxy
 from .network_graph.graph import CurrencyNetworkGraph
 from .exchange.orderbook import OrderBookGreenlet
 from .logger import get_logger
@@ -36,7 +37,7 @@ class TrustlinesRelay:
         self.node = None  # type: Node
         self._web3 = None
         self.orderbook = None  # type: OrderBookGreenlet
-        self.unw_eth = None  # type: str
+        self.token_proxies = {} # type: Dict[str, TokenProxy]
 
     @property
     def networks(self) -> Iterable[str]:
@@ -45,6 +46,11 @@ class TrustlinesRelay:
     @property
     def exchanges(self) -> Iterable[str]:
         return self.orderbook.exchange_addresses
+
+
+    @property
+    def tokens(self) -> Iterable[str]:
+        return list(self.token_proxies)
 
     def is_currency_network(self, address: str) -> bool:
         return address in self.networks
@@ -91,7 +97,14 @@ class TrustlinesRelay:
         assert is_checksum_address(address)
         if self.unw_eth != address:
             logger.info('New Unwrap ETH contract: {}'.format(address))
-            self.unw_eth = address
+
+    def new_token(self, address: str) -> None:
+        assert is_checksum_address(address)
+        if address not in self.tokens:
+            logger.info('New Token contract: {}'.format(address))            
+            self.token_proxies[address] = TokenProxy(self._web3,
+                                                     self.contracts['Token']['abi'],
+                                                     address)
 
     def get_networks_of_user(self, user_address: str) -> List[str]:
         assert is_checksum_address(user_address)
