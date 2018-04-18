@@ -16,6 +16,7 @@ from .blockchain.exchange_proxy import ExchangeProxy
 from .blockchain.currency_network_proxy import CurrencyNetworkProxy
 from .blockchain.node import Node
 from .blockchain.token_proxy import TokenProxy
+from .blockchain.unw_eth_proxy import UnwEthProxy
 from .network_graph.graph import CurrencyNetworkGraph
 from .exchange.orderbook import OrderBookGreenlet
 from .logger import get_logger
@@ -37,6 +38,7 @@ class TrustlinesRelay:
         self.node = None  # type: Node
         self._web3 = None
         self.orderbook = None  # type: OrderBookGreenlet
+        self.unw_eth_proxies = {}  # type: Dict[str, UnwEthProxy]
         self.token_proxies = {} # type: Dict[str, TokenProxy]
 
     @property
@@ -47,6 +49,9 @@ class TrustlinesRelay:
     def exchanges(self) -> Iterable[str]:
         return self.orderbook.exchange_addresses
 
+    @property
+    def unw_eth(self) -> Iterable[str]:
+        return list(self.unw_eth_proxies)
 
     @property
     def tokens(self) -> Iterable[str]:
@@ -56,7 +61,7 @@ class TrustlinesRelay:
         return address in self.networks
 
     def is_trusted_token(self, address: str) -> bool:
-        return address == self.unw_eth
+        return address in self.tokens or address in self.unw_eth
 
     def start(self):
         self._load_config()
@@ -95,8 +100,11 @@ class TrustlinesRelay:
 
     def new_unw_eth(self, address: str) -> None:
         assert is_checksum_address(address)
-        if self.unw_eth != address:
+        if address not in self.unw_eth:
             logger.info('New Unwrap ETH contract: {}'.format(address))
+            self.unw_eth_proxies[address] = UnwEthProxy(self._web3,
+                                                        self.contracts['UnwEth']['abi'],
+                                                        address)
 
     def new_token(self, address: str) -> None:
         assert is_checksum_address(address)
