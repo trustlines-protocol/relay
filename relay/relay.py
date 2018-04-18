@@ -39,7 +39,7 @@ class TrustlinesRelay:
         self._web3 = None
         self.orderbook = None  # type: OrderBookGreenlet
         self.unw_eth_proxies = {}  # type: Dict[str, UnwEthProxy]
-        self.token_proxies = {} # type: Dict[str, TokenProxy]
+        self.token_proxies = {}  # type: Dict[str, TokenProxy]
 
     @property
     def networks(self) -> Iterable[str]:
@@ -109,7 +109,7 @@ class TrustlinesRelay:
     def new_token(self, address: str) -> None:
         assert is_checksum_address(address)
         if address not in self.tokens:
-            logger.info('New Token contract: {}'.format(address))            
+            logger.info('New Token contract: {}'.format(address))
             self.token_proxies[address] = TokenProxy(self._web3,
                                                      self.contracts['Token']['abi'],
                                                      address)
