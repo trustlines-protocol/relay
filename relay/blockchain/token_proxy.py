@@ -1,7 +1,6 @@
 import logging
 
 from .proxy import Proxy
-from relay.exchange.order import Order
 from relay.logger import get_logger
 
 logger = get_logger('token', logging.DEBUG)
