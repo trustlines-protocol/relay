@@ -12,9 +12,10 @@ import itertools
 
 from relay.utils import sha3
 from relay.blockchain.currency_network_proxy import CurrencyNetworkProxy
+from relay.blockchain.unw_eth_proxy import UnwEthProxy
 from relay.blockchain.events import BlockchainEvent  # noqa: F401
 from relay.api import fields as custom_fields
-from .schemas import CurrencyNetworkEventSchema, UserCurrencyNetworkEventSchema
+from .schemas import CurrencyNetworkEventSchema, UserCurrencyNetworkEventSchema, UserTokenEventSchema
 from relay.relay import TrustlinesRelay
 
 
@@ -192,30 +193,54 @@ class UserEvents(Resource):
     args = {
         'fromBlock': fields.Int(required=False, missing=0),
         'type': fields.Str(required=False,
-                           validate=validate.OneOf(CurrencyNetworkProxy.event_types),
+                           validate=validate.OneOf(CurrencyNetworkProxy.event_types +
+                                                   UnwEthProxy.event_types),
                            missing=None)
     }
 
     @use_args(args)
     def get(self, args, user_address: str):
-        events = []
+        network_events = []
+        unw_eth_events = []
         type = args['type']
         from_block = args['fromBlock']
+
+        # currency networks
         networks = self.trustlines.networks
         for network_address in networks:
-            proxy = self.trustlines.currency_network_proxies[network_address]
+            currency_network_proxy = self.trustlines.currency_network_proxies[network_address]
             if type is not None:
-                events.append(gevent.spawn(proxy.get_network_events,
-                                           type,
-                                           user_address=user_address,
-                                           from_block=from_block))
+                network_events.append(gevent.spawn(currency_network_proxy.get_network_events,
+                                                   type,
+                                                   user_address=user_address,
+                                                   from_block=from_block))
             else:
-                events.append(gevent.spawn(proxy.get_all_network_events,
-                                           user_address=user_address,
-                                           from_block=from_block))
-        gevent.joinall(events, timeout=5)
-        flattened_events = list(itertools.chain.from_iterable([event.value for event in events]))
-        return UserCurrencyNetworkEventSchema().dump(flattened_events, many=True).data
+                network_events.append(gevent.spawn(currency_network_proxy.get_all_network_events,
+                                                   user_address=user_address,
+                                                   from_block=from_block))
+
+        # unw eth
+        unw_eth = self.trustlines.unw_eth
+        for unw_eth_address in unw_eth:
+            unw_eth_proxy = self.trustlines.unw_eth_proxies[unw_eth_address]
+            if type is not None:
+                unw_eth_events.append(gevent.spawn(unw_eth_proxy.get_unw_eth_events,
+                                                   type,
+                                                   user_address=user_address,
+                                                   from_block=from_block))
+            else:
+                unw_eth_events.append(gevent.spawn(unw_eth_proxy.get_all_unw_eth_events,
+                                                   user_address=user_address,
+                                                   from_block=from_block))
+
+        gevent.joinall(network_events, timeout=5)
+        gevent.joinall(unw_eth_events, timeout=5)
+        flattened_network_events = list(itertools.chain.from_iterable([event.value for event in network_events]))
+        flattened_unw_eth_events = list(itertools.chain.from_iterable([event.value for event in unw_eth_events]))
+        return list(itertools.chain(
+            UserCurrencyNetworkEventSchema().dump(flattened_network_events, many=True).data,
+            UserTokenEventSchema().dump(flattened_unw_eth_events, many=True).data
+        ))
 
 
 class EventsNetwork(Resource):
