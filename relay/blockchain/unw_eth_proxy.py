@@ -6,9 +6,9 @@ import itertools
 from .proxy import Proxy, sorted_events
 from relay.logger import get_logger
 
-from .token_events import (
+from .unw_eth_events import (
     BlockchainEvent,
-    TokenEvent,
+    UnwEthEvent,
     TransferEventType,
     DepositEventType,
     WithdrawalEventType,
@@ -59,10 +59,10 @@ class UnwEthProxy(Proxy):
                 result = self.get_events(event_name, filter1, from_block)
 
             for event in result:
-                if isinstance(event, TokenEvent):
+                if isinstance(event, UnwEthEvent):
                     event.user = user_address
                 else:
-                    raise ValueError('Expected a TokenEvent')
+                    raise ValueError('Expected a UnwEthEvent')
         return sorted_events(result)
 
     def get_all_unw_eth_events(self, user_address: str = None, from_block: int = 0) -> List[BlockchainEvent]:

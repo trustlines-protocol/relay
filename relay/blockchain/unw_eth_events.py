@@ -6,7 +6,7 @@ TransferEventType = 'Transfer'
 ApprovalEventType = 'Approval'
 
 
-class TokenEvent(BlockchainEvent):
+class UnwEthEvent(BlockchainEvent):
 
     def __init__(self, web3_event, current_blocknumber, timestamp, user=None):
         super().__init__(web3_event, current_blocknumber, timestamp)
@@ -40,7 +40,7 @@ class TokenEvent(BlockchainEvent):
             return self.from_
 
 
-class ValueEvent(TokenEvent):
+class ValueEvent(UnwEthEvent):
 
     @property
     def value(self):
