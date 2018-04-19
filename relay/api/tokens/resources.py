@@ -35,18 +35,6 @@ class TokenBalance(Resource):
         else:
             return self.trustlines.token_proxies[token_address].balance_of(user_address)
 
-class TokenBalance(Resource):
-
-    def __init__(self, trustlines: TrustlinesRelay) -> None:
-        self.trustlines = trustlines
-
-    def get(self, token_address: str, user_address: str):
-        abort_if_unknown_token(self.trustlines, token_address)
-        if token_address in self.trustlines.unw_eth:
-            return self.trustlines.unw_eth_proxies[token_address].balance_of(user_address)
-        else:
-            return self.trustlines.token_proxies[token_address].balance_of(user_address)
-
 
 class UserEventsToken(Resource):
 
@@ -78,3 +66,33 @@ class UserEventsToken(Resource):
             events = []
         return UserTokenEventSchema().dump(events, many=True).data
 
+
+class EventsToken(Resource):
+
+    def __init__(self, trustlines: TrustlinesRelay) -> None:
+        self.trustlines = trustlines
+
+    args = {
+        'fromBlock': fields.Int(required=False, missing=0),
+        'type': fields.Str(required=False,
+                           validate=validate.OneOf(UnwEthProxy.event_types),
+                           missing=None)
+    }
+
+    @use_args(args)
+    def get(self, args, token_address: str):
+        abort_if_unknown_token(self.trustlines, token_address)
+        from_block = args['fromBlock']
+        type = args['type']
+
+        if token_address in self.trustlines.unw_eth:
+            unw_eth_proxy = self.trustlines.unw_eth_proxies[token_address]
+            if type is not None:
+                events = unw_eth_proxy.get_events(type, from_block=from_block)
+            else:
+                events = unw_eth_proxy.get_all_events(from_block=from_block)
+        else:
+            # TODO
+            # token_proxy = self.trustlines.token_proxies[token_address]
+            events = []
+        return TokenEventSchema().dump(events, many=True).data
