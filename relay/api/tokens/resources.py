@@ -61,9 +61,11 @@ class UserEventsToken(Resource):
             else:
                 events = unw_eth_proxy.get_all_unw_eth_events(user_address, from_block=from_block)
         else:
-            # TODO
-            # token_proxy = self.trustlines.token_proxies[token_address]
-            events = []
+            token_proxy = self.trustlines.token_proxies[token_address]
+            if type is not None:
+                events = token_proxy.get_token_events(type, user_address, from_block=from_block)
+            else:
+                events = token_proxy.get_all_token_events(user_address, from_block=from_block)
         return UserTokenEventSchema().dump(events, many=True).data
 
 
@@ -92,7 +94,9 @@ class EventsToken(Resource):
             else:
                 events = unw_eth_proxy.get_all_events(from_block=from_block)
         else:
-            # TODO
-            # token_proxy = self.trustlines.token_proxies[token_address]
-            events = []
+            token_proxy = self.trustlines.token_proxies[token_address]
+            if type is not None:
+                events = token_proxy.get_events(type, from_block=from_block)
+            else:
+                events = token_proxy.get_all_events(from_block=from_block)
         return TokenEventSchema().dump(events, many=True).data
