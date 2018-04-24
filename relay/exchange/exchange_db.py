@@ -97,6 +97,8 @@ class OrderBookDB(object):
 
     def get_order_by_hash(self, order_hash: bytes) -> Order:
         order_orm = self.session.query(OrderORM).get(order_hash.hex())
+        if order_orm is None:
+            return None
         return order_orm.to_order()
 
     def get_orderbook_by_tokenpair(self, token_pair: Tuple[str, str], desc_price: bool = False) -> Sequence[Order]:
