@@ -48,6 +48,7 @@ class ValueEvent(TokenEvent):
 class TransferEvent(ValueEvent):
     pass
 
+
 class ApprovalEvent(ValueEvent):
     pass
 

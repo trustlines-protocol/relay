@@ -9,10 +9,7 @@ from relay.logger import get_logger
 from .token_events import (
     BlockchainEvent,
     TokenEvent,
-    TransferEventType,
-    ApprovalEventType,
-    from_to_types,
-    event_builders
+    from_to_types
 )
 
 logger = get_logger('token', logging.DEBUG)
