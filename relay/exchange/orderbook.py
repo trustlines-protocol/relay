@@ -87,6 +87,15 @@ class OrderBook(object):
         if self._db is not None:
             return self._db.get_order_by_hash(order_hash)
 
+    def get_filled_amount(self, order: Order) -> int:
+        return self._exchange_proxies[order.exchange_address].get_filled_amount(order)
+
+    def get_cancelled_amount(self, order: Order) -> int:
+        return self._exchange_proxies[order.exchange_address].get_cancelled_amount(order)
+
+    def get_unavailable_amount(self, order: Order) -> int:
+        return self._exchange_proxies[order.exchange_address].get_unavailable_amount(order)
+
 
 class OrderBookGreenlet(OrderBook):
 
