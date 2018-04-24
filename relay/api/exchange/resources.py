@@ -55,7 +55,36 @@ class OrderBook(Resource):
         }
 
 
+class OrderDetail(Resource):
+
+    def __init__(self, trustlines: TrustlinesRelay) -> None:
+        self.trustlines = trustlines
+
+    args = {
+        'includeFilled': webfields.Boolean(required=False, missing=False),
+        'includeCancelled': webfields.Boolean(required=False, missing=False),
+        'includeUnavailable': webfields.Boolean(required=False, missing=False)
+    }
+
+    @use_args(args)
+    def get(self, args, order_hash: str):
+        order_orm = self.trustlines.orderbook.get_order_by_hash(bytes.fromhex(order_hash[2:]))
+
+        if order_orm is None:
+            abort(422, message='Order does not exist')
+
+        order = order_as_dict(order_orm)
+        if (args['includeFilled']):
+            order['filledTakerAmount'] = self.trustlines.orderbook.get_filled_amount(order_orm)
+        if (args['includeCancelled']):
+            order['cancelledTakerAmount'] = self.trustlines.orderbook.get_cancelled_amount(order_orm)
+        if (args['includeCancelled']):
+            order['unavailableTakerAmount'] = self.trustlines.orderbook.get_unavailable_amount(order_orm)
+        return order
+
+
 class OrderSubmission(Resource):
+
     def __init__(self, trustlines: TrustlinesRelay) -> None:
         self.trustlines = trustlines
 

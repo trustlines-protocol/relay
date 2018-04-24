@@ -83,6 +83,10 @@ class OrderBook(object):
         if self._db is not None:
             return self._db.order_filled(orderhash, filled_maker_amount, filled_taker_amount)
 
+    def get_order_by_hash(self, order_hash: bytes):
+        if self._db is not None:
+            return self._db.get_order_by_hash(order_hash)
+
 
 class OrderBookGreenlet(OrderBook):
 
