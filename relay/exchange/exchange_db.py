@@ -5,6 +5,7 @@ from sqlalchemy import Column, Integer, String, Float
 from sqlalchemy.orm import sessionmaker
 
 from .order import Order
+from eth_utils import force_bytes
 
 Base = declarative_base()
 
@@ -124,7 +125,9 @@ class OrderBookDB(object):
         self.session.commit()
 
     def order_filled(self, order_hash: bytes, filled_maker_token_amount: int, filled_taker_token_amount: int) -> None:
-        order_orm = self.session.query(OrderORM).filter_by(msg_hash=order_hash.hex()).first()
+        # NOTE old version of web3.py returns bytes as string from contract, so we have to use force_bytes
+        order_hash_bytes = force_bytes(order_hash)
+        order_orm = self.session.query(OrderORM).filter_by(msg_hash=order_hash_bytes.hex()).first()
         order_orm.available_maker_token_amount -= filled_maker_token_amount
         order_orm.available_taker_token_amount -= filled_taker_token_amount
 
