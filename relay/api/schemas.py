@@ -1,6 +1,6 @@
 from marshmallow import Schema, fields
 
-from .fields import Address, BigInteger
+from .fields import Address, BigInteger, HexBytes
 
 
 class EventSchema(Schema):
@@ -43,3 +43,20 @@ class TokenEventSchema(BlockchainEventSchema):
 class UserTokenEventSchema(TokenEventSchema):
     direction = fields.Str()
     address = Address(attribute='other_party')
+
+
+class ExchangeEventSchema(BlockchainEventSchema):
+    exchangeAddress = Address(attribute='exchange_address')
+    makerTokenAddress = Address(attribute='maker_token')
+    takerTokenAddress = Address(attribute='taker_token')
+    from_ = Address(dump_to='from', load_from='from')
+    orderHash = HexBytes(attribute='order_hash')
+    filledMakerAmount = BigInteger(attribute='filled_maker_amount')
+    filledTakerAmount = BigInteger(attribute='filled_taker_amount')
+    cancelledMakerAmount = BigInteger(attribute='cancelled_maker_amount')
+    cancelledTakerAmount = BigInteger(attribute='cancelled_taker_amount')
+    to = Address()    
+
+
+class UserExchangeEventSchema(ExchangeEventSchema):
+    direction = fields.Str()
