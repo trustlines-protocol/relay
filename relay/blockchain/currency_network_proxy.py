@@ -2,7 +2,7 @@ import logging
 import socket
 from collections import namedtuple
 from typing import List, Dict
-
+from flask import abort
 import gevent
 import itertools
 
@@ -159,6 +159,8 @@ class CurrencyNetworkProxy(Proxy):
                 gevent.spawn(self.get_events, event_name, filter2, from_block)
             ]
             gevent.joinall(events, timeout=10)
+            if events is None:
+                abort(504, 'Timeout fetching events')
             result = list(itertools.chain.from_iterable([event.value for event in events]))
 
             for event in result:
@@ -173,6 +175,8 @@ class CurrencyNetworkProxy(Proxy):
                                type,
                                user_address=user_address,
                                from_block=from_block) for type in self.standard_event_types]
+        if events is None:
+            abort(504, 'Timeout fetching events')
         gevent.joinall(events, timeout=10)
         return sorted_events(list(itertools.chain.from_iterable([event.value for event in events])))
 

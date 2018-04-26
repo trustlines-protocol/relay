@@ -6,6 +6,7 @@ from typing import List, Dict, Callable, Any  # noqa: F401
 import gevent
 import itertools
 import socket
+from flask import abort
 
 from .events import BlockchainEvent
 
@@ -82,6 +83,8 @@ class Proxy(object):
                                filter_=filter_,
                                from_block=from_block) for type in self.standard_event_types]
         gevent.joinall(events, timeout=10)
+        if events is None:
+            abort(504, 'Timeout fetching events')
         return sorted_events(list(itertools.chain.from_iterable([event.value for event in events])))
 
     def _build_events(self, events: List[Any]):
