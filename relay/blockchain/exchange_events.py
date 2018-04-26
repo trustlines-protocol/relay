@@ -15,7 +15,6 @@ class ExchangeEvent(BlockchainEvent):
         self.order_hash = force_bytes(web3_event.get('args').get('orderHash'))
         self.maker_token = web3_event.get('args').get('makerToken')
         self.taker_token = web3_event.get('args').get('takerToken')
-        
 
     @property
     def from_(self):
@@ -45,7 +44,7 @@ class LogFillEvent(ExchangeEvent):
             return self.to
         else:
             return self.from_
-    
+
     @property
     def filled_maker_amount(self):
         return self._web3_event.get('args').get('filledMakerTokenAmount')
@@ -56,7 +55,7 @@ class LogFillEvent(ExchangeEvent):
 
 
 class LogCancelEvent(ExchangeEvent):
-    
+
     @property
     def cancelled_maker_amount(self):
         return self._web3_event.get('args').get('cancelledMakerTokenAmount')

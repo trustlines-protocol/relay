@@ -40,6 +40,7 @@ def order_as_dict(order: Order):
         }
     }
 
+
 def abort_if_unknown_exchange(trustlines, exchange_address):
     if exchange_address not in list(trustlines.exchanges):
         abort(404, 'Unkown exchange: {}'.format(exchange_address))
@@ -195,8 +196,8 @@ class EventsExchange(Resource):
     args = {
         'fromBlock': webfields.Int(required=False, missing=0),
         'type': webfields.Str(required=False,
-                           validate=validate.OneOf(ExchangeProxy.event_types),
-                           missing=None)
+                              validate=validate.OneOf(ExchangeProxy.event_types),
+                              missing=None)
     }
 
     @use_args(args)

@@ -1,7 +1,7 @@
 import gevent
 import itertools
 from .proxy import Proxy, sorted_events
-from typing import List, Dict
+from typing import List
 
 from relay.exchange.order import Order
 from .exchange_events import (
@@ -18,7 +18,6 @@ class ExchangeProxy(Proxy):
 
     event_builders = event_builders
     event_types = list(event_builders.keys())
-
     standard_event_types = [LogFillEventType,
                             LogCancelEventType]
 

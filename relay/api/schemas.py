@@ -55,7 +55,7 @@ class ExchangeEventSchema(BlockchainEventSchema):
     filledTakerAmount = BigInteger(attribute='filled_taker_amount')
     cancelledMakerAmount = BigInteger(attribute='cancelled_maker_amount')
     cancelledTakerAmount = BigInteger(attribute='cancelled_taker_amount')
-    to = Address()    
+    to = Address()
 
 
 class UserExchangeEventSchema(ExchangeEventSchema):
