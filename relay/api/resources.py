@@ -217,7 +217,7 @@ class UserEvents(Resource):
         if events is None:
             abort(504, 'Timeout fetching events')
         flattened_events = list(itertools.chain.from_iterable([event.value for event in events]))
-        return UserCurrencyNetworkEventSchema().dump(flattened_events, many=True).data            
+        return UserCurrencyNetworkEventSchema().dump(flattened_events, many=True).data
 
 
 class EventsNetwork(Resource):
