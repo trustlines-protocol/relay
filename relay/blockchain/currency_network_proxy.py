@@ -158,7 +158,7 @@ class CurrencyNetworkProxy(Proxy):
                 gevent.spawn(self.get_events, event_name, filter1, from_block),
                 gevent.spawn(self.get_events, event_name, filter2, from_block)
             ]
-            gevent.joinall(events, timeout=2)
+            gevent.joinall(events, timeout=10)
             result = list(itertools.chain.from_iterable([event.value for event in events]))
 
             for event in result:
@@ -173,7 +173,7 @@ class CurrencyNetworkProxy(Proxy):
                                type,
                                user_address=user_address,
                                from_block=from_block) for type in self.standard_event_types]
-        gevent.joinall(events, timeout=5)
+        gevent.joinall(events, timeout=10)
         return sorted_events(list(itertools.chain.from_iterable([event.value for event in events])))
 
     def estimate_gas_for_transfer(self, sender, receiver, value, max_fee, path):

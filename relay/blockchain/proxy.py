@@ -81,7 +81,7 @@ class Proxy(object):
                                type,
                                filter_=filter_,
                                from_block=from_block) for type in self.standard_event_types]
-        gevent.joinall(events, timeout=5)
+        gevent.joinall(events, timeout=10)
         return sorted_events(list(itertools.chain.from_iterable([event.value for event in events])))
 
     def _build_events(self, events: List[Any]):
