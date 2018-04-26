@@ -154,3 +154,29 @@ class UnwEthAddresses(Resource):
 
     def get(self):
         return self.trustlines.unw_eth_addresses
+
+
+class UserEventsExchange(Resource):
+
+    def __init__(self, trustlines: TrustlinesRelay) -> None:
+        self.trustlines = trustlines
+
+    args = {
+        'fromBlock': webfields.Int(required=False, missing=0),
+        'type': webfields.Str(required=False,
+                              validate=validate.OneOf(ExchangeProxy.event_types),
+                              missing=None)
+    }
+
+    @use_args(args)
+    def get(self, args, exchange_address: str, user_address: str):
+        abort_if_unknown_exchange(self.trustlines, exchange_address)
+        proxy = self.trustlines.orderbook._exchange_proxies[exchange_address]
+        from_block = args['fromBlock']
+        type = args['type']
+        if type is not None:
+            events = proxy.get_exchange_events(type, user_address, from_block=from_block)
+        else:
+            events = proxy.get_all_exchange_events(user_address, from_block=from_block)
+        return UserExchangeEventSchema().dump(events, many=True).data
+

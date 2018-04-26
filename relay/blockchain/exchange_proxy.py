@@ -1,19 +1,28 @@
-from .proxy import Proxy
-from relay.exchange.order import Order
+import gevent
+import itertools
+from .proxy import Proxy, sorted_events
+from typing import List, Dict
 
-FillEvent = 'LogFill'
-CancelEvent = 'LogCancel'
+from relay.exchange.order import Order
+from .exchange_events import (
+    BlockchainEvent,
+    ExchangeEvent,
+    LogFillEventType,
+    LogCancelEventType,
+    from_to_types,
+    event_builders
+)
 
 
 class ExchangeProxy(Proxy):
-    def __init__(
-            self,
-            web3,
-            exchange_abi,
-            token_abi,
-            address: str,
-            address_oracle
-    ) -> None:
+
+    event_builders = event_builders
+    event_types = list(event_builders.keys())
+
+    standard_event_types = [LogFillEventType,
+                            LogCancelEventType]
+
+    def __init__(self, web3, exchange_abi, token_abi, address: str, address_oracle) -> None:
         super().__init__(web3, exchange_abi, address)
         self._token_abi = token_abi
         self._address_oracle = address_oracle
@@ -49,14 +58,47 @@ class ExchangeProxy(Proxy):
             f(log_entry['args']['orderHash'],
               log_entry['args']['filledMakerTokenAmount'],
               log_entry['args']['filledTakerTokenAmount'])
-        self.start_listen_on(FillEvent, log)
+        self.start_listen_on(LogFillEventType, log)
 
     def start_listen_on_cancel(self, f) -> None:
         def log(log_entry):
             f(log_entry['args']['orderHash'],
               log_entry['args']['cancelledMakerTokenAmount'],
               log_entry['args']['cancelledTakerTokenAmount'])
-        self.start_listen_on(CancelEvent, log)
+        self.start_listen_on(LogCancelEventType, log)
+
+    def get_exchange_events(self, event_name: str, user_address: str=None, from_block: int=0) -> List[BlockchainEvent]:
+        if user_address is None:
+            result = self.get_events(event_name, from_block=from_block)
+        else:
+            filter1 = {from_to_types[event_name][0]: user_address}
+
+            if event_name == LogFillEventType:
+                # TODO taker attribute of LogFill is not indexed in contract yet
+                # filter2 = {from_to_types[event_name][1]: user_address}
+                events = [
+                    gevent.spawn(self.get_events, event_name, filter1, from_block),
+                    # gevent.spawn(self.get_events, event_name, filter2, from_block)
+                ]
+                gevent.joinall(events, timeout=10)
+                result = list(itertools.chain.from_iterable([event.value for event in events]))
+            else:
+                result = self.get_events(event_name, filter1, from_block)
+
+            for event in result:
+                if isinstance(event, ExchangeEvent):
+                    event.user = user_address
+                else:
+                    raise ValueError('Expected an ExchangeEvent')
+        return sorted_events(result)
+
+    def get_all_exchange_events(self, user_address: str=None, from_block: int=0) -> List[BlockchainEvent]:
+        events = [gevent.spawn(self.get_exchange_events,
+                               type,
+                               user_address=user_address,
+                               from_block=from_block) for type in self.standard_event_types]
+        gevent.joinall(events, timeout=10)
+        return sorted_events(list(itertools.chain.from_iterable([event.value for event in events])))
 
     def _is_currency_network(self, token_address: str) -> bool:
         return self._address_oracle.is_currency_network(token_address)
