@@ -3,11 +3,14 @@ from webargs.flaskparser import use_args
 from webargs import fields as webfields
 from webargs.flaskparser import abort
 from eth_utils import to_checksum_address, is_hex
-
+from marshmallow import validate
 from relay.relay import TrustlinesRelay
 from relay.api import fields
 from relay.exchange.order import Order
 from relay.exchange.orderbook import OrderInvalidException
+from relay.blockchain.exchange_proxy import ExchangeProxy
+
+from ..schemas import ExchangeEventSchema, UserExchangeEventSchema
 
 
 def order_as_dict(order: Order):
@@ -37,6 +40,9 @@ def order_as_dict(order: Order):
         }
     }
 
+def abort_if_unknown_exchange(trustlines, exchange_address):
+    if exchange_address not in list(trustlines.exchanges):
+        abort(404, 'Unkown exchange: {}'.format(exchange_address))
 
 def abort_if_invalid_order_hash(order_hash):
     if not is_hex(order_hash) or len(order_hash[2:]) != 64:
@@ -180,3 +186,27 @@ class UserEventsExchange(Resource):
             events = proxy.get_all_exchange_events(user_address, from_block=from_block)
         return UserExchangeEventSchema().dump(events, many=True).data
 
+
+class EventsExchange(Resource):
+
+    def __init__(self, trustlines: TrustlinesRelay) -> None:
+        self.trustlines = trustlines
+
+    args = {
+        'fromBlock': webfields.Int(required=False, missing=0),
+        'type': webfields.Str(required=False,
+                           validate=validate.OneOf(ExchangeProxy.event_types),
+                           missing=None)
+    }
+
+    @use_args(args)
+    def get(self, args, exchange_address: str):
+        abort_if_unknown_exchange(self.trustlines, exchange_address)
+        proxy = self.trustlines.orderbook._exchange_proxies[exchange_address]
+        from_block = args['fromBlock']
+        type = args['type']
+        if type is not None:
+            events = proxy.get_events(type, from_block=from_block)
+        else:
+            events = proxy.get_all_events(from_block=from_block)
+        return ExchangeEventSchema().dump(events, many=True).data
