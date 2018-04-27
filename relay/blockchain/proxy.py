@@ -113,3 +113,10 @@ def sorted_events(events: List[BlockchainEvent]) -> List[BlockchainEvent]:
             return math.inf
         return event.blocknumber
     return sorted(events, key=key)
+
+def format_event_greenlets(greenlet_jobs, _timeout=5):
+    gevent.joinall(greenlet_jobs, timeout=_timeout)
+    return list(itertools.chain.from_iterable(map(
+        lambda job: job.value if job.value is not None else abort(504, 'Timeout fetching events'),
+        greenlet_jobs
+)))
