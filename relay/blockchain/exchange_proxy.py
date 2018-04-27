@@ -12,9 +12,10 @@ class ExchangeProxy(Proxy):
             exchange_abi,
             token_abi,
             address: str,
-            address_oracle
+            address_oracle,
+            config
     ) -> None:
-        super().__init__(web3, exchange_abi, address)
+        super().__init__(web3, exchange_abi, address, config)
         self._token_abi = token_abi
         self._address_oracle = address_oracle
 

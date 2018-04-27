@@ -86,7 +86,8 @@ class TrustlinesRelay:
                                                       self.contracts['Exchange']['abi'],
                                                       self.contracts['Token']['abi'],
                                                       address,
-                                                      self))
+                                                      self,
+                                                      self.config))
 
     def new_unw_eth(self, address: str) -> None:
         assert is_checksum_address(address)
