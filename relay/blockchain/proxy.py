@@ -27,10 +27,11 @@ class Proxy(object):
     event_builders = {}  # type: Dict[str, Callable[[Any, int, int], BlockchainEvent]]
     standard_event_types = []  # type: List[str]
 
-    def __init__(self, web3, abi, address: str) -> None:
+    def __init__(self, web3, abi, address: str, config) -> None:
         self._web3 = web3
         self._proxy = web3.eth.contract(abi=abi, address=address)
         self.address = address
+        self.config = config
 
     def _watch_filter(self, eventname: str, function, params=None):
         while True:
@@ -82,7 +83,16 @@ class Proxy(object):
                                       type,
                                       filter_=filter_,
                                       from_block=from_block) for type in self.standard_event_types]
-        return sorted_events(format_event_greenlets(finished_jobs))
+        return sorted_events(self.format_event_greenlets(finished_jobs))
+
+    def format_event_greenlets(self, greenlet_jobs, _timeout=None):
+        if _timeout is None:
+            _timeout = self.config.get('greenletTimeoutInSec')
+        gevent.joinall(greenlet_jobs, timeout=_timeout)
+        return list(itertools.chain.from_iterable(map(
+            lambda job: job.value if job.value is not None else abort(504, 'Timeout fetching events'),
+            greenlet_jobs
+        )))
 
     def _build_events(self, events: List[Any]):
         current_blocknumber = self._web3.eth.blockNumber
@@ -110,10 +120,3 @@ def sorted_events(events: List[BlockchainEvent]) -> List[BlockchainEvent]:
             return math.inf
         return event.blocknumber
     return sorted(events, key=key)
-
-def format_event_greenlets(greenlet_jobs, _timeout=5):
-    gevent.joinall(greenlet_jobs, timeout=_timeout)
-    return list(itertools.chain.from_iterable(map(
-        lambda job: job.value if job.value is not None else abort(504, 'Timeout fetching events'),
-        greenlet_jobs
-)))

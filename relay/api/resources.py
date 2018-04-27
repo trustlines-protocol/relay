@@ -8,11 +8,9 @@ from webargs import fields
 from webargs.flaskparser import use_args
 from marshmallow import validate
 import gevent
-import itertools
 
 from relay.utils import sha3
 from relay.blockchain.currency_network_proxy import CurrencyNetworkProxy
-from relay.blockchain.proxy import format_event_greenlets
 from relay.blockchain.events import BlockchainEvent  # noqa: F401
 from relay.api import fields as custom_fields
 from .schemas import CurrencyNetworkEventSchema, UserCurrencyNetworkEventSchema
@@ -214,7 +212,7 @@ class UserEvents(Resource):
                 finished_jobs.append(gevent.spawn(proxy.get_all_network_events,
                                                   user_address=user_address,
                                                   from_block=from_block))
-        events = format_event_greenlets(finished_jobs)
+        events = proxy.format_event_greenlets(finished_jobs)
         return UserCurrencyNetworkEventSchema().dump(events, many=True).data
 
 

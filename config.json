@@ -6,5 +6,6 @@
     "ssl": false
   },
   "syncInterval": 300,
-  "updateNetworksInterval": 120
+  "updateNetworksInterval": 120,
+  "greenletTimeoutInSec": 5
 }

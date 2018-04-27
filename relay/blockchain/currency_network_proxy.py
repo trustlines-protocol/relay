@@ -2,11 +2,9 @@ import logging
 import socket
 from collections import namedtuple
 from typing import List, Dict
-from flask import abort
 import gevent
-import itertools
 
-from .proxy import Proxy, reconnect_interval, sorted_events, format_event_greenlets
+from .proxy import Proxy, reconnect_interval, sorted_events
 from relay.logger import get_logger
 
 from .currency_network_events import (
@@ -48,8 +46,8 @@ class CurrencyNetworkProxy(Proxy):
                             TrustlineRequestEventType,
                             TrustlineUpdateEventType]
 
-    def __init__(self, web3, abi, address: str) -> None:
-        super().__init__(web3, abi, address)
+    def __init__(self, web3, abi, address: str, config) -> None:
+        super().__init__(web3, abi, address, config)
         self.name = self._proxy.call().name().strip('\0')  # type: str
         self.decimals = self._proxy.call().decimals()  # typ: str
         self.symbol = self._proxy.call().symbol().strip('\0')  # type: str
@@ -158,7 +156,7 @@ class CurrencyNetworkProxy(Proxy):
                 gevent.spawn(self.get_events, event_name, filter2, from_block)
             ]
 
-            result = format_event_greenlets(finished_jobs)
+            result = self.format_event_greenlets(finished_jobs)
 
             for event in result:
                 if isinstance(event, CurrencyNetworkEvent):
@@ -172,7 +170,7 @@ class CurrencyNetworkProxy(Proxy):
                                       type,
                                       user_address=user_address,
                                       from_block=from_block) for type in self.standard_event_types]
-        return sorted_events(format_event_greenlets(finished_jobs))
+        return sorted_events(self.format_event_greenlets(finished_jobs))
 
     def estimate_gas_for_transfer(self, sender, receiver, value, max_fee, path):
         return self._proxy.estimateGas({'from': sender}).transfer(receiver, value, max_fee, path)
