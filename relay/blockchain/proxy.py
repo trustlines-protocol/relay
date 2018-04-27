@@ -78,14 +78,11 @@ class Proxy(object):
         return sorted_events(self._build_events(list))
 
     def get_all_events(self, filter_=None, from_block: int=0) -> List[BlockchainEvent]:
-        events = [gevent.spawn(self.get_events,
-                               type,
-                               filter_=filter_,
-                               from_block=from_block) for type in self.standard_event_types]
-        gevent.joinall(events, timeout=10)
-        if events is None:
-            abort(504, 'Timeout fetching events')
-        return sorted_events(list(itertools.chain.from_iterable([event.value for event in events])))
+        finished_jobs = [gevent.spawn(self.get_events,
+                                      type,
+                                      filter_=filter_,
+                                      from_block=from_block) for type in self.standard_event_types]
+        return sorted_events(format_event_greenlets(finished_jobs))
 
     def _build_events(self, events: List[Any]):
         current_blocknumber = self._web3.eth.blockNumber
