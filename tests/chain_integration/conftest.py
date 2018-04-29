@@ -136,18 +136,18 @@ def network_addresses_with_exchange(testnetworks):
 
 
 @pytest.fixture(scope='session')
-def currency_network(web3, currency_network_abi, testnetwork1_address):
+def currency_network(web3, currency_network_abi, testnetwork1_address, config):
     """this currency network is not reset for speed reasons,
        only use it for constant tests"""
-    currency_network = CurrencyNetworkProxy(web3, currency_network_abi, testnetwork1_address)
+    currency_network = CurrencyNetworkProxy(web3, currency_network_abi, testnetwork1_address, config)
     return currency_network
 
 
 @pytest.fixture(scope='session')
-def currency_network_with_trustlines(web3, currency_network_abi, testnetwork2_address, trustlines):
+def currency_network_with_trustlines(web3, currency_network_abi, testnetwork2_address, trustlines, config):
     """this currency network is not reset for speed reasons,
         only use it for constant tests"""
-    currency_network = CurrencyNetworkProxy(web3, currency_network_abi, testnetwork2_address)
+    currency_network = CurrencyNetworkProxy(web3, currency_network_abi, testnetwork2_address, config)
 
     currency_network.setup_trustlines(trustlines)
 
@@ -155,10 +155,10 @@ def currency_network_with_trustlines(web3, currency_network_abi, testnetwork2_ad
 
 
 @pytest.fixture()
-def fresh_currency_network(web3, currency_network_abi, testnetwork3_address, trustlines):
+def fresh_currency_network(web3, currency_network_abi, testnetwork3_address, trustlines, config):
     """this currency network is reset on every use which is very slow,
             only use it if you need it"""
-    currency_network = CurrencyNetworkProxy(web3, currency_network_abi, testnetwork3_address)
+    currency_network = CurrencyNetworkProxy(web3, currency_network_abi, testnetwork3_address, config)
 
     return currency_network
 
