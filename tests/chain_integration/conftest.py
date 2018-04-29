@@ -134,6 +134,11 @@ def unw_eth_address(testnetworks):
 def network_addresses_with_exchange(testnetworks):
     return [network.address for network in testnetworks[0]]
 
+@pytest.fixture()
+def config():
+    with open('config.json') as data_file:
+        return json.load(data_file)
+
 
 @pytest.fixture(scope='session')
 def currency_network(web3, currency_network_abi, testnetwork1_address, config):
