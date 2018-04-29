@@ -134,7 +134,8 @@ def unw_eth_address(testnetworks):
 def network_addresses_with_exchange(testnetworks):
     return [network.address for network in testnetworks[0]]
 
-@pytest.fixture()
+
+@pytest.fixture(scope='session')
 def config():
     with open('config.json') as data_file:
         return json.load(data_file)
