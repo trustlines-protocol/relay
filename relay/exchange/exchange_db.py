@@ -116,6 +116,14 @@ class OrderBookDB(object):
                                 OrderORM.expiration_timestamp_in_sec))
         return [order_orm.to_order() for order_orm in orders_orm]
 
+    def get_orders(self, query_params: dict) -> Sequence[Order]:
+        orders_orm = self.session.query(OrderORM)
+        for key, value in query_params:
+            if value is not None:
+                orders_orm.filter(OrderORM[key] == value)
+        return [order_orm.to_order() for order_orm in orders_orm]
+        
+
     def delete_order_by_hash(self, order_hash: bytes) -> None:
         self.session.query(OrderORM).filter_by(msg_hash=order_hash.hex()).delete(synchronize_session=False)
         self.session.commit()
