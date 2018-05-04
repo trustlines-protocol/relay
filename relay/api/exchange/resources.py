@@ -79,6 +79,34 @@ class OrderDetail(Resource):
         return order_as_dict(order)
 
 
+class Orders(Resource):
+
+    def __init__(self, trustlines: TrustlinesRelay) -> None:
+        self.trustlines = trustlines
+
+    args = {
+        'exchangeContractAddress': fields.Address(required=False, missing=None),
+        'tokenAddress': fields.Address(required=False, missing=None),
+        'makerTokenAddress': fields.Address(required=False, missing=None),
+        'takerTokenAddress': fields.Address(required=False, missing=None),
+        'maker': fields.Address(required=False, missing=None),
+        'taker': fields.Address(required=False, missing=None),
+        'trader': fields.Address(required=False, missing=None),
+        'feeRecipient': fields.Address(required=False, missing=None)
+    }
+
+    @use_args(args)
+    def get(self, args):
+        def to_checksum(address):
+            if address is not None:
+                return to_checksum_address(address)
+            else:
+                return None
+        for key in args:
+            args[key] = to_checksum(args[key]) 
+        return [order_as_dict(order) for order in self.trustlines.orderbook.get_orders(args)]
+
+
 class OrderSubmission(Resource):
 
     def __init__(self, trustlines: TrustlinesRelay) -> None:
