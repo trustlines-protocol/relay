@@ -1,5 +1,4 @@
 import web3  # type: ignore
-import re
 
 
 def merge_two_dicts(x, y):
@@ -18,8 +17,3 @@ def trim_args(args):
 
 def sha3(text: str) -> str:
     return web3.Web3.sha3(text=text)
-
-
-def to_snake_case(camel_str: str) -> str:
-    s1 = re.sub('(.)([A-Z][a-z]+)', r'\1_\2', camel_str)
-    return re.sub('([a-z0-9])([A-Z])', r'\1_\2', s1).lower()

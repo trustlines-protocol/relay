@@ -85,10 +85,11 @@ class OrderBook(object):
                      filled_taker_amount: int) -> None:
         if self._db is not None:
             return self._db.order_filled(orderhash, filled_maker_amount, filled_taker_amount)
-    
+
     def get_orders(self, query_params: dict) -> Sequence[Order]:
         if self._db is not None:
             return self._db.get_orders(query_params)
+        return []
 
     def order_cancelled(self,
                         orderhash: bytes,

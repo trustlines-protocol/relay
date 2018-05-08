@@ -6,7 +6,6 @@ from sqlalchemy.orm import sessionmaker
 
 from .order import Order
 from eth_utils import force_bytes
-from ..utils import to_snake_case
 
 Base = declarative_base()
 
@@ -138,8 +137,8 @@ class OrderBookDB(object):
             orders_orm.filter(OrderORM.taker_address == query['taker'])
         if (query['feeRecipient'] is not None):
             orders_orm.filter(OrderORM.fee_recipient == query['feeRecipient'])
-        
-        return [order_orm.to_order() for order_orm in orders_orm]        
+
+        return [order_orm.to_order() for order_orm in orders_orm]
 
     def delete_order_by_hash(self, order_hash: bytes) -> None:
         self.session.query(OrderORM).filter_by(msg_hash=order_hash.hex()).delete(synchronize_session=False)

@@ -11,8 +11,7 @@ from .resources import GraphDump, GraphImage, RequestEther, User, UserList, Netw
     ContactList, TrustlineList, Trustline, Spendable, SpendableTo, Path, ReduceDebtPath, UserEventsNetwork, \
     UserEvents, Relay, Balance, TransactionInfos, Block, EventsNetwork
 from .streams.app import WebSocketRPCHandler, MessagingWebSocketRPCHandler
-from .exchange.resources import OrderBook, OrderSubmission, ExchangeAddresses, UnwEthAddresses, OrderDetail, \
-    UserEventsExchange, EventsExchange, Orders
+from .exchange.resources import OrderBook, OrderSubmission, ExchangeAddresses, UnwEthAddresses, OrderDetail, Orders
 from .messaging.resources import PostMessage
 from .tokens.resources import TokenAddresses, EventsToken, TokenBalance, UserEventsToken
 from .pushservice.resources import AddClientToken, DeleteClientToken
