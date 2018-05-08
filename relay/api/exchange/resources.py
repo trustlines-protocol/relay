@@ -97,13 +97,6 @@ class Orders(Resource):
 
     @use_args(args)
     def get(self, args):
-        def to_checksum(address):
-            if address is not None:
-                return to_checksum_address(address)
-            else:
-                return None
-        for key in args:
-            args[key] = to_checksum(args[key]) 
         return [order_as_dict(order) for order in self.trustlines.orderbook.get_orders(args)]
 
 

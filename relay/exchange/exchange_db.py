@@ -6,6 +6,7 @@ from sqlalchemy.orm import sessionmaker
 
 from .order import Order
 from eth_utils import force_bytes
+from ..utils import to_snake_case
 
 Base = declarative_base()
 
@@ -116,13 +117,29 @@ class OrderBookDB(object):
                                 OrderORM.expiration_timestamp_in_sec))
         return [order_orm.to_order() for order_orm in orders_orm]
 
-    def get_orders(self, query_params: dict) -> Sequence[Order]:
+    def get_orders(self, query: dict) -> Sequence[Order]:
         orders_orm = self.session.query(OrderORM)
-        for key, value in query_params:
-            if value is not None:
-                orders_orm.filter(OrderORM[key] == value)
-        return [order_orm.to_order() for order_orm in orders_orm]
+
+        if (query['exchangeContractAddress'] is not None):
+            orders_orm.filter(OrderORM.exchange_address == query['exchangeContractAddress'])
+        if (query['tokenAddress'] is not None):
+            orders_orm.filter((OrderORM.maker_token == query['tokenAddress']) |
+                              (OrderORM.taker_token == query['tokenAddress']))
+        if (query['makerTokenAddress'] is not None):
+            orders_orm.filter(OrderORM.maker_token == query['makerTokenAddress'])
+        if (query['takerTokenAddress'] is not None):
+            orders_orm.filter(OrderORM.taker_token == query['takerTokenAddress'])
+        if (query['trader'] is not None):
+            orders_orm.filter((OrderORM.maker_address == query['trader']) |
+                              (OrderORM.taker_address == query['trader']))
+        if (query['maker'] is not None):
+            orders_orm.filter(OrderORM.maker_address == query['maker'])
+        if (query['taker'] is not None):
+            orders_orm.filter(OrderORM.taker_address == query['taker'])
+        if (query['feeRecipient'] is not None):
+            orders_orm.filter(OrderORM.fee_recipient == query['feeRecipient'])
         
+        return [order_orm.to_order() for order_orm in orders_orm]        
 
     def delete_order_by_hash(self, order_hash: bytes) -> None:
         self.session.query(OrderORM).filter_by(msg_hash=order_hash.hex()).delete(synchronize_session=False)
