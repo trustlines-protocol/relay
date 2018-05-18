@@ -14,6 +14,15 @@ class LogClient(Client):
         self.events.append((id, event))
 
 
+class SafeLogClient(Client):
+    "this client does not raise DisconnectedError"
+    def __init__(self):
+        self.events = []
+
+    def send(self, id, event):
+        self.events.append((id, event))
+
+
 @pytest.fixture()
 def subject():
     return Subject()
@@ -54,6 +63,16 @@ def test_auto_unsubscribe(subject, client):
     assert client.events == []
     assert subscription.closed
     assert len(subject.subscriptions) == 0
+
+
+def test_auto_unsubscribe_dont_skip(subject):
+    """test that publishing also works when auto-unsubscribing
+    see https://github.com/trustlines-network/relay/issues/85"""
+    clients = [LogClient(), SafeLogClient()]
+    for c in clients:
+        subject.subscribe(c)
+    subject.publish(event='disconnect')  # the first one throws and get's auto-unsubscribed
+    assert clients[1].events, "second client not notified"
 
 
 def test_subscription_after_puplish(messaging_subject, client):
