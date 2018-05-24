@@ -361,11 +361,7 @@ class CurrencyNetworkGraph(object):
         account.balance = new_balance(self.capacity_imbalance_fee_divisor, account.balance, value)
         return fee
 
-    def mediated_transfer(self, source, target, value):
-        """simulate mediated transfer off chain"""
-        cost, path = self.find_path(source, target, value)
-        assert path[0] == source
-        assert path[-1] == target
+    def transfer_path(self, path, value, cost):
         path = list(reversed(path))
         fees = 0
         target = path.pop(0)
@@ -378,21 +374,16 @@ class CurrencyNetworkGraph(object):
         assert fees == cost
         return cost
 
+    def mediated_transfer(self, source, target, value):
+        """simulate mediated transfer off chain"""
+        cost, path = self.find_path(source, target, value)
+        assert path[0] == source
+        assert path[-1] == target
+        return self.transfer_path(path, value, cost)
+
     def triangulation_transfer(self, source, target_reduce, target_increase, value):
         """simulate triangulation transfer off chain"""
         cost, path = self.find_path_triangulation(source, target_reduce, target_increase, value)
         assert path[0] == source
         assert path[-1] == source
-        path = list(reversed(path))
-        fees = 0
-        if value < 0:
-            value = -value
-        target = path.pop(0)
-        while len(path):
-            source = path.pop(0)
-            fee = self.transfer(source, target, value)
-            value += fee
-            fees += fee
-            target = source
-        assert fees == cost
-        return cost
+        return self.transfer_path(path, value, cost)
