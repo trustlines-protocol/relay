@@ -21,6 +21,7 @@ https://relay0.testnet.trustlines.network:443/api/v1
 ```
 
 ## API Endpoints
+### Network context
 - [Currency networks list](##/networks)
 - [Currency network details](##/networks/:network)
 - [Users list in currency network](##/networks/:network/users)
@@ -32,7 +33,12 @@ https://relay0.testnet.trustlines.network:443/api/v1
 - [Transfer path in currency network](##/networks/:network/path-info)
 - [All events in currency network](##/networks/:network/events)
 - [Events of user in currency network](##/networks/:network/users/:user/events)
-
+### User context
+- [Events of user in all currency networks](##/users/:user/events)
+- [Transaction infos for user](##/users/:user/txinfos)
+### Other
+- [Latest block number](###/blocknumber)
+- [Relay](###/relay)
 ---
 
 ### Currency networks list
@@ -383,182 +389,116 @@ GET /networks/:network/users/:user/events?type=:type&fromBlock=:fromBlock
 
 ---
 
-## `TODO` Get externally owned user
-Return user information of a externally owned address
+### Events of user in all currency networks
+### `/users/:user/events`
+Returns a list of event logs of an user in all currency networks. That means all events where the given user address is either `from` or `to`.
+#### Request
+```
+GET /users/:user/events?type=:type&fromBlock=:fromBlock
+```
+#### Parameters
+|Name|Type|Required|Description|
+|-|-|-|-|
+|user|string|YES|Address of user|
+|type|string|NO|Either `TrustlineUpdate`, `TrustlineUpdateRequest` or `Transfer`|
+|fromBlock|int|NO|Start of block range|
+#### Response
+```javascript
+[
+	// TrustlineUpdateRequest
+	{
+		"networkAddress": "0x55bdaAf9f941A5BB3EacC8D876eeFf90b90ddac9",
+		"blockNumber": 6997877,
+		"timestamp": 1524655432, // UNIX timestamp
+		"type": "TrustlineUpdateRequest",
+		"from": "0xcbF1153F6e5AC01D363d432e24112e8aA56c55ce",
+		"to": "0x7Ff66eb1A824FF9D1bB7e234a2d3B7A3b0345320",
+		"status": "confirmed", // sent || pending || confirmed depending on block height
+		"transactionId": "0xb141aa3baec4e7151d8bd6ecab46d26b1add131e50bcc517c956a7ac979815cd", // transaction hash
+		"given": "20000", // proposed amount [from -> to]
+		"received": "20000" // proposed amount [from <- to]
+	},
+	// TrustlineUpdate
+	{
+		"networkAddress": "0x55bdaAf9f941A5BB3EacC8D876eeFf90b90ddac9",
+		"blockNumber": 6997899,
+		"timestamp": 1524655600,
+		"type": "TrustlineUpdate",
+		"from": "0xcbF1153F6e5AC01D363d432e24112e8aA56c55ce",
+		"to": "0x7Ec3543702FA8F2C7b2bD84C034aAc36C263cA8b",
+		"status": "confirmed",
+		"transactionId": "0x10d4e9acb58d42d433dbc5c995e9a258cd2bb7fe82fedf2ebab82e450d30c643",
+		"given": "10000", // accepted amount [from -> to]
+		"received": "10000" // accepted amount [from <- to]
+	},
+	// Transfer	
+	{
+		"networkAddress": "0xC0B33D88C704455075a0724AA167a286da778DDE",
+		"blockNumber": 7011809,
+		"timestamp": 1524755036,
+		"type": "Transfer",
+		"from": "0xcbF1153F6e5AC01D363d432e24112e8aA56c55ce",
+		"to": "0x7Ec3543702FA8F2C7b2bD84C034aAc36C263cA8b",
+		"status": "confirmed",
+		"transactionId": "0x05c91f6506e78b1ca2413df9985ca7d37d2da5fc076c0b55c5d9eb9fdd7513a6",
+		"amount": "100" // transferred amount
+	},
+	... // more event objects
+]
+```
 
-`GET /users/:user`
+---
 
+### Transaction infos of user
+### `/users/:user/txinfos`
+Returns information that is needed to sign a transaction.
+#### Request
+```
+GET /users/:user/txinfos
+```
+#### Parameters
+|Name|Type|Required|Description|
+|-|-|-|-|
+|user|string|YES|Address of user|
+|type|string|NO|Either `TrustlineUpdate`, `TrustlineUpdateRequest` or `Transfer`|
+|fromBlock|int|NO|Start of block range|
+#### Response
 ```javascript
 {
-  "proxyAddress": "0x...",
-  "balance": "123.45555",
-  "networks": ["0x...", "0x...", ...]
+  "gasPrice": 0,
+  "balance": 2377634165348042492, // ETH balance of user in wei
+  "nonce": 58
 }
 ```
 
-## Get transaction infos
-Returns the transaction information
+---
 
-`GET /users/:user/txinfos`
-
-### Response
+### Latest block number
+### `/blocknumber`
+Returns the latest block number.
+#### Request
+```
+GET /blocknumber
+```
+#### Response
 ```javascript
-{
-    "balance": "1000",
-    "nonce": 15,
-    "gasPrice": "10000"
-}
+7426584 // latest block number
 ```
 
-## `NEW` Get balance of externally owned account
-Returns the ETH balance of an externally owned account
+---
 
-`GET /users/:user/balance`
-
-### Response
-```javascript
-"12.1009234"
+### Relay
+### `/relay`
+Relays a raw transaction to the blockchain.
+#### Request
 ```
-
-## Relay transaction
-Sends a signed transaction
-
-Remove txId as response instead compute on client
-
-`POST /relay`
-
-### Request
-```javascript
-// rawTransaction
+POST /relay
 ```
-
-### Response
+#### POST body
+|Name|Type|Required|Description|
+|-|-|-|-|
+|rawTransaction|string|YES|signed transation|
+#### Response
 ```javascript
-"txId"
+'0x...' // hash of transaction if relayed successfully
 ```
-
-# Exchange API
-
-## `TODO` Get balances
-Returns balances of user
-
-`GET networks/:network/users/:user/exchanges/:currency`
-
-### Parameters
-- `currency` -
-
-### Response
-```javascript
-{
-    "EUR": {
-        "available": "1000", // available trustlines money
-        "onOrders": "123", // amount on orders
-        "ethValue": "1.12" // exchange value
-    },
-    "ETH": {
-        "available": "123.112",
-        "onOrders": "1.1112",
-        "eurValue": "300"
-    }
-}
-```
-
-## `TODO` Get deposits
-Returns deposit history within range `start` to `end`
-
-`GET networks/:network/users/:user/exchanges/:currency/deposits?start=:start&end=:end`
-
-### Parameters
-- `start` - UNIX timestamp for range start
-- `end` - UNIX timestamp for range end
-
-### Response
-```javascript
-[
-    {
-        "currency": "ETH",
-        "address": "...",
-        "amount": "1.2323",
-        "confirmations": 10,
-        "txId": "...",
-        "timestamp": 1399305798,
-        "status": "COMPLETE"
-    },
-    // other deposits
-]
-```
-
-## `TODO` Get withdrawals
-Returns withdrawal history within range `start` to `end`
-
-`GET networks/:network/users/:user/exchanges/:currency/withdrawals?start=:start&end=:end`
-
-### Parameters
-- `start` - UNIX timestamp for range start
-- `end` - UNIX timestamp for range end
-
-### Response
-```javascript
-[
-    {
-        "currency": "ETH",
-        "address": "...",
-        "amount": "1.2323",
-        "confirmations": 10,
-        "txId": "...",
-        "timestamp": 1399305798,
-        "status": "COMPLETE"
-    },
-    // other deposits
-]
-```
-
-## `TODO` Get open orders
-Returns open orders for pair NetworkCurrency_ExchangeCurrency (i.e. EUR_ETH)
-
-`GET networks/:network/users/:user/exchanges/:currency/openorders`
-
-### Response
-```javascript
-[
-    {
-        "orderNumber": 123456,
-        "type": "SELL", // BUY or SELL
-        "rate": "0.025", // exchange rate
-        "amount": "100", // amount or order
-        "total": "2.5", // total order price
-        "timestamp": 1399305798
-    },
-    // other open orders
-]
-```
-
-## `TODO` Get trade history
-Returns trade history within range `start` and `end`
-
-`GET networks/:network/users/:user/exchanges/:currency/orders?start=:startTimestamp&end=:endTimestamp`
-
-### Parameters
-- `start` - UNIX timestamp for range start
-- `end` - UNIX timestamp for range end
-
-### Response
-```javascript
-[
-    {
-        "orderNumber": 123456,
-        "type": "SELL", // BUY or SELL
-        "rate": "0.025", // exchange rate
-        "amount": "100", // amount or order
-        "total": "2.5", // total order price
-        "fee": "0.00002", // fee of order
-        "timestamp": 1399305798
-    },
-    // other deposits
-]
-```
-
-## `TODO` Place buy order
-Places a limit buy order
-
-`POST networks/:network/users/:user/exchanges/:currency/`
