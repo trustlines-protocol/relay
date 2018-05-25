@@ -13,8 +13,9 @@ https://relay0.testnet.trustlines.network/api/v1
 ## Response
 - All endpoints return JSON
 - All number values are returned in their smallest unit
+- All ethereum addresses are returned as ERC55 checksum addresses
 - In case of an error, the response of the relay API will have the following format:
-```javascript
+```json
 {
   "message": "<errorMessage>"
 }
@@ -43,14 +44,23 @@ https://relay0.testnet.trustlines.network/api/v1
 ---
 
 ### Currency networks list
-### `/networks`
 Returns all registered currency networks with high-level information.
 #### Request
 ```
 GET /networks
 ```
+#### Example Request
+```
+curl https://relay0.testnet.trustlines.network/api/v1/networks
+```
 #### Response
-```javascript
+|Attribute|Type|Description|
+|---------|----|-----------|
+|name|string|Full name of the currency network|
+|abbreviation|string|Abbreviated name of currency network|
+|address|string|Contract address of currency network|
+#### Example Response
+```json
 [
   {
     "name": "Hours",
@@ -68,18 +78,29 @@ GET /networks
 ---
 
 ### Currency network details
-### `/networks/:network`
 Returns detailed information of currency network.
 #### Request
 ```
-GET /networks/:network
+GET /networks/:networkAddress
 ```
-#### Parameters
+#### URL Parameters
 |Name|Type|Required|Description|
-|-|-|-|-|
-|network|string|YES|Address of currency network|
+|----|----|--------|-----------|
+|networkAddress|string|YES|Address of currency network|
+#### Example Request
+```
+curl https://relay0.testnet.trustlines.network/api/v1/networks/0xC0B33D88C704455075a0724AA167a286da778DDE
+```
 #### Response
-```javascript
+|Attribute|Type|Description|
+|---------|----|-----------|
+|abbreviation|string|Abbreviated name of currency network|
+|address|string|Contract address of currency network|
+|decimals|int|Decimals specified in currency network|
+|name|string|Full name of the currency network|
+|numUsers|int|Total number of users in currency network|
+#### Example Response
+```json
 {
   "abbreviation": "HOU",
   "address": "0xC0B33D88C704455075a0724AA167a286da778DDE",
@@ -92,213 +113,299 @@ GET /networks/:network
 ---
 
 ### Users list in currency network 
-### `/networks/:network/users`
 Returns a list of user addresses in a currency network.
 #### Request
 ```
-GET /networks/:network/users
+GET /networks/:networkAddress/users
 ```
-#### Parameters
+#### URL Parameters
 |Name|Type|Required|Description|
 |-|-|-|-|
-|network|string|YES|Address of currency network|
+|networkAddress|string|YES|Address of currency network|
+#### Example Request
+```
+curl https://relay0.testnet.trustlines.network/api/v1/networks/0xC0B33D88C704455075a0724AA167a286da778DDE/users
+```
 #### Response
-```javascript
+`string[]` - Array with addresses of users in currency network
+#### Example Response
+```json
 [
   "0xcbF1153F6e5AC01D363d432e24112e8aA56c55ce",
   "0x7Ff66eb1A824FF9D1bB7e234a2d3B7A3b0345320",
-  "0x7Ec3543702FA8F2C7b2bD84C034aAc36C263cA8b",
-	...
+  "0x7Ec3543702FA8F2C7b2bD84C034aAc36C263cA8b"
 ]
 ```
 
 ---
 
 ### User details in currency network 
-### `/networks/:network/users/:user`
 Returns detailed information of an user in a currency network.
 #### Request
 ```
-GET /networks/:network/users/:user
+GET /networks/:networkAddress/users/:userAddress
 ```
-#### Parameters
+#### URL Parameters
 |Name|Type|Required|Description|
 |-|-|-|-|
-|network|string|YES|Address of currency network|
-|user|string|YES|Address of user|
+|networkAddress|string|YES|Address of currency network|
+|userAddress|string|YES|Address of user|
+#### Example Request
+```
+curl https://relay0.testnet.trustlines.network/api/v1/networks/0xC0B33D88C704455075a0724AA167a286da778DDE/users/0xcbF1153F6e5AC01D363d432e24112e8aA56c55ce
+```
 #### Response
-```javascript
+|Attribute|Type|Description|
+|---------|----|-----------|
+|balance|string|Sum over balances of all trustlines user has in currency network|
+|given|string|Sum of all creditlines given by user in currency network|
+|received|string|Sum of all creditlines received by user in currency network|
+|leftGiven|string|given - balance|
+|leftReceived|string|received + balance|
+#### Example Response
+```json
 {
-	"balance": -1000, // sum over balances of all trustlines user has in currency network
-  "given": 2000, // sum of all creditlines given by user in currency network
-  "received": 3000, // sum of all creditlines received by user in currency network
-  "leftGiven": 3000, // given - balance
-  "leftReceived": 1000 // received + balance
+	"balance": "-1000",
+  "given": "2000",
+  "received": "3000",
+  "leftGiven": "3000",
+  "leftReceived": "1000"
 }
 ```
 
 ---
 
 ### Trustlines of user in currency network
-### `/networks/:network/users/:user/trustlines`
 Returns a list of trustlines an user has in a currency network.
 #### Request
 ```
-GET /networks/:network/users/:user/trustlines
+GET /networks/:networkAddress/users/:userAddress/trustlines
 ```
-#### Parameters
+#### URL Parameters
 |Name|Type|Required|Description|
 |-|-|-|-|
-|network|string|YES|Address of currency network|
-|user|string|YES|Address of user|
-### Response
-```javascript
+|networkAddress|string|YES|Address of currency network|
+|userAddress|string|YES|Address of user|
+#### Example Request
+```
+curl https://relay0.testnet.trustlines.network/api/v1/networks/0xC0B33D88C704455075a0724AA167a286da778DDE/users/0xcbF1153F6e5AC01D363d432e24112e8aA56c55ce/trustlines
+```
+#### Response
+|Attribute|Type|Description|
+|---------|----|-----------|
+|address|string|Address of trustline counterparty|
+|balance|string|Balance of trustline from point of view of user|
+|given|string|Creditline given to counterparty|
+|received|string|Creditline received by counterparty|
+|leftGiven|string|given - balance|
+|leftReceived|string|received + balance|
+|id|string|Identifier of trustline|
+#### Example Response
+```json
 [
 	{
-		"address": "0x7Ec3543702FA8F2C7b2bD84C034aAc36C263cA8b", // address of trustline counterparty
-		"balance": -102, // balance of trustline from POV of user
-		"given": 10000,  // credit line given to counterparty
-		"received": 10000, // credit line received by counterparty
-		"leftGiven": 10102, // given - balance
-		"leftReceived": 9898, // received - balance
-		"id": "0x314338891c370d4c77657386c676b6cd2e4862af1244820f9e7b9166d181057f" // identifier of trustline
+		"address": "0x7Ec3543702FA8F2C7b2bD84C034aAc36C263cA8b",
+		"balance": "-102",
+		"given": "10000",
+		"received": "10000",
+		"leftGiven": "10102", 
+		"leftReceived": "9898", 
+		"id": "0x314338891c370d4c77657386c676b6cd2e4862af1244820f9e7b9166d181057f"
 	},
-	... // other trustline objects
+	... // other trustlines
 ]
 ```
 
 ---
 
 ### Trustline of user in currency network
-### `/networks/:network/users/:userA/trustlines/:userB`
 Returns a trustline between users A and B in a currency network.
 #### Request
 ```
-GET /networks/:network/users/:userA/trustlines/:userB
+GET /networks/:networkAddress/users/:userAddressA/trustlines/:userAddressB
 ```
-#### Parameters
+#### URL Parameters
 |Name|Type|Required|Description|
 |-|-|-|-|
-|network|string|YES|Address of currency network|
-|userA|string|YES|Address of user A|
-|userB|string|YES|Address of user B|
+|networkAddress|string|YES|Address of currency network|
+|userAddressA|string|YES|Address of user A|
+|userAddressB|string|YES|Address of user B|
+#### Example Request
+```
+curl https://relay0.testnet.trustlines.network/api/v1/networks/0xC0B33D88C704455075a0724AA167a286da778DDE/users/0xcbF1153F6e5AC01D363d432e24112e8aA56c55ce/trustlines/0x7Ec3543702FA8F2C7b2bD84C034aAc36C263cA8b
+```
 ### Response
-```javascript
+|Attribute|Type|Description|
+|---------|----|-----------|
+|address|string|Address of trustline counterparty (B)|
+|balance|string|Balance of trustline from point of view of user (A)|
+|given|string|Creditline given to counterparty|
+|received|string|Creditline received by counterparty|
+|leftGiven|string|given - balance|
+|leftReceived|string|received + balance|
+|id|string|Identifier of trustline|
+### Example Response
+```json
 {
-	"address": "0x7Ec3543702FA8F2C7b2bD84C034aAc36C263cA8b", // address of trustline counterparty / user B
-	"balance": -102, // balance of trustline from POV of user A
-	"given": 10000,  // credit line given to counterparty
-	"received": 10000, // credit line received by counterparty
-	"leftGiven": 10102, // given - balance
-	"leftReceived": 9898, // received - balance
-	"id": "0x314338891c370d4c77657386c676b6cd2e4862af1244820f9e7b9166d181057f" // identifier of trustline
+	"address": "0x7Ec3543702FA8F2C7b2bD84C034aAc36C263cA8b",
+	"balance": "-102",
+	"given": "10000",
+	"received": "10000",
+	"leftGiven": "10102",
+	"leftReceived": "9898",
+	"id": "0x314338891c370d4c77657386c676b6cd2e4862af1244820f9e7b9166d181057f"
 }
 ```
 
 ---
 
 ### Total spendable amount of user in currency network
-### `/networks/:network/users/:user/spendable`
 Returns the total amount a user can spend in a currency network.
 #### Request
 ```
-GET /networks/:network/users/:user/spendable
+GET /networks/:networkAddress/users/:userAddress/spendable
 ```
+#### URL Parameters
 |Name|Type|Required|Description|
 |-|-|-|-|
-|network|string|YES|Address of currency network|
-|user|string|YES|Address of user|
-### Response
-```javascript
-1000 // total amount user can spend in a currency network
+|networkAddress|string|YES|Address of currency network|
+|userAddress|string|YES|Address of user|
+#### Example Request
+```
+curl https://relay0.testnet.trustlines.network/api/v1/networks/0xC0B33D88C704455075a0724AA167a286da778DDE/users/0xcbF1153F6e5AC01D363d432e24112e8aA56c55ce/spendable
+```
+#### Response
+`string` - Total amount in smallest unit user can spend in a currency network
+#### Example Response
+```json
+"1000"
 ```
 
 ---
 
 ### Spendable amount to other user in currency network
-### `/networks/:network/users/:userA/spendables/:userB`
 Returns amount user A can spend to user B in a currency network.
 #### Request
 ```
-GET /networks/:network/users/:userA/spendables/:userB
+GET /networks/:networkAddress/users/:userAddressA/spendables/:userAddressB
 ```
-#### Parameters
+#### URL Parameters
 |Name|Type|Required|Description|
 |-|-|-|-|
-|network|string|YES|Address of currency network|
-|userA|string|YES|Address of user A|
-|userB|string|YES|Address of user B|
-### Response
-```javascript
-90 // amount user A can spend to user B in a currency network
+|networkAddress|string|YES|Address of currency network|
+|userAddressA|string|YES|Address of user A|
+|userAddressB|string|YES|Address of user B|
+#### Example Request
+```
+curl https://relay0.testnet.trustlines.network/api/v1/networks/0xC0B33D88C704455075a0724AA167a286da778DDE/users/0xcbF1153F6e5AC01D363d432e24112e8aA56c55ce/spendables/0x7Ec3543702FA8F2C7b2bD84C034aAc36C263cA8b
+```
+#### Response
+`string` - Amount user A can spend to user B in a currency network
+#### Example Response
+```json
+"90" // amount user A can spend to user B in a currency network
 ```
 
 ---
 
 ### Transfer path in currency network
-### `/networks/:network/path-info`
 Returns the cheapest path, the estimated gas costs and maximal fees for a transfer.
 #### Request
 ```
-POST /networks/:network/path-info
+POST /networks/:networkAddress/path-info
 ```
-### Parameters
+#### URL Parameters
 |Name|Type|Required|Description|
 |-|-|-|-|
-|network|string|YES|Address of currency network|
-### POST body
+|networkAddress|string|YES|Address of currency network|
+#### Data Parameters
 |Name|Type|Required|Description|
 |-|-|-|-|
 |from|string|YES|Address of user who sends transfer|
 |to|string|YES|Address of user who receives transfer|
-|value|int|YES|Transfer amount in smallest unit|
-|maxFees|int|NO|Upper bound for transfer fees|
-|maxHops|int|NO|Upper bound for hops in transfer path|
-### Response
-```javascript
+|value|string|YES|Transfer amount in smallest unit|
+|maxFees|string|NO|Upper bound for transfer fees|
+|maxHops|string|NO|Upper bound for hops in transfer path|
+#### Example Request
+```bash
+curl --header "Content-Type: application/json" \
+  --request POST \
+  --data '{"from":"0xcbF1153F6e5AC01D363d432e24112e8aA56c55ce","to":"0x7Ec3543702FA8F2C7b2bD84C034aAc36C263cA8b", "value": "1000"}' \
+  https://relay0.testnet.trustlines.network/api/v1/networks/0xC0B33D88C704455075a0724AA167a286da778DDE/path-info
+```
+#### Response
+|Attribute|Type|Description|
+|---------|----|-----------|
+|path|string[]|Addresses of users on transfer path|
+|fees|string|Maximal transfer fees|
+|estimatedGas|int|Estimated gas costs for transfer|
+#### Example Response
+```json
 {
 	"path": [
-    "0xcbF1153F6e5AC01D363d432e24112e8aA56c55ce", // from address
-		..., // hop addresses in path
-    "0x7Ec3543702FA8F2C7b2bD84C034aAc36C263cA8b" // to address
+    "0xcbF1153F6e5AC01D363d432e24112e8aA56c55ce",
+    "0x7Ec3543702FA8F2C7b2bD84C034aAc36C263cA8b"
   ],
-  "fees": 2, // maximal transfer fees
-  "estimatedGas": 76324 // estimated gas costs for transfer
+  "fees": "2",
+  "estimatedGas": 76324
 }
 ```
 
 ---
 
 ### All events in currency network
-### `/networks/:network/events`
 Returns a list of event logs in a currency network.
 #### Request
 ```
-GET /networks/:network/events?type=:type&fromBlock=:fromBlock
+GET /networks/:networkAddress/events?type=:type&fromBlock=:fromBlock
 ```
-#### Parameters
+#### URL Parameters
 |Name|Type|Required|Description|
 |-|-|-|-|
 |network|string|YES|Address of currency network|
 |type|string|NO|Either `TrustlineUpdate`, `TrustlineUpdateRequest` or `Transfer`|
 |fromBlock|int|NO|Start of block range|
+#### Example Request
+```
+curl https://relay0.testnet.trustlines.network/api/v1/networks/0xC0B33D88C704455075a0724AA167a286da778DDE/events?type=TrustlineUpdate&fromBlock=123456
+```
 #### Response
-```javascript
+|Attribute|Type|Description|
+|---------|----|-----------|
+|networkAddress|string|Address of currency network|
+|blockNumber|string|Number of block|
+|timestamp|int|UNIX timestamp|
+|type|string|Either `TrustlineUpdate`, `TrustlineUpdateRequest` or `Transfer`|
+|from|string|Address of `from` user|
+|to|string|Address of `to` user|
+|status|string| `sent`, `pending` or `confirmed` depending on block height|
+|transactionId|string|Transaction hash|
+
+Following additional attributes for `TrustlineUpdate` and `TrustlineUpdateRequest` events:
+|Attribute|Type|Description|
+|---------|----|-----------|
+|given|string|Proposed or accepted amount `from -> to`|
+|received|string|Proposed or accepted amount `to -> from`|
+
+Following additional attributes for `Transfer` events:
+|Attribute|Type|Description|
+|---------|----|-----------|
+|amount|string|Transfer amount `from -> to`|
+#### Example Response
+```json
 [
-	// TrustlineUpdateRequest
 	{
 		"networkAddress": "0xC0B33D88C704455075a0724AA167a286da778DDE",
 		"blockNumber": 6997877,
-		"timestamp": 1524655432, // UNIX timestamp
+		"timestamp": 1524655432,
 		"type": "TrustlineUpdateRequest",
 		"from": "0xcbF1153F6e5AC01D363d432e24112e8aA56c55ce",
 		"to": "0x7Ff66eb1A824FF9D1bB7e234a2d3B7A3b0345320",
-		"status": "confirmed", // sent || pending || confirmed depending on block height
-		"transactionId": "0xb141aa3baec4e7151d8bd6ecab46d26b1add131e50bcc517c956a7ac979815cd", // transaction hash
-		"given": "20000", // proposed amount [from -> to]
-		"received": "20000" // proposed amount [from <- to]
+		"status": "confirmed",
+		"transactionId": "0xb141aa3baec4e7151d8bd6ecab46d26b1add131e50bcc517c956a7ac979815cd",
+		"given": "20000",
+		"received": "20000"
 	},
-	// TrustlineUpdate
 	{
 		"networkAddress": "0xC0B33D88C704455075a0724AA167a286da778DDE",
 		"blockNumber": 6997899,
@@ -308,10 +415,9 @@ GET /networks/:network/events?type=:type&fromBlock=:fromBlock
 		"to": "0x7Ec3543702FA8F2C7b2bD84C034aAc36C263cA8b",
 		"status": "confirmed",
 		"transactionId": "0x10d4e9acb58d42d433dbc5c995e9a258cd2bb7fe82fedf2ebab82e450d30c643",
-		"given": "10000", // accepted amount [from -> to]
-		"received": "10000" // accepted amount [from <- to]
+		"given": "10000",
+		"received": "10000"
 	},
-	// Transfer	
 	{
 		"networkAddress": "0xC0B33D88C704455075a0724AA167a286da778DDE",
 		"blockNumber": 7011809,
@@ -321,22 +427,24 @@ GET /networks/:network/events?type=:type&fromBlock=:fromBlock
 		"to": "0x7Ec3543702FA8F2C7b2bD84C034aAc36C263cA8b",
 		"status": "confirmed",
 		"transactionId": "0x05c91f6506e78b1ca2413df9985ca7d37d2da5fc076c0b55c5d9eb9fdd7513a6",
-		"amount": "100" // transferred amount
-	},
-	... // more event objects
+		"amount": "100"
+	}
 ]
 ```
 
 ---
 
 ### Events of a user in currency network
-### `/networks/:network/users/:user/events`
 Returns a list of event logs of an user in a currency network. That means all events where the given user address is either `from` or `to`.
 #### Request
 ```
 GET /networks/:network/users/:user/events?type=:type&fromBlock=:fromBlock
 ```
-#### Parameters
+#### Example Request
+```
+curl https://relay0.testnet.trustlines.network/api/v1/networks/0xC0B33D88C704455075a0724AA167a286da778DDE/users/0xcbF1153F6e5AC01D363d432e24112e8aA56c55ce/events?type=TrustlineUpdate&fromBlock=123456
+```
+#### URL Parameters
 |Name|Type|Required|Description|
 |-|-|-|-|
 |network|string|YES|Address of currency network|
@@ -344,22 +452,42 @@ GET /networks/:network/users/:user/events?type=:type&fromBlock=:fromBlock
 |type|string|NO|Either `TrustlineUpdate`, `TrustlineUpdateRequest` or `Transfer`|
 |fromBlock|int|NO|Start of block range|
 #### Response
-```javascript
+|Attribute|Type|Description|
+|---------|----|-----------|
+|networkAddress|string|Address of currency network|
+|blockNumber|string|Number of block|
+|timestamp|int|UNIX timestamp|
+|type|string|Either `TrustlineUpdate`, `TrustlineUpdateRequest` or `Transfer`|
+|from|string|Address of `from` user|
+|to|string|Address of `to` user|
+|status|string| `sent`, `pending` or `confirmed` depending on block height|
+|transactionId|string|Transaction hash|
+
+Following additional attributes for `TrustlineUpdate` and `TrustlineUpdateRequest` events:
+|Attribute|Type|Description|
+|---------|----|-----------|
+|given|string|Proposed or accepted amount `from -> to`|
+|received|string|Proposed or accepted amount `to -> from`|
+
+Following additional attributes for `Transfer` events:
+|Attribute|Type|Description|
+|---------|----|-----------|
+|amount|string|Transfer amount `from -> to`|
+#### Example Response
+```json
 [
-	// TrustlineUpdateRequest
 	{
 		"networkAddress": "0xC0B33D88C704455075a0724AA167a286da778DDE",
 		"blockNumber": 6997877,
-		"timestamp": 1524655432, // UNIX timestamp
+		"timestamp": 1524655432,
 		"type": "TrustlineUpdateRequest",
 		"from": "0xcbF1153F6e5AC01D363d432e24112e8aA56c55ce",
 		"to": "0x7Ff66eb1A824FF9D1bB7e234a2d3B7A3b0345320",
-		"status": "confirmed", // sent || pending || confirmed depending on block height
-		"transactionId": "0xb141aa3baec4e7151d8bd6ecab46d26b1add131e50bcc517c956a7ac979815cd", // transaction hash
-		"given": "20000", // proposed amount [from -> to]
-		"received": "20000" // proposed amount [from <- to]
+		"status": "confirmed",
+		"transactionId": "0xb141aa3baec4e7151d8bd6ecab46d26b1add131e50bcc517c956a7ac979815cd",
+		"given": "20000",
+		"received": "20000"
 	},
-	// TrustlineUpdate
 	{
 		"networkAddress": "0xC0B33D88C704455075a0724AA167a286da778DDE",
 		"blockNumber": 6997899,
@@ -369,10 +497,9 @@ GET /networks/:network/users/:user/events?type=:type&fromBlock=:fromBlock
 		"to": "0x7Ec3543702FA8F2C7b2bD84C034aAc36C263cA8b",
 		"status": "confirmed",
 		"transactionId": "0x10d4e9acb58d42d433dbc5c995e9a258cd2bb7fe82fedf2ebab82e450d30c643",
-		"given": "10000", // accepted amount [from -> to]
-		"received": "10000" // accepted amount [from <- to]
+		"given": "10000",
+		"received": "10000"
 	},
-	// Transfer	
 	{
 		"networkAddress": "0xC0B33D88C704455075a0724AA167a286da778DDE",
 		"blockNumber": 7011809,
@@ -382,46 +509,68 @@ GET /networks/:network/users/:user/events?type=:type&fromBlock=:fromBlock
 		"to": "0x7Ec3543702FA8F2C7b2bD84C034aAc36C263cA8b",
 		"status": "confirmed",
 		"transactionId": "0x05c91f6506e78b1ca2413df9985ca7d37d2da5fc076c0b55c5d9eb9fdd7513a6",
-		"amount": "100" // transferred amount
-	},
-	... // more event objects
+		"amount": "100"
+	}
 ]
 ```
 
 ---
 
 ### Events of user in all currency networks
-### `/users/:user/events`
 Returns a list of event logs of an user in all currency networks. That means all events where the given user address is either `from` or `to`.
 #### Request
 ```
 GET /users/:user/events?type=:type&fromBlock=:fromBlock
 ```
-#### Parameters
+#### Example Request
+```
+curl https://relay0.testnet.trustlines.network/api/v1/users/0xcbF1153F6e5AC01D363d432e24112e8aA56c55ce/events?type=TrustlineUpdate&fromBlock=123456
+```
+#### URL Parameters
 |Name|Type|Required|Description|
 |-|-|-|-|
 |user|string|YES|Address of user|
 |type|string|NO|Either `TrustlineUpdate`, `TrustlineUpdateRequest` or `Transfer`|
 |fromBlock|int|NO|Start of block range|
 #### Response
-```javascript
+|Attribute|Type|Description|
+|---------|----|-----------|
+|networkAddress|string|Address of currency network|
+|blockNumber|string|Number of block|
+|timestamp|int|UNIX timestamp|
+|type|string|Either `TrustlineUpdate`, `TrustlineUpdateRequest` or `Transfer`|
+|from|string|Address of `from` user|
+|to|string|Address of `to` user|
+|status|string| `sent`, `pending` or `confirmed` depending on block height|
+|transactionId|string|Transaction hash|
+
+Following additional attributes for `TrustlineUpdate` and `TrustlineUpdateRequest` events:
+|Attribute|Type|Description|
+|---------|----|-----------|
+|given|string|Proposed or accepted amount `from -> to`|
+|received|string|Proposed or accepted amount `to -> from`|
+
+Following additional attributes for `Transfer` events:
+|Attribute|Type|Description|
+|---------|----|-----------|
+|amount|string|Transfer amount `from -> to`|
+#### Example Response
+```json
 [
-	// TrustlineUpdateRequest
 	{
-		"networkAddress": "0x55bdaAf9f941A5BB3EacC8D876eeFf90b90ddac9",
+		"networkAddress": "0xC0B33D88C704455075a0724AA167a286da778DDE",
 		"blockNumber": 6997877,
-		"timestamp": 1524655432, // UNIX timestamp
+		"timestamp": 1524655432,
 		"type": "TrustlineUpdateRequest",
 		"from": "0xcbF1153F6e5AC01D363d432e24112e8aA56c55ce",
 		"to": "0x7Ff66eb1A824FF9D1bB7e234a2d3B7A3b0345320",
-		"status": "confirmed", // sent || pending || confirmed depending on block height
-		"transactionId": "0xb141aa3baec4e7151d8bd6ecab46d26b1add131e50bcc517c956a7ac979815cd", // transaction hash
-		"given": "20000", // proposed amount [from -> to]
-		"received": "20000" // proposed amount [from <- to]
+		"status": "confirmed",
+		"transactionId": "0xb141aa3baec4e7151d8bd6ecab46d26b1add131e50bcc517c956a7ac979815cd",
+		"given": "20000",
+		"received": "20000"
 	},
-	// TrustlineUpdate
 	{
-		"networkAddress": "0x55bdaAf9f941A5BB3EacC8D876eeFf90b90ddac9",
+		"networkAddress": "0xC0B33D88C704455075a0724AA167a286da778DDE",
 		"blockNumber": 6997899,
 		"timestamp": 1524655600,
 		"type": "TrustlineUpdate",
@@ -429,10 +578,9 @@ GET /users/:user/events?type=:type&fromBlock=:fromBlock
 		"to": "0x7Ec3543702FA8F2C7b2bD84C034aAc36C263cA8b",
 		"status": "confirmed",
 		"transactionId": "0x10d4e9acb58d42d433dbc5c995e9a258cd2bb7fe82fedf2ebab82e450d30c643",
-		"given": "10000", // accepted amount [from -> to]
-		"received": "10000" // accepted amount [from <- to]
+		"given": "10000",
+		"received": "10000"
 	},
-	// Transfer	
 	{
 		"networkAddress": "0xC0B33D88C704455075a0724AA167a286da778DDE",
 		"blockNumber": 7011809,
@@ -442,32 +590,38 @@ GET /users/:user/events?type=:type&fromBlock=:fromBlock
 		"to": "0x7Ec3543702FA8F2C7b2bD84C034aAc36C263cA8b",
 		"status": "confirmed",
 		"transactionId": "0x05c91f6506e78b1ca2413df9985ca7d37d2da5fc076c0b55c5d9eb9fdd7513a6",
-		"amount": "100" // transferred amount
-	},
-	... // more event objects
+		"amount": "100"
+	}
 ]
 ```
 
 ---
 
 ### Transaction infos of user
-### `/users/:user/txinfos`
 Returns information that is needed to sign a transaction.
 #### Request
 ```
-GET /users/:user/txinfos
+GET /users/:userAddress/tx-infos
 ```
-#### Parameters
+#### Example Request
+```
+curl https://relay0.testnet.trustlines.network/api/v1/users/0xcbF1153F6e5AC01D363d432e24112e8aA56c55ce/tx-infos
+```
+#### URL Parameters
 |Name|Type|Required|Description|
 |-|-|-|-|
-|user|string|YES|Address of user|
-|type|string|NO|Either `TrustlineUpdate`, `TrustlineUpdateRequest` or `Transfer`|
-|fromBlock|int|NO|Start of block range|
+|userAddress|string|YES|Address of user|
 #### Response
-```javascript
+|Attribute|Type|Description|
+|---------|----|-----------|
+|gasPrice|string|Gas price|
+|balance|string|Balance of user in wei|
+|nonce|int|Nonce needed for creating a transaction|
+#### Example Response
+```json
 {
   "gasPrice": 0,
-  "balance": 2377634165348042492, // ETH balance of user in wei
+  "balance": "2377634165348042492",
   "nonce": 58
 }
 ```
@@ -475,31 +629,44 @@ GET /users/:user/txinfos
 ---
 
 ### Latest block number
-### `/blocknumber`
 Returns the latest block number.
 #### Request
 ```
 GET /blocknumber
 ```
+#### Example Request
+```
+curl https://relay0.testnet.trustlines.network/api/v1/blocknumber
+```
 #### Response
-```javascript
-7426584 // latest block number
+`int` - Latest block number
+#### Example Response
+```json
+7426584
 ```
 
 ---
 
 ### Relay
-### `/relay`
 Relays a raw transaction to the blockchain.
 #### Request
 ```
 POST /relay
 ```
-#### POST body
+#### Data Parameters
 |Name|Type|Required|Description|
-|-|-|-|-|
-|rawTransaction|string|YES|signed transation|
+|----|----|--------|-----------|
+|rawTransaction|string|YES|RLP encoded signed transaction|
+#### Example Request
+```bash
+curl --header "Content-Type: application/json" \
+  --request POST \
+  --data '{"rawTransaction":"<rawTxString>"}' \
+  https://relay0.testnet.trustlines.network/api/v1/relay
+```
 #### Response
-```javascript
-'0x...' // hash of transaction if relayed successfully
+`string` - hash of transaction if relayed successfully
+#### Example Response
+```json
+"<tx hash>"
 ```
