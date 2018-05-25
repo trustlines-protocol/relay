@@ -40,7 +40,10 @@ class Subject(object):
         if self.subscriptions:
             logger.debug('Sent event to {} subscribers'.format(len(self.subscriptions)))
         result = 0
-        for subscription in self.subscriptions:
+        # The call to notify in the following code is allowed to unsubscribe
+        # the client. That means we need to copy the self.subscriptions list as
+        # it's being modified when unsubscribing.
+        for subscription in self.subscriptions[:]:
             if subscription.notify(event):
                 result += 1
         return result

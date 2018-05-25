@@ -14,6 +14,15 @@ class LogClient(Client):
         self.events.append((id, event))
 
 
+class SafeLogClient(Client):
+    "this client does not raise DisconnectedError"
+    def __init__(self):
+        self.events = []
+
+    def send(self, id, event):
+        self.events.append((id, event))
+
+
 @pytest.fixture()
 def subject():
     return Subject()
@@ -30,44 +39,54 @@ def client():
 
 
 def test_subscription(subject, client):
-    subscribtion = subject.subscribe(client)
+    subscription = subject.subscribe(client)
     subject.publish(event='test')
-    id = subscribtion.id
+    id = subscription.id
     assert client.events == [(id, 'test')]
-    assert not subscribtion.closed
+    assert not subscription.closed
     assert len(subject.subscriptions) == 1
 
 
 def test_cancel_subscription(subject, client):
-    subscribtion = subject.subscribe(client)
-    subscribtion.unsubscribe()
+    subscription = subject.subscribe(client)
+    subscription.unsubscribe()
     subject.publish(event='test')
     assert client.events == []
-    assert subscribtion.closed
+    assert subscription.closed
     assert len(subject.subscriptions) == 0
 
 
 def test_auto_unsubscribe(subject, client):
-    subscribtion = subject.subscribe(client)
+    subscription = subject.subscribe(client)
     subject.publish(event='disconnect')  # throws disconnected error, should unsubscribe
     subject.publish(event='test')
     assert client.events == []
-    assert subscribtion.closed
+    assert subscription.closed
     assert len(subject.subscriptions) == 0
+
+
+def test_auto_unsubscribe_dont_skip(subject):
+    """test that publishing also works when auto-unsubscribing
+    see https://github.com/trustlines-network/relay/issues/85"""
+    clients = [LogClient(), SafeLogClient()]
+    for c in clients:
+        subject.subscribe(c)
+    subject.publish(event='disconnect')  # the first one throws and get's auto-unsubscribed
+    assert clients[1].events, "second client not notified"
 
 
 def test_subscription_after_puplish(messaging_subject, client):
     assert not messaging_subject.publish(event='test')
-    subscribtion = messaging_subject.subscribe(client)
+    subscription = messaging_subject.subscribe(client)
     assert messaging_subject.get_missed_messages() == ['test']
-    assert not subscribtion.closed
+    assert not subscription.closed
 
 
 def test_subscription_after_resubscribe(messaging_subject, client):
     messaging_subject.publish(event='test')
-    subscribtion = messaging_subject.subscribe(client)
+    subscription = messaging_subject.subscribe(client)
     messaging_subject.get_missed_messages()
-    subscribtion.unsubscribe()
+    subscription.unsubscribe()
     client.events.clear()
     messaging_subject.subscribe(client)
     assert messaging_subject.get_missed_messages() == []
@@ -76,9 +95,9 @@ def test_subscription_after_resubscribe(messaging_subject, client):
 
 def test_subscription_both(messaging_subject, client):
     assert not messaging_subject.publish(event='test1')
-    subscribtion = messaging_subject.subscribe(client)
+    subscription = messaging_subject.subscribe(client)
     assert messaging_subject.publish(event='test2')
-    id = subscribtion.id
+    id = subscription.id
     assert messaging_subject.get_missed_messages() == ['test1']
     assert client.events == [(id, 'test2')]
-    assert not subscribtion.closed
+    assert not subscription.closed
