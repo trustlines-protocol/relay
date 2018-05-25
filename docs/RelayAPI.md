@@ -211,8 +211,7 @@ curl https://relay0.testnet.trustlines.network/api/v1/networks/0xC0B33D88C704455
 		"leftGiven": "10102", 
 		"leftReceived": "9898", 
 		"id": "0x314338891c370d4c77657386c676b6cd2e4862af1244820f9e7b9166d181057f"
-	},
-	... // other trustlines
+	}
 ]
 ```
 
@@ -303,7 +302,7 @@ curl https://relay0.testnet.trustlines.network/api/v1/networks/0xC0B33D88C704455
 `string` - Amount user A can spend to user B in a currency network
 #### Example Response
 ```json
-"90" // amount user A can spend to user B in a currency network
+"90"
 ```
 
 ---
