@@ -7,11 +7,11 @@ The relay component of the trustlines network project provides a REST API.
 ```
 You can use the following base endpoint to talk to the currently deployed KOVAN test setup.
 ```
-https://relay0.testnet.trustlines.network:443/api/v1
+https://relay0.testnet.trustlines.network/api/v1
 ```
 
 ## Response
-- All endpoints return either a number, a JSON object or an array
+- All endpoints return JSON
 - All number values are returned in their smallest unit
 - In case of an error, the response of the relay API will have the following format:
 ```javascript
@@ -22,23 +22,24 @@ https://relay0.testnet.trustlines.network:443/api/v1
 
 ## API Endpoints
 ### Network context
-- [Currency networks list](##/networks)
-- [Currency network details](##/networks/:network)
-- [Users list in currency network](##/networks/:network/users)
-- [User details in currency network](##/networks/:network/users/:user)
-- [Trustlines of user in currency network](##/networks/:network/users/:user/trustlines)
-- [Trustline details of user in currency network](##/networks/:network/users/:userA/trustlines/:userB)
-- [Total spendable amount of user in currency network](##/networks/:network/users/:userA/spendable)
-- [Spendable amount to other user in currency network](##/networks/:network/users/:userA/spendables/:userB)
-- [Transfer path in currency network](##/networks/:network/path-info)
-- [All events in currency network](##/networks/:network/events)
-- [Events of user in currency network](##/networks/:network/users/:user/events)
+- [Currency networks list](#currency-networks-list)
+- [Currency network details](#currency-network-details)
+- [Users list in currency network](#users-list-in-currency-network)
+- [User details in currency network](#user-details-in-currency-network)
+- [Trustlines of user in currency network](#trustlines-of-user-in-currency-network)
+- [Trustline details of user in currency network](#trustline-details-of-user-in-currency-network)
+- [Total spendable amount of user in currency network](#total-spendable-amount-of-user-in-currency-network)
+- [Spendable amount to other user in currency network](#spendable-amount-to-other-user-in-currency-network)
+- [Transfer path in currency network](#transfer-path-in-currency-network)
+- [All events in currency network](#all-events-in-currency-network)
+- [Events of user in currency network](#events-of-user-in-currency-network)
 ### User context
-- [Events of user in all currency networks](##/users/:user/events)
-- [Transaction infos for user](##/users/:user/txinfos)
+- [Events of user in all currency networks](#events-of-user-in-all-currency-networks)
+- [Transaction infos for user](#transaction-infos-for-user)
 ### Other
-- [Latest block number](###/blocknumber)
-- [Relay](###/relay)
+- [Latest block number](#latest-block-number)
+- [Relay transaction](#relay-transaction)
+
 ---
 
 ### Currency networks list
