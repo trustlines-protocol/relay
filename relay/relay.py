@@ -56,6 +56,7 @@ class TrustlinesRelay:
         self._load_config()
         self._load_contracts()
         self._load_orderbook()
+        logger.info('using RPCProvider with parameters %s' % self.config['rpc'])
         self._web3 = Web3(
             RPCProvider(
                 self.config['rpc']['host'],
@@ -140,7 +141,10 @@ class TrustlinesRelay:
     def _start_listen_on_new_addresses(self):
         def listen():
             while True:
-                self._load_addresses()
+                try:
+                    self._load_addresses()
+                except Exception:
+                    logger.critical("Error while loading addresses", exc_info=sys.exc_info())
                 sleep(self.config.get('updateNetworksInterval', 120))
 
         gevent.Greenlet.spawn(listen)
