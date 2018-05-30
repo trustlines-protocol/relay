@@ -60,7 +60,7 @@ class TrustlinesRelay:
         self._load_config()
         self._load_contracts()
         self._load_orderbook()
-        logger.info('using RPCProvider with parameters %s' % self.config['rpc'])
+        logger.info('using RPCProvider with parameters {}'.format(self.config['rpc']))
         self._web3 = Web3(
             RPCProvider(
                 self.config['rpc']['host'],
