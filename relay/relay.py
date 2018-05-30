@@ -46,6 +46,10 @@ class TrustlinesRelay:
     def exchanges(self) -> Iterable[str]:
         return self.orderbook.exchange_addresses
 
+    @property
+    def enable_ether_faucet(self) -> bool:
+        return self.config.get('enableEtherFaucet', False)
+
     def is_currency_network(self, address: str) -> bool:
         return address in self.networks
 
