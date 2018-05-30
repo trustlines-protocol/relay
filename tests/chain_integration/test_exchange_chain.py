@@ -11,7 +11,7 @@ def engine():
 
 
 @pytest.fixture()
-def orderBook(engine, web3, exchange_abi, token_abi, testnetworks, is_currency_network_function):
+def orderBook(engine, web3, exchange_abi, token_abi, testnetworks, is_currency_network_function, config):
     exchange_address = testnetworks[1].address
     orderBook = OrderBookGreenlet()
     orderBook.connect_db(engine)
@@ -22,6 +22,7 @@ def orderBook(engine, web3, exchange_abi, token_abi, testnetworks, is_currency_n
             exchange_abi,
             token_abi,
             exchange_address,
-            is_currency_network_function))
+            is_currency_network_function,
+            config))
 
     return orderBook

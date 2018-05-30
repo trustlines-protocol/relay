@@ -6,6 +6,7 @@ from typing import List, Dict, Callable, Any  # noqa: F401
 import gevent
 import itertools
 import socket
+from flask import abort
 
 from .events import BlockchainEvent
 
@@ -26,10 +27,11 @@ class Proxy(object):
     event_builders = {}  # type: Dict[str, Callable[[Any, int, int], BlockchainEvent]]
     standard_event_types = []  # type: List[str]
 
-    def __init__(self, web3, abi, address: str) -> None:
+    def __init__(self, web3, abi, address: str, config) -> None:
         self._web3 = web3
         self._proxy = web3.eth.contract(abi=abi, address=address)
         self.address = address
+        self.config = config
 
     def _watch_filter(self, eventname: str, function, params=None):
         while True:
@@ -77,12 +79,20 @@ class Proxy(object):
         return sorted_events(self._build_events(list))
 
     def get_all_events(self, filter_=None, from_block: int=0) -> List[BlockchainEvent]:
-        events = [gevent.spawn(self.get_events,
-                               type,
-                               filter_=filter_,
-                               from_block=from_block) for type in self.standard_event_types]
-        gevent.joinall(events, timeout=5)
-        return sorted_events(list(itertools.chain.from_iterable([event.value for event in events])))
+        finished_jobs = [gevent.spawn(self.get_events,
+                                      type,
+                                      filter_=filter_,
+                                      from_block=from_block) for type in self.standard_event_types]
+        return sorted_events(self.format_event_greenlets(finished_jobs))
+
+    def format_event_greenlets(self, greenlet_jobs, _timeout=None):
+        if _timeout is None:
+            _timeout = self.config.get('greenletTimeoutInSec')
+        gevent.joinall(greenlet_jobs, timeout=_timeout)
+        return list(itertools.chain.from_iterable(map(
+            lambda job: job.value if job.value is not None else abort(504, 'Timeout fetching events'),
+            greenlet_jobs
+        )))
 
     def _build_events(self, events: List[Any]):
         current_blocknumber = self._web3.eth.blockNumber

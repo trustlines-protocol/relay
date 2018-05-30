@@ -51,13 +51,14 @@ def order_trustlines(exchange_address, network_addresses_with_exchange, unw_eth_
 
 
 @pytest.fixture()
-def exchange_proxy(web3, exchange_abi, token_abi, exchange_address, address_oracle):
+def exchange_proxy(web3, exchange_abi, token_abi, exchange_address, address_oracle, config):
     return ExchangeProxy(
         web3,
         exchange_abi,
         token_abi,
         exchange_address,
-        address_oracle)
+        address_oracle,
+        config)
 
 
 def test_validate(order_trustlines, exchange_proxy):

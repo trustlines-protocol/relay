@@ -8,7 +8,6 @@ from webargs import fields
 from webargs.flaskparser import use_args
 from marshmallow import validate
 import gevent
-import itertools
 
 from relay.utils import sha3
 from relay.blockchain.currency_network_proxy import CurrencyNetworkProxy
@@ -198,24 +197,23 @@ class UserEvents(Resource):
 
     @use_args(args)
     def get(self, args, user_address: str):
-        events = []
+        finished_jobs = []
         type = args['type']
         from_block = args['fromBlock']
         networks = self.trustlines.networks
         for network_address in networks:
             proxy = self.trustlines.currency_network_proxies[network_address]
             if type is not None:
-                events.append(gevent.spawn(proxy.get_network_events,
-                                           type,
-                                           user_address=user_address,
-                                           from_block=from_block))
+                finished_jobs.append(gevent.spawn(proxy.get_network_events,
+                                                  type,
+                                                  user_address=user_address,
+                                                  from_block=from_block))
             else:
-                events.append(gevent.spawn(proxy.get_all_network_events,
-                                           user_address=user_address,
-                                           from_block=from_block))
-        gevent.joinall(events, timeout=5)
-        flattened_events = list(itertools.chain.from_iterable([event.value for event in events]))
-        return UserCurrencyNetworkEventSchema().dump(flattened_events, many=True).data
+                finished_jobs.append(gevent.spawn(proxy.get_all_network_events,
+                                                  user_address=user_address,
+                                                  from_block=from_block))
+        events = proxy.format_event_greenlets(finished_jobs)
+        return UserCurrencyNetworkEventSchema().dump(events, many=True).data
 
 
 class EventsNetwork(Resource):

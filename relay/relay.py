@@ -74,7 +74,8 @@ class TrustlinesRelay:
         self.currency_network_graphs[address] = CurrencyNetworkGraph(100)
         self.currency_network_proxies[address] = CurrencyNetworkProxy(self._web3,
                                                                       self.contracts['CurrencyNetwork']['abi'],
-                                                                      address)
+                                                                      address,
+                                                                      self.config)
         self._start_listen_network(address)
 
     def new_exchange(self, address: str) -> None:
@@ -85,7 +86,8 @@ class TrustlinesRelay:
                                                       self.contracts['Exchange']['abi'],
                                                       self.contracts['Token']['abi'],
                                                       address,
-                                                      self))
+                                                      self,
+                                                      self.config))
 
     def new_unw_eth(self, address: str) -> None:
         assert is_checksum_address(address)

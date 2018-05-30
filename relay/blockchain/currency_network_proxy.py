@@ -2,9 +2,7 @@ import logging
 import socket
 from collections import namedtuple
 from typing import List, Dict
-
 import gevent
-import itertools
 
 from .proxy import Proxy, reconnect_interval, sorted_events
 from relay.logger import get_logger
@@ -48,8 +46,8 @@ class CurrencyNetworkProxy(Proxy):
                             TrustlineRequestEventType,
                             TrustlineUpdateEventType]
 
-    def __init__(self, web3, abi, address: str) -> None:
-        super().__init__(web3, abi, address)
+    def __init__(self, web3, abi, address: str, config) -> None:
+        super().__init__(web3, abi, address, config)
         self.name = self._proxy.call().name().strip('\0')  # type: str
         self.decimals = self._proxy.call().decimals()  # typ: str
         self.symbol = self._proxy.call().symbol().strip('\0')  # type: str
@@ -150,16 +148,15 @@ class CurrencyNetworkProxy(Proxy):
         if user_address is None:
             result = self.get_events(event_name, from_block=from_block)
         else:
-
             filter1 = {from_to_types[event_name][0]: user_address}
             filter2 = {from_to_types[event_name][1]: user_address}
 
-            events = [
+            finished_jobs = [
                 gevent.spawn(self.get_events, event_name, filter1, from_block),
                 gevent.spawn(self.get_events, event_name, filter2, from_block)
             ]
-            gevent.joinall(events, timeout=2)
-            result = list(itertools.chain.from_iterable([event.value for event in events]))
+
+            result = self.format_event_greenlets(finished_jobs)
 
             for event in result:
                 if isinstance(event, CurrencyNetworkEvent):
@@ -168,13 +165,12 @@ class CurrencyNetworkProxy(Proxy):
                     raise ValueError('Expected a CurrencyNetworkEvent')
         return sorted_events(result)
 
-    def get_all_network_events(self, user_address: str = None, from_block: int = 0) -> List[BlockchainEvent]:
-        events = [gevent.spawn(self.get_network_events,
-                               type,
-                               user_address=user_address,
-                               from_block=from_block) for type in self.standard_event_types]
-        gevent.joinall(events, timeout=5)
-        return sorted_events(list(itertools.chain.from_iterable([event.value for event in events])))
+    def get_all_network_events(self, user_address: str=None, from_block: int=0) -> List[BlockchainEvent]:
+        finished_jobs = [gevent.spawn(self.get_network_events,
+                                      type,
+                                      user_address=user_address,
+                                      from_block=from_block) for type in self.standard_event_types]
+        return sorted_events(self.format_event_greenlets(finished_jobs))
 
     def estimate_gas_for_transfer(self, sender, receiver, value, max_fee, path):
         return self._proxy.estimateGas({'from': sender}).transfer(receiver, value, max_fee, path)
