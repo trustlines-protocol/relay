@@ -60,7 +60,9 @@ def ApiApp(trustlines):
 
     add_resource(Block, '/blocknumber')
     add_resource(Relay, '/relay')
-    add_resource(RequestEther, '/request-ether')
+
+    if trustlines.enable_ether_faucet:
+        add_resource(RequestEther, '/request-ether')
 
     add_resource(OrderBook, '/exchange/orderbook')
     add_resource(OrderSubmission, '/exchange/order')

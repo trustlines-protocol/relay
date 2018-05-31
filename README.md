@@ -50,3 +50,6 @@ Add the `address` of the deployed `Currency Network` to the file `/relay/network
 cd relay
 python trustlines.py
 ```
+
+## Docs
+- [REST API Documentation](./docs/RelayAPI.md)

@@ -11,8 +11,35 @@ from .api.app import ApiApp
 logger = get_logger('trustlines', logging.DEBUG)
 
 
+def patch_warnings_module():
+    """patch the warnings modules simplefilter function
+
+    the web3 module prints excessive deprecation warnings. They call
+
+      warnings.simplefilter('always', DeprecationWarning)
+
+    in web3.utils.decorators before calling into warnings.warn. So, we need to
+    take some drastic measures to prevent the flood of deprecation warnings
+    cluttering all of our logs.
+
+    We replace warnings.simplefilter with a function that does nothing when
+    called with category=DeprecationWarning.
+    """
+    import warnings
+    orig_simplefilter = warnings.simplefilter
+
+    def simplefilter(action, category=Warning, lineno=0, append=False):
+        if category is DeprecationWarning:
+            return
+        return orig_simplefilter(action, category=category, lineno=lineno, append=append)
+
+    warnings.simplefilter = simplefilter
+    logger.info("the warnings module has been patched. You will not see the DeprecationWarning messages from web3")
+
+
 def main():
     logger.info('Starting relay server')
+    patch_warnings_module()
     trustlines = TrustlinesRelay()
     trustlines.start()
     ipport = ('', 5000)

@@ -46,6 +46,10 @@ class TrustlinesRelay:
     def exchanges(self) -> Iterable[str]:
         return self.orderbook.exchange_addresses
 
+    @property
+    def enable_ether_faucet(self) -> bool:
+        return self.config.get('enableEtherFaucet', False)
+
     def is_currency_network(self, address: str) -> bool:
         return address in self.networks
 
@@ -56,6 +60,7 @@ class TrustlinesRelay:
         self._load_config()
         self._load_contracts()
         self._load_orderbook()
+        logger.info('using RPCProvider with parameters {}'.format(self.config['rpc']))
         self._web3 = Web3(
             RPCProvider(
                 self.config['rpc']['host'],
@@ -118,12 +123,13 @@ class TrustlinesRelay:
         with open('addresses.json') as data_file:
             try:
                 addresses = json.load(data_file)
-                for address in addresses['networks']:
-                    self.new_network(to_checksum_address(address))
-                self.new_exchange(to_checksum_address(addresses['exchange']))
-                self.new_unw_eth(to_checksum_address(addresses['unwEth']))
             except json.decoder.JSONDecodeError as e:
                 logger.error('Could not read addresses.json:' + str(e))
+                return
+        for address in addresses['networks']:
+            self.new_network(to_checksum_address(address))
+        self.new_exchange(to_checksum_address(addresses['exchange']))
+        self.new_unw_eth(to_checksum_address(addresses['unwEth']))
 
     def _start_listen_network(self, address):
         assert is_checksum_address(address)
@@ -140,7 +146,10 @@ class TrustlinesRelay:
     def _start_listen_on_new_addresses(self):
         def listen():
             while True:
-                self._load_addresses()
+                try:
+                    self._load_addresses()
+                except Exception:
+                    logger.critical("Error while loading addresses", exc_info=sys.exc_info())
                 sleep(self.config.get('updateNetworksInterval', 120))
 
         gevent.Greenlet.spawn(listen)
