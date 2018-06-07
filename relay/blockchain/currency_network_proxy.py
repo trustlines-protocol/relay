@@ -147,33 +147,45 @@ class CurrencyNetworkProxy(Proxy):
         self.start_listen_on(TransferEventType, log)
 
     def get_network_events(self, event_name: str, user_address: str=None, from_block: int=0) -> List[BlockchainEvent]:
+        logger.debug("get_network_events: event_name=%s user_address=%s from_block=%s",
+                     event_name,
+                     user_address,
+                     from_block)
         if user_address is None:
-            result = self.get_events(event_name, from_block=from_block)
+            events = self.get_events(event_name, from_block=from_block)
         else:
 
             filter1 = {from_to_types[event_name][0]: user_address}
             filter2 = {from_to_types[event_name][1]: user_address}
 
-            events = [
+            spawned_greenlets = [
                 gevent.spawn(self.get_events, event_name, filter1, from_block),
                 gevent.spawn(self.get_events, event_name, filter2, from_block)
             ]
-            gevent.joinall(events, timeout=2)
-            result = list(itertools.chain.from_iterable([event.value for event in events]))
+            finished_greenlets = gevent.joinall(spawned_greenlets, raise_error=True, timeout=15)
+            if len(finished_greenlets) < len(spawned_greenlets):
+                logger.warning(
+                    "get_network_events: event_name=%s user_address=%s from_block=%s. could not get all events %s/%s",
+                    event_name,
+                    user_address,
+                    from_block,
+                    len(finished_greenlets),
+                    len(spawned_greenlets))
+            events = list(itertools.chain.from_iterable([g.value for g in finished_greenlets]))
 
-            for event in result:
+            for event in events:
                 if isinstance(event, CurrencyNetworkEvent):
                     event.user = user_address
                 else:
                     raise ValueError('Expected a CurrencyNetworkEvent')
-        return sorted_events(result)
+        return sorted_events(events)
 
     def get_all_network_events(self, user_address: str = None, from_block: int = 0) -> List[BlockchainEvent]:
         events = [gevent.spawn(self.get_network_events,
                                type,
                                user_address=user_address,
                                from_block=from_block) for type in self.standard_event_types]
-        gevent.joinall(events, timeout=5)
+        gevent.joinall(events, timeout=20)
         return sorted_events(list(itertools.chain.from_iterable([event.value for event in events])))
 
     def estimate_gas_for_transfer(self, sender, receiver, value, max_fee, path):
