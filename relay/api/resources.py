@@ -213,8 +213,8 @@ class UserEvents(Resource):
                 events.append(gevent.spawn(proxy.get_all_network_events,
                                            user_address=user_address,
                                            from_block=from_block))
-        gevent.joinall(events, timeout=5)
-        flattened_events = list(itertools.chain.from_iterable([event.value for event in events]))
+        finished_greenlets = gevent.joinall(events, raise_error=True, timeout=20)
+        flattened_events = list(itertools.chain.from_iterable([gr.value for gr in finished_greenlets]))
         return UserCurrencyNetworkEventSchema().dump(flattened_events, many=True).data
 
 
