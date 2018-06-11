@@ -349,6 +349,59 @@ class Path(Resource):
                 'fees': cost}
 
 
+class ReduceDebtPath(Resource):
+
+    def __init__(self, trustlines: TrustlinesRelay) -> None:
+        self.trustlines = trustlines
+
+    args = {
+        'value': fields.Int(required=True),
+        'maxHops': fields.Int(required=False, missing=None),
+        'maxFees': fields.Int(required=False, missing=None),
+        'from': custom_fields.Address(required=True),
+        'to': custom_fields.Address(required=True),
+        'via': custom_fields.Address(required=True)
+    }
+
+    @use_args(args)
+    def post(self, args, network_address: str):
+        abort_if_unknown_network(self.trustlines, network_address)
+
+        source = args['from']
+        target_reduce = args['to']
+        target_increase = args['via']
+        value = args['value']
+        max_fees = args['maxFees']
+        max_hops = args['maxHops']
+
+        cost, path = self.trustlines.currency_network_graphs[network_address].find_path_triangulation(
+            source=source,
+            target_reduce=target_reduce,
+            target_increase=target_increase,
+            value=value,
+            max_fees=max_fees,
+            max_hops=max_hops)
+
+        if path:
+            try:
+                gas = self.trustlines.currency_network_proxies[network_address].estimate_gas_for_transfer(
+                    source,
+                    source,
+                    value,
+                    cost*2,  # max_fee for smart contract
+                    path[1:])  # the smart contract takes the sender of the message as source
+            except ValueError as e:  # should mean out of gas, so path was not right.
+                gas = 0
+                path = []
+                cost = 0
+        else:
+            gas = 0
+
+        return {'path': path,
+                'estimatedGas': gas,
+                'fees': cost}
+
+
 class GraphImage(MethodView):
 
     def __init__(self, trustlines: TrustlinesRelay) -> None:

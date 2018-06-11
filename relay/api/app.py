@@ -7,8 +7,8 @@ from werkzeug.routing import BaseConverter, ValidationError
 from eth_utils import is_address, to_checksum_address, is_checksum_address
 
 from .resources import GraphDump, GraphImage, RequestEther, User, UserList, Network, NetworkList, \
-    ContactList, TrustlineList, Trustline, Spendable, SpendableTo, Path, UserEventsNetwork, UserEvents, Relay, \
-    Balance, TransactionInfos, Block, EventsNetwork
+    ContactList, TrustlineList, Trustline, Spendable, SpendableTo, Path, ReduceDebtPath, UserEventsNetwork, \
+    UserEvents, Relay, Balance, TransactionInfos, Block, EventsNetwork
 from .streams.app import WebSocketRPCHandler, MessagingWebSocketRPCHandler
 from .exchange.resources import OrderBook, OrderSubmission, ExchangeAddresses, UnwEthAddresses
 from .messaging.resources import PostMessage
@@ -53,6 +53,7 @@ def ApiApp(trustlines):
                  '/networks/<address:network_address>/users/<address:a_address>/spendables/<address:b_address>')
     add_resource(UserEventsNetwork, '/networks/<address:network_address>/users/<address:user_address>/events')
     add_resource(Path, '/networks/<address:network_address>/path-info')
+    add_resource(ReduceDebtPath, '/networks/<address:network_address>/reduce-debt-path-info')
 
     add_resource(UserEvents, '/users/<address:user_address>/events')
     add_resource(TransactionInfos, '/users/<address:user_address>/txinfos')
