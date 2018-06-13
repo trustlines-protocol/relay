@@ -1,9 +1,10 @@
-from flask import Flask, Blueprint
+from flask import Flask, Blueprint, jsonify
 from flask_cors import CORS
 from flask_restful import Api
 from flask_sockets import Sockets
 from webargs.flaskparser import parser, abort
 from werkzeug.routing import BaseConverter, ValidationError
+from werkzeug.exceptions import HTTPException
 from eth_utils import is_address, to_checksum_address, is_checksum_address
 
 from .resources import GraphDump, GraphImage, RequestEther, User, UserList, Network, NetworkList, \
@@ -29,6 +30,7 @@ class AddressConverter(BaseConverter):
 
 def ApiApp(trustlines):
     app = Flask(__name__)
+    app.register_error_handler(Exception, handle_error)
     sockets = Sockets(app)
     Api(app, catch_all_404s=True)
     CORS(app, send_wildcard=True)
@@ -72,8 +74,8 @@ def ApiApp(trustlines):
 
     add_resource(PostMessage, '/messages/<address:user_address>')
 
-    api_bp.add_url_rule('/networks/<address:address>/image', view_func=GraphImage.as_view('image', trustlines))
-    api_bp.add_url_rule('/networks/<address:address>/dump', view_func=GraphDump.as_view('dump', trustlines))
+    api_bp.add_url_rule('/networks/<address:network_address>/image', view_func=GraphImage.as_view('image', trustlines))
+    api_bp.add_url_rule('/networks/<address:network_address>/dump', view_func=GraphDump.as_view('dump', trustlines))
 
     sockets_bp.add_url_rule('/events', 'stream', view_func=WebSocketRPCHandler(trustlines))
     sockets_bp.add_url_rule('/messages', 'stream', view_func=MessagingWebSocketRPCHandler(trustlines))
@@ -92,3 +94,12 @@ def handle_request_parsing_error(err):
     a JSON error response to the client.
     """
     abort(422, message='Validation errors in your request', error=err.messages)
+
+
+# Handle all errors as json
+def handle_error(e):
+    code = 500
+    if isinstance(e, HTTPException):
+        code = e.code
+    return jsonify(message="The server encountered an internal error and was unable to complete your request.  "
+                           "Either the server is overloaded or there is an error in the application."), code
