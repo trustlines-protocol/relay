@@ -305,7 +305,7 @@ class Path(Resource):
         self.trustlines = trustlines
 
     args = {
-        'value': fields.Int(required=False, missing=1),
+        'value': fields.Int(required=False, missing=1, validate=validate.Range(min=1)),
         'maxHops': fields.Int(required=False, missing=None),
         'maxFees': fields.Int(required=False, missing=None),
         'from': custom_fields.Address(required=True),
@@ -335,7 +335,7 @@ class Path(Resource):
                     source,
                     target,
                     value,
-                    cost*2,
+                    cost,
                     path[1:])
             except ValueError as e:  # should mean out of gas, so path was not right.
                 gas = 0
@@ -355,7 +355,7 @@ class ReduceDebtPath(Resource):
         self.trustlines = trustlines
 
     args = {
-        'value': fields.Int(required=True),
+        'value': fields.Int(required=True, validate=validate.Range(min=1)),
         'maxHops': fields.Int(required=False, missing=None),
         'maxFees': fields.Int(required=False, missing=None),
         'from': custom_fields.Address(required=True),
@@ -388,7 +388,7 @@ class ReduceDebtPath(Resource):
                     source,
                     source,
                     value,
-                    cost*2,  # max_fee for smart contract
+                    cost,  # max_fee for smart contract
                     path[1:])  # the smart contract takes the sender of the message as source
             except ValueError as e:  # should mean out of gas, so path was not right.
                 gas = 0
