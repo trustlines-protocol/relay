@@ -50,6 +50,10 @@ class TrustlinesRelay:
     def enable_ether_faucet(self) -> bool:
         return self.config.get('enableEtherFaucet', False)
 
+    @property
+    def event_query_timeout(self) -> int:
+        return self.config.get('eventQueryTimeout', 20)
+
     def is_currency_network(self, address: str) -> bool:
         return address in self.networks
 
