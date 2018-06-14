@@ -7,5 +7,6 @@
   },
   "syncInterval": 300,
   "updateNetworksInterval": 120,
+  "eventQueryTimeout": 20,
   "enableEtherFaucet": false
 }
