@@ -1,4 +1,4 @@
-from relay.network_graph.fees import imbalance_fee, new_balance
+from relay.network_graph.fees import imbalance_fee, new_balance, estimate_fees_from_capacity
 
 
 def test_increase_imbalance_fee():
@@ -39,3 +39,40 @@ def test_new_balance_both():
 
 def test_new_balance_from_negative():
     assert new_balance(50, -250, 250) == -506
+
+
+def test_estimate_fees_from_capacity_single_hop():
+    """
+    Tests the estimation for a single hop
+    The estimation has to be an upper bound so the actual fees have to be lower
+    """
+    fees = estimate_fees_from_capacity(100, 12345, 1)
+    assert fees >= imbalance_fee(100, 0, 12345-fees)
+
+
+def test_estimate_fees_from_capacity_single_hop_edge_case():
+    """Tests the edge case for the estimation"""
+    fees = estimate_fees_from_capacity(100, 101, 1)
+    assert fees >= imbalance_fee(100, 0, 101-fees)
+    assert fees == 2
+
+
+def test_estimate_fees_from_capacity_single_hop_sanity():
+    """Tests whether for small values outside of indeterminate case, the estimation is exact"""
+    fees = estimate_fees_from_capacity(100, 150, 1)
+    assert fees == imbalance_fee(100, 0, 150-fees)
+
+
+def test_estimate_fees_from_capacity_two_hops():
+    fees = estimate_fees_from_capacity(100, 104, 2)
+    assert fees >= 4
+
+
+def test_estimate_fees_from_capacity_three_hops():
+    fees = estimate_fees_from_capacity(100, 106, 3)
+    assert fees >= 6
+
+
+def test_estimate_fees_from_capacity_eight_hops():
+    fees = estimate_fees_from_capacity(100, 116, 8)
+    assert fees >= 16
