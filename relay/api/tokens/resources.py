@@ -10,7 +10,7 @@ from relay.relay import TrustlinesRelay
 
 
 def abort_if_unknown_token(trustlines, token_address):
-    if token_address not in trustlines.tokens and token_address not in trustlines.unw_eth:
+    if token_address not in trustlines.tokens and token_address not in trustlines.unw_eth_addresses:
         abort(404, 'Unkown network: {}'.format(token_address))
 
 
@@ -20,7 +20,7 @@ class TokenAddresses(Resource):
         self.trustlines = trustlines
 
     def get(self):
-        return self.trustlines.unw_eth + self.trustlines.tokens
+        return self.trustlines.unw_eth_addresses + self.trustlines.tokens
 
 
 class TokenBalance(Resource):
@@ -30,7 +30,7 @@ class TokenBalance(Resource):
 
     def get(self, token_address: str, user_address: str):
         abort_if_unknown_token(self.trustlines, token_address)
-        if token_address in self.trustlines.unw_eth:
+        if token_address in self.trustlines.unw_eth_addresses:
             return self.trustlines.unw_eth_proxies[token_address].balance_of(user_address)
         else:
             return self.trustlines.token_proxies[token_address].balance_of(user_address)
@@ -54,7 +54,7 @@ class UserEventsToken(Resource):
         from_block = args['fromBlock']
         type = args['type']
 
-        if token_address in self.trustlines.unw_eth:
+        if token_address in self.trustlines.unw_eth_addresses:
             proxy = self.trustlines.unw_eth_proxies[token_address]
             func_names = ['get_unw_eth_events', 'get_all_unw_eth_events']
         else:
@@ -87,7 +87,7 @@ class EventsToken(Resource):
         from_block = args['fromBlock']
         type = args['type']
 
-        if token_address in self.trustlines.unw_eth:
+        if token_address in self.trustlines.unw_eth_addresses:
             proxy = self.trustlines.unw_eth_proxies[token_address]
         else:
             proxy = self.trustlines.token_proxies[token_address]

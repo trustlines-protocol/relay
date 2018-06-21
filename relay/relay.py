@@ -51,7 +51,7 @@ class TrustlinesRelay:
         return self.orderbook.exchange_addresses
 
     @property
-    def unw_eth(self) -> Iterable[str]:
+    def unw_eth_addresses(self) -> Iterable[str]:
         return list(self.unw_eth_proxies)
 
     @property
@@ -70,7 +70,7 @@ class TrustlinesRelay:
         return address in self.networks
 
     def is_trusted_token(self, address: str) -> bool:
-        return address in self.tokens or address in self.unw_eth
+        return address in self.tokens or address in self.unw_eth_addresses
 
     def start(self):
         self._load_config()
@@ -110,7 +110,7 @@ class TrustlinesRelay:
 
     def new_unw_eth(self, address: str) -> None:
         assert is_checksum_address(address)
-        if address not in self.unw_eth:
+        if address not in self.unw_eth_addresses:
             logger.info('New Unwrap ETH contract: {}'.format(address))
             self.unw_eth_proxies[address] = UnwEthProxy(self._web3,
                                                         self.contracts['UnwEth']['abi'],
@@ -151,7 +151,7 @@ class TrustlinesRelay:
     def get_unw_eth_event_queries(self, user_address: str, type: str, from_block: int):
         assert is_checksum_address(user_address)
         queries = []
-        for unw_eth_address in self.unw_eth:
+        for unw_eth_address in self.unw_eth_addresses:
             unw_eth_proxy = self.unw_eth_proxies[unw_eth_address]
             if type is not None:
                 queries.append(functools.partial(unw_eth_proxy.get_unw_eth_events,
