@@ -3,8 +3,8 @@ import io
 
 import networkx as nx
 
-from .dijkstra_weighted import find_path, find_path_triangulation
-from .fees import new_balance, imbalance_fee
+from .dijkstra_weighted import find_path, find_path_triangulation, find_maximum_capacity_path
+from .fees import new_balance, imbalance_fee, estimate_fees_from_capacity
 
 creditline_ab = 'creditline_ab'
 creditline_ba = 'creditline_ba'
@@ -346,6 +346,33 @@ class CurrencyNetworkGraph(object):
         except (nx.NetworkXNoPath, KeyError):  # key error for if source or target is not in graph
             cost, path = 0, []  # cost is the total fee, not the actual amount to be transfered
         return cost, list(path)
+
+    def find_maximum_capacity_path(self, source, target, max_hops=None):
+        """
+        find a path probably with the maximum capacity to transfer from source to target
+        The "imbalance_fee" function not being bijective, only an estimate of the fees can be found from "value + fee"
+
+        Args:
+            source: source for the path
+            target: target for the path
+            max_hops: the maximum number of hops to find the path
+
+        Returns:
+            returns capacity of the path in term of credit (not the value that can be send), and the path
+        """
+        try:
+            capacity, path = find_maximum_capacity_path(self.graph,
+                                                        source,
+                                                        target,
+                                                        max_hops=max_hops)
+        except (nx.NetworkXNoPath, KeyError):  # key error for if source or target is not in graph
+            capacity, path = 0, []  # cost is the total fee, not the actual amount to be transfered
+
+        fees = estimate_fees_from_capacity(self.capacity_imbalance_fee_divisor, capacity, len(path)-1)
+        capacity = capacity - fees
+        if capacity <= 0:
+            return 0, []
+        return capacity, list(path)
 
     def transfer(self, source, target, value):
         """simulate transfer off chain"""

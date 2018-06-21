@@ -76,6 +76,13 @@ def complex_community_with_trustlines_and_fees(complexfriendsdict):
     return community
 
 
+@pytest.fixture
+def complex_community_with_trustlines(complexfriendsdict):
+    community = CurrencyNetworkGraph()
+    community.gen_network(complexfriendsdict)
+    return community
+
+
 def test_users(community_with_trustlines):
     community = community_with_trustlines
     assert len(community.users) == 5  # should have 5 users
@@ -232,6 +239,93 @@ def test_triangulation_target_increase_equals_source(complex_community_with_trus
     cost, path = complex_community_with_trustlines_and_fees.find_path_triangulation(
                 A, B, A, 10000)
     assert path == []
+
+
+def test_capacity_path_single_hop(complex_community_with_trustlines):
+    """test for getting the capacity of the path A-B"""
+    value, path = complex_community_with_trustlines.find_maximum_capacity_path(
+                A, B)
+    assert path == [A, B]
+    assert value == 50000
+
+
+def test_capacity_path_single_hop_more_capacity(complex_community_with_trustlines):
+    """test whether the balance A-B impacts capacity"""
+    complex_community_with_trustlines.update_balance(A, B, 10000)
+    value, path = complex_community_with_trustlines.find_maximum_capacity_path(
+                A, B)
+    assert path == [A, B]
+    assert value == 60000
+
+
+def test_capacity_path_single_hop_less_capacity(complex_community_with_trustlines):
+    """test whether the balance A-B impacts capacity"""
+    complex_community_with_trustlines.update_balance(A, B, -10000)
+    complex_community_with_trustlines.update_balance(A, C, -10000)
+    value, path = complex_community_with_trustlines.find_maximum_capacity_path(
+                A, B)
+    assert path == [A, B]
+    assert value == 40000
+
+
+def test_capacity_path_multi_hops_negative_balance(complex_community_with_trustlines):
+    """Tests multihop, A-C balance has to be updated so path A-B is used"""
+    complex_community_with_trustlines.update_balance(A, C, -10000)
+
+    value, path = complex_community_with_trustlines.find_maximum_capacity_path(
+                A, E)
+
+    assert path == [A, B, D, E]
+    assert value == 50000
+
+
+def test_capacity_path_multi_hops_negative_balance_lowers_capacity(complex_community_with_trustlines):
+    """Tests whether lowering the balance lowers the capacity"""
+    complex_community_with_trustlines.update_balance(A, C, -20000)
+    complex_community_with_trustlines.update_balance(A, B, -10000)
+
+    value, path = complex_community_with_trustlines.find_maximum_capacity_path(
+                A, E)
+
+    assert path == [A, B, D, E]
+    assert value == 40000
+
+
+def test_capacity_path_multi_hops_positive_balance(complex_community_with_trustlines):
+    """Tests whether increasing the balance increases the capacity"""
+    complex_community_with_trustlines.update_balance(A, C, 10000)
+    complex_community_with_trustlines.update_balance(C, D, 10000)
+    complex_community_with_trustlines.update_balance(D, E, 10000)
+
+    value, path = complex_community_with_trustlines.find_maximum_capacity_path(
+                A, E)
+
+    assert path == [A, C, D, E]
+    assert value == 60000
+
+
+def test_max_capacity_estimation_single_hop(complex_community_with_trustlines_and_fees):
+    """Tests whether the path and capacity found actually work (= estimation of fees is bigger than actual fees)"""
+    complex_community_with_trustlines_and_fees.update_balance(A, B, -49899)
+    complex_community_with_trustlines_and_fees.update_balance(A, C, -50000)
+
+    capacity, path = complex_community_with_trustlines_and_fees.find_maximum_capacity_path(
+                A, B)
+
+    value, path = complex_community_with_trustlines_and_fees.find_path(A, B, capacity)
+    assert path == [A, B]
+
+
+def test_max_capacity_estimation_multi_hop(complex_community_with_trustlines_and_fees):
+    """Tests whether the path and capacity found actually work (= estimation of fees is bigger than actual fees)"""
+    complex_community_with_trustlines_and_fees.update_balance(A, C, 10000)
+    complex_community_with_trustlines_and_fees.update_balance(C, D, 10000)
+
+    capacity, path = complex_community_with_trustlines_and_fees.find_maximum_capacity_path(
+                A, E)
+
+    value, path = complex_community_with_trustlines_and_fees.find_path(A, E, capacity)
+    assert path == [A, C, D, E]
 
 
 def test_mediated_transfer(community_with_trustlines):

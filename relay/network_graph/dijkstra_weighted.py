@@ -54,6 +54,63 @@ def find_path(G, source, target, get_fee, value, max_hops=None, max_fees=None, i
             "node %s not reachable from %s" % (source, target))
 
 
+def find_maximum_capacity_path(G, source, target, max_hops=None):
+    G_succ = G.succ if G.is_directed() else G.adj
+    push = heappush
+    pop = heappop
+
+    paths = {source: [source]}  # dictionary of paths
+    capacity = {}  # dictionary of capacities
+    seen = {source: 0}  # final dictionnaries of capacities
+    c = count()
+    fringe = []  # use heapq with (distance,label) tuples
+
+    def get_capacity(u, v, data):  # gets the capacity from u to v
+        if (u < v):
+            return data['creditline_ba'] + data['balance_ab']
+        return data['creditline_ab'] - data['balance_ab']
+
+    for v, e in G_succ[source].items():
+        capacity[v] = get_capacity(source, v, e)
+        paths[v] = [source] + [v]
+        seen[source] = 0
+        push(fringe, (-capacity[v], next(c), v, 1))  # (-capacity, counter, node, hops)
+        # We use -capacity because we want the vertex with max capacity
+
+    while fringe:
+        (capa, _, u, n) = pop(fringe)
+        capa = -capa  # revert the capacity of a vertex to its original meaning
+        if u in seen:
+            continue  # already searched this node.
+        seen[u] = capa
+        if u == target:
+            break
+
+        for v, e in G_succ[u].items():
+            if v in seen:
+                continue
+            if max_hops is not None:
+                if n+1 > max_hops:
+                    continue
+            else:
+                min_cap = min(capacity[u], get_capacity(u, v, e))  # does not work with source
+                if v in capacity:
+                    if capacity[v] < min_cap:
+                        capacity[v] = min_cap
+                        paths[v] = paths[u]+[v]
+                        push(fringe, (-capacity[v], next(c), v, n+1))
+                else:
+                    capacity[v] = min_cap
+                    paths[v] = paths[u]+[v]
+                    push(fringe, (-capacity[v], next(c), v, n+1))
+
+    try:
+        return (seen[target], paths[target])  # first element is the total capacity of the path not transferable amount
+    except KeyError:
+        raise nx.NetworkXNoPath(
+            "node %s not reachable from %s" % (source, target))
+
+
 def find_path_triangulation(G, source, target_reduce, target_increase, get_fee, value, max_hops=None, max_fees=None):
     """
     target_reduce is the node we want to reduce our credit with
