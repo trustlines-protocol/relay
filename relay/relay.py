@@ -2,6 +2,7 @@ import json
 import logging
 import os
 import sys
+import functools
 from collections import defaultdict
 from copy import deepcopy
 from typing import Dict, Iterable, List  # noqa: F401
@@ -130,6 +131,38 @@ class TrustlinesRelay:
             if user_address in self.currency_network_graphs[network_address].users:
                 networks_of_user.append(network_address)
         return networks_of_user
+
+    def get_network_event_queries(self, user_address: str, type: str, from_block: int):
+        assert is_checksum_address(user_address)
+        queries = []
+        for network_address in self.networks:
+            currency_network_proxy = self.currency_network_proxies[network_address]
+            if type is not None:
+                queries.append(functools.partial(currency_network_proxy.get_network_events,
+                                                 type,
+                                                 user_address=user_address,
+                                                 from_block=from_block))
+            else:
+                queries.append(functools.partial(currency_network_proxy.get_all_network_events,
+                                                 user_address=user_address,
+                                                 from_block=from_block))
+        return queries
+
+    def get_unwrapped_eth_event_queries(self, user_address: str, type: str, from_block: int):
+        assert is_checksum_address(user_address)
+        queries = []
+        for unw_eth_address in self.unw_eth:
+            unw_eth_proxy = self.unw_eth_proxies[unw_eth_address]
+            if type is not None:
+                queries.append(functools.partial(unw_eth_proxy.get_unw_eth_events,
+                                                 type,
+                                                 user_address=user_address,
+                                                 from_block=from_block))
+            else:
+                queries.append(functools.partial(unw_eth_proxy.get_all_unw_eth_events,
+                                                 user_address=user_address,
+                                                 from_block=from_block))
+        return queries
 
     def _load_config(self):
         with open('config.json') as data_file:

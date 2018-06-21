@@ -222,38 +222,12 @@ class UserEvents(Resource):
 
     @use_args(args)
     def get(self, args, user_address: str):
-        currency_network_queries = []
-        unw_eth_queries = []
         type = args['type']
         from_block = args['fromBlock']
-        # currency networks
-        networks = self.trustlines.networks
-        for network_address in networks:
-            currency_network_proxy = self.trustlines.currency_network_proxies[network_address]
-            if type is not None:
-                currency_network_queries.append(functools.partial(currency_network_proxy.get_network_events,
-                                                                  type,
-                                                                  user_address=user_address,
-                                                                  from_block=from_block))
-            else:
-                currency_network_queries.append(functools.partial(currency_network_proxy.get_all_network_events,
-                                                                  user_address=user_address,
-                                                                  from_block=from_block))
-        # unw eth
-        unw_eth = self.trustlines.unw_eth
-        for unw_eth_address in unw_eth:
-            unw_eth_proxy = self.trustlines.unw_eth_proxies[unw_eth_address]
-            if type is not None:
-                unw_eth_queries.append(functools.partial(unw_eth_proxy.get_unw_eth_events,
-                                                         type,
-                                                         user_address=user_address,
-                                                         from_block=from_block))
-            else:
-                unw_eth_queries.append(functools.partial(unw_eth_proxy.get_all_unw_eth_events,
-                                                         user_address=user_address,
-                                                         from_block=from_block))
+        network_queries = self.trustlines.get_network_event_queries(user_address, type, from_block)
+        unw_eth_queries = self.trustlines.get_unwrapped_eth_event_queries(user_address, type, from_block)
         try:
-            currency_network_results = concurrency_utils.joinall(currency_network_queries,
+            currency_network_results = concurrency_utils.joinall(network_queries,
                                                                  timeout=self.trustlines.event_query_timeout)
             unw_eth_results = concurrency_utils.joinall(unw_eth_queries,
                                                         timeout=self.trustlines.event_query_timeout)
