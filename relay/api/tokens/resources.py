@@ -12,7 +12,7 @@ from relay.relay import TrustlinesRelay
 
 
 def abort_if_unknown_token(trustlines, token_address):
-    if token_address not in trustlines.tokens and token_address not in trustlines.unw_eth_addresses:
+    if token_address not in trustlines.token_addresses and token_address not in trustlines.unw_eth_addresses:
         abort(404, 'Unkown network: {}'.format(token_address))
 
 
@@ -22,7 +22,7 @@ class TokenAddresses(Resource):
         self.trustlines = trustlines
 
     def get(self):
-        return self.trustlines.unw_eth_addresses + self.trustlines.tokens
+        return self.trustlines.unw_eth_addresses + self.trustlines.token_addresses
 
 
 class TokenBalance(Resource):

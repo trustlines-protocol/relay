@@ -55,7 +55,7 @@ class TrustlinesRelay:
         return list(self.unw_eth_proxies)
 
     @property
-    def tokens(self) -> Iterable[str]:
+    def token_addresses(self) -> Iterable[str]:
         return list(self.token_proxies)
 
     @property
@@ -70,7 +70,7 @@ class TrustlinesRelay:
         return address in self.networks
 
     def is_trusted_token(self, address: str) -> bool:
-        return address in self.tokens or address in self.unw_eth_addresses
+        return address in self.token_addresses or address in self.unw_eth_addresses
 
     def start(self):
         self._load_config()
@@ -118,7 +118,7 @@ class TrustlinesRelay:
 
     def new_token(self, address: str) -> None:
         assert is_checksum_address(address)
-        if address not in self.tokens:
+        if address not in self.token_addresses:
             logger.info('New Token contract: {}'.format(address))
             self.token_proxies[address] = TokenProxy(self._web3,
                                                      self.contracts['Token']['abi'],
