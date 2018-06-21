@@ -1,4 +1,4 @@
-from typing import Dict
+import json
 
 import firebase_admin
 from firebase_admin import credentials
@@ -28,8 +28,8 @@ class FirebaseRawPushService:
         message = self._build_event_message(client_token, event)
         messaging.send(message, app=self._app)
 
-    def _build_event_message(self, client_token: str, event: Event, ) -> messaging.Message:
-        data = _ensure_strings(UserCurrencyNetworkEventSchema().dump(event).data)  # Firebase allows only strings
+    def _build_event_message(self, client_token: str, event: Event) -> messaging.Message:
+        data = UserCurrencyNetworkEventSchema().dump(event).data
         event_type = event.type
 
         message = messaging.Message(
@@ -37,7 +37,9 @@ class FirebaseRawPushService:
                 title='New {}'.format(event_type),
                 body='Click for more details',
             ),
-            data=data,
+            data={
+                'event': json.dumps(data),
+            },
             token=client_token,
         )
 
@@ -62,10 +64,3 @@ class FirebasePushService:
         """
         for client_token in self._client_token_db.get_client_tokens(user_address):
             self._firebaseRawPushService.send_event(client_token, event)
-
-
-def _ensure_strings(dict: Dict) -> Dict:
-    for key, value in dict.items():
-        if not isinstance(value, str):
-            dict[key] = str(value)
-    return dict
