@@ -148,7 +148,7 @@ class TrustlinesRelay:
                                                  from_block=from_block))
         return queries
 
-    def get_unwrapped_eth_event_queries(self, user_address: str, type: str, from_block: int):
+    def get_unw_eth_event_queries(self, user_address: str, type: str, from_block: int):
         assert is_checksum_address(user_address)
         queries = []
         for unw_eth_address in self.unw_eth:

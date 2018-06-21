@@ -225,7 +225,7 @@ class UserEvents(Resource):
         type = args['type']
         from_block = args['fromBlock']
         network_queries = self.trustlines.get_network_event_queries(user_address, type, from_block)
-        unw_eth_queries = self.trustlines.get_unwrapped_eth_event_queries(user_address, type, from_block)
+        unw_eth_queries = self.trustlines.get_unw_eth_event_queries(user_address, type, from_block)
         try:
             currency_network_results = concurrency_utils.joinall(network_queries,
                                                                  timeout=self.trustlines.event_query_timeout)
