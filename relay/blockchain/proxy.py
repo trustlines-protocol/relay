@@ -1,15 +1,15 @@
 import logging
 import math
 import time
+import functools
 from typing import List, Dict, Callable, Any  # noqa: F401
 
 import gevent
 import itertools
 import socket
 
+import relay.concurrency_utils as concurrency_utils
 from .events import BlockchainEvent
-
-
 from relay.logger import get_logger
 
 
@@ -61,7 +61,7 @@ class Proxy(object):
         filter = self._watch_filter(eventname, function, params)
         filter.link_exception(on_exception)
 
-    def get_events(self, event_name, filter_=None, from_block=0) -> List[BlockchainEvent]:
+    def get_events(self, event_name, filter_=None, from_block=0, timeout: float = None) -> List[BlockchainEvent]:
         if event_name not in self.event_builders.keys():
             raise ValueError('Unknown eventname {}'.format(event_name))
 
@@ -73,16 +73,22 @@ class Proxy(object):
             'fromBlock': from_block,
             'toBlock': queryBlock
         }
-        list = self._proxy.pastEvents(event_name, params).get(False)
-        return sorted_events(self._build_events(list))
 
-    def get_all_events(self, filter_=None, from_block: int=0) -> List[BlockchainEvent]:
-        events = [gevent.spawn(self.get_events,
-                               type,
-                               filter_=filter_,
-                               from_block=from_block) for type in self.standard_event_types]
-        gevent.joinall(events, timeout=5)
-        return sorted_events(list(itertools.chain.from_iterable([event.value for event in events])))
+        queries = [lambda: self._proxy.pastEvents(event_name, params).get(False)]
+        results = concurrency_utils.joinall(queries, timeout=timeout)
+        return sorted_events(self._build_events(results[0]))
+
+    def get_all_events(self,
+                       filter_=None,
+                       from_block: int = 0,
+                       timeout: float = None
+                       ) -> List[BlockchainEvent]:
+        queries = [functools.partial(self.get_events,
+                                     type,
+                                     filter_=filter_,
+                                     from_block=from_block) for type in self.standard_event_types]
+        results = concurrency_utils.joinall(queries, timeout=timeout)
+        return sorted_events(list(itertools.chain.from_iterable(results)))
 
     def _build_events(self, events: List[Any]):
         current_blocknumber = self._web3.eth.blockNumber
