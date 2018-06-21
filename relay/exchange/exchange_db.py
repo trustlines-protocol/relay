@@ -20,8 +20,10 @@ class OrderORM(Base):  # type: ignore
     fee_recipient = Column(String)
     maker_token_amount = Column(Integer)
     taker_token_amount = Column(Integer)
-    available_maker_token_amount = Column(Integer)
-    available_taker_token_amount = Column(Integer)
+    filled_maker_token_amount = Column(Integer)
+    filled_taker_token_amount = Column(Integer)
+    cancelled_maker_token_amount = Column(Integer)
+    cancelled_taker_token_amount = Column(Integer)
     price = Column(Float)
     maker_fee = Column(Integer)
     taker_fee = Column(Integer)
@@ -43,8 +45,10 @@ class OrderORM(Base):  # type: ignore
             fee_recipient=order.fee_recipient,
             maker_token_amount=order.maker_token_amount,
             taker_token_amount=order.taker_token_amount,
-            available_maker_token_amount=order.available_maker_token_amount,
-            available_taker_token_amount=order.available_taker_token_amount,
+            filled_maker_token_amount=order.filled_maker_token_amount,
+            filled_taker_token_amount=order.filled_taker_token_amount,
+            cancelled_maker_token_amount=order.cancelled_maker_token_amount,
+            cancelled_taker_token_amount=order.cancelled_taker_token_amount,
             price=order.price,
             maker_fee=order.maker_fee,
             taker_fee=order.taker_fee,
@@ -66,8 +70,10 @@ class OrderORM(Base):  # type: ignore
             fee_recipient=self.fee_recipient,
             maker_token_amount=self.maker_token_amount,
             taker_token_amount=self.taker_token_amount,
-            available_maker_token_amount=self.available_maker_token_amount,
-            available_taker_token_amount=self.available_taker_token_amount,
+            filled_maker_token_amount=self.filled_maker_token_amount,
+            filled_taker_token_amount=self.filled_taker_token_amount,
+            cancelled_maker_token_amount=self.cancelled_maker_token_amount,
+            cancelled_taker_token_amount=self.cancelled_taker_token_amount,
             maker_fee=self.maker_fee,
             taker_fee=self.taker_fee,
             expiration_timestamp_in_sec=self.expiration_timestamp_in_sec,
@@ -128,8 +134,19 @@ class OrderBookDB(object):
         # NOTE old version of web3.py returns bytes as string from contract, so we have to use force_bytes
         order_hash_bytes = force_bytes(order_hash)
         order_orm = self.session.query(OrderORM).filter_by(msg_hash=order_hash_bytes.hex()).first()
-        order_orm.available_maker_token_amount -= filled_maker_token_amount
-        order_orm.available_taker_token_amount -= filled_taker_token_amount
+        order_orm.filled_maker_token_amount += filled_maker_token_amount
+        order_orm.filled_taker_token_amount += filled_taker_token_amount
+
+        if order_orm.to_order().is_filled():
+            self.session.delete(order_orm)
+        self.session.commit()
+
+    def order_cancelled(self, order_hash: bytes, cancelled_maker_token_amount: int, cancelled_taker_token_amount: int) -> None:
+        # NOTE old version of web3.py returns bytes as string from contract, so we have to use force_bytes
+        order_hash_bytes = force_bytes(order_hash)
+        order_orm = self.session.query(OrderORM).filter_by(msg_hash=order_hash_bytes.hex()).first()
+        order_orm.cancelled_maker_token_amount += cancelled_maker_token_amount
+        order_orm.cancelled_taker_token_amount += cancelled_taker_token_amount
 
         if order_orm.to_order().is_filled():
             self.session.delete(order_orm)

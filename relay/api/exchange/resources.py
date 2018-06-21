@@ -20,6 +20,12 @@ def order_as_dict(order: Order):
         'feeRecipient': order.fee_recipient,
         'makerTokenAmount': str(order.maker_token_amount),
         'takerTokenAmount': str(order.taker_token_amount),
+        'filledMakerTokenAmount': str(order.filled_maker_token_amount),
+        'filledTakerTokenAmount': str(order.filled_taker_token_amount),
+        'cancelledMakerTokenAmount': str(order.cancelled_maker_token_amount),
+        'cancelledTakerTokenAmount': str(order.cancelled_taker_token_amount),
+        'availableMakerTokenAmount': str(order.available_maker_token_amount),
+        'availableTakerTokenAmount': str(order.available_taker_token_amount),
         'makerFee': str(order.maker_fee),
         'takerFee': str(order.taker_fee),
         'expirationUnixTimestampSec': str(order.expiration_timestamp_in_sec),
@@ -60,27 +66,11 @@ class OrderDetail(Resource):
     def __init__(self, trustlines: TrustlinesRelay) -> None:
         self.trustlines = trustlines
 
-    args = {
-        'includeFilled': webfields.Boolean(required=False, missing=False),
-        'includeCancelled': webfields.Boolean(required=False, missing=False),
-        'includeUnavailable': webfields.Boolean(required=False, missing=False)
-    }
-
-    @use_args(args)
-    def get(self, args, order_hash: str):
+    def get(self, order_hash: str):
         order_orm = self.trustlines.orderbook.get_order_by_hash(bytes.fromhex(order_hash[2:]))
-
         if order_orm is None:
             abort(422, message='Order does not exist')
-
-        order = order_as_dict(order_orm)
-        if (args['includeFilled']):
-            order['filledTakerAmount'] = self.trustlines.orderbook.get_filled_amount(order_orm)
-        if (args['includeCancelled']):
-            order['cancelledTakerAmount'] = self.trustlines.orderbook.get_cancelled_amount(order_orm)
-        if (args['includeCancelled']):
-            order['unavailableTakerAmount'] = self.trustlines.orderbook.get_unavailable_amount(order_orm)
-        return order
+        return order_as_dict(order_orm)
 
 
 class OrderSubmission(Resource):
