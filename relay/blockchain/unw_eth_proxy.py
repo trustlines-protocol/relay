@@ -3,7 +3,6 @@ from typing import List
 import functools
 import itertools
 
-import gevent
 import relay.concurrency_utils as concurrency_utils
 from .proxy import Proxy, sorted_events
 from relay.logger import get_logger

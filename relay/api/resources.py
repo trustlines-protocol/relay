@@ -1,5 +1,4 @@
 import tempfile
-import functools
 import logging
 from typing import List  # noqa: F401
 
