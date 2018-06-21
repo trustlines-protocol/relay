@@ -55,17 +55,17 @@ class UserEventsToken(Resource):
         type = args['type']
 
         if token_address in self.trustlines.unw_eth:
-            unw_eth_proxy = self.trustlines.unw_eth_proxies[token_address]
-            if type is not None:
-                events = unw_eth_proxy.get_unw_eth_events(type, user_address, from_block=from_block)
-            else:
-                events = unw_eth_proxy.get_all_unw_eth_events(user_address, from_block=from_block)
+            proxy = self.trustlines.unw_eth_proxies[token_address]
+            func_names = ['get_unw_eth_events', 'get_all_unw_eth_events']
         else:
-            token_proxy = self.trustlines.token_proxies[token_address]
-            if type is not None:
-                events = token_proxy.get_token_events(type, user_address, from_block=from_block)
-            else:
-                events = token_proxy.get_all_token_events(user_address, from_block=from_block)
+            proxy = self.trustlines.token_proxies[token_address]
+            func_names = ['get_token_events', 'get_all_token_events']
+        
+        if type is not None:
+            events = getattr(proxy, func_names[0])(type, user_address, from_block=from_block)
+        else:
+            events = getattr(proxy, func_names[1])(user_address, from_block=from_block)
+
         return UserTokenEventSchema().dump(events, many=True).data
 
 
@@ -88,15 +88,13 @@ class EventsToken(Resource):
         type = args['type']
 
         if token_address in self.trustlines.unw_eth:
-            unw_eth_proxy = self.trustlines.unw_eth_proxies[token_address]
-            if type is not None:
-                events = unw_eth_proxy.get_events(type, from_block=from_block)
-            else:
-                events = unw_eth_proxy.get_all_events(from_block=from_block)
+            proxy = self.trustlines.unw_eth_proxies[token_address]
         else:
-            token_proxy = self.trustlines.token_proxies[token_address]
-            if type is not None:
-                events = token_proxy.get_events(type, from_block=from_block)
-            else:
-                events = token_proxy.get_all_events(from_block=from_block)
+            proxy = self.trustlines.token_proxies[token_address]
+
+        if type is not None:
+            events = proxy.get_events(type, from_block=from_block)
+        else:
+            events = proxy.get_all_events(from_block=from_block)
+
         return TokenEventSchema().dump(events, many=True).data
