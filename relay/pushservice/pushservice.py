@@ -12,7 +12,7 @@ from .client_token_db import ClientTokenDB
 class FirebaseRawPushService:
     """Sends push notifications to firebase. Sending is done based on raw client tokens"""
 
-    def __init__(self):
+    def __init__(self) -> None:
         self._app = None
 
     def initialize(self, path_to_keyfile: str) -> None:
@@ -49,7 +49,7 @@ class FirebaseRawPushService:
 class FirebasePushService:
     """Sends push notifications to firebase. Sending is done based on ethereum addresses"""
 
-    def __init__(self, client_token_db: ClientTokenDB, firebaseRawPushService: FirebaseRawPushService):
+    def __init__(self, client_token_db: ClientTokenDB, firebaseRawPushService: FirebaseRawPushService) -> None:
         """
         Args:
             client_token_db: Database to map ethereum address to client token
