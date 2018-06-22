@@ -137,7 +137,7 @@ class TrustlinesRelay:
         queries = []
         for network_address in self.networks:
             currency_network_proxy = self.currency_network_proxies[network_address]
-            if type is not None:
+            if type is not None and type in currency_network_proxy.standard_event_types:
                 queries.append(functools.partial(currency_network_proxy.get_network_events,
                                                  type,
                                                  user_address=user_address,
@@ -153,7 +153,7 @@ class TrustlinesRelay:
         queries = []
         for unw_eth_address in self.unw_eth_addresses:
             unw_eth_proxy = self.unw_eth_proxies[unw_eth_address]
-            if type is not None:
+            if type is not None and type in unw_eth_proxy.standard_event_types:
                 queries.append(functools.partial(unw_eth_proxy.get_unw_eth_events,
                                                  type,
                                                  user_address=user_address,
