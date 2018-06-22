@@ -33,9 +33,9 @@ class TokenBalance(Resource):
     def get(self, token_address: str, user_address: str):
         abort_if_unknown_token(self.trustlines, token_address)
         if token_address in self.trustlines.unw_eth_addresses:
-            return self.trustlines.unw_eth_proxies[token_address].balance_of(user_address)
+            return str(self.trustlines.unw_eth_proxies[token_address].balance_of(user_address))
         else:
-            return self.trustlines.token_proxies[token_address].balance_of(user_address)
+            return str(self.trustlines.token_proxies[token_address].balance_of(user_address))
 
 
 class UserEventsToken(Resource):
