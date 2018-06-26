@@ -15,7 +15,7 @@ from relay.blockchain.unw_eth_events import UnwEthEvent
 from relay.blockchain.exchange_events import ExchangeEvent
 from relay.blockchain.currency_network_events import CurrencyNetworkEvent
 from relay.api import fields as custom_fields
-from .schemas import CurrencyNetworkEventSchema, UserCurrencyNetworkEventSchema, UserTokenEventSchema \
+from .schemas import CurrencyNetworkEventSchema, UserCurrencyNetworkEventSchema, UserTokenEventSchema, \
     ExchangeEventSchema
 from relay.relay import TrustlinesRelay
 from relay.concurrency_utils import TimeoutException
