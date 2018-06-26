@@ -1,4 +1,6 @@
 import tempfile
+import functools
+import logging
 from typing import List  # noqa: F401
 
 from flask import request, send_file, make_response, abort
@@ -7,15 +9,23 @@ from flask_restful import Resource
 from webargs import fields
 from webargs.flaskparser import use_args
 from marshmallow import validate
-import gevent
 import itertools
 
+import relay.concurrency_utils as concurrency_utils
 from relay.utils import sha3
 from relay.blockchain.currency_network_proxy import CurrencyNetworkProxy
 from relay.blockchain.events import BlockchainEvent  # noqa: F401
 from relay.api import fields as custom_fields
 from .schemas import CurrencyNetworkEventSchema, UserCurrencyNetworkEventSchema
 from relay.relay import TrustlinesRelay
+from relay.concurrency_utils import TimeoutException
+from relay.logger import get_logger
+
+
+logger = get_logger('api.resources', logging.DEBUG)
+
+
+TIMEOUT_MESSAGE = 'The server could not handle the request in time'
 
 
 def abort_if_unknown_network(trustlines, network_address):
@@ -177,10 +187,22 @@ class UserEventsNetwork(Resource):
         proxy = self.trustlines.currency_network_proxies[network_address]
         from_block = args['fromBlock']
         type = args['type']
-        if type is not None:
-            events = proxy.get_network_events(type, user_address, from_block=from_block)
-        else:
-            events = proxy.get_all_network_events(user_address, from_block=from_block)
+        try:
+            if type is not None:
+                events = proxy.get_network_events(type, user_address,
+                                                  from_block=from_block,
+                                                  timeout=self.trustlines.event_query_timeout)
+            else:
+                events = proxy.get_all_network_events(user_address,
+                                                      from_block=from_block,
+                                                      timeout=self.trustlines.event_query_timeout)
+        except TimeoutException:
+            logger.warning(
+                "User network events: event_name=%s user_address=%s from_block=%s. could not get events in time",
+                type,
+                user_address,
+                from_block)
+            abort(504, TIMEOUT_MESSAGE)
         return UserCurrencyNetworkEventSchema().dump(events, many=True).data
 
 
@@ -198,23 +220,31 @@ class UserEvents(Resource):
 
     @use_args(args)
     def get(self, args, user_address: str):
-        events = []
+        queries = []
         type = args['type']
         from_block = args['fromBlock']
         networks = self.trustlines.networks
         for network_address in networks:
             proxy = self.trustlines.currency_network_proxies[network_address]
             if type is not None:
-                events.append(gevent.spawn(proxy.get_network_events,
-                                           type,
-                                           user_address=user_address,
-                                           from_block=from_block))
+                queries.append(functools.partial(proxy.get_network_events,
+                                                 type,
+                                                 user_address=user_address,
+                                                 from_block=from_block))
             else:
-                events.append(gevent.spawn(proxy.get_all_network_events,
-                                           user_address=user_address,
-                                           from_block=from_block))
-        gevent.joinall(events, timeout=5)
-        flattened_events = list(itertools.chain.from_iterable([event.value for event in events]))
+                queries.append(functools.partial(proxy.get_all_network_events,
+                                                 user_address=user_address,
+                                                 from_block=from_block))
+        try:
+            results = concurrency_utils.joinall(queries, timeout=self.trustlines.event_query_timeout)
+        except TimeoutException:
+            logger.warning(
+                "User events: event_name=%s user_address=%s from_block=%s. could not get events in time",
+                type,
+                user_address,
+                from_block)
+            abort(504, TIMEOUT_MESSAGE)
+        flattened_events = list(itertools.chain.from_iterable(results))
         return UserCurrencyNetworkEventSchema().dump(flattened_events, many=True).data
 
 
@@ -236,10 +266,17 @@ class EventsNetwork(Resource):
         proxy = self.trustlines.currency_network_proxies[network_address]
         from_block = args['fromBlock']
         type = args['type']
-        if type is not None:
-            events = proxy.get_events(type, from_block=from_block)
-        else:
-            events = proxy.get_all_events(from_block=from_block)
+        try:
+            if type is not None:
+                events = proxy.get_events(type, from_block=from_block, timeout=self.trustlines.event_query_timeout)
+            else:
+                events = proxy.get_all_events(from_block=from_block, timeout=self.trustlines.event_query_timeout)
+        except TimeoutException:
+            logger.warning(
+                "Network events: event_name=%s from_block=%s. could not get events in time",
+                type,
+                from_block)
+            abort(504, TIMEOUT_MESSAGE)
         return CurrencyNetworkEventSchema().dump(events, many=True).data
 
 
@@ -305,7 +342,7 @@ class Path(Resource):
         self.trustlines = trustlines
 
     args = {
-        'value': fields.Int(required=False, missing=1),
+        'value': fields.Int(required=False, missing=1, validate=validate.Range(min=1)),
         'maxHops': fields.Int(required=False, missing=None),
         'maxFees': fields.Int(required=False, missing=None),
         'from': custom_fields.Address(required=True),
@@ -335,8 +372,61 @@ class Path(Resource):
                     source,
                     target,
                     value,
-                    cost*2,
+                    cost,
                     path[1:])
+            except ValueError as e:  # should mean out of gas, so path was not right.
+                gas = 0
+                path = []
+                cost = 0
+        else:
+            gas = 0
+
+        return {'path': path,
+                'estimatedGas': gas,
+                'fees': cost}
+
+
+class ReduceDebtPath(Resource):
+
+    def __init__(self, trustlines: TrustlinesRelay) -> None:
+        self.trustlines = trustlines
+
+    args = {
+        'value': fields.Int(required=True, validate=validate.Range(min=1)),
+        'maxHops': fields.Int(required=False, missing=None),
+        'maxFees': fields.Int(required=False, missing=None),
+        'from': custom_fields.Address(required=True),
+        'to': custom_fields.Address(required=True),
+        'via': custom_fields.Address(required=True)
+    }
+
+    @use_args(args)
+    def post(self, args, network_address: str):
+        abort_if_unknown_network(self.trustlines, network_address)
+
+        source = args['from']
+        target_reduce = args['to']
+        target_increase = args['via']
+        value = args['value']
+        max_fees = args['maxFees']
+        max_hops = args['maxHops']
+
+        cost, path = self.trustlines.currency_network_graphs[network_address].find_path_triangulation(
+            source=source,
+            target_reduce=target_reduce,
+            target_increase=target_increase,
+            value=value,
+            max_fees=max_fees,
+            max_hops=max_hops)
+
+        if path:
+            try:
+                gas = self.trustlines.currency_network_proxies[network_address].estimate_gas_for_transfer(
+                    source,
+                    source,
+                    value,
+                    cost,  # max_fee for smart contract
+                    path[1:])  # the smart contract takes the sender of the message as source
             except ValueError as e:  # should mean out of gas, so path was not right.
                 gas = 0
                 path = []

@@ -2,12 +2,15 @@ import logging
 import socket
 from collections import namedtuple
 from typing import List, Dict
-
-import gevent
+import functools
 import itertools
 
+import gevent
+
+import relay.concurrency_utils as concurrency_utils
 from .proxy import Proxy, reconnect_interval, sorted_events
 from relay.logger import get_logger
+
 
 from .currency_network_events import (
     BlockchainEvent,
@@ -146,35 +149,50 @@ class CurrencyNetworkProxy(Proxy):
             f(self._build_event(log_entry))
         self.start_listen_on(TransferEventType, log)
 
-    def get_network_events(self, event_name: str, user_address: str=None, from_block: int=0) -> List[BlockchainEvent]:
+    def get_network_events(self,
+                           event_name: str,
+                           user_address: str=None,
+                           from_block: int=0,
+                           timeout: float = None
+                           ) -> List[BlockchainEvent]:
+        logger.debug("get_network_events: event_name=%s user_address=%s from_block=%s",
+                     event_name,
+                     user_address,
+                     from_block)
         if user_address is None:
-            result = self.get_events(event_name, from_block=from_block)
+            queries = [functools.partial(self.get_events, event_name, from_block=from_block)]
+            events = concurrency_utils.joinall(queries, timeout=timeout)
         else:
 
             filter1 = {from_to_types[event_name][0]: user_address}
             filter2 = {from_to_types[event_name][1]: user_address}
 
-            events = [
-                gevent.spawn(self.get_events, event_name, filter1, from_block),
-                gevent.spawn(self.get_events, event_name, filter2, from_block)
+            queries = [
+                functools.partial(self.get_events, event_name, filter1, from_block),
+                functools.partial(self.get_events, event_name, filter2, from_block)
             ]
-            gevent.joinall(events, timeout=2)
-            result = list(itertools.chain.from_iterable([event.value for event in events]))
+            results = concurrency_utils.joinall(queries, timeout=timeout)
 
-            for event in result:
+            events = list(itertools.chain.from_iterable(results))
+
+            for event in events:
                 if isinstance(event, CurrencyNetworkEvent):
                     event.user = user_address
                 else:
                     raise ValueError('Expected a CurrencyNetworkEvent')
-        return sorted_events(result)
+        return sorted_events(events)
 
-    def get_all_network_events(self, user_address: str = None, from_block: int = 0) -> List[BlockchainEvent]:
-        events = [gevent.spawn(self.get_network_events,
-                               type,
-                               user_address=user_address,
-                               from_block=from_block) for type in self.standard_event_types]
-        gevent.joinall(events, timeout=5)
-        return sorted_events(list(itertools.chain.from_iterable([event.value for event in events])))
+    def get_all_network_events(self,
+                               user_address: str = None,
+                               from_block: int = 0,
+                               timeout: float = None
+                               ) -> List[BlockchainEvent]:
+        queries = [functools.partial(self.get_network_events,
+                                     type,
+                                     user_address=user_address,
+                                     from_block=from_block) for type in self.standard_event_types]
+        results = concurrency_utils.joinall(queries, timeout=timeout)
+        return sorted_events(list(itertools.chain.from_iterable(results)))
 
     def estimate_gas_for_transfer(self, sender, receiver, value, max_fee, path):
         return self._proxy.estimateGas({'from': sender}).transfer(receiver, value, max_fee, path)

@@ -3,7 +3,7 @@ import io
 
 import networkx as nx
 
-from .dijkstra_weighted import find_path
+from .dijkstra_weighted import find_path, find_path_triangulation
 from .fees import new_balance, imbalance_fee
 
 creditline_ab = 'creditline_ab'
@@ -328,7 +328,31 @@ class CurrencyNetworkGraph(object):
                                    max_fees=max_fees)
         except (nx.NetworkXNoPath, KeyError):  # key error for if source or target is not in graph
             cost, path = 0, []
+            # cost is the total fee, not the actual amount to be transfered
         return cost, list(reversed(path))
+
+    def find_path_triangulation(self, source, target_reduce, target_increase,
+                                value=None, max_hops=None, max_fees=None):
+        """
+        find a path to update the the creditline between source and target with value, via target_increasae
+        the shortest path is found based on
+            - the number of hops
+            - the imbalance it adds or reduces in the accounts
+        """
+        if value is None:
+            value = 1
+        try:
+            cost, path = find_path_triangulation(self.graph,
+                                                 source,
+                                                 target_reduce,
+                                                 target_increase,
+                                                 self._cost_func_fast_reverse,
+                                                 value,
+                                                 max_hops=max_hops,
+                                                 max_fees=max_fees)
+        except (nx.NetworkXNoPath, KeyError):  # key error for if source or target is not in graph
+            cost, path = 0, []  # cost is the total fee, not the actual amount to be transfered
+        return cost, list(path)
 
     def transfer(self, source, target, value):
         """simulate transfer off chain"""
@@ -337,11 +361,7 @@ class CurrencyNetworkGraph(object):
         account.balance = new_balance(self.capacity_imbalance_fee_divisor, account.balance, value)
         return fee
 
-    def mediated_transfer(self, source, target, value):
-        """simulate mediated transfer off chain"""
-        cost, path = self.find_path(source, target, value)
-        assert path[0] == source
-        assert path[-1] == target
+    def transfer_path(self, path, value, cost):
         path = list(reversed(path))
         fees = 0
         target = path.pop(0)
@@ -353,3 +373,17 @@ class CurrencyNetworkGraph(object):
             target = source
         assert fees == cost
         return cost
+
+    def mediated_transfer(self, source, target, value):
+        """simulate mediated transfer off chain"""
+        cost, path = self.find_path(source, target, value)
+        assert path[0] == source
+        assert path[-1] == target
+        return self.transfer_path(path, value, cost)
+
+    def triangulation_transfer(self, source, target_reduce, target_increase, value):
+        """simulate triangulation transfer off chain"""
+        cost, path = self.find_path_triangulation(source, target_reduce, target_increase, value)
+        assert path[0] == source
+        assert path[-1] == source
+        return self.transfer_path(path, value, cost)
