@@ -191,7 +191,10 @@ class TrustlinesRelay:
         assert is_checksum_address(user_address)
         network_event_queries = self._get_network_event_queries(user_address, type, from_block)
         unw_eth_event_queries = self._get_unw_eth_event_queries(user_address, type, from_block)
-        results = concurrency_utils.joinall(network_event_queries + unw_eth_event_queries, timeout=timeout)
+        exchange_event_queries = self._get_exchange_event_queries(user_address, type, from_block)
+        results = concurrency_utils.joinall(network_event_queries +
+                                            unw_eth_event_queries +
+                                            exchange_event_queries, timeout=timeout)
         return sorted_events(list(itertools.chain.from_iterable(results)))
 
     def _get_network_event_queries(self, user_address: str, type: str, from_block: int):
@@ -226,9 +229,8 @@ class TrustlinesRelay:
                                                  from_block=from_block))
         return queries
 
-    def get_exchange_event_queries(self, user_address: str, type: str, from_block: int):
+    def _get_exchange_event_queries(self, user_address: str, type: str, from_block: int):
         assert is_checksum_address(user_address)
-        queries = []
         queries = []
         for exchange_address in self.exchange_addresses:
             exchange_proxy = self.orderbook.exchange_proxy[exchange_address]
