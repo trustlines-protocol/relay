@@ -45,7 +45,7 @@ class Order(object):
         self.filled_maker_token_amount = filled_maker_token_amount
         self.filled_taker_token_amount = filled_taker_token_amount
         self.cancelled_maker_token_amount = cancelled_maker_token_amount
-        self.cancelled_taker_token_amount = cancelled_taker_token_amount        
+        self.cancelled_taker_token_amount = cancelled_taker_token_amount
 
     @property
     def price(self) -> float:
@@ -76,10 +76,6 @@ class Order(object):
 
     def is_filled(self) -> bool:
         return self.available_maker_token_amount <= 0 or self.available_taker_token_amount <= 0
-
-    def update_token_amount(self, filled_maker_amount: int, filled_taker_amount: int) -> None:
-        self.available_maker_token_amount -= filled_maker_amount
-        self.available_taker_token_amount -= filled_taker_amount
 
     def hash(self) -> bytes:
         return keccak256(
