@@ -60,7 +60,7 @@ class TrustlinesRelay:
         return self.currency_network_proxies.keys()
 
     @property
-    def exchanges(self) -> Iterable[str]:
+    def exchange_addresses(self) -> Iterable[str]:
         return self.orderbook.exchange_addresses
 
     @property
@@ -114,7 +114,7 @@ class TrustlinesRelay:
 
     def new_exchange(self, address: str) -> None:
         assert is_checksum_address(address)
-        if address not in self.exchanges:
+        if address not in self.exchange_addresses:
             logger.info('New Exchange contract: {}'.format(address))
             self.orderbook.add_exchange(ExchangeProxy(self._web3,
                                                       self.contracts['Exchange']['abi'],
