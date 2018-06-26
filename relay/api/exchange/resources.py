@@ -1,3 +1,4 @@
+import logging
 from flask_restful import Resource
 from webargs.flaskparser import use_args
 from webargs import fields as webfields
@@ -9,9 +10,14 @@ from relay.api import fields
 from relay.exchange.order import Order
 from relay.exchange.orderbook import OrderInvalidException
 from relay.blockchain.exchange_proxy import ExchangeProxy
+from relay.concurrency_utils import TimeoutException
+from relay.logger import get_logger
 
 from ..schemas import ExchangeEventSchema, UserExchangeEventSchema
 
+logger = get_logger('api.resources', logging.DEBUG)
+
+TIMEOUT_MESSAGE = 'The server could not handle the request in time'
 
 def order_as_dict(order: Order):
     return {
@@ -42,7 +48,7 @@ def order_as_dict(order: Order):
 
 
 def abort_if_unknown_exchange(trustlines, exchange_address):
-    if exchange_address not in list(trustlines.exchanges):
+    if exchange_address not in list(trustlines.exchange_addresses):
         abort(404, 'Unkown exchange: {}'.format(exchange_address))
 
 def abort_if_invalid_order_hash(order_hash):
@@ -151,7 +157,7 @@ class ExchangeAddresses(Resource):
         self.trustlines = trustlines
 
     def get(self):
-        return list(self.trustlines.exchanges)
+        return list(self.trustlines.exchange_addresses)
 
 
 class UnwEthAddresses(Resource):
@@ -181,10 +187,23 @@ class UserEventsExchange(Resource):
         proxy = self.trustlines.orderbook._exchange_proxies[exchange_address]
         from_block = args['fromBlock']
         type = args['type']
-        if type is not None:
-            events = proxy.get_exchange_events(type, user_address, from_block=from_block)
-        else:
-            events = proxy.get_all_exchange_events(user_address, from_block=from_block)
+        try:
+            if type is not None:
+                events = proxy.get_exchange_events(type,
+                                                   user_address,
+                                                   from_block=from_block,
+                                                   timeout=self.trustlines.event_query_timeout)
+            else:
+                events = proxy.get_all_exchange_events(user_address,
+                                                       from_block=from_block,
+                                                       timeout=self.trustlines.event_query_timeout)
+        except TimeoutException:
+            logger.warning(
+                "User exchange events: event_name=%s user_address=%s from_block=%s. could not get events in time",
+                type,
+                user_address,
+                from_block)
+            abort(504, TIMEOUT_MESSAGE)
         return UserExchangeEventSchema().dump(events, many=True).data
 
 
@@ -206,8 +225,18 @@ class EventsExchange(Resource):
         proxy = self.trustlines.orderbook._exchange_proxies[exchange_address]
         from_block = args['fromBlock']
         type = args['type']
-        if type is not None:
-            events = proxy.get_events(type, from_block=from_block)
-        else:
-            events = proxy.get_all_events(from_block=from_block)
+        try:
+            if type is not None:
+                events = proxy.get_events(type,
+                                          from_block=from_block,
+                                          timeout=self.trustlines.event_query_timeout)
+            else:
+                events = proxy.get_all_events(from_block=from_block,
+                                              timeout=self.trustlines.event_query_timeout)
+        except TimeoutException:
+            logger.warning(
+                "Exchange events: event_name=%s from_block=%s. could not get events in time",
+                type,
+                from_block)
+            abort(504, TIMEOUT_MESSAGE)
         return ExchangeEventSchema().dump(events, many=True).data

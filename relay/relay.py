@@ -226,6 +226,23 @@ class TrustlinesRelay:
                                                  from_block=from_block))
         return queries
 
+    def get_exchange_event_queries(self, user_address: str, type: str, from_block: int):
+        assert is_checksum_address(user_address)
+        queries = []
+        queries = []
+        for exchange_address in self.exchange_addresses:
+            exchange_proxy = self.orderbook.exchange_proxy[exchange_address]
+            if type is not None and type in exchange_proxy.standard_event_types:
+                queries.append(functools.partial(exchange_proxy.get_exchange_events,
+                                                 type,
+                                                 user_address=user_address,
+                                                 from_block=from_block))
+            else:
+                queries.append(functools.partial(exchange_proxy.get_all_exchange_events,
+                                                 user_address=user_address,
+                                                 from_block=from_block))
+        return queries
+
     def _load_config(self):
         with open('config.json') as data_file:
             self.config = json.load(data_file)
