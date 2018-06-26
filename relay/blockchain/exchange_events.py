@@ -8,7 +8,7 @@ LogCancelEventType = 'LogCancel'
 class ExchangeEvent(TLNetworkEvent):
 
     def __init__(self, web3_event, current_blocknumber, timestamp, user=None):
-        super().__init__(web3_event, current_blocknumber, timestampm, from_to_types, user)
+        super().__init__(web3_event, current_blocknumber, timestamp, from_to_types, user)
         self.exchange_address = web3_event.get('address')
         self.order_hash = force_bytes(web3_event.get('args').get('orderHash'))
         self.maker_token = web3_event.get('args').get('makerToken')

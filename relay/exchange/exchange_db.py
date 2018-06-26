@@ -137,11 +137,12 @@ class OrderBookDB(object):
         # NOTE old version of web3.py returns bytes as string from contract, so we have to use force_bytes
         order_hash_bytes = force_bytes(order_hash)
         order_orm = self.session.query(OrderORM).filter_by(msg_hash=order_hash_bytes.hex()).first()
-        order_orm.filled_maker_token_amount += filled_maker_token_amount
-        order_orm.filled_taker_token_amount += filled_taker_token_amount
+        if order_orm is not None:
+            order_orm.filled_maker_token_amount += filled_maker_token_amount
+            order_orm.filled_taker_token_amount += filled_taker_token_amount
 
-        if order_orm.to_order().is_filled():
-            self.session.delete(order_orm)
+            if order_orm.to_order().is_filled():
+                self.session.delete(order_orm)
         self.session.commit()
 
     def order_cancelled(self,
@@ -151,9 +152,10 @@ class OrderBookDB(object):
         # NOTE old version of web3.py returns bytes as string from contract, so we have to use force_bytes
         order_hash_bytes = force_bytes(order_hash)
         order_orm = self.session.query(OrderORM).filter_by(msg_hash=order_hash_bytes.hex()).first()
-        order_orm.cancelled_maker_token_amount += cancelled_maker_token_amount
-        order_orm.cancelled_taker_token_amount += cancelled_taker_token_amount
+        if order_orm is not None:
+            order_orm.cancelled_maker_token_amount += cancelled_maker_token_amount
+            order_orm.cancelled_taker_token_amount += cancelled_taker_token_amount
 
-        if order_orm.to_order().is_filled():
-            self.session.delete(order_orm)
+            if order_orm.to_order().is_filled():
+                self.session.delete(order_orm)
         self.session.commit()
