@@ -123,7 +123,7 @@ def test_cancelled_amout(order_trustlines, exchange_proxy, testnetworks, account
     exchange_contract.transact({'from': maker}).cancelOrder(
         [order.maker_address, order.taker_address, order.maker_token, order.taker_token, order.fee_recipient],
         [order.maker_token_amount, order.taker_token_amount, order.maker_fee,
-        order.taker_fee, order.expiration_timestamp_in_sec, order.salt],
+         order.taker_fee, order.expiration_timestamp_in_sec, order.salt],
         100)
 
     assert exchange_proxy.get_cancelled_amount(order) == 100
@@ -149,7 +149,7 @@ def test_unavailable_amount(order_trustlines, exchange_proxy, testnetworks, acco
     exchange_contract.transact({'from': maker}).cancelOrder(
         [order.maker_address, order.taker_address, order.maker_token, order.taker_token, order.fee_recipient],
         [order.maker_token_amount, order.taker_token_amount, order.maker_fee,
-        order.taker_fee, order.expiration_timestamp_in_sec, order.salt],
+         order.taker_fee, order.expiration_timestamp_in_sec, order.salt],
         10)
 
     assert exchange_proxy.get_unavailable_amount(order) == 20
