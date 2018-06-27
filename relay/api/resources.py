@@ -166,6 +166,31 @@ class SpendableTo(Resource):
         return self.trustlines.currency_network_proxies[network_address].spendableTo(a_address, b_address)
 
 
+class MaxCapacityPath(Resource):
+
+    args = {
+        'maxHops': fields.Int(required=False, missing=None),
+        'from': custom_fields.Address(required=True),
+        'to': custom_fields.Address(required=True)
+    }
+
+    @use_args(args)
+    def post(self, args, network_address: str):
+        abort_if_unknown_network(self.trustlines, network_address)
+
+        source = args['from']
+        target = args['to']
+        max_hops = args['maxHops']
+
+        capacity, path = self.trustlines.currency_network_graphs[network_address].find_maximum_capacity_path(
+            source=source,
+            target=target,
+            max_hops=max_hops)
+
+        return {'capacity': capacity,
+                'path': path}
+
+
 class UserEventsNetwork(Resource):
 
     def __init__(self, trustlines: TrustlinesRelay) -> None:
