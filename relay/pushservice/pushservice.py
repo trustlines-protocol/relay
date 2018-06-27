@@ -18,7 +18,6 @@ class FirebaseRawPushService:
         Args:
             path_to_keyfile: Path to json keyfile with firebase credentials
         """
-        self._app = None
         cred = credentials.Certificate(path_to_keyfile)
         self._app = firebase_admin.initialize_app(cred)
 
