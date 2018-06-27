@@ -75,7 +75,7 @@ class OrderDetail(Resource):
         abort_if_invalid_order_hash(order_hash)
         order = self.trustlines.orderbook.get_order_by_hash(bytes.fromhex(order_hash[2:]))
         if order is None:
-            abort(402, message='Order does not exist')
+            abort(404, message='Order does not exist')
         return order_as_dict(order)
 
 
