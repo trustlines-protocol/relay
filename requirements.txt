@@ -20,3 +20,4 @@ gevent-websocket
 marshmallow
 flask-sockets
 mypy
+firebase-admin
