@@ -12,7 +12,7 @@ from gevent import sleep
 from sqlalchemy import create_engine
 from web3 import Web3, RPCProvider
 
-from relay.pushservice.client import FirebaseClient
+from relay.pushservice.client import PushNotificationClient
 from relay.pushservice.pushservice import FirebaseRawPushService
 from .blockchain.exchange_proxy import ExchangeProxy
 from .blockchain.currency_network_proxy import CurrencyNetworkProxy
@@ -117,12 +117,15 @@ class TrustlinesRelay:
     def add_push_client_token(self, user_address: str, client_token: str):
         if self._firebase_raw_push_service is not None:
             logger.debug('Add client token {} for address {}'.format(client_token, user_address))
-            self.subjects[user_address].subscribe(FirebaseClient(self._firebase_raw_push_service, client_token))
+            self.subjects[user_address].subscribe(
+                PushNotificationClient(self._firebase_raw_push_service, client_token)
+            )
 
     def delete_push_client_token(self, user_address: str, client_token: str):
         subscriptions = self.subjects[user_address].subscriptions
         for subscription in subscriptions[:]:  # Copy the list because we will delete items
-            if isinstance(subscription.client, FirebaseClient) and subscription.client.client_token == client_token:
+            if (isinstance(subscription.client, PushNotificationClient) and
+                    subscription.client.client_token == client_token):
                 logger.debug('Remove client token {} for address {}'.format(client_token, user_address))
                 subscription.unsubscribe()
 
@@ -177,8 +180,7 @@ class TrustlinesRelay:
     def _start_push_service(self):
         path = self.config.get('firebase', {}).get('credentialsPath', None)
         if path is not None:
-            self._firebase_raw_push_service = FirebaseRawPushService()
-            self._firebase_raw_push_service.initialize(path)
+            self._firebase_raw_push_service = FirebaseRawPushService(path)
             logger.info('Firebase pushservice started')
         else:
             logger.info('No firebase credentials in config, pushservice disabled')

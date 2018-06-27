@@ -1,12 +1,21 @@
-from relay.streams import Client
+import logging
+
+from relay.streams import Client, DisconnectedError
 from relay.events import Event
-from .pushservice import FirebaseRawPushService
+from relay.logger import get_logger
+from .pushservice import FirebaseRawPushService, InvalidClientTokenException
 
 
-class FirebaseClient(Client):
+logger = get_logger('pushserviceclient', logging.DEBUG)
 
-    def __init__(self, firebaseRawPushService: FirebaseRawPushService, client_token: str) -> None:
-        self._firebaseRawPushService = firebaseRawPushService
+
+class PushNotificationClient(Client):
+    """
+    Stream Client that sends events as push notification
+    """
+
+    def __init__(self, rawPushService: FirebaseRawPushService, client_token: str) -> None:
+        self._rawPushService = rawPushService
         self.client_token = client_token
 
     def send(self, id, event):
@@ -14,4 +23,10 @@ class FirebaseClient(Client):
             raise NotImplementedError
         elif not isinstance(event, Event):
             raise ValueError('Unexpected Type: ' + type(event))
-        self._firebaseRawPushService.send_event(self.client_token, event)
+        try:
+            self._rawPushService.send_event(self.client_token, event)
+        except InvalidClientTokenException as e:
+            # Token not longer valid means listener is not listing anymore
+            raise DisconnectedError from e
+        except Exception as e:
+            logger.warning('Could not sent push notification to %s\nerror: %s', self.client_token, e)

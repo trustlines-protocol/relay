@@ -1,12 +1,29 @@
 import json
 
 import firebase_admin
-from firebase_admin import credentials
-from firebase_admin import messaging
+from firebase_admin import credentials, messaging
 
 from relay.events import Event
 from relay.api.schemas import UserCurrencyNetworkEventSchema
 from .client_token_db import ClientTokenDB
+
+# see https://firebase.google.com/docs/cloud-messaging/admin/errors
+INVALID_CLIENT_TOKEN_ERRORS = [
+    'invalid-registration-token',
+    'registration-token-not-registered',
+]
+
+
+class PushServiceException(Exception):
+    pass
+
+
+class InvalidClientTokenException(PushServiceException):
+    pass
+
+
+class MessageNotSentException(PushServiceException):
+    pass
 
 
 class FirebaseRawPushService:
@@ -23,7 +40,40 @@ class FirebaseRawPushService:
 
     def send_event(self, client_token, event: Event):
         message = self._build_event_message(client_token, event)
-        messaging.send(message, app=self._app)
+        try:
+            messaging.send(message, app=self._app)
+        except messaging.ApiCallError as e:
+            # Check if error code is because token is invalid
+            # see https://firebase.google.com/docs/cloud-messaging/admin/errors
+            if e.code in INVALID_CLIENT_TOKEN_ERRORS:
+                raise InvalidClientTokenException from e
+            else:
+                raise MessageNotSentException from e
+
+    def check_client_token(self, client_token: str) -> bool:
+        """
+        Check if the client_token is valid by sending a test message with the dry_run flag being set
+        Args:
+            client_token: The client token to check
+
+        Returns: True if the client token is valid, false otherwise
+
+        """
+        test_message = messaging.Message(
+            token=client_token
+        )
+        try:
+            messaging.send(test_message, app=self._app, dry_run=True)  # dry run to test token
+        except ValueError:
+            return False
+        except messaging.ApiCallError as e:
+            # Check if error code is because token is invalid
+            # see https://firebase.google.com/docs/cloud-messaging/admin/errors
+            if e.code in INVALID_CLIENT_TOKEN_ERRORS:
+                return False
+            else:
+                raise
+        return True
 
     def _build_event_message(self, client_token: str, event: Event) -> messaging.Message:
         data = UserCurrencyNetworkEventSchema().dump(event).data
@@ -59,5 +109,9 @@ class FirebasePushService:
         """
         Sends an event to a user. The client to push the notification to is taken from the database
         """
-        for client_token in self._client_token_db.get_client_tokens(user_address):
-            self._firebaseRawPushService.send_event(client_token, event)
+        # Iterate over copy list, because we might delete from this list
+        for client_token in list(self._client_token_db.get_client_tokens(user_address)):
+            try:
+                self._firebaseRawPushService.send_event(client_token, event)
+            except InvalidClientTokenException:
+                self._client_token_db.delete_client_token(user_address, client_token)
