@@ -79,11 +79,17 @@ class OrderBook(object):
             return self._db.get_orderbook_by_tokenpair(tuple(reversed(token_pair)), desc_price=True)
         return []
 
-    def order_filled(self, orderhash: bytes, filled_maker_amount: int, filled_taker_amount: int):
+    def order_filled(self,
+                     orderhash: bytes,
+                     filled_maker_amount: int,
+                     filled_taker_amount: int) -> None:
         if self._db is not None:
             return self._db.order_filled(orderhash, filled_maker_amount, filled_taker_amount)
 
-    def order_cancelled(self, orderhash: bytes, cancelled_maker_amount: int, cancelled_taker_amount: int):
+    def order_cancelled(self,
+                        orderhash: bytes,
+                        cancelled_maker_amount: int,
+                        cancelled_taker_amount: int) -> None:
         if self._db is not None:
             return self._db.order_cancelled(orderhash, cancelled_maker_amount, cancelled_taker_amount)
 

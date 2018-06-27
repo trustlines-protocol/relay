@@ -74,7 +74,7 @@ class OrderDetail(Resource):
         order = self.trustlines.orderbook.get_order_by_hash(bytes.fromhex(order_hash[2:]))
         if order is None:
             abort(402, message='Order does not exist')
-        return order_as_dict(order_orm)
+        return order_as_dict(order)
 
 
 class OrderSubmission(Resource):
