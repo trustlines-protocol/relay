@@ -37,9 +37,11 @@ def order_as_dict(order: Order):
         }
     }
 
+
 def abort_if_invalid_order_hash(order_hash):
-    if not is_hex(order_hash):
-        abort(404, 'Invalid hash: {}'.format(order_hash))
+    if not is_hex(order_hash) or len(order_hash[2:]) != 64:
+        abort(404, message='Invalid order hash: {}'.format(order_hash))
+
 
 class OrderBook(Resource):
 
