@@ -2,7 +2,7 @@ from flask_restful import Resource
 from webargs.flaskparser import use_args
 from webargs import fields as webfields
 from webargs.flaskparser import abort
-from eth_utils import to_checksum_address
+from eth_utils import to_checksum_address, is_hex
 
 from relay.relay import TrustlinesRelay
 from relay.api import fields
@@ -37,6 +37,9 @@ def order_as_dict(order: Order):
         }
     }
 
+def abort_if_invalid_order_hash(order_hash):
+    if not is_hex(order_hash):
+        abort(404, 'Invalid hash: {}'.format(order_hash))
 
 class OrderBook(Resource):
 
@@ -67,9 +70,10 @@ class OrderDetail(Resource):
         self.trustlines = trustlines
 
     def get(self, order_hash: str):
-        order_orm = self.trustlines.orderbook.get_order_by_hash(bytes.fromhex(order_hash[2:]))
-        if order_orm is None:
-            abort(422, message='Order does not exist')
+        abort_if_invalid_order_hash(order_hash)
+        order = self.trustlines.orderbook.get_order_by_hash(bytes.fromhex(order_hash[2:]))
+        if order is None:
+            abort(402, message='Order does not exist')
         return order_as_dict(order_orm)
 
 
