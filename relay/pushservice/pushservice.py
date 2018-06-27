@@ -11,6 +11,7 @@ from .client_token_db import ClientTokenDB
 INVALID_CLIENT_TOKEN_ERRORS = [
     'invalid-registration-token',
     'registration-token-not-registered',
+    'invalid-argument',
 ]
 
 
