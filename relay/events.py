@@ -5,6 +5,8 @@ from relay.network_graph.graph import AccountSummary
 
 class Event(object):
 
+    type = 'Event'
+
     def __init__(self, timestamp: int) -> None:
         self.timestamp = timestamp
 

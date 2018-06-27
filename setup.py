@@ -89,6 +89,7 @@ setup(
                       'networkx>=2.0',
                       'pygraphviz',
                       'pysha3',
+                      'firebase-admin'
 ],
 
     # List additional groups of dependencies here (e.g. development

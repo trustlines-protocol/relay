@@ -1,3 +1,6 @@
+# Make external libs work with gevent, but still enable real threading
+from gevent import monkey; monkey.patch_all(thread=False)  # noqa: E702
+
 import logging
 
 from gevent.wsgi import WSGIServer
