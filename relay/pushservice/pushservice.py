@@ -12,17 +12,15 @@ from .client_token_db import ClientTokenDB
 class FirebaseRawPushService:
     """Sends push notifications to firebase. Sending is done based on raw client tokens"""
 
-    def __init__(self) -> None:
-        self._app = None
-
-    def initialize(self, path_to_keyfile: str) -> None:
+    def __init__(self, path_to_keyfile: str) -> None:
         """
         Initializes the push service
         Args:
             path_to_keyfile: Path to json keyfile with firebase credentials
         """
+        self._app = None
         cred = credentials.Certificate(path_to_keyfile)
-        self.app = firebase_admin.initialize_app(cred)
+        self._app = firebase_admin.initialize_app(cred)
 
     def send_event(self, client_token, event: Event):
         message = self._build_event_message(client_token, event)
