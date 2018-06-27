@@ -11,7 +11,7 @@ from .resources import GraphDump, GraphImage, RequestEther, User, UserList, Netw
     ContactList, TrustlineList, Trustline, Spendable, SpendableTo, Path, ReduceDebtPath, UserEventsNetwork, \
     UserEvents, Relay, Balance, TransactionInfos, Block, EventsNetwork
 from .streams.app import WebSocketRPCHandler, MessagingWebSocketRPCHandler
-from .exchange.resources import OrderBook, OrderSubmission, ExchangeAddresses, UnwEthAddresses
+from .exchange.resources import OrderBook, OrderSubmission, ExchangeAddresses, UnwEthAddresses, OrderDetail
 from .messaging.resources import PostMessage
 
 
@@ -71,6 +71,7 @@ def ApiApp(trustlines):
     add_resource(OrderSubmission, '/exchange/order')
     add_resource(ExchangeAddresses, '/exchange/exchanges')
     add_resource(UnwEthAddresses, '/exchange/eth')
+    add_resource(OrderDetail, '/exchange/order/<string:order_hash>')
 
     add_resource(PostMessage, '/messages/<address:user_address>')
 

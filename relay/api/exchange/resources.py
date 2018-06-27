@@ -2,7 +2,7 @@ from flask_restful import Resource
 from webargs.flaskparser import use_args
 from webargs import fields as webfields
 from webargs.flaskparser import abort
-from eth_utils import to_checksum_address
+from eth_utils import to_checksum_address, is_hex
 
 from relay.relay import TrustlinesRelay
 from relay.api import fields
@@ -20,6 +20,12 @@ def order_as_dict(order: Order):
         'feeRecipient': order.fee_recipient,
         'makerTokenAmount': str(order.maker_token_amount),
         'takerTokenAmount': str(order.taker_token_amount),
+        'filledMakerTokenAmount': str(order.filled_maker_token_amount),
+        'filledTakerTokenAmount': str(order.filled_taker_token_amount),
+        'cancelledMakerTokenAmount': str(order.cancelled_maker_token_amount),
+        'cancelledTakerTokenAmount': str(order.cancelled_taker_token_amount),
+        'availableMakerTokenAmount': str(order.available_maker_token_amount),
+        'availableTakerTokenAmount': str(order.available_taker_token_amount),
         'makerFee': str(order.maker_fee),
         'takerFee': str(order.taker_fee),
         'expirationUnixTimestampSec': str(order.expiration_timestamp_in_sec),
@@ -30,6 +36,11 @@ def order_as_dict(order: Order):
             's': '0x{:032X}'.format(int.from_bytes(order.s, 'big'))
         }
     }
+
+
+def abort_if_invalid_order_hash(order_hash):
+    if not is_hex(order_hash) or len(order_hash[2:]) != 64:
+        abort(404, message='Invalid order hash: {}'.format(order_hash))
 
 
 class OrderBook(Resource):
@@ -55,7 +66,21 @@ class OrderBook(Resource):
         }
 
 
+class OrderDetail(Resource):
+
+    def __init__(self, trustlines: TrustlinesRelay) -> None:
+        self.trustlines = trustlines
+
+    def get(self, order_hash: str):
+        abort_if_invalid_order_hash(order_hash)
+        order = self.trustlines.orderbook.get_order_by_hash(bytes.fromhex(order_hash[2:]))
+        if order is None:
+            abort(404, message='Order does not exist')
+        return order_as_dict(order)
+
+
 class OrderSubmission(Resource):
+
     def __init__(self, trustlines: TrustlinesRelay) -> None:
         self.trustlines = trustlines
 
