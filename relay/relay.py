@@ -13,7 +13,7 @@ from sqlalchemy import create_engine
 from web3 import Web3, RPCProvider
 
 from relay.pushservice.client import PushNotificationClient
-from relay.pushservice.pushservice import FirebaseRawPushService
+from relay.pushservice.pushservice import FirebaseRawPushService, InvalidClientTokenException
 from .blockchain.exchange_proxy import ExchangeProxy
 from .blockchain.currency_network_proxy import CurrencyNetworkProxy
 from .blockchain.node import Node
@@ -24,6 +24,10 @@ from .streams import Subject, MessagingSubject
 from .events import NetworkBalanceEvent, BalanceEvent
 
 logger = get_logger('relay', logging.DEBUG)
+
+
+class TokenNotFoundException(Exception):
+    pass
 
 
 class TrustlinesRelay:
@@ -114,20 +118,26 @@ class TrustlinesRelay:
                 networks_of_user.append(network_address)
         return networks_of_user
 
-    def add_push_client_token(self, user_address: str, client_token: str):
+    def add_push_client_token(self, user_address: str, client_token: str) -> None:
         if self._firebase_raw_push_service is not None:
+            if not self._firebase_raw_push_service.check_client_token(client_token):
+                raise InvalidClientTokenException
             logger.debug('Add client token {} for address {}'.format(client_token, user_address))
             self.subjects[user_address].subscribe(
                 PushNotificationClient(self._firebase_raw_push_service, client_token)
             )
 
-    def delete_push_client_token(self, user_address: str, client_token: str):
+    def delete_push_client_token(self, user_address: str, client_token: str) -> None:
+        success = False
         subscriptions = self.subjects[user_address].subscriptions
         for subscription in subscriptions[:]:  # Copy the list because we will delete items
             if (isinstance(subscription.client, PushNotificationClient) and
                     subscription.client.client_token == client_token):
                 logger.debug('Remove client token {} for address {}'.format(client_token, user_address))
                 subscription.unsubscribe()
+                success = True
+        if not success:
+            raise TokenNotFoundException
 
     def _load_config(self):
         with open('config.json') as data_file:
