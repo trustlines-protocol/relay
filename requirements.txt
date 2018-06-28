@@ -10,6 +10,10 @@ pygraphviz
 pysha3
 pytest==3.2.5
 flake8
+flake8-pep3101
+flake8-string-format
+flake8-invalid-escape-sequences
+flake8-per-file-ignores
 coverage
 eth-testrpc
 git+https://github.com/trustlines-network/contracts.git@develop
