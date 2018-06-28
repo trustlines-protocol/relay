@@ -36,6 +36,12 @@ class ExchangeProxy(Proxy):
         return self._proxy.call().getUnavailableTakerTokenAmount(order.hash()) < order.taker_token_amount
 
     def get_filled_amount(self, order: Order) -> int:
+        return self._proxy.call().filled(order.hash())
+
+    def get_cancelled_amount(self, order: Order) -> int:
+        return self._proxy.call().cancelled(order.hash())
+
+    def get_unavailable_amount(self, order: Order) -> int:
         return self._proxy.call().getUnavailableTakerTokenAmount(order.hash())
 
     def start_listen_on_fill(self, f) -> None:

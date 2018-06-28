@@ -12,6 +12,8 @@ from gevent import sleep
 from sqlalchemy import create_engine
 from web3 import Web3, RPCProvider
 
+from relay.pushservice.client import PushNotificationClient
+from relay.pushservice.pushservice import FirebaseRawPushService, InvalidClientTokenException
 from .blockchain.exchange_proxy import ExchangeProxy
 from .blockchain.currency_network_proxy import CurrencyNetworkProxy
 from .blockchain.node import Node
@@ -22,6 +24,10 @@ from .streams import Subject, MessagingSubject
 from .events import NetworkBalanceEvent, BalanceEvent
 
 logger = get_logger('relay', logging.DEBUG)
+
+
+class TokenNotFoundException(Exception):
+    pass
 
 
 class TrustlinesRelay:
@@ -37,6 +43,7 @@ class TrustlinesRelay:
         self._web3 = None
         self.orderbook = None  # type: OrderBookGreenlet
         self.unw_eth = None  # type: str
+        self._firebase_raw_push_service = None
 
     @property
     def networks(self) -> Iterable[str]:
@@ -50,6 +57,10 @@ class TrustlinesRelay:
     def enable_ether_faucet(self) -> bool:
         return self.config.get('enableEtherFaucet', False)
 
+    @property
+    def event_query_timeout(self) -> int:
+        return self.config.get('eventQueryTimeout', 20)
+
     def is_currency_network(self, address: str) -> bool:
         return address in self.networks
 
@@ -60,6 +71,7 @@ class TrustlinesRelay:
         self._load_config()
         self._load_contracts()
         self._load_orderbook()
+        self._start_push_service()
         logger.info('using RPCProvider with parameters {}'.format(self.config['rpc']))
         self._web3 = Web3(
             RPCProvider(
@@ -105,6 +117,31 @@ class TrustlinesRelay:
             if user_address in self.currency_network_graphs[network_address].users:
                 networks_of_user.append(network_address)
         return networks_of_user
+
+    def add_push_client_token(self, user_address: str, client_token: str) -> None:
+        if self._firebase_raw_push_service is not None:
+            if not self._firebase_raw_push_service.check_client_token(client_token):
+                raise InvalidClientTokenException
+            for subscription in self.subjects[user_address].subscriptions:
+                if (isinstance(subscription.client, PushNotificationClient) and
+                        subscription.client.client_token == client_token):
+                    return  # Token already registered
+            logger.debug('Add client token {} for address {}'.format(client_token, user_address))
+            self.subjects[user_address].subscribe(
+                PushNotificationClient(self._firebase_raw_push_service, client_token)
+            )
+
+    def delete_push_client_token(self, user_address: str, client_token: str) -> None:
+        success = False
+        subscriptions = self.subjects[user_address].subscriptions
+        for subscription in subscriptions[:]:  # Copy the list because we will delete items
+            if (isinstance(subscription.client, PushNotificationClient) and
+                    subscription.client.client_token == client_token):
+                logger.debug('Remove client token {} for address {}'.format(client_token, user_address))
+                subscription.unsubscribe()
+                success = True
+        if not success:
+            raise TokenNotFoundException
 
     def _load_config(self):
         with open('config.json') as data_file:
@@ -153,6 +190,14 @@ class TrustlinesRelay:
                 sleep(self.config.get('updateNetworksInterval', 120))
 
         gevent.Greenlet.spawn(listen)
+
+    def _start_push_service(self):
+        path = self.config.get('firebase', {}).get('credentialsPath', None)
+        if path is not None:
+            self._firebase_raw_push_service = FirebaseRawPushService(path)
+            logger.info('Firebase pushservice started')
+        else:
+            logger.info('No firebase credentials in config, pushservice disabled')
 
     def _on_balance_update(self, balance_update_event):
         graph = self.currency_network_graphs[balance_update_event.network_address]
