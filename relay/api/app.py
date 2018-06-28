@@ -76,8 +76,8 @@ def ApiApp(trustlines):
 
     add_resource(PostMessage, '/messages/<address:user_address>')
 
-    add_resource(AddClientToken, '/pushnotifications/<address:user_address>')
-    add_resource(DeleteClientToken, '/pushnotifications/<address:user_address>/<string:client_token>')
+    add_resource(AddClientToken, '/pushnotifications/<address:user_address>/token/<string:client_token>')
+    add_resource(DeleteClientToken, '/pushnotifications/<address:user_address>/token/<string:client_token>')
 
     api_bp.add_url_rule('/networks/<address:network_address>/image', view_func=GraphImage.as_view('image', trustlines))
     api_bp.add_url_rule('/networks/<address:network_address>/dump', view_func=GraphDump.as_view('dump', trustlines))

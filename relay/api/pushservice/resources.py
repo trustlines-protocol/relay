@@ -1,7 +1,5 @@
 from flask import abort
 from flask_restful import Resource
-from webargs.flaskparser import use_args
-from webargs import fields
 
 from relay.relay import TrustlinesRelay, TokenNotFoundException, InvalidClientTokenException
 
@@ -11,14 +9,9 @@ class AddClientToken(Resource):
     def __init__(self, trustlines: TrustlinesRelay) -> None:
         self.trustlines = trustlines
 
-    args = {
-        'clientToken': fields.String(required=True),
-    }
-
-    @use_args(args)
-    def post(self, args, user_address: str):
+    def put(self, user_address: str, client_token: str):
         try:
-            self.trustlines.add_push_client_token(user_address, args['clientToken'])
+            self.trustlines.add_push_client_token(user_address, client_token)
         except InvalidClientTokenException:
             abort(422, 'Invalid Token')
         return 'Ok'
