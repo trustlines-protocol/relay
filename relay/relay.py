@@ -122,6 +122,10 @@ class TrustlinesRelay:
         if self._firebase_raw_push_service is not None:
             if not self._firebase_raw_push_service.check_client_token(client_token):
                 raise InvalidClientTokenException
+            for subscription in self.subjects[user_address].subscriptions:
+                if (isinstance(subscription.client, PushNotificationClient) and
+                        subscription.client.client_token == client_token):
+                    return  # Token already registered
             logger.debug('Add client token {} for address {}'.format(client_token, user_address))
             self.subjects[user_address].subscribe(
                 PushNotificationClient(self._firebase_raw_push_service, client_token)
