@@ -1,13 +1,57 @@
 from typing import Iterable
 
+from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy import Column, String
+from sqlalchemy.orm import sessionmaker
+from sqlalchemy.exc import IntegrityError
+
+Base = declarative_base()
+
+
+class TokenMappingORM(Base):  # type: ignore
+    __tablename__ = 'client_token'
+    user_address = Column(String, index=True, primary_key=True)
+    client_token = Column(String, primary_key=True)
+
+
+class ClientTokenDBException(Exception):
+    pass
+
+
+class ClientTokenAlreadyExistsException(ClientTokenDBException):
+    pass
+
 
 class ClientTokenDB:
 
+    def __init__(self, engine) -> None:
+        Session = sessionmaker(bind=engine)
+        Base.metadata.create_all(engine)
+        self.session = Session()
+
     def get_client_tokens(self, user_address: str) -> Iterable[str]:
-        raise NotImplementedError
+        return [token_mapping_orm.client_token for token_mapping_orm in (self.session.query(TokenMappingORM)
+                .filter(TokenMappingORM.user_address == user_address).all())]
 
-    def add_client_token(self, user_address: str, client_token: str):
-        pass
+    def add_client_token(self, user_address: str, client_token: str) -> None:
+        """
+        Adds a client token for the given user address
 
-    def delete_client_token(self, user_address: str, client_token: str):
-        pass
+        user address and client token are not checked to be valid, this needs to be ensured by the user
+
+        Raises:
+        ClientTokenAlreadyExistsException: If the combination of user_address and client_token already exists
+        """
+        tokenMappingOrm = TokenMappingORM(user_address=user_address, client_token=client_token)
+        try:
+            self.session.add(tokenMappingOrm)
+            self.session.commit()
+        except IntegrityError as e:
+            self.session.rollback()
+            raise ClientTokenAlreadyExistsException from e
+
+    def delete_client_token(self, user_address: str, client_token: str) -> None:
+        """Deletes a client token from the given user address"""
+        self.session.query(TokenMappingORM).filter(TokenMappingORM.user_address == user_address,
+                                                   TokenMappingORM.client_token == client_token).delete()
+        self.session.commit()
