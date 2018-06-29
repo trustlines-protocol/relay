@@ -1,4 +1,5 @@
 import pytest
+import gevent
 
 from relay.streams import Client, Subject, MessagingSubject, DisconnectedError
 
@@ -21,6 +22,13 @@ class SafeLogClient(Client):
 
     def send(self, id, event):
         self.events.append((id, event))
+
+
+class GeventClient(Client):
+
+    def send(self, id, event):
+        gevent.sleep(0.1)
+        raise DisconnectedError
 
 
 @pytest.fixture()
@@ -101,3 +109,12 @@ def test_subscription_both(messaging_subject, client):
     assert messaging_subject.get_missed_messages() == ['test1']
     assert client.events == [(id, 'test2')]
     assert not subscription.closed
+
+
+def test_unsubscription_race_condition(subject):
+    """Tests for race condition when client can unschedule greenlet and thus delay unsubscription"""
+    client1 = GeventClient()
+    subject.subscribe(client1)
+    # publish will unsubscribe because client is disconnected. Because it is delayed it will try to unsubscribe twice
+    gevent.joinall((gevent.spawn(subject.publish, 'test1'), gevent.spawn(subject.publish, 'test2')), raise_error=True)
+    assert subject.subscriptions == []

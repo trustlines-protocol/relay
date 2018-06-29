@@ -71,8 +71,9 @@ class Subscription():
         return False
 
     def unsubscribe(self) -> None:
-        self.closed = True
-        self.subject.unsubscribe(self)
+        if not self.closed:
+            self.closed = True
+            self.subject.unsubscribe(self)
 
 
 class MessagingSubject(Subject):
