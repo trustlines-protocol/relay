@@ -17,6 +17,7 @@ from web3 import Web3, RPCProvider
 from .blockchain.proxy import sorted_events
 from relay.pushservice.client import PushNotificationClient
 from relay.pushservice.pushservice import FirebaseRawPushService, InvalidClientTokenException
+from relay.pushservice.client_token_db import ClientTokenDB, ClientTokenAlreadyExistsException
 from .blockchain.exchange_proxy import ExchangeProxy
 from .blockchain.currency_network_proxy import CurrencyNetworkProxy
 from .blockchain.node import Node
@@ -52,6 +53,7 @@ class TrustlinesRelay:
         self.unw_eth_proxies = {}  # type: Dict[str, UnwEthProxy]
         self.token_proxies = {}  # type: Dict[str, TokenProxy]
         self._firebase_raw_push_service = None
+        self._client_token_db = None  # type: ClientTokenDB
 
     @property
     def networks(self) -> Iterable[str]:
@@ -146,18 +148,30 @@ class TrustlinesRelay:
 
     def add_push_client_token(self, user_address: str, client_token: str) -> None:
         if self._firebase_raw_push_service is not None:
-            if not self._firebase_raw_push_service.check_client_token(client_token):
-                raise InvalidClientTokenException
-            for subscription in self.subjects[user_address].subscriptions:
-                if (isinstance(subscription.client, PushNotificationClient) and
-                        subscription.client.client_token == client_token):
-                    return  # Token already registered
-            logger.debug('Add client token {} for address {}'.format(client_token, user_address))
-            self.subjects[user_address].subscribe(
-                PushNotificationClient(self._firebase_raw_push_service, client_token)
-            )
+            self._start_pushnotifications(user_address, client_token)
+            try:
+                self._client_token_db.add_client_token(user_address, client_token)
+            except ClientTokenAlreadyExistsException:
+                pass  # all good
 
     def delete_push_client_token(self, user_address: str, client_token: str) -> None:
+        if self._firebase_raw_push_service is not None:
+            self._client_token_db.delete_client_token(user_address, client_token)
+            self._stop_pushnotifications(user_address, client_token)
+
+    def _start_pushnotifications(self, user_address: str, client_token: str) -> None:
+        if not self._firebase_raw_push_service.check_client_token(client_token):
+            raise InvalidClientTokenException
+        for subscription in self.subjects[user_address].subscriptions:
+            if (isinstance(subscription.client, PushNotificationClient) and
+                    subscription.client.client_token == client_token):
+                return  # Token already registered
+        logger.debug('Add client token {} for address {}'.format(client_token, user_address))
+        self.subjects[user_address].subscribe(
+            PushNotificationClient(self._firebase_raw_push_service, client_token)
+        )
+
+    def _stop_pushnotifications(self, user_address: str, client_token: str) -> None:
         success = False
         subscriptions = self.subjects[user_address].subscriptions
         for subscription in subscriptions[:]:  # Copy the list because we will delete items
@@ -264,9 +278,23 @@ class TrustlinesRelay:
         path = self.config.get('firebase', {}).get('credentialsPath', None)
         if path is not None:
             self._firebase_raw_push_service = FirebaseRawPushService(path)
+            self._client_token_db = ClientTokenDB(create_engine('sqlite:///client_token.db'))
             logger.info('Firebase pushservice started')
+            self._start_pushnotifications_for_registered_users()
         else:
             logger.info('No firebase credentials in config, pushservice disabled')
+
+    def _start_pushnotifications_for_registered_users(self):
+        number_of_new_listeners = 0
+        for token_mapping in self._client_token_db.get_all_client_tokens():
+            try:
+                self._start_pushnotifications(token_mapping.user_address, token_mapping.client_token)
+                number_of_new_listeners += 1
+            except InvalidClientTokenException:
+                # token now invalid, so delete it from database
+                self._client_token_db.delete_client_token(token_mapping.user_address, token_mapping.client_token)
+                pass
+        logger.debug('Start pushnotifications for {} registered user devices'.format(number_of_new_listeners))
 
     def _on_balance_update(self, balance_update_event):
         graph = self.currency_network_graphs[balance_update_event.network_address]

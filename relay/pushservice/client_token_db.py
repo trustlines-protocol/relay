@@ -1,4 +1,5 @@
 from typing import Iterable
+from collections import namedtuple
 
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy import Column, String
@@ -22,6 +23,9 @@ class ClientTokenAlreadyExistsException(ClientTokenDBException):
     pass
 
 
+TokenMapping = namedtuple('TokenMapping', ['user_address', 'client_token'])
+
+
 class ClientTokenDB:
 
     def __init__(self, engine) -> None:
@@ -32,6 +36,10 @@ class ClientTokenDB:
     def get_client_tokens(self, user_address: str) -> Iterable[str]:
         return [token_mapping_orm.client_token for token_mapping_orm in (self.session.query(TokenMappingORM)
                 .filter(TokenMappingORM.user_address == user_address).all())]
+
+    def get_all_client_tokens(self) -> Iterable[TokenMapping]:
+        return [TokenMapping(token_mapping_orm.user_address, token_mapping_orm.client_token) for token_mapping_orm in
+                (self.session.query(TokenMappingORM).all())]
 
     def add_client_token(self, user_address: str, client_token: str) -> None:
         """
