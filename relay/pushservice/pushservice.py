@@ -4,6 +4,7 @@ import firebase_admin
 from firebase_admin import credentials, messaging
 
 from relay.events import Event
+from relay.blockchain.currency_network_events import TransferEvent, TrustlineRequestEvent, TrustlineUpdateEvent
 from relay.api.schemas import UserCurrencyNetworkEventSchema
 from .client_token_db import ClientTokenDB
 
@@ -40,7 +41,7 @@ class FirebaseRawPushService:
         self._app = firebase_admin.initialize_app(cred)
 
     def send_event(self, client_token, event: Event):
-        message = self._build_event_message(client_token, event)
+        message = _build_event_message(client_token, event)
         try:
             messaging.send(message, app=self._app)
         except messaging.ApiCallError as e:
@@ -76,22 +77,42 @@ class FirebaseRawPushService:
                 raise
         return True
 
-    def _build_event_message(self, client_token: str, event: Event) -> messaging.Message:
-        data = UserCurrencyNetworkEventSchema().dump(event).data
-        event_type = event.type
 
-        message = messaging.Message(
-            notification=messaging.Notification(
-                title='New {}'.format(event_type),
+def _build_event_message(client_token: str, event: Event) -> messaging.Message:
+    data = UserCurrencyNetworkEventSchema().dump(event).data
+
+    message = messaging.Message(
+        notification=_build_notification(event),
+        data={
+            'event': json.dumps(data),
+        },
+        token=client_token,
+    )
+
+    return message
+
+
+def _build_notification(event: Event) -> messaging.Notification:
+    notification = None
+    if isinstance(event, TransferEvent):
+        if event.direction == 'received':
+            notification = messaging.Notification(
+                title='Payment received',
                 body='Click for more details',
-            ),
-            data={
-                'event': json.dumps(data),
-            },
-            token=client_token,
+            )
+    elif isinstance(event, TrustlineRequestEvent):
+        if event.direction == 'received':
+            notification = messaging.Notification(
+                title='Trustline Update Request',
+                body='Someone wants to update a trustline',
+            )
+    elif isinstance(event, TrustlineUpdateEvent):
+        notification = messaging.Notification(
+            title='Trustline Update',
+            body='A trustline was updated',
         )
 
-        return message
+    return notification
 
 
 class FirebasePushService:
