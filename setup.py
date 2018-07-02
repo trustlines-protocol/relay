@@ -95,7 +95,9 @@ setup(
                       'gevent-websocket',
                       'marshmallow',
                       'flask-sockets',
-                      'firebase-admin'
+                      'firebase-admin',
+                      'psycopg2',
+                      'psycogreen',
     ],
 
     # List additional groups of dependencies here (e.g. development

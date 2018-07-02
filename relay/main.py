@@ -1,6 +1,7 @@
 # Make external libs work with gevent, but still enable real threading
 from gevent import monkey; monkey.patch_all(thread=False)  # noqa: E702
-
+# Make postgresql usable with gevent
+import psycogreen.gevent; psycogreen.gevent.patch_psycopg()  # noqa: E702
 import logging
 
 from gevent.wsgi import WSGIServer
