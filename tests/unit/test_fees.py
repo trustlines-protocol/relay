@@ -50,11 +50,18 @@ def test_estimate_fees_from_capacity_single_hop():
     assert fees >= imbalance_fee(100, 0, 12345-fees)
 
 
-def test_estimate_fees_from_capacity_single_hop_edge_case():
-    """Tests the edge case for the estimation"""
+def test_estimate_fees_from_capacity_single_hop_upper_edge_case():
+    """Tests the upper value of the edge case for the estimation"""
     fees = estimate_fees_from_capacity(100, 101, 1)
     assert fees >= imbalance_fee(100, 0, 101-fees)
     assert fees == 2
+
+
+def test_estimate_fees_from_capacity_single_hop_lower_edge_case():
+    """Tests the lower value of the edge case for the estimation"""
+    fees = estimate_fees_from_capacity(100, 100, 1)
+    assert fees >= imbalance_fee(100, 0, 100-fees)
+    assert fees == 1
 
 
 def test_estimate_fees_from_capacity_single_hop_sanity():
