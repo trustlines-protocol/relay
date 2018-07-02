@@ -249,6 +249,22 @@ def test_capacity_path_single_hop(complex_community_with_trustlines):
     assert value == 50000
 
 
+def test_capacity_path_single_hop_with_fees(complex_community_with_trustlines_and_fees):
+    """test for getting the capacity of the path A-B"""
+    value, path = complex_community_with_trustlines_and_fees.find_maximum_capacity_path(
+                A, B)
+    assert path == [A, B]
+    assert value == 49504
+
+
+def test_capacity_path_multi_hop_with_fees(complex_community_with_trustlines_and_fees):
+    """test for getting the capacity of the path B-E"""
+    value, path = complex_community_with_trustlines_and_fees.find_maximum_capacity_path(
+                B, E)
+    assert path == [B, D, E]
+    assert 49008 <= value <= 49013
+
+
 def test_capacity_path_single_hop_more_capacity(complex_community_with_trustlines):
     """test whether the balance A-B impacts capacity"""
     complex_community_with_trustlines.update_balance(A, B, 10000)
