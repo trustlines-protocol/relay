@@ -22,7 +22,7 @@ class TokenAddresses(Resource):
         self.trustlines = trustlines
 
     def get(self):
-        return self.trustlines.unw_eth_addresses + self.trustlines.token_addresses
+        return self.trustlines.token_addresses
 
 
 class TokenBalance(Resource):

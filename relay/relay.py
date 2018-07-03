@@ -56,7 +56,7 @@ class TrustlinesRelay:
 
     @property
     def token_addresses(self) -> Iterable[str]:
-        return list(self.token_proxies)
+        return self.unw_eth_addresses + list(self.token_proxies)
 
     @property
     def enable_ether_faucet(self) -> bool:
