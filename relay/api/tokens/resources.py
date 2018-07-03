@@ -7,7 +7,7 @@ from flask import abort
 from webargs import fields
 from webargs.flaskparser import use_args
 from marshmallow import validate
-from typing import Union  # NOQA
+from typing import Union  # noqa: F401
 from relay.relay import TrustlinesRelay
 
 
