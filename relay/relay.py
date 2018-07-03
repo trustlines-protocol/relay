@@ -3,6 +3,7 @@ import logging
 import os
 import sys
 import functools
+import itertools
 from collections import defaultdict
 from copy import deepcopy
 from typing import Dict, Iterable, List  # noqa: F401
@@ -13,16 +14,19 @@ from gevent import sleep
 from sqlalchemy import create_engine
 from web3 import Web3, RPCProvider
 
+from .blockchain.proxy import sorted_events
 from .blockchain.exchange_proxy import ExchangeProxy
 from .blockchain.currency_network_proxy import CurrencyNetworkProxy
 from .blockchain.node import Node
 from .blockchain.token_proxy import TokenProxy
 from .blockchain.unw_eth_proxy import UnwEthProxy
+from .blockchain.events import BlockchainEvent
 from .network_graph.graph import CurrencyNetworkGraph
 from .exchange.orderbook import OrderBookGreenlet
 from .logger import get_logger
 from .streams import Subject, MessagingSubject
 from .events import NetworkBalanceEvent, BalanceEvent
+import relay.concurrency_utils as concurrency_utils
 
 logger = get_logger('relay', logging.DEBUG)
 
@@ -56,7 +60,7 @@ class TrustlinesRelay:
 
     @property
     def token_addresses(self) -> Iterable[str]:
-        return self.unw_eth_addresses + list(self.token_proxies)
+        return list(self.token_proxies) + list(self.unw_eth_addresses)
 
     @property
     def enable_ether_faucet(self) -> bool:
@@ -132,7 +136,18 @@ class TrustlinesRelay:
                 networks_of_user.append(network_address)
         return networks_of_user
 
-    def get_network_event_queries(self, user_address: str, type: str, from_block: int):
+    def get_user_events(self,
+                        user_address: str,
+                        type: str=None,
+                        from_block: int=0,
+                        timeout: float=None) -> List[BlockchainEvent]:
+        assert is_checksum_address(user_address)
+        network_event_queries = self._get_network_event_queries(user_address, type, from_block)
+        unw_eth_event_queries = self._get_unw_eth_event_queries(user_address, type, from_block)
+        results = concurrency_utils.joinall(network_event_queries + unw_eth_event_queries, timeout=timeout)
+        return sorted_events(list(itertools.chain.from_iterable(results)))
+
+    def _get_network_event_queries(self, user_address: str, type: str, from_block: int):
         assert is_checksum_address(user_address)
         queries = []
         for network_address in self.networks:
@@ -148,7 +163,7 @@ class TrustlinesRelay:
                                                  from_block=from_block))
         return queries
 
-    def get_unw_eth_event_queries(self, user_address: str, type: str, from_block: int):
+    def _get_unw_eth_event_queries(self, user_address: str, type: str, from_block: int):
         assert is_checksum_address(user_address)
         queries = []
         for unw_eth_address in self.unw_eth_addresses:

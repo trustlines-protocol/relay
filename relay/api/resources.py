@@ -8,13 +8,13 @@ from flask_restful import Resource
 from webargs import fields
 from webargs.flaskparser import use_args
 from marshmallow import validate
-import itertools
 
-import relay.concurrency_utils as concurrency_utils
 from relay.utils import sha3
 from relay.blockchain.currency_network_proxy import CurrencyNetworkProxy
 from relay.blockchain.unw_eth_proxy import UnwEthProxy
 from relay.blockchain.events import BlockchainEvent  # noqa: F401
+from relay.blockchain.unw_eth_events import UnwEthEvent
+from relay.blockchain.currency_network_events import CurrencyNetworkEvent
 from relay.api import fields as custom_fields
 from .schemas import CurrencyNetworkEventSchema, UserCurrencyNetworkEventSchema, UserTokenEventSchema
 from relay.relay import TrustlinesRelay
@@ -223,13 +223,11 @@ class UserEvents(Resource):
     def get(self, args, user_address: str):
         type = args['type']
         from_block = args['fromBlock']
-        network_queries = self.trustlines.get_network_event_queries(user_address, type, from_block)
-        unw_eth_queries = self.trustlines.get_unw_eth_event_queries(user_address, type, from_block)
         try:
-            currency_network_results = concurrency_utils.joinall(network_queries,
-                                                                 timeout=self.trustlines.event_query_timeout)
-            unw_eth_results = concurrency_utils.joinall(unw_eth_queries,
-                                                        timeout=self.trustlines.event_query_timeout)
+            events = self.trustlines.get_user_events(user_address,
+                                                     type,
+                                                     from_block=from_block,
+                                                     timeout=self.trustlines.event_query_timeout)
         except TimeoutException:
             logger.warning(
                 "User events: event_name=%s user_address=%s from_block=%s. could not get events in time",
@@ -237,12 +235,13 @@ class UserEvents(Resource):
                 user_address,
                 from_block)
             abort(504, TIMEOUT_MESSAGE)
-        flattened_network_events = list(itertools.chain.from_iterable(currency_network_results))
-        flattened_unw_eth_events = list(itertools.chain.from_iterable(unw_eth_results))
-        return list(itertools.chain(
-            UserCurrencyNetworkEventSchema().dump(flattened_network_events, many=True).data,
-            UserTokenEventSchema().dump(flattened_unw_eth_events, many=True).data
-        ))
+        serialized_events = []
+        for event in events:
+            if isinstance(event, CurrencyNetworkEvent):
+                serialized_events.append(UserCurrencyNetworkEventSchema().dump(event).data)
+            if isinstance(event, UnwEthEvent):
+                serialized_events.append(UserTokenEventSchema().dump(event).data)
+        return serialized_events
 
 
 class EventsNetwork(Resource):
