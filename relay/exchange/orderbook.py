@@ -79,9 +79,23 @@ class OrderBook(object):
             return self._db.get_orderbook_by_tokenpair(tuple(reversed(token_pair)), desc_price=True)
         return []
 
-    def order_filled(self, orderhash: bytes, filled_maker_amount: int, filled_taker_amount: int):
+    def order_filled(self,
+                     orderhash: bytes,
+                     filled_maker_amount: int,
+                     filled_taker_amount: int) -> None:
         if self._db is not None:
             return self._db.order_filled(orderhash, filled_maker_amount, filled_taker_amount)
+
+    def order_cancelled(self,
+                        orderhash: bytes,
+                        cancelled_maker_amount: int,
+                        cancelled_taker_amount: int) -> None:
+        if self._db is not None:
+            return self._db.order_cancelled(orderhash, cancelled_maker_amount, cancelled_taker_amount)
+
+    def get_order_by_hash(self, order_hash: bytes):
+        if self._db is not None:
+            return self._db.get_order_by_hash(order_hash)
 
 
 class OrderBookGreenlet(OrderBook):
@@ -103,7 +117,7 @@ class OrderBookGreenlet(OrderBook):
 
     def _start_listen_on_fill_or_cancel(self, exchange_address: str):
         self._exchange_proxies[exchange_address].start_listen_on_fill(self._db.order_filled)
-        self._exchange_proxies[exchange_address].start_listen_on_cancel(self._db.order_filled)
+        self._exchange_proxies[exchange_address].start_listen_on_cancel(self._db.order_cancelled)
 
     def _run(self):
         while self.running:

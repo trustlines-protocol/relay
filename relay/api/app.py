@@ -11,9 +11,10 @@ from .resources import GraphDump, GraphImage, RequestEther, User, UserList, Netw
     ContactList, TrustlineList, Trustline, Spendable, SpendableTo, Path, ReduceDebtPath, UserEventsNetwork, \
     UserEvents, Relay, Balance, TransactionInfos, Block, EventsNetwork
 from .streams.app import WebSocketRPCHandler, MessagingWebSocketRPCHandler
-from .exchange.resources import OrderBook, OrderSubmission, ExchangeAddresses, UnwEthAddresses
+from .exchange.resources import OrderBook, OrderSubmission, ExchangeAddresses, UnwEthAddresses, OrderDetail
 from .messaging.resources import PostMessage
 from .tokens.resources import TokenAddresses, EventsToken, TokenBalance, UserEventsToken
+from .pushservice.resources import AddClientToken, DeleteClientToken
 
 
 class AddressConverter(BaseConverter):
@@ -72,6 +73,7 @@ def ApiApp(trustlines):
     add_resource(OrderSubmission, '/exchange/order')
     add_resource(ExchangeAddresses, '/exchange/exchanges')
     add_resource(UnwEthAddresses, '/exchange/eth')
+    add_resource(OrderDetail, '/exchange/order/<string:order_hash>')
 
     add_resource(TokenAddresses, '/tokens')
     add_resource(EventsToken, '/tokens/<address:token_address>/events')
@@ -79,6 +81,9 @@ def ApiApp(trustlines):
     add_resource(UserEventsToken, '/tokens/<address:token_address>/users/<address:user_address>/events')
 
     add_resource(PostMessage, '/messages/<address:user_address>')
+
+    add_resource(AddClientToken, '/pushnotifications/<address:user_address>/token/<string:client_token>')
+    add_resource(DeleteClientToken, '/pushnotifications/<address:user_address>/token/<string:client_token>')
 
     api_bp.add_url_rule('/networks/<address:network_address>/image', view_func=GraphImage.as_view('image', trustlines))
     api_bp.add_url_rule('/networks/<address:network_address>/dump', view_func=GraphDump.as_view('dump', trustlines))

@@ -22,8 +22,10 @@ class Order(object):
         v: int,
         r: bytes,
         s: bytes,
-        available_maker_token_amount: int = None,
-        available_taker_token_amount: int = None
+        filled_maker_token_amount: int = 0,
+        filled_taker_token_amount: int = 0,
+        cancelled_maker_token_amount: int = 0,
+        cancelled_taker_token_amount: int = 0
     ) -> None:
         self.exchange_address = exchange_address
         self.maker_address = maker_address
@@ -40,19 +42,22 @@ class Order(object):
         self.v = v
         self.r = r
         self.s = s
-
-        if available_maker_token_amount is None:
-            self.available_maker_token_amount = maker_token_amount
-        else:
-            self.available_maker_token_amount = available_maker_token_amount
-        if available_taker_token_amount is None:
-            self.available_taker_token_amount = taker_token_amount
-        else:
-            self.available_taker_token_amount = available_taker_token_amount
+        self.filled_maker_token_amount = filled_maker_token_amount
+        self.filled_taker_token_amount = filled_taker_token_amount
+        self.cancelled_maker_token_amount = cancelled_maker_token_amount
+        self.cancelled_taker_token_amount = cancelled_taker_token_amount
 
     @property
     def price(self) -> float:
         return self.taker_token_amount / self.maker_token_amount
+
+    @property
+    def available_maker_token_amount(self) -> float:
+        return self.maker_token_amount - self.filled_maker_token_amount - self.cancelled_maker_token_amount
+
+    @property
+    def available_taker_token_amount(self) -> float:
+        return self.taker_token_amount - self.filled_taker_token_amount - self.cancelled_taker_token_amount
 
     def validate(self) -> bool:
         return self.validate_signature() and self.validate_addresses()
@@ -71,10 +76,6 @@ class Order(object):
 
     def is_filled(self) -> bool:
         return self.available_maker_token_amount <= 0 or self.available_taker_token_amount <= 0
-
-    def update_token_amount(self, filled_maker_amount: int, filled_taker_amount: int) -> None:
-        self.available_maker_token_amount -= filled_maker_amount
-        self.available_taker_token_amount -= filled_taker_amount
 
     def hash(self) -> bytes:
         return keccak256(
