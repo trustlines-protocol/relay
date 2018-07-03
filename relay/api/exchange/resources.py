@@ -19,6 +19,7 @@ logger = get_logger('api.resources', logging.DEBUG)
 
 TIMEOUT_MESSAGE = 'The server could not handle the request in time'
 
+
 def order_as_dict(order: Order):
     return {
         'exchangeContractAddress': order.exchange_address,
@@ -50,6 +51,7 @@ def order_as_dict(order: Order):
 def abort_if_unknown_exchange(trustlines, exchange_address):
     if exchange_address not in list(trustlines.exchange_addresses):
         abort(404, 'Unkown exchange: {}'.format(exchange_address))
+
 
 def abort_if_invalid_order_hash(order_hash):
     if not is_hex(order_hash) or len(order_hash[2:]) != 64:

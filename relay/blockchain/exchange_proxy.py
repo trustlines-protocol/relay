@@ -19,8 +19,6 @@ from .exchange_events import (
 
 logger = get_logger('token', logging.DEBUG)
 
-LogFillEvent = 'LogFill'
-LogCancelEvent = 'LogCancel'
 
 class ExchangeProxy(Proxy):
 
