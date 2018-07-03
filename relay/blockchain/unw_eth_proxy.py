@@ -20,11 +20,6 @@ from .unw_eth_events import (
 
 logger = get_logger('unwrap eth', logging.DEBUG)
 
-DepositEvent = 'Deposit'
-WithdrawalEvent = 'Withdrawal'
-TransferEvent = 'Transfer'
-ApprovalEvent = 'Approval'
-
 
 class UnwEthProxy(Proxy):
 
@@ -59,7 +54,7 @@ class UnwEthProxy(Proxy):
             filter2 = {from_to_types[event_name][1]: user_address}
 
             queries = [functools.partial(self.get_events, event_name, filter1, from_block)]
-            if (event_name == TransferEvent):
+            if (event_name == TransferEventType):
                 queries.append(functools.partial(self.get_events, event_name, filter2, from_block))
             results = concurrency_utils.joinall(queries, timeout=timeout)
 

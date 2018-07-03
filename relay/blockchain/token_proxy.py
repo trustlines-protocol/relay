@@ -18,16 +18,14 @@ from .token_events import (
 
 logger = get_logger('token', logging.DEBUG)
 
-TransferEvent = 'Transfer'
-ApprovalEvent = 'Approval'
-
 
 class TokenProxy(Proxy):
 
     event_builders = event_builders
     event_types = list(event_builders.keys())
 
-    standard_event_types = [TransferEventType, ApprovalEventType]
+    standard_event_types = [TransferEventType,
+                            ApprovalEventType]
 
     def __init__(self, web3, token_abi, address: str) -> None:
         super().__init__(web3, token_abi, address)
@@ -52,7 +50,7 @@ class TokenProxy(Proxy):
             filter2 = {from_to_types[event_name][1]: user_address}
 
             queries = [functools.partial(self.get_events, event_name, filter1, from_block)]
-            if (event_name == TransferEvent):
+            if (event_name == TransferEventType):
                 queries.append(functools.partial(self.get_events, event_name, filter2, from_block))
             results = concurrency_utils.joinall(queries, timeout=timeout)
 
