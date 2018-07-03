@@ -30,7 +30,7 @@ TIMEOUT_MESSAGE = 'The server could not handle the request in time'
 
 def abort_if_unknown_network(trustlines, network_address):
     if network_address not in trustlines.networks:
-        abort(404, 'Unkown network: {}'.format(network_address))
+        abort(404, 'Unknown network: {}'.format(network_address))
 
 
 class NetworkList(Resource):
