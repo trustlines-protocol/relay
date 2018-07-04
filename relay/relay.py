@@ -2,6 +2,8 @@ import json
 import logging
 import os
 import sys
+import functools
+import itertools
 from collections import defaultdict
 from copy import deepcopy
 from typing import Dict, Iterable, List  # noqa: F401
@@ -12,16 +14,21 @@ from gevent import sleep
 from sqlalchemy import create_engine
 from web3 import Web3, RPCProvider
 
+from .blockchain.proxy import sorted_events
 from relay.pushservice.client import PushNotificationClient
 from relay.pushservice.pushservice import FirebaseRawPushService, InvalidClientTokenException
 from .blockchain.exchange_proxy import ExchangeProxy
 from .blockchain.currency_network_proxy import CurrencyNetworkProxy
 from .blockchain.node import Node
+from .blockchain.token_proxy import TokenProxy
+from .blockchain.unw_eth_proxy import UnwEthProxy
+from .blockchain.events import BlockchainEvent
 from .network_graph.graph import CurrencyNetworkGraph
 from .exchange.orderbook import OrderBookGreenlet
 from .logger import get_logger
 from .streams import Subject, MessagingSubject
 from .events import NetworkBalanceEvent, BalanceEvent
+import relay.concurrency_utils as concurrency_utils
 
 logger = get_logger('relay', logging.DEBUG)
 
@@ -42,7 +49,8 @@ class TrustlinesRelay:
         self.node = None  # type: Node
         self._web3 = None
         self.orderbook = None  # type: OrderBookGreenlet
-        self.unw_eth = None  # type: str
+        self.unw_eth_proxies = {}  # type: Dict[str, UnwEthProxy]
+        self.token_proxies = {}  # type: Dict[str, TokenProxy]
         self._firebase_raw_push_service = None
 
     @property
@@ -52,6 +60,14 @@ class TrustlinesRelay:
     @property
     def exchanges(self) -> Iterable[str]:
         return self.orderbook.exchange_addresses
+
+    @property
+    def unw_eth_addresses(self) -> Iterable[str]:
+        return list(self.unw_eth_proxies)
+
+    @property
+    def token_addresses(self) -> Iterable[str]:
+        return list(self.token_proxies) + list(self.unw_eth_addresses)
 
     @property
     def enable_ether_faucet(self) -> bool:
@@ -65,7 +81,7 @@ class TrustlinesRelay:
         return address in self.networks
 
     def is_trusted_token(self, address: str) -> bool:
-        return address == self.unw_eth
+        return address in self.token_addresses or address in self.unw_eth_addresses
 
     def start(self):
         self._load_config()
@@ -106,9 +122,19 @@ class TrustlinesRelay:
 
     def new_unw_eth(self, address: str) -> None:
         assert is_checksum_address(address)
-        if self.unw_eth != address:
+        if address not in self.unw_eth_addresses:
             logger.info('New Unwrap ETH contract: {}'.format(address))
-            self.unw_eth = address
+            self.unw_eth_proxies[address] = UnwEthProxy(self._web3,
+                                                        self.contracts['UnwEth']['abi'],
+                                                        address)
+
+    def new_token(self, address: str) -> None:
+        assert is_checksum_address(address)
+        if address not in self.token_addresses:
+            logger.info('New Token contract: {}'.format(address))
+            self.token_proxies[address] = TokenProxy(self._web3,
+                                                     self.contracts['Token']['abi'],
+                                                     address)
 
     def get_networks_of_user(self, user_address: str) -> List[str]:
         assert is_checksum_address(user_address)
@@ -142,6 +168,49 @@ class TrustlinesRelay:
                 success = True
         if not success:
             raise TokenNotFoundException
+
+    def get_user_events(self,
+                        user_address: str,
+                        type: str=None,
+                        from_block: int=0,
+                        timeout: float=None) -> List[BlockchainEvent]:
+        assert is_checksum_address(user_address)
+        network_event_queries = self._get_network_event_queries(user_address, type, from_block)
+        unw_eth_event_queries = self._get_unw_eth_event_queries(user_address, type, from_block)
+        results = concurrency_utils.joinall(network_event_queries + unw_eth_event_queries, timeout=timeout)
+        return sorted_events(list(itertools.chain.from_iterable(results)))
+
+    def _get_network_event_queries(self, user_address: str, type: str, from_block: int):
+        assert is_checksum_address(user_address)
+        queries = []
+        for network_address in self.networks:
+            currency_network_proxy = self.currency_network_proxies[network_address]
+            if type is not None and type in currency_network_proxy.standard_event_types:
+                queries.append(functools.partial(currency_network_proxy.get_network_events,
+                                                 type,
+                                                 user_address=user_address,
+                                                 from_block=from_block))
+            else:
+                queries.append(functools.partial(currency_network_proxy.get_all_network_events,
+                                                 user_address=user_address,
+                                                 from_block=from_block))
+        return queries
+
+    def _get_unw_eth_event_queries(self, user_address: str, type: str, from_block: int):
+        assert is_checksum_address(user_address)
+        queries = []
+        for unw_eth_address in self.unw_eth_addresses:
+            unw_eth_proxy = self.unw_eth_proxies[unw_eth_address]
+            if type is not None and type in unw_eth_proxy.standard_event_types:
+                queries.append(functools.partial(unw_eth_proxy.get_unw_eth_events,
+                                                 type,
+                                                 user_address=user_address,
+                                                 from_block=from_block))
+            else:
+                queries.append(functools.partial(unw_eth_proxy.get_all_unw_eth_events,
+                                                 user_address=user_address,
+                                                 from_block=from_block))
+        return queries
 
     def _load_config(self):
         with open('config.json') as data_file:

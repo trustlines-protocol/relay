@@ -1,7 +1,5 @@
 import tempfile
-import functools
 import logging
-from typing import List  # noqa: F401
 
 from flask import request, send_file, make_response, abort
 from flask.views import MethodView
@@ -9,14 +7,14 @@ from flask_restful import Resource
 from webargs import fields
 from webargs.flaskparser import use_args
 from marshmallow import validate
-import itertools
 
-import relay.concurrency_utils as concurrency_utils
 from relay.utils import sha3
 from relay.blockchain.currency_network_proxy import CurrencyNetworkProxy
-from relay.blockchain.events import BlockchainEvent  # noqa: F401
+from relay.blockchain.unw_eth_proxy import UnwEthProxy
+from relay.blockchain.unw_eth_events import UnwEthEvent
+from relay.blockchain.currency_network_events import CurrencyNetworkEvent
 from relay.api import fields as custom_fields
-from .schemas import CurrencyNetworkEventSchema, UserCurrencyNetworkEventSchema
+from .schemas import CurrencyNetworkEventSchema, UserCurrencyNetworkEventSchema, UserTokenEventSchema
 from relay.relay import TrustlinesRelay
 from relay.concurrency_utils import TimeoutException
 from relay.logger import get_logger
@@ -214,29 +212,20 @@ class UserEvents(Resource):
     args = {
         'fromBlock': fields.Int(required=False, missing=0),
         'type': fields.Str(required=False,
-                           validate=validate.OneOf(CurrencyNetworkProxy.event_types),
+                           validate=validate.OneOf(CurrencyNetworkProxy.event_types +
+                                                   UnwEthProxy.event_types),
                            missing=None)
     }
 
     @use_args(args)
     def get(self, args, user_address: str):
-        queries = []
         type = args['type']
         from_block = args['fromBlock']
-        networks = self.trustlines.networks
-        for network_address in networks:
-            proxy = self.trustlines.currency_network_proxies[network_address]
-            if type is not None:
-                queries.append(functools.partial(proxy.get_network_events,
-                                                 type,
-                                                 user_address=user_address,
-                                                 from_block=from_block))
-            else:
-                queries.append(functools.partial(proxy.get_all_network_events,
-                                                 user_address=user_address,
-                                                 from_block=from_block))
         try:
-            results = concurrency_utils.joinall(queries, timeout=self.trustlines.event_query_timeout)
+            events = self.trustlines.get_user_events(user_address,
+                                                     type,
+                                                     from_block=from_block,
+                                                     timeout=self.trustlines.event_query_timeout)
         except TimeoutException:
             logger.warning(
                 "User events: event_name=%s user_address=%s from_block=%s. could not get events in time",
@@ -244,8 +233,13 @@ class UserEvents(Resource):
                 user_address,
                 from_block)
             abort(504, TIMEOUT_MESSAGE)
-        flattened_events = list(itertools.chain.from_iterable(results))
-        return UserCurrencyNetworkEventSchema().dump(flattened_events, many=True).data
+        serialized_events = []
+        for event in events:
+            if isinstance(event, CurrencyNetworkEvent):
+                serialized_events.append(UserCurrencyNetworkEventSchema().dump(event).data)
+            if isinstance(event, UnwEthEvent):
+                serialized_events.append(UserTokenEventSchema().dump(event).data)
+        return serialized_events
 
 
 class EventsNetwork(Resource):

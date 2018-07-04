@@ -31,3 +31,15 @@ class CurrencyNetworkEventSchema(BlockchainEventSchema):
 class UserCurrencyNetworkEventSchema(CurrencyNetworkEventSchema):
     direction = fields.Str()
     address = Address(attribute='other_party')
+
+
+class TokenEventSchema(BlockchainEventSchema):
+    tokenAddress = Address(attribute='token_address')
+    amount = BigInteger(attribute='value')
+    from_ = Address(dump_to='from', load_from='from')
+    to = Address()
+
+
+class UserTokenEventSchema(TokenEventSchema):
+    direction = fields.Str()
+    address = Address(attribute='other_party')
