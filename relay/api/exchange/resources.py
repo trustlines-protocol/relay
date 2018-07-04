@@ -50,7 +50,7 @@ def order_as_dict(order: Order):
 
 def abort_if_unknown_exchange(trustlines, exchange_address):
     if exchange_address not in list(trustlines.exchange_addresses):
-        abort(404, 'Unkown exchange: {}'.format(exchange_address))
+        abort(404, 'Unknown exchange: {}'.format(exchange_address))
 
 
 def abort_if_invalid_order_hash(order_hash):
