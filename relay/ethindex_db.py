@@ -1,10 +1,15 @@
 """provide access to the ethindex database"""
 
+import logging
 import psycopg2
 import psycopg2.extras
 from typing import List, Any
 from relay.blockchain.currency_network_events import event_builders
 from relay.blockchain.events import BlockchainEvent
+import relay.logger
+
+
+logger = relay.logger.get_logger('ethindex_db', level=logging.DEBUG)
 
 
 def connect(dsn):
@@ -126,6 +131,9 @@ class EthindexDB:
                     (from_block, event_name, network_address),
                 )
                 rows = cur.fetchall()
+        logger.debug("get_events(%s, %s, %s, %s) -> %s rows",
+                     event_name, from_block, timeout, network_address, len(rows))
+
         return self.event_builder.build_events(rows)
 
     def get_all_events(
