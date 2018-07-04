@@ -34,8 +34,8 @@ class ClientTokenDB:
         self.session = Session()
 
     def get_client_tokens(self, user_address: str) -> Iterable[str]:
-        return [token_mapping_orm.client_token for token_mapping_orm in (self.session.query(TokenMappingORM)
-                .filter(TokenMappingORM.user_address == user_address).all())]
+        return [client_token for (client_token,) in self.session.query(TokenMappingORM.client_token)
+                .filter(TokenMappingORM.user_address == user_address).all()]
 
     def get_all_client_tokens(self) -> Iterable[TokenMapping]:
         return [TokenMapping(token_mapping_orm.user_address, token_mapping_orm.client_token) for token_mapping_orm in
