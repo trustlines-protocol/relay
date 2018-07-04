@@ -18,6 +18,7 @@ from .blockchain.proxy import sorted_events
 from relay.pushservice.client import PushNotificationClient
 from relay.pushservice.pushservice import FirebaseRawPushService, InvalidClientTokenException
 from relay.pushservice.client_token_db import ClientTokenDB, ClientTokenAlreadyExistsException
+from relay import ethindex_db
 from .blockchain.exchange_proxy import ExchangeProxy
 from .blockchain.currency_network_proxy import CurrencyNetworkProxy
 from .blockchain.node import Node
@@ -78,6 +79,15 @@ class TrustlinesRelay:
     @property
     def event_query_timeout(self) -> int:
         return self.config.get('eventQueryTimeout', 20)
+
+    def get_event_selector_for_currency_network(self, network_address):
+        """return either a CurrencyNetworkProxy or a EthindexDB instance
+        This is being used from relay.api to query for events.
+        """
+        if os.environ.get("ETHINDEX", "") == "1":
+            return ethindex_db.EthindexDB(ethindex_db.connect(""), network_address=network_address)
+        else:
+            return self.currency_network_proxies[network_address]
 
     def is_currency_network(self, address: str) -> bool:
         return address in self.networks
