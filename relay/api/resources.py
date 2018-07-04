@@ -1,6 +1,5 @@
 import tempfile
 import logging
-from typing import List  # noqa: F401
 
 from flask import request, send_file, make_response, abort
 from flask.views import MethodView
@@ -12,7 +11,6 @@ from marshmallow import validate
 from relay.utils import sha3
 from relay.blockchain.currency_network_proxy import CurrencyNetworkProxy
 from relay.blockchain.unw_eth_proxy import UnwEthProxy
-from relay.blockchain.events import BlockchainEvent  # noqa: F401
 from relay.blockchain.unw_eth_events import UnwEthEvent
 from relay.blockchain.currency_network_events import CurrencyNetworkEvent
 from relay.api import fields as custom_fields

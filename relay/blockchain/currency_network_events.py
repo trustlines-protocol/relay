@@ -1,4 +1,4 @@
-from .events import BlockchainEvent, TLNetworkEvent  # NOQA
+from .events import TLNetworkEvent
 
 
 CreditlineRequestEventType = 'CreditlineUpdateRequest'

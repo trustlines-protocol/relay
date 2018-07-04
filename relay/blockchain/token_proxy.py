@@ -6,9 +6,8 @@ import itertools
 import relay.concurrency_utils as concurrency_utils
 from .proxy import Proxy, sorted_events
 from relay.logger import get_logger
-
+from .events import BlockchainEvent
 from .token_events import (
-    BlockchainEvent,
     TokenEvent,
     TransferEventType,
     ApprovalEventType,

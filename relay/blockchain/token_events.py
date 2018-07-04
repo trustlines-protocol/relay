@@ -1,4 +1,4 @@
-from .events import TLNetworkEvent, BlockchainEvent  # NOQA
+from .events import TLNetworkEvent
 
 TransferEventType = 'Transfer'
 ApprovalEventType = 'Approval'
