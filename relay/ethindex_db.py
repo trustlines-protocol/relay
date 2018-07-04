@@ -4,7 +4,7 @@ import logging
 import psycopg2
 import psycopg2.extras
 from typing import List, Any
-from relay.blockchain.currency_network_events import event_builders
+from relay.blockchain.currency_network_events import event_builders, from_to_types, CurrencyNetworkEvent
 from relay.blockchain.events import BlockchainEvent
 import relay.logger
 import relay.blockchain.currency_network_proxy
@@ -95,7 +95,43 @@ class EthindexDB:
         timeout: float = None,
         network_address: str = None,
     ) -> List[BlockchainEvent]:
-        pass
+        network_address = self._get_addr(network_address)
+        if user_address is None:
+            return self.get_events(event_name, from_block=from_block, timeout=timeout, network_address=network_address)
+        with self.conn as conn:
+            with conn.cursor() as cur:
+                cur.execute(
+                    """SELECT transactionHash "transactionHash",
+                              blockNumber "blockNumber",
+                              address,
+                              eventName "event",
+                              args,
+                              blockHash "blockHash",
+                              transactionIndex "transactionIndex",
+                              logIndex "logIndex",
+                              timestamp
+                       FROM events
+                       WHERE
+                          blockNumber>=%s
+                          AND eventName=%s
+                          AND address=%s
+                          AND (args->>'{_from}'=%s or args->>'{_to}'=%s)
+                       ORDER BY blocknumber, transactionIndex, logIndex""".format(_from=from_to_types[event_name][0],
+                                                                                  _to=from_to_types[event_name][1]),
+                    (from_block, event_name, network_address, user_address.lower(), user_address.lower()),
+                    # XXX: get rid of .lower calls above when we have checksum addresses
+                )
+                rows = cur.fetchall()
+        logger.debug("get_network_events(%s, %s, %s, %s) -> %s rows",
+                     event_name, from_block, timeout, network_address, len(rows))
+
+        events = self.event_builder.build_events(rows)
+        for event in events:
+            if isinstance(event, CurrencyNetworkEvent):
+                event.user = user_address
+            else:
+                raise ValueError('Expected a CurrencyNetworkEvent')
+        return events
 
     def get_all_network_events(
         self,
