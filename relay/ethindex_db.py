@@ -7,7 +7,11 @@ from typing import List, Any
 from relay.blockchain.currency_network_events import event_builders
 from relay.blockchain.events import BlockchainEvent
 import relay.logger
+import relay.blockchain.currency_network_proxy
 
+# proxy.get_all_events just asks for these network events. so we need the list
+# here.
+standard_event_types = tuple(relay.blockchain.currency_network_proxy.CurrencyNetworkProxy.standard_event_types)
 
 logger = relay.logger.get_logger('ethindex_db', level=logging.DEBUG)
 
@@ -142,4 +146,29 @@ class EthindexDB:
         timeout: float = None,
         network_address: str = None,
     ) -> List[BlockchainEvent]:
-        pass
+        network_address = self._get_addr(network_address)
+        with self.conn as conn:
+            with conn.cursor() as cur:
+                cur.execute(
+                    """SELECT transactionHash "transactionHash",
+                              blockNumber "blockNumber",
+                              address,
+                              eventName "event",
+                              args,
+                              blockHash "blockHash",
+                              transactionIndex "transactionIndex",
+                              logIndex "logIndex",
+                              timestamp
+                       FROM events
+                       WHERE
+                          blockNumber>=%s
+                          AND address=%s
+                          AND eventName in %s
+                       ORDER BY blocknumber, transactionIndex, logIndex""",
+                    (from_block, network_address, standard_event_types),
+                )
+                rows = cur.fetchall()
+        logger.debug("get_all_events(%s, %s, %s) -> %s rows",
+                     from_block, timeout, network_address, len(rows))
+
+        return self.event_builder.build_events(rows)
