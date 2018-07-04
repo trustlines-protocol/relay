@@ -11,9 +11,8 @@ import relay.concurrency_utils as concurrency_utils
 from .proxy import Proxy, reconnect_interval, sorted_events
 from relay.logger import get_logger
 
-
+from .events import BlockchainEvent
 from .currency_network_events import (
-    BlockchainEvent,
     CurrencyNetworkEvent,
     CreditlineUpdateEventType,
     CreditlineRequestEventType,
