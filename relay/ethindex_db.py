@@ -1,5 +1,6 @@
 """provide access to the ethindex database"""
 
+import itertools
 import logging
 import psycopg2
 import psycopg2.extras
@@ -8,6 +9,7 @@ from relay.blockchain.currency_network_events import event_builders, from_to_typ
 from relay.blockchain.events import BlockchainEvent
 import relay.logger
 import relay.blockchain.currency_network_proxy
+from relay.blockchain.proxy import sorted_events
 
 # proxy.get_all_events just asks for these network events. so we need the list
 # here.
@@ -140,7 +142,9 @@ class EthindexDB:
         timeout: float = None,
         network_address: str = None,
     ) -> List[BlockchainEvent]:
-        pass
+        results = [self.get_network_events(type, user_address=user_address, from_block=from_block)
+                   for type in standard_event_types]
+        return sorted_events(list(itertools.chain.from_iterable(results)))
 
     def get_events(
         self,
