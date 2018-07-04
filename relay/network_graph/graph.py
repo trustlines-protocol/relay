@@ -146,13 +146,6 @@ class AccountSummary(object):
     def creditline_left_received(self):
         return self.balance + self.creditline_received
 
-    def as_dict(self):
-        return {'balance': self.balance,
-                'given': self.creditline_given,
-                'received': self.creditline_received,
-                'leftGiven': self.creditline_left_given,
-                'leftReceived': self.creditline_left_received}
-
 
 class CurrencyNetworkGraph(object):
     """The whole graph of a Token Network"""
