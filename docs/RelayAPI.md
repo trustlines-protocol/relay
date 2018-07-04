@@ -113,7 +113,7 @@ curl https://relay0.testnet.trustlines.network/api/v1/networks/0xC0B33D88C704455
 
 ---
 
-### Users list in currency network 
+### Users list in currency network
 Returns a list of user addresses in a currency network.
 #### Request
 ```
@@ -140,7 +140,7 @@ curl https://relay0.testnet.trustlines.network/api/v1/networks/0xC0B33D88C704455
 
 ---
 
-### User details in currency network 
+### User details in currency network
 Returns detailed information of an user in a currency network.
 #### Request
 ```
@@ -209,8 +209,8 @@ curl https://relay0.testnet.trustlines.network/api/v1/networks/0xC0B33D88C704455
 		"balance": "-102",
 		"given": "10000",
 		"received": "10000",
-		"leftGiven": "10102", 
-		"leftReceived": "9898", 
+		"leftGiven": "10102",
+		"leftReceived": "9898",
 		"id": "0x314338891c370d4c77657386c676b6cd2e4862af1244820f9e7b9166d181057f"
 	}
 ]
