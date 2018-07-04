@@ -254,7 +254,7 @@ class EventsNetwork(Resource):
     @use_args(args)
     def get(self, args, network_address: str):
         abort_if_unknown_network(self.trustlines, network_address)
-        proxy = self.trustlines.currency_network_proxies[network_address]
+        proxy = self.trustlines.get_event_selector_for_currency_network(network_address)
         from_block = args['fromBlock']
         type = args['type']
         try:
