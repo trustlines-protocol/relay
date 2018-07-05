@@ -31,7 +31,7 @@ class EventBuilder:
     So, this could be merged with the implementation in Proxy.
     """
 
-    def __init__(self, current_blocknumber: int, _event_builders=None):
+    def __init__(self, current_blocknumber: int, _event_builders=None) -> None:
         self.current_blocknumber = current_blocknumber
         self.event_builders = _event_builders or event_builders
 
