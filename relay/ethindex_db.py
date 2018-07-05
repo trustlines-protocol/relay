@@ -49,6 +49,23 @@ class EventBuilder:
         return self.event_builders[event_type](event, current_blocknumber, timestamp)
 
 
+# we need to 'select * from events' all the time, but we're using lower-case
+# identifiers in postgres. The following select statement will give us a
+# dictionary with keys in the right case.
+select_star_from_events = \
+    """SELECT transactionHash "transactionHash",
+              blockNumber "blockNumber",
+              address,
+              eventName "event",
+              args,
+              blockHash "blockHash",
+              transactionIndex "transactionIndex",
+              logIndex "logIndex",
+              timestamp
+       FROM events
+    """
+
+
 class EthindexDB:
     """EthIndexDB provides a partly compatible interface for the
        relay.blockchain.currency_network_proxy.CurrencyNetworkProxy class
@@ -103,17 +120,8 @@ class EthindexDB:
         with self.conn as conn:
             with conn.cursor() as cur:
                 cur.execute(
-                    """SELECT transactionHash "transactionHash",
-                              blockNumber "blockNumber",
-                              address,
-                              eventName "event",
-                              args,
-                              blockHash "blockHash",
-                              transactionIndex "transactionIndex",
-                              logIndex "logIndex",
-                              timestamp
-                       FROM events
-                       WHERE
+                    select_star_from_events +
+                    """WHERE
                           blockNumber>=%s
                           AND eventName=%s
                           AND address=%s
@@ -157,17 +165,8 @@ class EthindexDB:
         with self.conn as conn:
             with conn.cursor() as cur:
                 cur.execute(
-                    """SELECT transactionHash "transactionHash",
-                              blockNumber "blockNumber",
-                              address,
-                              eventName "event",
-                              args,
-                              blockHash "blockHash",
-                              transactionIndex "transactionIndex",
-                              logIndex "logIndex",
-                              timestamp
-                       FROM events
-                       WHERE
+                    select_star_from_events +
+                    """WHERE
                           blockNumber>=%s
                           AND eventName=%s
                           AND address=%s
@@ -190,17 +189,8 @@ class EthindexDB:
         with self.conn as conn:
             with conn.cursor() as cur:
                 cur.execute(
-                    """SELECT transactionHash "transactionHash",
-                              blockNumber "blockNumber",
-                              address,
-                              eventName "event",
-                              args,
-                              blockHash "blockHash",
-                              transactionIndex "transactionIndex",
-                              logIndex "logIndex",
-                              timestamp
-                       FROM events
-                       WHERE
+                    select_star_from_events +
+                    """WHERE
                           blockNumber>=%s
                           AND address=%s
                           AND eventName in %s
