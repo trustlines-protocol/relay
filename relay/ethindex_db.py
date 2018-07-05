@@ -2,6 +2,7 @@
 
 import itertools
 import logging
+import collections
 import psycopg2
 import psycopg2.extras
 from typing import List, Any
@@ -20,6 +21,11 @@ logger = relay.logger.get_logger('ethindex_db', level=logging.DEBUG)
 
 def connect(dsn):
     return psycopg2.connect(dsn, cursor_factory=psycopg2.extras.RealDictCursor)
+
+
+# EventsQuery is used to store a where block together with required parameters
+# EthindexDB._run_events_query uses this to build and run a complete query.
+EventsQuery = collections.namedtuple("EventsQuery", ["where_block", "params"])
 
 
 class EventBuilder:
@@ -61,6 +67,10 @@ select_star_from_events = \
        FROM events
     """
 
+order_by_default_sort_order = \
+    """ ORDER BY blocknumber, transactionIndex, logIndex
+    """
+
 
 class EthindexDB:
     """EthIndexDB provides a partly compatible interface for the
@@ -100,6 +110,19 @@ class EthindexDB:
         assert r, "no network address passed in and no default network address given"
         return r
 
+    def _run_events_query(self, events_query: EventsQuery) -> List[BlockchainEvent]:
+        """run a query on the events table"""
+        query_string = "{select_star_from_events} WHERE {where_block} {order_by_default_sort_order}".format(
+            select_star_from_events=select_star_from_events,
+            where_block=events_query.where_block,
+            order_by_default_sort_order=order_by_default_sort_order)
+
+        with self.conn as conn:
+            with conn.cursor() as cur:
+                cur.execute(query_string, events_query.params)
+                rows = cur.fetchall()
+                return self._build_events(rows)
+
     def get_network_events(
         self,
         event_name: str,
@@ -111,24 +134,19 @@ class EthindexDB:
         network_address = self._get_addr(network_address)
         if user_address is None:
             return self.get_events(event_name, from_block=from_block, timeout=timeout, network_address=network_address)
-        with self.conn as conn:
-            with conn.cursor() as cur:
-                cur.execute(
-                    select_star_from_events +
-                    """WHERE
-                          blockNumber>=%s
-                          AND eventName=%s
-                          AND address=%s
-                          AND (args->>'{_from}'=%s or args->>'{_to}'=%s)
-                       ORDER BY blocknumber, transactionIndex, logIndex""".format(_from=from_to_types[event_name][0],
-                                                                                  _to=from_to_types[event_name][1]),
-                    (from_block, event_name, network_address, user_address.lower(), user_address.lower()),
-                    # XXX: get rid of .lower calls above when we have checksum addresses
-                )
-                rows = cur.fetchall()
-                events = self._build_events(rows)
+        query = EventsQuery(
+            """blockNumber>=%s
+               AND eventName=%s
+               AND address=%s
+               AND (args->>'{_from}'=%s or args->>'{_to}'=%s)
+            """.format(_from=from_to_types[event_name][0],
+                       _to=from_to_types[event_name][1]),
+            (from_block, event_name, network_address, user_address.lower(), user_address.lower()))
+
+        events = self._run_events_query(query)
+
         logger.debug("get_network_events(%s, %s, %s, %s) -> %s rows",
-                     event_name, from_block, timeout, network_address, len(rows))
+                     event_name, from_block, timeout, network_address, len(events))
 
         for event in events:
             if isinstance(event, CurrencyNetworkEvent):
@@ -159,21 +177,15 @@ class EthindexDB:
         network_address: str = None,
     ) -> List[BlockchainEvent]:
         network_address = self._get_addr(network_address)
-        with self.conn as conn:
-            with conn.cursor() as cur:
-                cur.execute(
-                    select_star_from_events +
-                    """WHERE
-                          blockNumber>=%s
-                          AND eventName=%s
-                          AND address=%s
-                       ORDER BY blocknumber, transactionIndex, logIndex""",
-                    (from_block, event_name, network_address),
-                )
-                rows = cur.fetchall()
-                events = self._build_events(rows)
+        query = EventsQuery(
+            """blockNumber>=%s
+               AND eventName=%s
+               AND address=%s""",
+            (from_block, event_name, network_address))
+        events = self._run_events_query(query)
+
         logger.debug("get_events(%s, %s, %s, %s) -> %s rows",
-                     event_name, from_block, timeout, network_address, len(rows))
+                     event_name, from_block, timeout, network_address, len(events))
 
         return events
 
@@ -184,20 +196,14 @@ class EthindexDB:
         network_address: str = None,
     ) -> List[BlockchainEvent]:
         network_address = self._get_addr(network_address)
-        with self.conn as conn:
-            with conn.cursor() as cur:
-                cur.execute(
-                    select_star_from_events +
-                    """WHERE
-                          blockNumber>=%s
-                          AND address=%s
-                          AND eventName in %s
-                       ORDER BY blocknumber, transactionIndex, logIndex""",
-                    (from_block, network_address, standard_event_types),
-                )
-                rows = cur.fetchall()
-                events = self._build_events(rows)
+        query = EventsQuery(
+            """blockNumber>=%s
+               AND address=%s
+               AND eventName in %s""",
+            (from_block, network_address, standard_event_types))
+
+        events = self._run_events_query(query)
         logger.debug("get_all_events(%s, %s, %s) -> %s rows",
-                     from_block, timeout, network_address, len(rows))
+                     from_block, timeout, network_address, len(events))
 
         return events
