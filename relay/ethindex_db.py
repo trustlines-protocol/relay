@@ -150,6 +150,9 @@ class EthindexDB:
         timeout: float = None,
         network_address: str = None,
     ) -> List[BlockchainEvent]:
+        # XXX The following code should be replaced with a proper SQL query.
+        # The reason it isn't already a SQL query, is that we need to
+        # dynamically create that query.
         results = [self.get_network_events(type, user_address=user_address, from_block=from_block)
                    for type in standard_event_types]
         return sorted_events(list(itertools.chain.from_iterable(results)))
