@@ -358,21 +358,40 @@ class CurrencyNetworkGraph(object):
             max_hops: the maximum number of hops to find the path
 
         Returns:
-            returns capacity of the path in term of credit (not the value that can be send), and the path
+            returns the value that can be send in the max capacity path and the path,
         """
         try:
-            capacity, path = find_maximum_capacity_path(self.graph,
-                                                        source,
-                                                        target,
-                                                        max_hops=max_hops)
+            min_capacity, path, path_capacities = find_maximum_capacity_path(self.graph,
+                                                                             source,
+                                                                             target,
+                                                                             max_hops=max_hops)
         except (nx.NetworkXNoPath, KeyError):  # key error for if source or target is not in graph
-            capacity, path = 0, []  # cost is the total fee, not the actual amount to be transfered
+            min_capacity, path, path_capacities = 0, [], []
 
-        fees = estimate_fees_from_capacity(self.capacity_imbalance_fee_divisor, capacity, len(path)-1)
-        capacity = capacity - fees
-        if capacity <= 0:
+        sendable = self.estimate_sendable_from_capacity(min_capacity, path_capacities)
+
+        if sendable <= 0:
             return 0, []
-        return capacity, list(path)
+
+        return sendable, list(path)
+
+    def estimate_sendable_from_capacity(self, capacity, path_capacities):
+        """
+        estimates the actual sendable amount along a path with path_capacities;
+        capacity is the smallest value of path_capacities
+        """
+        divisor = self.capacity_imbalance_fee_divisor
+
+        if divisor == 0:
+            return capacity
+
+        fees = estimate_fees_from_capacity(self.capacity_imbalance_fee_divisor, capacity, path_capacities)
+
+        # we treat the edge case that bothers us so much here.
+        if capacity//divisor == capacity % divisor:
+            capacity -= 1
+
+        return capacity - fees
 
     def transfer(self, source, target, value):
         """simulate transfer off chain"""

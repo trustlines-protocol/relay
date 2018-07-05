@@ -77,6 +77,20 @@ def complex_community_with_trustlines_and_fees(complexfriendsdict):
 
 
 @pytest.fixture
+def complex_community_with_trustlines_and_fees_33(complexfriendsdict):
+    community = CurrencyNetworkGraph(33)
+    community.gen_network(complexfriendsdict)
+    return community
+
+
+@pytest.fixture
+def complex_community_with_trustlines_and_fees_202(complexfriendsdict):
+    community = CurrencyNetworkGraph(202)
+    community.gen_network(complexfriendsdict)
+    return community
+
+
+@pytest.fixture
 def complex_community_with_trustlines(complexfriendsdict):
     community = CurrencyNetworkGraph()
     community.gen_network(complexfriendsdict)
@@ -321,7 +335,7 @@ def test_capacity_path_multi_hops_positive_balance(complex_community_with_trustl
 
 
 def test_max_capacity_estimation_single_hop(complex_community_with_trustlines_and_fees):
-    """Tests whether the path and capacity found actually work (= estimation of fees is bigger than actual fees)"""
+    """Tests whether the path and capacity found actually work"""
     complex_community_with_trustlines_and_fees.update_balance(A, B, -49899)
     complex_community_with_trustlines_and_fees.update_balance(A, C, -50000)
 
@@ -332,8 +346,19 @@ def test_max_capacity_estimation_single_hop(complex_community_with_trustlines_an
     assert path == [A, B]
 
 
+def test_max_capacity_estimation_single_hop_big_value(complex_community_with_trustlines_and_fees):
+    """Tests whether the path and capacity found actually work"""
+    complex_community_with_trustlines_and_fees.update_balance(A, B, -50000+12345)
+    complex_community_with_trustlines_and_fees.update_balance(A, C, -50000)
+    capacity, path = complex_community_with_trustlines_and_fees.find_maximum_capacity_path(
+                A, B)
+
+    value, path = complex_community_with_trustlines_and_fees.find_path(A, B, capacity)
+    assert path == [A, B]
+
+
 def test_max_capacity_estimation_multi_hop(complex_community_with_trustlines_and_fees):
-    """Tests whether the path and capacity found actually work (= estimation of fees is bigger than actual fees)"""
+    """Tests whether the path and capacity found actually work"""
     complex_community_with_trustlines_and_fees.update_balance(A, C, 10000)
     complex_community_with_trustlines_and_fees.update_balance(C, D, 10000)
 
@@ -342,6 +367,28 @@ def test_max_capacity_estimation_multi_hop(complex_community_with_trustlines_and
 
     value, path = complex_community_with_trustlines_and_fees.find_path(A, E, capacity)
     assert path == [A, C, D, E]
+
+
+def test_max_capacity_estimation_multi_hop_fees_33(complex_community_with_trustlines_and_fees_33):
+    """Tests whether the path and capacity found actually work with different fee divisor"""
+    complex_community_with_trustlines_and_fees_33.update_balance(A, B, -50000+12345)
+    complex_community_with_trustlines_and_fees_33.update_balance(A, C, -50000)
+    capacity, path = complex_community_with_trustlines_and_fees_33.find_maximum_capacity_path(
+                A, B)
+
+    value, path = complex_community_with_trustlines_and_fees_33.find_path(A, B, capacity)
+    assert path == [A, B]
+
+
+def test_max_capacity_estimation_multi_hop_fees_202(complex_community_with_trustlines_and_fees_202):
+    """Tests whether the path and capacity found actually work with higher fee divisor"""
+    complex_community_with_trustlines_and_fees_202.update_balance(A, B, -50000+12345)
+    complex_community_with_trustlines_and_fees_202.update_balance(A, C, -50000)
+    capacity, path = complex_community_with_trustlines_and_fees_202.find_maximum_capacity_path(
+                A, B)
+
+    value, path = complex_community_with_trustlines_and_fees_202.find_path(A, B, capacity)
+    assert path == [A, B]
 
 
 def test_mediated_transfer(community_with_trustlines):

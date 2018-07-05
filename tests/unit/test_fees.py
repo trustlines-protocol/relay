@@ -46,40 +46,43 @@ def test_estimate_fees_from_capacity_single_hop():
     Tests the estimation for a single hop
     The estimation has to be an upper bound so the actual fees have to be lower
     """
-    fees = estimate_fees_from_capacity(100, 12345, 1)
-    assert fees >= imbalance_fee(100, 0, 12345-fees)
+    fees = estimate_fees_from_capacity(100, 12345, [12345])
+    assert fees == 123
 
 
 def test_estimate_fees_from_capacity_single_hop_upper_edge_case():
     """Tests the upper value of the edge case for the estimation"""
-    fees = estimate_fees_from_capacity(100, 101, 1)
-    assert fees >= imbalance_fee(100, 0, 101-fees)
-    assert fees == 2
+    fees = estimate_fees_from_capacity(100, 101, [101])
+    assert fees == 1
 
 
 def test_estimate_fees_from_capacity_single_hop_lower_edge_case():
     """Tests the lower value of the edge case for the estimation"""
-    fees = estimate_fees_from_capacity(100, 100, 1)
-    assert fees >= imbalance_fee(100, 0, 100-fees)
+    fees = estimate_fees_from_capacity(100, 100, [100])
     assert fees == 1
 
 
 def test_estimate_fees_from_capacity_single_hop_sanity():
     """Tests whether for small values outside of indeterminate case, the estimation is exact"""
-    fees = estimate_fees_from_capacity(100, 150, 1)
-    assert fees == imbalance_fee(100, 0, 150-fees)
+    fees = estimate_fees_from_capacity(100, 150, [150])
+    assert fees == 2
 
 
-def test_estimate_fees_from_capacity_two_hops():
-    fees = estimate_fees_from_capacity(100, 104, 2)
+def test_estimate_fees_from_capacity_last_hop_smallest():
+    fees = estimate_fees_from_capacity(100, 104, [500, 104])
+    assert fees >= 4
+
+
+def test_estimate_fees_from_capacity_first_hop_smallest():
+    fees = estimate_fees_from_capacity(100, 104, [104, 500])
     assert fees >= 4
 
 
 def test_estimate_fees_from_capacity_three_hops():
-    fees = estimate_fees_from_capacity(100, 106, 3)
+    fees = estimate_fees_from_capacity(100, 106, [112, 106, 250])
     assert fees >= 6
 
 
 def test_estimate_fees_from_capacity_eight_hops():
-    fees = estimate_fees_from_capacity(100, 116, 8)
+    fees = estimate_fees_from_capacity(100, 116, [116, 116, 116, 116, 116, 116, 116, 116])
     assert fees >= 16
