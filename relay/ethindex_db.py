@@ -31,20 +31,16 @@ class EventBuilder:
     So, this could be merged with the implementation in Proxy.
     """
 
-    def __init__(self, current_blocknumber: int, _event_builders=None) -> None:
-        self.current_blocknumber = current_blocknumber
+    def __init__(self, _event_builders=None) -> None:
         self.event_builders = _event_builders or event_builders
 
-    def build_events(self, events: List[Any]):
-        return [self._build_event(event, self.current_blocknumber) for event in events]
+    def build_events(self, events: List[Any], current_blocknumber: int):
+        return [self._build_event(event, current_blocknumber) for event in events]
 
     def _build_event(
-        self, event: Any, current_blocknumber: int = None
+        self, event: Any, current_blocknumber: int
     ) -> BlockchainEvent:
         event_type = event.get("event")  # type: str
-        blocknumber = event.get("blockNumber")  # type: int
-        if current_blocknumber is None:
-            current_blocknumber = blocknumber
         timestamp = event.get("timestamp")  # type: int
         return self.event_builders[event_type](event, current_blocknumber, timestamp)
 
@@ -77,24 +73,22 @@ class EthindexDB:
     we allow to pass a default network_address in.
     """
 
-    def __init__(self, conn, current_blocknumber=None, network_address=None):
+    def __init__(self, conn, network_address=None):
         self.conn = conn
         self.default_network_address = network_address
-        if current_blocknumber is None:
-            current_blocknumber = self._get_current_blocknumber(self.conn)
+        self.event_builder = EventBuilder(event_builders)
 
-        self.event_builder = EventBuilder(current_blocknumber, event_builders)
+    def _build_events(self, rows):
+        return self.event_builder.build_events(rows, self._get_current_blocknumber())
 
-    @staticmethod
-    def _get_current_blocknumber(conn):
-        with conn:
-            with conn.cursor() as cur:
-                cur.execute("""select * from sync where syncid='default'""")
-                row = cur.fetchone()
-                if row:
-                    return row["last_block_number"]
-                else:
-                    raise RuntimeError("Could not determine current block number")
+    def _get_current_blocknumber(self):
+        with self.conn.cursor() as cur:
+            cur.execute("""select * from sync where syncid='default'""")
+            row = cur.fetchone()
+            if row:
+                return row["last_block_number"]
+            else:
+                raise RuntimeError("Could not determine current block number")
 
     def _get_addr(self, network_address):
         """all the methods here take a network_address argument, which is currently not being used.
@@ -132,10 +126,10 @@ class EthindexDB:
                     # XXX: get rid of .lower calls above when we have checksum addresses
                 )
                 rows = cur.fetchall()
+                events = self._build_events(rows)
         logger.debug("get_network_events(%s, %s, %s, %s) -> %s rows",
                      event_name, from_block, timeout, network_address, len(rows))
 
-        events = self.event_builder.build_events(rows)
         for event in events:
             if isinstance(event, CurrencyNetworkEvent):
                 event.user = user_address
@@ -177,10 +171,11 @@ class EthindexDB:
                     (from_block, event_name, network_address),
                 )
                 rows = cur.fetchall()
+                events = self._build_events(rows)
         logger.debug("get_events(%s, %s, %s, %s) -> %s rows",
                      event_name, from_block, timeout, network_address, len(rows))
 
-        return self.event_builder.build_events(rows)
+        return events
 
     def get_all_events(
         self,
@@ -201,7 +196,8 @@ class EthindexDB:
                     (from_block, network_address, standard_event_types),
                 )
                 rows = cur.fetchall()
+                events = self._build_events(rows)
         logger.debug("get_all_events(%s, %s, %s) -> %s rows",
                      from_block, timeout, network_address, len(rows))
 
-        return self.event_builder.build_events(rows)
+        return events
