@@ -85,12 +85,12 @@ class ExchangeProxy(Proxy):
             events = concurrency_utils.joinall(queries, timeout=timeout)
         else:
             filter1 = {from_to_types[event_name][0]: user_address}
-            filter2 = {from_to_types[event_name][1]: user_address}
+            # filter2 = {from_to_types[event_name][1]: user_address}
 
             queries = [functools.partial(self.get_events, event_name, filter1, from_block)]
             # TODO taker attribute of LogFill is not indexed in contract yet
             # if event_name == LogFillEventType:
-                # queries.append(functools.partial(self.get_events, event_name, filter2, from_block))
+            #   queries.append(functools.partial(self.get_events, event_name, filter2, from_block))
             results = concurrency_utils.joinall(queries, timeout=timeout)
 
             events = list(itertools.chain.from_iterable(results))
