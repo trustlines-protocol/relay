@@ -50,3 +50,9 @@ from_to_types = {
     WithdrawalEventType: ['src', 'src'],
     ApprovalEventType: ['src', 'guy']
 }
+
+
+standard_event_types = [TransferEventType,
+                        DepositEventType,
+                        WithdrawalEventType,
+                        ApprovalEventType]

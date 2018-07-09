@@ -10,9 +10,9 @@ from .events import BlockchainEvent
 from .token_events import (
     TokenEvent,
     TransferEventType,
-    ApprovalEventType,
     from_to_types,
-    event_builders
+    event_builders,
+    standard_event_types,
 )
 
 logger = get_logger('token', logging.DEBUG)
@@ -23,8 +23,7 @@ class TokenProxy(Proxy):
     event_builders = event_builders
     event_types = list(event_builders.keys())
 
-    standard_event_types = [TransferEventType,
-                            ApprovalEventType]
+    standard_event_types = standard_event_types
 
     def __init__(self, web3, token_abi, address: str) -> None:
         super().__init__(web3, token_abi, address)
