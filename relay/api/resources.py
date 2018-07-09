@@ -179,18 +179,13 @@ class UserEventsNetwork(Resource):
     @use_args(args)
     def get(self, args, network_address: str, user_address: str):
         abort_if_unknown_network(self.trustlines, network_address)
-        proxy = self.trustlines.get_event_selector_for_currency_network(network_address)
         from_block = args['fromBlock']
         type = args['type']
         try:
-            if type is not None:
-                events = proxy.get_network_events(type, user_address,
-                                                  from_block=from_block,
-                                                  timeout=self.trustlines.event_query_timeout)
-            else:
-                events = proxy.get_all_network_events(user_address,
-                                                      from_block=from_block,
-                                                      timeout=self.trustlines.event_query_timeout)
+            events = self.trustlines.get_user_network_events(network_address,
+                                                             user_address,
+                                                             type=type,
+                                                             from_block=from_block)
         except TimeoutException:
             logger.warning(
                 "User network events: event_name=%s user_address=%s from_block=%s. could not get events in time",
@@ -220,7 +215,7 @@ class UserEvents(Resource):
         from_block = args['fromBlock']
         try:
             events = self.trustlines.get_user_events(user_address,
-                                                     type,
+                                                     type=type,
                                                      from_block=from_block,
                                                      timeout=self.trustlines.event_query_timeout)
         except TimeoutException:
@@ -254,14 +249,10 @@ class EventsNetwork(Resource):
     @use_args(args)
     def get(self, args, network_address: str):
         abort_if_unknown_network(self.trustlines, network_address)
-        proxy = self.trustlines.get_event_selector_for_currency_network(network_address)
         from_block = args['fromBlock']
         type = args['type']
         try:
-            if type is not None:
-                events = proxy.get_events(type, from_block=from_block, timeout=self.trustlines.event_query_timeout)
-            else:
-                events = proxy.get_all_events(from_block=from_block, timeout=self.trustlines.event_query_timeout)
+            events = self.trustlines.get_network_events(network_address, type=type, from_block=from_block)
         except TimeoutException:
             logger.warning(
                 "Network events: event_name=%s from_block=%s. could not get events in time",
