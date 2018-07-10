@@ -140,10 +140,9 @@ class OrderBookDB(object):
         if order_orm is not None:
             order_orm.filled_maker_token_amount += filled_maker_token_amount
             order_orm.filled_taker_token_amount += filled_taker_token_amount
-
             if order_orm.to_order().is_filled():
                 self.session.delete(order_orm)
-        self.session.commit()
+            self.session.commit()
 
     def order_cancelled(self,
                         order_hash: bytes,
@@ -155,7 +154,6 @@ class OrderBookDB(object):
         if order_orm is not None:
             order_orm.cancelled_maker_token_amount += cancelled_maker_token_amount
             order_orm.cancelled_taker_token_amount += cancelled_taker_token_amount
-
             if order_orm.to_order().is_filled():
                 self.session.delete(order_orm)
-        self.session.commit()
+            self.session.commit()
