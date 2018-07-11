@@ -13,6 +13,7 @@ from .resources import GraphDump, GraphImage, RequestEther, User, UserList, Netw
 from .streams.app import WebSocketRPCHandler, MessagingWebSocketRPCHandler
 from .exchange.resources import OrderBook, OrderSubmission, ExchangeAddresses, UnwEthAddresses, OrderDetail
 from .messaging.resources import PostMessage
+from .tokens.resources import TokenAddresses, EventsToken, TokenBalance, UserEventsToken
 from .pushservice.resources import AddClientToken, DeleteClientToken
 
 
@@ -73,6 +74,11 @@ def ApiApp(trustlines):
     add_resource(ExchangeAddresses, '/exchange/exchanges')
     add_resource(UnwEthAddresses, '/exchange/eth')
     add_resource(OrderDetail, '/exchange/order/<string:order_hash>')
+
+    add_resource(TokenAddresses, '/tokens')
+    add_resource(EventsToken, '/tokens/<address:token_address>/events')
+    add_resource(TokenBalance, '/tokens/<address:token_address>/users/<address:user_address>/balance')
+    add_resource(UserEventsToken, '/tokens/<address:token_address>/users/<address:user_address>/events')
 
     add_resource(PostMessage, '/messages/<address:user_address>')
 

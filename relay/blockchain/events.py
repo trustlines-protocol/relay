@@ -19,3 +19,37 @@ class BlockchainEvent(Event):
             return 'pending'
         else:
             return 'confirmed'
+
+
+class TLNetworkEvent(BlockchainEvent):
+
+    def __init__(self, web3_event, current_blocknumber, timestamp, from_to_types, user=None) -> None:
+        super().__init__(web3_event, current_blocknumber, timestamp)
+        self.user = user
+        self.from_to_types = from_to_types
+
+    @property
+    def from_(self) -> str:
+        return self._web3_event.get('args')[self.from_to_types[self._web3_event.get('event')][0]]
+
+    @property
+    def to(self) -> str:
+        return self._web3_event.get('args')[self.from_to_types[self._web3_event.get('event')][1]]
+
+    @property
+    def direction(self):
+        if self.user is None:
+            return None
+        if self.from_ == self.user:
+            return 'sent'
+        else:
+            return 'received'
+
+    @property
+    def other_party(self):
+        if self.user is None:
+            return None
+        if self.from_ == self.user:
+            return self.to
+        else:
+            return self.from_

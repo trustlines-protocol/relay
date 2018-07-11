@@ -85,12 +85,20 @@ setup(
                       'gevent==1.1.2',
                       'web3[gevent]',
                       'ethereum==1.6.1',
-                      'eth-utils',
                       'networkx>=2.0',
                       'pygraphviz',
                       'pysha3',
-                      'firebase-admin'
-],
+                      'trustlines-contracts',
+                      'sqlalchemy',
+                      'eth-utils',
+                      'tinyrpc',
+                      'gevent-websocket',
+                      'marshmallow',
+                      'flask-sockets',
+                      'firebase-admin',
+                      'psycopg2',
+                      'psycogreen',
+    ],
 
     # List additional groups of dependencies here (e.g. development
     # dependencies). You can install these using the following syntax,

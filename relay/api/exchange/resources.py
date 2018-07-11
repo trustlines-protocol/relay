@@ -153,4 +153,4 @@ class UnwEthAddresses(Resource):
         self.trustlines = trustlines
 
     def get(self):
-        return [self.trustlines.unw_eth]
+        return self.trustlines.unw_eth_addresses

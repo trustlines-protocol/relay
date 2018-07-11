@@ -8,10 +8,6 @@ ethereum==1.6.1
 networkx>=2.0
 pygraphviz
 pysha3
-pytest==3.2.5
-flake8
-coverage
-eth-testrpc
 git+https://github.com/trustlines-network/contracts.git@develop
 sqlalchemy
 eth-utils==0.7.4
@@ -19,5 +15,17 @@ tinyrpc
 gevent-websocket
 marshmallow
 flask-sockets
-mypy
 firebase-admin
+psycopg2 --no-binary psycopg2
+psycogreen
+
+# --- development dependencies, i.e. dependencies not needed for running tl-relay
+flake8
+flake8-pep3101
+flake8-string-format
+flake8-invalid-escape-sequences
+flake8-per-file-ignores
+coverage
+mypy
+pytest==3.2.5
+eth-testrpc

@@ -11,9 +11,8 @@ import relay.concurrency_utils as concurrency_utils
 from .proxy import Proxy, reconnect_interval, sorted_events
 from relay.logger import get_logger
 
-
+from .events import BlockchainEvent
 from .currency_network_events import (
-    BlockchainEvent,
     CurrencyNetworkEvent,
     CreditlineUpdateEventType,
     CreditlineRequestEventType,
@@ -23,6 +22,7 @@ from .currency_network_events import (
     TransferEventType,
     from_to_types,
     event_builders,
+    standard_event_types
 )
 
 
@@ -45,11 +45,7 @@ class CurrencyNetworkProxy(Proxy):
     event_builders = event_builders
     event_types = list(event_builders.keys())
 
-    standard_event_types = [TransferEventType,
-                            CreditlineRequestEventType,
-                            CreditlineUpdateEventType,
-                            TrustlineRequestEventType,
-                            TrustlineUpdateEventType]
+    standard_event_types = standard_event_types
 
     def __init__(self, web3, abi, address: str) -> None:
         super().__init__(web3, abi, address)

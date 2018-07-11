@@ -31,3 +31,48 @@ class CurrencyNetworkEventSchema(BlockchainEventSchema):
 class UserCurrencyNetworkEventSchema(CurrencyNetworkEventSchema):
     direction = fields.Str()
     address = Address(attribute='other_party')
+
+
+class TokenEventSchema(BlockchainEventSchema):
+    tokenAddress = Address(attribute='token_address')
+    amount = BigInteger(attribute='value')
+    from_ = Address(dump_to='from', load_from='from')
+    to = Address()
+
+
+class UserTokenEventSchema(TokenEventSchema):
+    direction = fields.Str()
+    address = Address(attribute='other_party')
+
+
+class AccountSummarySchema(Schema):
+    class Meta:
+        strict = True
+
+    leftGiven = BigInteger(attribute='creditline_left_given')
+    leftReceived = BigInteger(attribute='creditline_left_received')
+    given = BigInteger(attribute='creditline_given')
+    received = BigInteger(attribute='creditline_received')
+    balance = BigInteger()
+
+
+class TrustlineSchema(Schema):
+    class Meta:
+        strict = True
+
+    leftGiven = BigInteger(attribute='creditline_left_given')
+    leftReceived = BigInteger(attribute='creditline_left_received')
+    given = BigInteger(attribute='creditline_given')
+    received = BigInteger(attribute='creditline_received')
+    balance = BigInteger()
+    id = fields.Str()
+    address = Address(attribute='other_party')
+
+
+class TxInfosSchema(Schema):
+    class Meta:
+        strict = True
+
+    balance = BigInteger()
+    nonce = fields.Integer()
+    gasPrice = BigInteger(attribute='gas_price')
