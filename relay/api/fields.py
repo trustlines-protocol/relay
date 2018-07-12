@@ -37,7 +37,7 @@ class BigInteger(fields.String):
 class HexBytes(fields.String):
 
     def _serialize(self, value, attr, obj):
-        return '0x{:032X}'.format(int.from_bytes(value, 'big'))
+        return '0x{:064X}'.format(int.from_bytes(value, 'big')).lower()
 
     def _deserialize(self, value, attr, data):
         value = super()._deserialize(value, attr, data)
