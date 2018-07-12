@@ -26,6 +26,11 @@ def abort_if_invalid_order_hash(order_hash):
         abort(404, message='Invalid order hash: {}'.format(order_hash))
 
 
+def abort_if_unknown_exchange(trustlines, exchange_address):
+    if exchange_address not in trustlines.exchange_addresses and exchange_address not in trustlines.exchange_addresses:
+        abort(404, 'Unknown exchange: {}'.format(exchange_address))
+
+
 class OrderBook(Resource):
 
     def __init__(self, trustlines: TrustlinesRelay) -> None:
