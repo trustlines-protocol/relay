@@ -322,7 +322,7 @@ class TrustlinesRelay:
         assert is_checksum_address(user_address)
         queries = []
         for exchange_address in self.exchange_addresses:
-            exchange_proxy = self.orderbook._exchange_proxies[exchange_address]
+            exchange_proxy = self.get_event_selector_for_exchange(exchange_address)
             if type is not None and type in exchange_proxy.standard_event_types:
                 queries.append(functools.partial(exchange_proxy.get_exchange_events,
                                                  type,

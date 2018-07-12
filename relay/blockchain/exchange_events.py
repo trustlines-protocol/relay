@@ -49,5 +49,4 @@ from_to_types = {
 }
 
 
-
 standard_event_types = [LogFillEventType, LogCancelEventType]
