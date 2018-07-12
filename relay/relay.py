@@ -24,6 +24,7 @@ from .blockchain.currency_network_proxy import CurrencyNetworkProxy
 from .blockchain import currency_network_events
 from .blockchain import token_events
 from .blockchain import unw_eth_events
+from .blockchain import exchange_events
 from .blockchain.node import Node
 from .blockchain.token_proxy import TokenProxy
 from .blockchain.unw_eth_proxy import UnwEthProxy
@@ -125,6 +126,19 @@ class TrustlinesRelay:
                                           from_to_types=unw_eth_events.from_to_types)
         else:
             return self.unw_eth_proxies[address]
+
+    def get_event_selector_for_exchange(self, address):
+        """return either a proxy or a EthindexDB instance
+        This is being used from relay.api to query for events.
+        """
+        if self.use_eth_index:
+            return ethindex_db.EthindexDB(ethindex_db.connect(""),
+                                          address=address,
+                                          standard_event_types=exchange_events.standard_event_types,
+                                          event_builders=exchange_events.event_builders,
+                                          from_to_types=exchange_events.from_to_types)
+        else:
+            return self.orderbook._exchange_proxies[address]
 
     def is_currency_network(self, address: str) -> bool:
         return address in self.networks
@@ -355,6 +369,34 @@ class TrustlinesRelay:
         else:
             events = proxy.get_all_events(from_block=from_block)
 
+        return events
+
+    def get_exchange_events(self,
+                            exchange_address: str,
+                            type: str = None,
+                            from_block: int = 0) -> List[BlockchainEvent]:
+        proxy = self.get_event_selector_for_exchange(exchange_address)
+        if type is not None:
+            events = proxy.get_events(type, from_block=from_block)
+        else:
+            events = proxy.get_all_events(from_block=from_block)
+        return events
+
+    def get_user_exchange_events(self,
+                                 exchange_address: str,
+                                 user_address: str,
+                                 type: str = None,
+                                 from_block: int = 0) -> List[BlockchainEvent]:
+        proxy = self.get_event_selector_for_exchange(exchange_address)
+        if type is not None:
+            events = proxy.get_exchange_events(type,
+                                               user_address,
+                                               from_block=from_block,
+                                               timeout=self.event_query_timeout)
+        else:
+            events = proxy.get_all_exchange_events(user_address,
+                                                   from_block=from_block,
+                                                   timeout=self.event_query_timeout)
         return events
 
     def _load_config(self):

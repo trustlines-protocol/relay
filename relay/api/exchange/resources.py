@@ -160,19 +160,13 @@ class UserEventsExchange(Resource):
     @use_args(args)
     def get(self, args, exchange_address: str, user_address: str):
         abort_if_unknown_exchange(self.trustlines, exchange_address)
-        proxy = self.trustlines.orderbook._exchange_proxies[exchange_address]
         from_block = args['fromBlock']
         type = args['type']
         try:
-            if type is not None:
-                events = proxy.get_exchange_events(type,
-                                                   user_address,
-                                                   from_block=from_block,
-                                                   timeout=self.trustlines.event_query_timeout)
-            else:
-                events = proxy.get_all_exchange_events(user_address,
-                                                       from_block=from_block,
-                                                       timeout=self.trustlines.event_query_timeout)
+            events = self.trustlines.get_user_exchange_events(exchange_address,
+                                                              user_address,
+                                                              type=type,
+                                                              from_block=from_block)
         except TimeoutException:
             logger.warning(
                 "User exchange events: event_name=%s user_address=%s from_block=%s. could not get events in time",
@@ -202,13 +196,7 @@ class EventsExchange(Resource):
         from_block = args['fromBlock']
         type = args['type']
         try:
-            if type is not None:
-                events = proxy.get_events(type,
-                                          from_block=from_block,
-                                          timeout=self.trustlines.event_query_timeout)
-            else:
-                events = proxy.get_all_events(from_block=from_block,
-                                              timeout=self.trustlines.event_query_timeout)
+            events = trustlines.get_exchange_events(exchange_address, type=type, from_block=from_block)
         except TimeoutException:
             logger.warning(
                 "Exchange events: event_name=%s from_block=%s. could not get events in time",
