@@ -36,3 +36,7 @@ from_to_types = {
     TransferEventType: ['_from', '_to'],
     ApprovalEventType: ['_owner', '_spender']
 }
+
+
+standard_event_types = [TransferEventType,
+                        ApprovalEventType]

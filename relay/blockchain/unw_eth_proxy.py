@@ -10,11 +10,9 @@ from .events import BlockchainEvent
 from .unw_eth_events import (
     UnwEthEvent,
     TransferEventType,
-    DepositEventType,
-    WithdrawalEventType,
-    ApprovalEventType,
     from_to_types,
-    event_builders
+    event_builders,
+    standard_event_types,
 )
 
 logger = get_logger('unwrap eth', logging.DEBUG)
@@ -25,10 +23,7 @@ class UnwEthProxy(Proxy):
     event_builders = event_builders
     event_types = list(event_builders.keys())
 
-    standard_event_types = [TransferEventType,
-                            DepositEventType,
-                            WithdrawalEventType,
-                            ApprovalEventType]
+    standard_event_types = standard_event_types
 
     def __init__(self, web3, unw_eth_abi, address: str) -> None:
         super().__init__(web3, unw_eth_abi, address)

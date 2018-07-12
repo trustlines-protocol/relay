@@ -7,6 +7,7 @@ from eth_utils import to_checksum_address, is_hex
 from marshmallow import validate
 from relay.relay import TrustlinesRelay
 from relay.api import fields
+from relay.api.exchange.schemas import OrderSchema
 from relay.exchange.order import Order
 from relay.exchange.orderbook import OrderInvalidException
 from relay.blockchain.exchange_proxy import ExchangeProxy
@@ -18,39 +19,6 @@ from ..schemas import ExchangeEventSchema, UserExchangeEventSchema
 logger = get_logger('api.resources', logging.DEBUG)
 
 TIMEOUT_MESSAGE = 'The server could not handle the request in time'
-
-
-def order_as_dict(order: Order):
-    return {
-        'exchangeContractAddress': order.exchange_address,
-        'maker': order.maker_address,
-        'taker': order.taker_address,
-        'makerTokenAddress': order.maker_token,
-        'takerTokenAddress': order.taker_token,
-        'feeRecipient': order.fee_recipient,
-        'makerTokenAmount': str(order.maker_token_amount),
-        'takerTokenAmount': str(order.taker_token_amount),
-        'filledMakerTokenAmount': str(order.filled_maker_token_amount),
-        'filledTakerTokenAmount': str(order.filled_taker_token_amount),
-        'cancelledMakerTokenAmount': str(order.cancelled_maker_token_amount),
-        'cancelledTakerTokenAmount': str(order.cancelled_taker_token_amount),
-        'availableMakerTokenAmount': str(order.available_maker_token_amount),
-        'availableTakerTokenAmount': str(order.available_taker_token_amount),
-        'makerFee': str(order.maker_fee),
-        'takerFee': str(order.taker_fee),
-        'expirationUnixTimestampSec': str(order.expiration_timestamp_in_sec),
-        'salt': str(order.salt),
-        'ecSignature': {
-            'v': int(order.v),
-            'r': '0x{:032X}'.format(int.from_bytes(order.r, 'big')),
-            's': '0x{:032X}'.format(int.from_bytes(order.s, 'big'))
-        }
-    }
-
-
-def abort_if_unknown_exchange(trustlines, exchange_address):
-    if exchange_address not in list(trustlines.exchange_addresses):
-        abort(404, 'Unknown exchange: {}'.format(exchange_address))
 
 
 def abort_if_invalid_order_hash(order_hash):
@@ -73,11 +41,12 @@ class OrderBook(Resource):
         base_token_address = to_checksum_address(args['baseTokenAddress'])
         quote_token_address = to_checksum_address(args['quoteTokenAddress'])
         return {
-            'bids': [order_as_dict(order) for order in
-                     self.trustlines.orderbook.get_bids_by_tokenpair((base_token_address, quote_token_address))],
-            'asks': [order_as_dict(order) for order in
-                     self.trustlines.orderbook.get_asks_by_tokenpair((base_token_address, quote_token_address))],
-
+            'bids': OrderSchema().dump(
+                self.trustlines.orderbook.get_bids_by_tokenpair((base_token_address, quote_token_address)),
+                many=True),
+            'asks': OrderSchema().dump(
+                self.trustlines.orderbook.get_asks_by_tokenpair((base_token_address, quote_token_address)),
+                many=True),
         }
 
 
@@ -91,7 +60,7 @@ class OrderDetail(Resource):
         order = self.trustlines.orderbook.get_order_by_hash(bytes.fromhex(order_hash[2:]))
         if order is None:
             abort(404, message='Order does not exist')
-        return order_as_dict(order)
+        return OrderSchema().dump(order)
 
 
 class OrderSubmission(Resource):

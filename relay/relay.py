@@ -6,7 +6,7 @@ import functools
 import itertools
 from collections import defaultdict
 from copy import deepcopy
-from typing import Dict, Iterable, List  # noqa: F401
+from typing import Dict, Iterable, List, Union  # noqa: F401
 
 import gevent
 from eth_utils import is_checksum_address, to_checksum_address
@@ -18,8 +18,12 @@ from .blockchain.proxy import sorted_events
 from relay.pushservice.client import PushNotificationClient
 from relay.pushservice.pushservice import FirebaseRawPushService, InvalidClientTokenException
 from relay.pushservice.client_token_db import ClientTokenDB, ClientTokenAlreadyExistsException
+from relay import ethindex_db
 from .blockchain.exchange_proxy import ExchangeProxy
 from .blockchain.currency_network_proxy import CurrencyNetworkProxy
+from .blockchain import currency_network_events
+from .blockchain import token_events
+from .blockchain import unw_eth_events
 from .blockchain.node import Node
 from .blockchain.token_proxy import TokenProxy
 from .blockchain.unw_eth_proxy import UnwEthProxy
@@ -78,6 +82,49 @@ class TrustlinesRelay:
     @property
     def event_query_timeout(self) -> int:
         return self.config.get('eventQueryTimeout', 20)
+
+    @property
+    def use_eth_index(self) -> bool:
+        return os.environ.get("ETHINDEX", "") == "1"
+
+    def get_event_selector_for_currency_network(self, network_address):
+        """return either a CurrencyNetworkProxy or a EthindexDB instance
+        This is being used from relay.api to query for events.
+        """
+        if self.use_eth_index:
+            return ethindex_db.EthindexDB(ethindex_db.connect(""),
+                                          address=network_address,
+                                          standard_event_types=currency_network_events.standard_event_types,
+                                          event_builders=currency_network_events.event_builders,
+                                          from_to_types=currency_network_events.from_to_types)
+        else:
+            return self.currency_network_proxies[network_address]
+
+    def get_event_selector_for_token(self, address):
+        """return either a proxy or a EthindexDB instance
+        This is being used from relay.api to query for events.
+        """
+        if self.use_eth_index:
+            return ethindex_db.EthindexDB(ethindex_db.connect(""),
+                                          address=address,
+                                          standard_event_types=token_events.standard_event_types,
+                                          event_builders=token_events.event_builders,
+                                          from_to_types=token_events.from_to_types)
+        else:
+            return self.token_proxies[address]
+
+    def get_event_selector_for_unw_eth(self, address):
+        """return either a proxy or a EthindexDB instance
+        This is being used from relay.api to query for events.
+        """
+        if self.use_eth_index:
+            return ethindex_db.EthindexDB(ethindex_db.connect(""),
+                                          address=address,
+                                          standard_event_types=unw_eth_events.standard_event_types,
+                                          event_builders=unw_eth_events.event_builders,
+                                          from_to_types=unw_eth_events.from_to_types)
+        else:
+            return self.unw_eth_proxies[address]
 
     def is_currency_network(self, address: str) -> bool:
         return address in self.networks
@@ -183,6 +230,34 @@ class TrustlinesRelay:
         if not success:
             raise TokenNotFoundException
 
+    def get_user_network_events(self,
+                                network_address: str,
+                                user_address: str,
+                                type: str = None,
+                                from_block: int = 0
+                                ) -> List[BlockchainEvent]:
+        proxy = self.get_event_selector_for_currency_network(network_address)
+        if type is not None:
+            events = proxy.get_network_events(type, user_address,
+                                              from_block=from_block,
+                                              timeout=self.event_query_timeout)
+        else:
+            events = proxy.get_all_network_events(user_address,
+                                                  from_block=from_block,
+                                                  timeout=self.event_query_timeout)
+        return events
+
+    def get_network_events(self,
+                           network_address: str,
+                           type: str = None,
+                           from_block: int = 0) -> List[BlockchainEvent]:
+        proxy = self.get_event_selector_for_currency_network(network_address)
+        if type is not None:
+            events = proxy.get_events(type, from_block=from_block, timeout=self.event_query_timeout)
+        else:
+            events = proxy.get_all_events(from_block=from_block, timeout=self.event_query_timeout)
+        return events
+
     def get_user_events(self,
                         user_address: str,
                         type: str=None,
@@ -201,8 +276,8 @@ class TrustlinesRelay:
         assert is_checksum_address(user_address)
         queries = []
         for network_address in self.networks:
-            currency_network_proxy = self.currency_network_proxies[network_address]
-            if type is not None and type in currency_network_proxy.standard_event_types:
+            currency_network_proxy = self.get_event_selector_for_currency_network(network_address)
+            if type is not None and type in currency_network_proxy.event_types:
                 queries.append(functools.partial(currency_network_proxy.get_network_events,
                                                  type,
                                                  user_address=user_address,
@@ -217,8 +292,8 @@ class TrustlinesRelay:
         assert is_checksum_address(user_address)
         queries = []
         for unw_eth_address in self.unw_eth_addresses:
-            unw_eth_proxy = self.unw_eth_proxies[unw_eth_address]
-            if type is not None and type in unw_eth_proxy.standard_event_types:
+            unw_eth_proxy = self.get_event_selector_for_unw_eth(unw_eth_address)
+            if type is not None and type in unw_eth_proxy.event_types:
                 queries.append(functools.partial(unw_eth_proxy.get_unw_eth_events,
                                                  type,
                                                  user_address=user_address,
@@ -244,6 +319,43 @@ class TrustlinesRelay:
                                                  user_address=user_address,
                                                  from_block=from_block))
         return queries
+
+    def get_user_token_events(self,
+                              token_address: str,
+                              user_address: str,
+                              type: str = None,
+                              from_block: int = 0) -> List[BlockchainEvent]:
+        if token_address in self.unw_eth_addresses:
+            proxy = self.get_event_selector_for_unw_eth(token_address)  # type: Union[UnwEthProxy, TokenProxy]
+            func_names = ['get_unw_eth_events', 'get_all_unw_eth_events']
+        else:
+            proxy = self.get_event_selector_for_token(token_address)
+            func_names = ['get_token_events', 'get_all_token_events']
+
+        if type is not None:
+            events = getattr(proxy, func_names[0])(type, user_address, from_block=from_block)
+        else:
+            events = getattr(proxy, func_names[1])(user_address, from_block=from_block)
+
+        return events
+
+    def get_token_events(self,
+                         token_address: str,
+                         type: str = None,
+                         from_block: int = 0) -> List[BlockchainEvent]:
+
+        if token_address in self.unw_eth_addresses:
+            proxy = self.get_event_selector_for_unw_eth(
+                token_address)  # type: Union[UnwEthProxy, TokenProxy]
+        else:
+            proxy = self.get_event_selector_for_token(token_address)
+
+        if type is not None:
+            events = proxy.get_events(type, from_block=from_block)
+        else:
+            events = proxy.get_all_events(from_block=from_block)
+
+        return events
 
     def _load_config(self):
         with open('config.json') as data_file:

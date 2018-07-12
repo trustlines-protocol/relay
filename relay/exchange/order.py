@@ -1,6 +1,11 @@
+from collections import namedtuple
+
 from eth_utils import is_checksum_address
 
 from tlcontracts.signing import keccak256, eth_sign, eth_validate
+
+
+EcSignature = namedtuple('EcSignature', 'v r s')
 
 
 class Order(object):
@@ -58,6 +63,10 @@ class Order(object):
     @property
     def available_taker_token_amount(self) -> float:
         return self.taker_token_amount - self.filled_taker_token_amount - self.cancelled_taker_token_amount
+
+    @property
+    def ec_signature(self):
+        return EcSignature(self.v, self.r, self. s)
 
     def validate(self) -> bool:
         return self.validate_signature() and self.validate_addresses()

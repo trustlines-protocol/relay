@@ -63,6 +63,8 @@ pkg-resources==0.0.0
 pluggy==0.6.0
 populus==2.2.0
 protobuf==3.6.0
+psycogreen==1.0
+psycopg2==2.7.5
 py==1.5.3
 py-ecc==1.4.2
 py-geth==2.0.1

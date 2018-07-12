@@ -76,3 +76,9 @@ from_to_types = {
     TrustlineUpdateEventType: ['_creditor', '_debtor'],
     BalanceUpdateEventType: ['_from',  '_to'],
 }
+
+standard_event_types = [TransferEventType,
+                        CreditlineRequestEventType,
+                        CreditlineUpdateEventType,
+                        TrustlineRequestEventType,
+                        TrustlineUpdateEventType]
