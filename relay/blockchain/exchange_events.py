@@ -47,3 +47,7 @@ from_to_types = {
     LogFillEventType: ['maker', 'taker'],
     LogCancelEventType: ['maker', 'maker']
 }
+
+
+
+standard_event_types = [LogFillEventType, LogCancelEventType]

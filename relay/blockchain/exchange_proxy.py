@@ -14,7 +14,8 @@ from .exchange_events import (
     LogFillEventType,
     LogCancelEventType,
     from_to_types,
-    event_builders
+    event_builders,
+    standard_event_types
 )
 
 logger = get_logger('token', logging.DEBUG)
@@ -24,7 +25,7 @@ class ExchangeProxy(Proxy):
 
     event_builders = event_builders
     event_types = list(event_builders.keys())
-    standard_event_types = [LogFillEventType, LogCancelEventType]
+    standard_event_types = standard_event_types
 
     def __init__(self, web3, exchange_abi, token_abi, address: str, address_oracle) -> None:
         super().__init__(web3, exchange_abi, address)
