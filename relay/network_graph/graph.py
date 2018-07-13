@@ -387,8 +387,13 @@ class CurrencyNetworkGraph(object):
 
         fees = estimate_fees_from_capacity(self.capacity_imbalance_fee_divisor, capacity, path_capacities)
 
-        # we treat the edge case that bothers us so much here.
-        if capacity//divisor == capacity % divisor:
+        """
+        we want to withdraw 1 from the capacity if we are on the discontinuity of 'floor(capacity - fees // divisor)':
+        (capacity - fees) % divisor == 0
+        and this is discontinuity happens around the minimal capacity of the path and due to high fees elswhere:
+        capacity = n * divisor + n  <=> capacity//divisor == (capacity % divisor)
+        """
+        if capacity//divisor == (capacity % divisor) and (capacity - fees) % divisor == 0:
             capacity -= 1
 
         return capacity - fees
