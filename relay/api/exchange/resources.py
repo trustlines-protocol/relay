@@ -97,7 +97,16 @@ class Orders(Resource):
 
     @use_args(args)
     def get(self, args):
-        return [order_as_dict(order) for order in self.trustlines.orderbook.get_orders(args)]
+        return [order_as_dict(order) for order in
+            self.trustlines.orderbook.get_orders(
+                filter_exchange_address=args['exchangeContractAddress'],
+                filter_token_address=args['tokenAddress'],
+                filter_maker_token_address=args['makerTokenAddress'],
+                filter_taker_token_address=args['takerTokenAddress'],
+                filter_trader_address=args['maker'],
+                filter_maker_address=args['taker'],
+                filter_taker_address=args['trader'],
+                filter_fee_recipient_address=args['feeRecipient'])]
 
 
 class OrderSubmission(Resource):
