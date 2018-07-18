@@ -9,6 +9,7 @@ from typing import List, Any
 from relay.blockchain import currency_network_events
 from relay.blockchain import token_events
 from relay.blockchain import unw_eth_events
+from relay.blockchain import exchange_events
 from relay.blockchain.events import BlockchainEvent, TLNetworkEvent
 import relay.blockchain.token_proxy
 from relay.blockchain.proxy import sorted_events
@@ -188,6 +189,21 @@ class EthindexDB:
             timeout,
         )
 
+    def get_exchange_events(
+            self,
+            event_name: str,
+            user_address: str = None,
+            from_block: int = 0,
+            timeout: float = None,
+    ) -> List[BlockchainEvent]:
+        """Function for compatibility with relay.blockchain.ExchangeProxy. Will be removed after a refactoring"""
+        return self.get_user_events(
+            event_name,
+            user_address,
+            from_block,
+            timeout,
+        )
+
     def get_user_events(
         self,
         event_name: str,
@@ -245,6 +261,16 @@ class EthindexDB:
                                timeout: float = None
                                ) -> List[BlockchainEvent]:
         return self.get_all_contract_events(currency_network_events.standard_event_types,
+                                            user_address,
+                                            from_block,
+                                            timeout)
+
+    def get_all_exchange_events(self,
+                                user_address: str = None,
+                                from_block: int = 0,
+                                timeout: float = None
+                                ) -> List[BlockchainEvent]:
+        return self.get_all_contract_events(exchange_events.standard_event_types,
                                             user_address,
                                             from_block,
                                             timeout)

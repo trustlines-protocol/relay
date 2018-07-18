@@ -12,11 +12,13 @@ from relay.utils import sha3
 from relay.blockchain.currency_network_proxy import CurrencyNetworkProxy
 from relay.blockchain.unw_eth_proxy import UnwEthProxy
 from relay.blockchain.unw_eth_events import UnwEthEvent
+from relay.blockchain.exchange_events import ExchangeEvent
 from relay.blockchain.currency_network_events import CurrencyNetworkEvent
 from relay.api import fields as custom_fields
 from .schemas import (CurrencyNetworkEventSchema,
                       UserCurrencyNetworkEventSchema,
                       UserTokenEventSchema,
+                      ExchangeEventSchema,
                       AccountSummarySchema,
                       TrustlineSchema,
                       TxInfosSchema)
@@ -231,6 +233,8 @@ class UserEvents(Resource):
                 serialized_events.append(UserCurrencyNetworkEventSchema().dump(event).data)
             if isinstance(event, UnwEthEvent):
                 serialized_events.append(UserTokenEventSchema().dump(event).data)
+            if isinstance(event, ExchangeEvent):
+                serialized_events.append(ExchangeEventSchema().dump(event).data)
         return serialized_events
 
 
