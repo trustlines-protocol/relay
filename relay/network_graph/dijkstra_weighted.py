@@ -2,10 +2,11 @@ from heapq import heappush, heappop
 from itertools import count
 
 import networkx as nx
+import math
 
 
 def find_path(G, source, target, get_fee, value, max_hops=None, max_fees=None, ignore=None):
-    G_succ = G.succ if G.is_directed() else G.adj
+    G_adj = G.adj
 
     paths = {source: [source]}  # dictionary of paths
 
@@ -28,7 +29,7 @@ def find_path(G, source, target, get_fee, value, max_hops=None, max_fees=None, i
         if v == target:
             break
 
-        for u, e in G_succ[v].items():
+        for u, e in G_adj[v].items():
             cost = get_fee(v, u, e, d)  # fee of transferring from u to v
             if cost is None:
                 continue
@@ -49,6 +50,75 @@ def find_path(G, source, target, get_fee, value, max_hops=None, max_fees=None, i
                 paths[u] = paths[v] + [u]
     try:
         return (dist[target]-value, paths[target])  # cost is the total fee, not the actual amount to be transfered
+    except KeyError:
+        raise nx.NetworkXNoPath(
+            "node %s not reachable from %s" % (source, target))
+
+
+def find_maximum_capacity_path(G, source, target, max_hops=None):
+    """
+    The logic is the same as dijkstra's Algorithm
+    We visit nodes with the maximum capacity untill we reach the destination.
+    At this point we are sure it is the maximum capacity path since every path
+    already have a smaller capacity and the capacity can only decrease.
+    """
+    G_adj = G.adj
+    push = heappush
+    pop = heappop
+
+    paths = {source: [source]}  # dictionary of paths
+    capacity = {}  # dictionary of capacities
+    seen = {}  # final dictionnaries of capacities
+    c = count()
+    fringe = []  # use heapq with (distance,label) tuples
+
+    def get_capacity(u, v, data):  # gets the capacity from u to v
+        if (u < v):
+            return data['creditline_ba'] + data['balance_ab']
+        return data['creditline_ab'] - data['balance_ab']
+
+    capacity[source] = math.inf
+    paths[source] = [source]
+    push(fringe, (-math.inf, next(c), source, 0))  # (-capacity, counter, node, hops)
+    # We use -capacity because we want the vertex with max capacity
+
+    while fringe:
+        (capa, _, u, n) = pop(fringe)
+        capa = -capa  # revert the capacity of a vertex to its original meaning
+        if u in seen:
+            continue  # already searched this node.
+        seen[u] = capa
+        if u == target:
+            break
+
+        for v, e in G_adj[u].items():
+            if v in seen:
+                continue
+            if max_hops is not None:
+                if n+1 > max_hops:
+                    continue
+            else:
+                min_cap = min(capacity[u], get_capacity(u, v, e))
+                if (v not in capacity) or (v in capacity and capacity[v] < min_cap):
+                    capacity[v] = min_cap
+                    paths[v] = paths[u]+[v]
+                    push(fringe, (-capacity[v], next(c), v, n+1))
+
+    try:
+        capacities = []
+        u = source
+
+        for v in paths[target][1:]:
+            if u < v:
+                capacity = get_capacity(u, v, G[u][v])
+            else:
+                capacity = get_capacity(u, v, G[v][u])
+
+            capacities.append(capacity)
+            u = v
+
+        return (seen[target], paths[target], capacities)
+        # first element is the total capacity of the path not transferable amount
     except KeyError:
         raise nx.NetworkXNoPath(
             "node %s not reachable from %s" % (source, target))
@@ -87,8 +157,8 @@ def find_path_triangulation(G, source, target_reduce, target_increase, get_fee, 
         raise nx.NetworkXNoPath(
             "The balance of target_reduce is lower than value %d" % value)
 
-    G_succ = G.succ if G.is_directed() else G.adj
-    neighbors = [x[0] for x in G_succ[source].items()]
+    G_adj = G.adj
+    neighbors = [x[0] for x in G_adj[source].items()]
 
     if target_reduce not in neighbors:
         raise nx.NetworkXNoPath(
