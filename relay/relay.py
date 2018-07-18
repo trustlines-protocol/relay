@@ -400,6 +400,16 @@ class TrustlinesRelay:
                                                    timeout=self.event_query_timeout)
         return events
 
+    def get_all_user_exchange_events(self,
+                                     user_address: str,
+                                     type: str=None,
+                                     from_block: int=0,
+                                     timeout: float=None) -> List[BlockchainEvent]:
+        assert is_checksum_address(user_address)
+        exchange_event_queries = self._get_exchange_event_queries(user_address, type, from_block)
+        results = concurrency_utils.joinall(exchange_event_queries, timeout=timeout)
+        return sorted_events(list(itertools.chain.from_iterable(results)))
+
     def _load_config(self):
         with open('config.json') as data_file:
             self.config = json.load(data_file)
