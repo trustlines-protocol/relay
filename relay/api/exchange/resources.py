@@ -1,46 +1,34 @@
+import logging
 from flask_restful import Resource
 from webargs.flaskparser import use_args
 from webargs import fields as webfields
 from webargs.flaskparser import abort
 from eth_utils import to_checksum_address, is_hex
-
+from marshmallow import validate
 from relay.relay import TrustlinesRelay
 from relay.api import fields
+from relay.api.exchange.schemas import OrderSchema
 from relay.exchange.order import Order
 from relay.exchange.orderbook import OrderInvalidException
+from relay.blockchain.exchange_proxy import ExchangeProxy
+from relay.concurrency_utils import TimeoutException
+from relay.logger import get_logger
 
+from ..schemas import ExchangeEventSchema, UserExchangeEventSchema
 
-def order_as_dict(order: Order):
-    return {
-        'exchangeContractAddress': order.exchange_address,
-        'maker': order.maker_address,
-        'taker': order.taker_address,
-        'makerTokenAddress': order.maker_token,
-        'takerTokenAddress': order.taker_token,
-        'feeRecipient': order.fee_recipient,
-        'makerTokenAmount': str(order.maker_token_amount),
-        'takerTokenAmount': str(order.taker_token_amount),
-        'filledMakerTokenAmount': str(order.filled_maker_token_amount),
-        'filledTakerTokenAmount': str(order.filled_taker_token_amount),
-        'cancelledMakerTokenAmount': str(order.cancelled_maker_token_amount),
-        'cancelledTakerTokenAmount': str(order.cancelled_taker_token_amount),
-        'availableMakerTokenAmount': str(order.available_maker_token_amount),
-        'availableTakerTokenAmount': str(order.available_taker_token_amount),
-        'makerFee': str(order.maker_fee),
-        'takerFee': str(order.taker_fee),
-        'expirationUnixTimestampSec': str(order.expiration_timestamp_in_sec),
-        'salt': str(order.salt),
-        'ecSignature': {
-            'v': int(order.v),
-            'r': '0x{:032X}'.format(int.from_bytes(order.r, 'big')),
-            's': '0x{:032X}'.format(int.from_bytes(order.s, 'big'))
-        }
-    }
+logger = get_logger('api.resources', logging.DEBUG)
+
+TIMEOUT_MESSAGE = 'The server could not handle the request in time'
 
 
 def abort_if_invalid_order_hash(order_hash):
     if not is_hex(order_hash) or len(order_hash[2:]) != 64:
         abort(404, message='Invalid order hash: {}'.format(order_hash))
+
+
+def abort_if_unknown_exchange(trustlines, exchange_address):
+    if exchange_address not in trustlines.exchange_addresses and exchange_address not in trustlines.exchange_addresses:
+        abort(404, 'Unknown exchange: {}'.format(exchange_address))
 
 
 class OrderBook(Resource):
@@ -58,11 +46,12 @@ class OrderBook(Resource):
         base_token_address = to_checksum_address(args['baseTokenAddress'])
         quote_token_address = to_checksum_address(args['quoteTokenAddress'])
         return {
-            'bids': [order_as_dict(order) for order in
-                     self.trustlines.orderbook.get_bids_by_tokenpair((base_token_address, quote_token_address))],
-            'asks': [order_as_dict(order) for order in
-                     self.trustlines.orderbook.get_asks_by_tokenpair((base_token_address, quote_token_address))],
-
+            'bids': OrderSchema().dump(
+                self.trustlines.orderbook.get_bids_by_tokenpair((base_token_address, quote_token_address)),
+                many=True),
+            'asks': OrderSchema().dump(
+                self.trustlines.orderbook.get_asks_by_tokenpair((base_token_address, quote_token_address)),
+                many=True),
         }
 
 
@@ -76,7 +65,7 @@ class OrderDetail(Resource):
         order = self.trustlines.orderbook.get_order_by_hash(bytes.fromhex(order_hash[2:]))
         if order is None:
             abort(404, message='Order does not exist')
-        return order_as_dict(order)
+        return OrderSchema().dump(order)
 
 
 class Orders(Resource):
@@ -174,7 +163,7 @@ class ExchangeAddresses(Resource):
         self.trustlines = trustlines
 
     def get(self):
-        return list(self.trustlines.exchanges)
+        return list(self.trustlines.exchange_addresses)
 
 
 class UnwEthAddresses(Resource):
@@ -184,3 +173,63 @@ class UnwEthAddresses(Resource):
 
     def get(self):
         return self.trustlines.unw_eth_addresses
+
+
+class UserEventsExchange(Resource):
+
+    def __init__(self, trustlines: TrustlinesRelay) -> None:
+        self.trustlines = trustlines
+
+    args = {
+        'fromBlock': webfields.Int(required=False, missing=0),
+        'type': webfields.Str(required=False,
+                              validate=validate.OneOf(ExchangeProxy.event_types),
+                              missing=None)
+    }
+
+    @use_args(args)
+    def get(self, args, exchange_address: str, user_address: str):
+        abort_if_unknown_exchange(self.trustlines, exchange_address)
+        from_block = args['fromBlock']
+        type = args['type']
+        try:
+            events = self.trustlines.get_user_exchange_events(exchange_address,
+                                                              user_address,
+                                                              type=type,
+                                                              from_block=from_block)
+        except TimeoutException:
+            logger.warning(
+                "User exchange events: event_name=%s user_address=%s from_block=%s. could not get events in time",
+                type,
+                user_address,
+                from_block)
+            abort(504, TIMEOUT_MESSAGE)
+        return UserExchangeEventSchema().dump(events, many=True).data
+
+
+class EventsExchange(Resource):
+
+    def __init__(self, trustlines: TrustlinesRelay) -> None:
+        self.trustlines = trustlines
+
+    args = {
+        'fromBlock': webfields.Int(required=False, missing=0),
+        'type': webfields.Str(required=False,
+                              validate=validate.OneOf(ExchangeProxy.event_types),
+                              missing=None)
+    }
+
+    @use_args(args)
+    def get(self, args, exchange_address: str):
+        abort_if_unknown_exchange(self.trustlines, exchange_address)
+        from_block = args['fromBlock']
+        type = args['type']
+        try:
+            events = self.trustlines.get_exchange_events(exchange_address, type=type, from_block=from_block)
+        except TimeoutException:
+            logger.warning(
+                "Exchange events: event_name=%s from_block=%s. could not get events in time",
+                type,
+                from_block)
+            abort(504, TIMEOUT_MESSAGE)
+        return ExchangeEventSchema().dump(events, many=True).data

@@ -1,3 +1,8 @@
+from collections import namedtuple
+
+
+TxInfos = namedtuple('TxInfos', 'balance, nonce, gas_price')
+
 
 class Node:
 
@@ -11,9 +16,9 @@ class Node:
         return self._web3.eth.getTransactionReceipt(txn_hash)
 
     def get_tx_infos(self, user_address):
-        return {'balance': self._web3.eth.getBalance(user_address),
-                'nonce': self._web3.eth.getTransactionCount(user_address),
-                'gasPrice': self._web3.eth.gasPrice}
+        return TxInfos(balance=self._web3.eth.getBalance(user_address),
+                       nonce=self._web3.eth.getTransactionCount(user_address),
+                       gas_price=self._web3.eth.gasPrice)
 
     @property
     def blocknumber(self):

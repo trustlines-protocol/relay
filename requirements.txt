@@ -16,10 +16,11 @@ gevent-websocket
 marshmallow
 flask-sockets
 firebase-admin
+psycopg2 --no-binary psycopg2
+psycogreen
 
 # --- development dependencies, i.e. dependencies not needed for running tl-relay
 flake8
-flake8-pep3101
 flake8-string-format
 flake8-invalid-escape-sequences
 flake8-per-file-ignores

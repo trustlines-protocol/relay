@@ -12,9 +12,16 @@ from relay.utils import sha3
 from relay.blockchain.currency_network_proxy import CurrencyNetworkProxy
 from relay.blockchain.unw_eth_proxy import UnwEthProxy
 from relay.blockchain.unw_eth_events import UnwEthEvent
+from relay.blockchain.exchange_events import ExchangeEvent
 from relay.blockchain.currency_network_events import CurrencyNetworkEvent
 from relay.api import fields as custom_fields
-from .schemas import CurrencyNetworkEventSchema, UserCurrencyNetworkEventSchema, UserTokenEventSchema
+from .schemas import (CurrencyNetworkEventSchema,
+                      UserCurrencyNetworkEventSchema,
+                      UserTokenEventSchema,
+                      ExchangeEventSchema,
+                      AccountSummarySchema,
+                      TrustlineSchema,
+                      TxInfosSchema)
 from relay.relay import TrustlinesRelay
 from relay.concurrency_utils import TimeoutException
 from relay.logger import get_logger
@@ -80,7 +87,8 @@ class User(Resource):
 
     def get(self, network_address: str, user_address: str):
         abort_if_unknown_network(self.trustlines, network_address)
-        return self.trustlines.currency_network_graphs[network_address].get_account_sum(user_address).as_dict()
+        return AccountSummarySchema().dump(
+            self.trustlines.currency_network_graphs[network_address].get_account_sum(user_address)).data
 
 
 class ContactList(Resource):
@@ -93,27 +101,11 @@ class ContactList(Resource):
         return self.trustlines.currency_network_graphs[network_address].get_friends(user_address)
 
 
-class TrustlineDao(object):
-    def __init__(self, network_address: str, a_address: str, b_address: str, account_sum: str) -> None:
-        self.network_address = network_address
-        self.a_address = a_address
-        self.b_address = b_address
-        self.account_sum = account_sum
-
-    @property
-    def id(self):
-        if self.a_address < self.b_address:
-            return sha3(self.network_address + self.a_address + self.b_address)
+def _id(network_address, a_address, b_address):
+        if a_address < b_address:
+            return sha3(network_address + a_address + b_address)
         else:
-            return sha3(self.network_address + self.b_address + self.a_address)
-
-    def as_dict(self):
-        trustline = {
-            'address': self.b_address,
-            'id': self.id
-        }
-        trustline.update(self.account_sum.as_dict())
-        return trustline
+            return sha3(network_address + b_address + a_address)
 
 
 class Trustline(Resource):
@@ -124,8 +116,12 @@ class Trustline(Resource):
     def get(self, network_address, a_address, b_address):
         abort_if_unknown_network(self.trustlines, network_address)
         graph = self.trustlines.currency_network_graphs[network_address]
-        trustline = TrustlineDao(network_address, a_address, b_address, graph.get_account_sum(a_address, b_address))
-        return trustline.as_dict()
+        data = TrustlineSchema().dump(graph.get_account_sum(a_address, b_address)).data
+        data.update({
+            'address': b_address,
+            'id': _id(network_address, a_address, b_address)
+        })
+        return data
 
 
 class TrustlineList(Resource):
@@ -139,11 +135,14 @@ class TrustlineList(Resource):
         friends = graph.get_friends(user_address)
         accounts = []
         for friend_address in friends:
-            trustline = TrustlineDao(network_address,
-                                     user_address,
-                                     friend_address,
-                                     graph.get_account_sum(user_address, friend_address))
-            accounts.append(trustline.as_dict())
+            data = TrustlineSchema().dump(graph.get_account_sum(user_address, friend_address)).data
+            data.update(
+                {
+                    'address': friend_address,
+                    'id': _id(network_address, user_address, friend_address)
+                }
+            )
+            accounts.append(data)
         return accounts
 
 
@@ -182,18 +181,13 @@ class UserEventsNetwork(Resource):
     @use_args(args)
     def get(self, args, network_address: str, user_address: str):
         abort_if_unknown_network(self.trustlines, network_address)
-        proxy = self.trustlines.currency_network_proxies[network_address]
         from_block = args['fromBlock']
         type = args['type']
         try:
-            if type is not None:
-                events = proxy.get_network_events(type, user_address,
-                                                  from_block=from_block,
-                                                  timeout=self.trustlines.event_query_timeout)
-            else:
-                events = proxy.get_all_network_events(user_address,
-                                                      from_block=from_block,
-                                                      timeout=self.trustlines.event_query_timeout)
+            events = self.trustlines.get_user_network_events(network_address,
+                                                             user_address,
+                                                             type=type,
+                                                             from_block=from_block)
         except TimeoutException:
             logger.warning(
                 "User network events: event_name=%s user_address=%s from_block=%s. could not get events in time",
@@ -223,7 +217,7 @@ class UserEvents(Resource):
         from_block = args['fromBlock']
         try:
             events = self.trustlines.get_user_events(user_address,
-                                                     type,
+                                                     type=type,
                                                      from_block=from_block,
                                                      timeout=self.trustlines.event_query_timeout)
         except TimeoutException:
@@ -239,6 +233,8 @@ class UserEvents(Resource):
                 serialized_events.append(UserCurrencyNetworkEventSchema().dump(event).data)
             if isinstance(event, UnwEthEvent):
                 serialized_events.append(UserTokenEventSchema().dump(event).data)
+            if isinstance(event, ExchangeEvent):
+                serialized_events.append(ExchangeEventSchema().dump(event).data)
         return serialized_events
 
 
@@ -257,14 +253,10 @@ class EventsNetwork(Resource):
     @use_args(args)
     def get(self, args, network_address: str):
         abort_if_unknown_network(self.trustlines, network_address)
-        proxy = self.trustlines.currency_network_proxies[network_address]
         from_block = args['fromBlock']
         type = args['type']
         try:
-            if type is not None:
-                events = proxy.get_events(type, from_block=from_block, timeout=self.trustlines.event_query_timeout)
-            else:
-                events = proxy.get_all_events(from_block=from_block, timeout=self.trustlines.event_query_timeout)
+            events = self.trustlines.get_network_events(network_address, type=type, from_block=from_block)
         except TimeoutException:
             logger.warning(
                 "Network events: event_name=%s from_block=%s. could not get events in time",
@@ -280,7 +272,7 @@ class TransactionInfos(Resource):
         self.trustlines = trustlines
 
     def get(self, user_address: str):
-        return self.trustlines.node.get_tx_infos(user_address)
+        return TxInfosSchema().dump(self.trustlines.node.get_tx_infos(user_address)).data
 
 
 class Relay(Resource):
@@ -308,7 +300,7 @@ class Balance(Resource):
         self.trustlines = trustlines
 
     def get(self, user_address: str):
-        return self.trustlines.node.balance(user_address)
+        return str(self.trustlines.node.balance(user_address))
 
 
 class Block(Resource):

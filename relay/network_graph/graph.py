@@ -3,8 +3,8 @@ import io
 
 import networkx as nx
 
-from .dijkstra_weighted import find_path, find_path_triangulation
-from .fees import new_balance, imbalance_fee
+from .dijkstra_weighted import find_path, find_path_triangulation, find_maximum_capacity_path
+from .fees import new_balance, imbalance_fee, estimate_fees_from_capacity
 
 creditline_ab = 'creditline_ab'
 creditline_ba = 'creditline_ba'
@@ -145,13 +145,6 @@ class AccountSummary(object):
     @property
     def creditline_left_received(self):
         return self.balance + self.creditline_received
-
-    def as_dict(self):
-        return {'balance': self.balance,
-                'given': self.creditline_given,
-                'received': self.creditline_received,
-                'leftGiven': self.creditline_left_given,
-                'leftReceived': self.creditline_left_received}
 
 
 class CurrencyNetworkGraph(object):
@@ -353,6 +346,57 @@ class CurrencyNetworkGraph(object):
         except (nx.NetworkXNoPath, KeyError):  # key error for if source or target is not in graph
             cost, path = 0, []  # cost is the total fee, not the actual amount to be transfered
         return cost, list(path)
+
+    def find_maximum_capacity_path(self, source, target, max_hops=None):
+        """
+        find a path probably with the maximum capacity to transfer from source to target
+        The "imbalance_fee" function not being bijective, only an estimate of the fees can be found from "value + fee"
+
+        Args:
+            source: source for the path
+            target: target for the path
+            max_hops: the maximum number of hops to find the path
+
+        Returns:
+            returns the value that can be send in the max capacity path and the path,
+        """
+        try:
+            min_capacity, path, path_capacities = find_maximum_capacity_path(self.graph,
+                                                                             source,
+                                                                             target,
+                                                                             max_hops=max_hops)
+        except (nx.NetworkXNoPath, KeyError):  # key error for if source or target is not in graph
+            min_capacity, path, path_capacities = 0, [], []
+
+        sendable = self.estimate_sendable_from_capacity(min_capacity, path_capacities)
+
+        if sendable <= 0:
+            return 0, []
+
+        return sendable, list(path)
+
+    def estimate_sendable_from_capacity(self, capacity, path_capacities):
+        """
+        estimates the actual sendable amount along a path with path_capacities;
+        capacity is the smallest value of path_capacities
+        """
+        divisor = self.capacity_imbalance_fee_divisor
+
+        if divisor == 0:
+            return capacity
+
+        fees = estimate_fees_from_capacity(self.capacity_imbalance_fee_divisor, capacity, path_capacities)
+
+        """
+        we want to withdraw 1 from the capacity if we are on the discontinuity of 'floor(capacity - fees // divisor)':
+        (capacity - fees) % divisor == 0
+        and this is discontinuity happens around the minimal capacity of the path and due to high fees elswhere:
+        capacity = n * divisor + n  <=> capacity//divisor == (capacity % divisor)
+        """
+        if capacity//divisor == (capacity % divisor) and (capacity - fees) % divisor == 0:
+            capacity -= 1
+
+        return capacity - fees
 
     def transfer(self, source, target, value):
         """simulate transfer off chain"""
