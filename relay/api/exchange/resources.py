@@ -1,19 +1,34 @@
+import logging
 from flask_restful import Resource
 from webargs.flaskparser import use_args
 from webargs import fields as webfields
 from webargs.flaskparser import abort
 from eth_utils import to_checksum_address, is_hex
-
+from marshmallow import validate
 from relay.relay import TrustlinesRelay
 from relay.api import fields
 from relay.api.exchange.schemas import OrderSchema
 from relay.exchange.order import Order
 from relay.exchange.orderbook import OrderInvalidException
+from relay.blockchain.exchange_proxy import ExchangeProxy
+from relay.concurrency_utils import TimeoutException
+from relay.logger import get_logger
+
+from ..schemas import ExchangeEventSchema, UserExchangeEventSchema
+
+logger = get_logger('api.resources', logging.DEBUG)
+
+TIMEOUT_MESSAGE = 'The server could not handle the request in time'
 
 
 def abort_if_invalid_order_hash(order_hash):
     if not is_hex(order_hash) or len(order_hash[2:]) != 64:
         abort(404, message='Invalid order hash: {}'.format(order_hash))
+
+
+def abort_if_unknown_exchange(trustlines, exchange_address):
+    if exchange_address not in trustlines.exchange_addresses and exchange_address not in trustlines.exchange_addresses:
+        abort(404, 'Unknown exchange: {}'.format(exchange_address))
 
 
 class OrderBook(Resource):
@@ -118,7 +133,7 @@ class ExchangeAddresses(Resource):
         self.trustlines = trustlines
 
     def get(self):
-        return list(self.trustlines.exchanges)
+        return list(self.trustlines.exchange_addresses)
 
 
 class UnwEthAddresses(Resource):
@@ -128,3 +143,63 @@ class UnwEthAddresses(Resource):
 
     def get(self):
         return self.trustlines.unw_eth_addresses
+
+
+class UserEventsExchange(Resource):
+
+    def __init__(self, trustlines: TrustlinesRelay) -> None:
+        self.trustlines = trustlines
+
+    args = {
+        'fromBlock': webfields.Int(required=False, missing=0),
+        'type': webfields.Str(required=False,
+                              validate=validate.OneOf(ExchangeProxy.event_types),
+                              missing=None)
+    }
+
+    @use_args(args)
+    def get(self, args, exchange_address: str, user_address: str):
+        abort_if_unknown_exchange(self.trustlines, exchange_address)
+        from_block = args['fromBlock']
+        type = args['type']
+        try:
+            events = self.trustlines.get_user_exchange_events(exchange_address,
+                                                              user_address,
+                                                              type=type,
+                                                              from_block=from_block)
+        except TimeoutException:
+            logger.warning(
+                "User exchange events: event_name=%s user_address=%s from_block=%s. could not get events in time",
+                type,
+                user_address,
+                from_block)
+            abort(504, TIMEOUT_MESSAGE)
+        return UserExchangeEventSchema().dump(events, many=True).data
+
+
+class EventsExchange(Resource):
+
+    def __init__(self, trustlines: TrustlinesRelay) -> None:
+        self.trustlines = trustlines
+
+    args = {
+        'fromBlock': webfields.Int(required=False, missing=0),
+        'type': webfields.Str(required=False,
+                              validate=validate.OneOf(ExchangeProxy.event_types),
+                              missing=None)
+    }
+
+    @use_args(args)
+    def get(self, args, exchange_address: str):
+        abort_if_unknown_exchange(self.trustlines, exchange_address)
+        from_block = args['fromBlock']
+        type = args['type']
+        try:
+            events = self.trustlines.get_exchange_events(exchange_address, type=type, from_block=from_block)
+        except TimeoutException:
+            logger.warning(
+                "Exchange events: event_name=%s from_block=%s. could not get events in time",
+                type,
+                from_block)
+            abort(504, TIMEOUT_MESSAGE)
+        return ExchangeEventSchema().dump(events, many=True).data
