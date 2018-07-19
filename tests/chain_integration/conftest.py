@@ -8,9 +8,12 @@ import gevent
 from web3 import Web3, HTTPProvider
 from web3.utils.transactions import wait_for_transaction_receipt
 from eth_utils import to_checksum_address
-from tlcontracts.deploy import deploy_test_network, deploy_networks
+from tlcontracts.deploy import deploy_networks, deploy_network, get_project
 
 from relay.blockchain.currency_network_proxy import CurrencyNetworkProxy
+
+
+NETWORKS = [('Fugger', 'FUG', 2), ('Hours', 'HOU', 2), ('Testcoin', 'T', 6)]
 
 
 @pytest.fixture(autouse=True, scope='session')
@@ -67,7 +70,16 @@ def trustlines(accounts):
             ]  # (A, B, clAB, clBA)
 
 
-NETWORKS = [("Euro", "EUR", 2), ("US Dollar", "USD", 2), ("TestCoin", "T", 6)]
+def deploy_test_network():
+    project = get_project()
+    with project.get_chain('testrpclocal') as chain:
+        return deploy_network(chain, 'Trustlines', 'T', 6)
+
+
+def deploy_test_networks():
+    project = get_project()
+    with project.get_chain('testrpclocal') as chain:
+        return deploy_networks(chain, NETWORKS)
 
 
 @pytest.fixture(scope='session')
@@ -93,23 +105,23 @@ def token_abi(contracts):
 
 @pytest.fixture(scope='session')
 def testnetwork1_address():
-    return deploy_test_network('testrpclocal').address
+    return deploy_test_network().address
 
 
 @pytest.fixture(scope='session')
 def testnetwork2_address():
-    return deploy_test_network('testrpclocal').address
+    return deploy_test_network().address
 
 
 @pytest.fixture()
 def testnetwork3_address():
-    return deploy_test_network('testrpclocal').address
+    return deploy_test_network().address
 
 
 @pytest.fixture()
 def testnetworks(accounts):
     maker, taker, *rest = accounts
-    currency_network_contracts, exchange_contract, unw_eth_contract = deploy_networks('testrpclocal', NETWORKS)
+    currency_network_contracts, exchange_contract, unw_eth_contract = deploy_test_networks()
 
     unw_eth_contract.transact({'from': taker, 'value': 200}).deposit()
 

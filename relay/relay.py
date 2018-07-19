@@ -286,7 +286,7 @@ class TrustlinesRelay:
                                             exchange_event_queries, timeout=timeout)
         return sorted_events(list(itertools.chain.from_iterable(results)))
 
-    def _get_network_event_queries(self, user_address: str, type: str, from_block: int):
+    def _get_network_event_queries(self, user_address: str, type: str = None, from_block: int = 0):
         assert is_checksum_address(user_address)
         queries = []
         for network_address in self.networks:
@@ -302,7 +302,7 @@ class TrustlinesRelay:
                                                  from_block=from_block))
         return queries
 
-    def _get_unw_eth_event_queries(self, user_address: str, type: str, from_block: int):
+    def _get_unw_eth_event_queries(self, user_address: str, type: str = None, from_block: int = 0):
         assert is_checksum_address(user_address)
         queries = []
         for unw_eth_address in self.unw_eth_addresses:
@@ -318,7 +318,7 @@ class TrustlinesRelay:
                                                  from_block=from_block))
         return queries
 
-    def _get_exchange_event_queries(self, user_address: str, type: str, from_block: int):
+    def _get_exchange_event_queries(self, user_address: str, type: str = None, from_block: int = 0):
         assert is_checksum_address(user_address)
         queries = []
         for exchange_address in self.exchange_addresses:

@@ -4,7 +4,7 @@ from gevent import monkey; monkey.patch_all(thread=False)  # noqa: E702
 import psycogreen.gevent; psycogreen.gevent.patch_psycopg()  # noqa: E702
 import logging
 
-from gevent.wsgi import WSGIServer
+from gevent.pywsgi import WSGIServer
 from geventwebsocket.handler import WebSocketHandler
 
 from relay.relay import TrustlinesRelay

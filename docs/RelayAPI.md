@@ -30,7 +30,8 @@ https://relay0.testnet.trustlines.network/api/v1
 - [Trustlines of user in currency network](#trustlines-of-user-in-currency-network)
 - [Trustline details of user in currency network](#trustline-details-of-user-in-currency-network)
 - [Total spendable amount of user in currency network](#total-spendable-amount-of-user-in-currency-network)
-- [Spendable amount to other user in currency network](#spendable-amount-to-other-user-in-currency-network)
+- [Spendable amount to adjacent user in currency network](#spendable-amount-to-adjacent-user-in-currency-network)
+- [Spendable amount and path to any user in currency network](#spendable-amount-and-path-to-any-user-in-currency-network)
 - [Transfer path in currency network](#transfer-path-in-currency-network)
 - [Debt reduction path in currency network](#debt-reduction-path-in-currency-network)
 - [All events in currency network](#all-events-in-currency-network)
@@ -283,8 +284,8 @@ curl https://relay0.testnet.trustlines.network/api/v1/networks/0xC0B33D88C704455
 
 ---
 
-### Spendable amount to other user in currency network
-Returns amount user A can spend to user B in a currency network.
+### Spendable amount to adjacent user in currency network
+Returns amount user A can spend to adjacent user B in a currency network.
 #### Request
 ```
 GET /networks/:networkAddress/users/:userAddressA/spendables/:userAddressB
@@ -304,6 +305,48 @@ curl https://relay0.testnet.trustlines.network/api/v1/networks/0xC0B33D88C704455
 #### Example Response
 ```json
 "90"
+```
+
+---
+
+### Spendable amount and path to any user in currency network
+Returns an estimation on the amount user A can spend to any reachable user B in a currency network.
+#### Request
+```
+POST /networks/:network_address/max-capacity-path-info
+```
+#### URL Parameters
+|Name|Type|Required|Description|
+|-|-|-|-|
+|networkAddress|string|YES|Address of currency network|
+#### Data Parameters
+|Name|Type|Required|Description|
+|-|-|-|-|
+|from|string|YES|Address of user who sends transfer|
+|to|string|YES|Address of user who receives transfer|
+|maxHops|string|NO|Upper bound for hops in transfer path|
+#### Example Request
+```bash
+curl --header "Content-Type: application/json" \
+  --request POST \
+  --data '{"from":"0xcbF1153F6e5AC01D363d432e24112e8aA56c55ce","to":"0x7Ec3543702FA8F2C7b2bD84C034aAc36C263cA8b"}' \
+  https://relay0.testnet.trustlines.network/api/v1/networks/0xC0B33D88C704455075a0724AA167a286da778DDE/max-capacity-path-info
+```
+#### Response
+|Attribute|Type|Description|
+|---------|----|-----------|
+|capacity|string|Estimated capacity of estimated max capacity path|
+|path|string[]|Addresses of users on max capacity path|
+#### Example Response
+```json
+{
+    "capacity": "18",
+	"path": [
+    "0xcbF1153F6e5AC01D363d432e24112e8aA56c55ce",
+    "0xc257274276a4e539741ca11b590b9447b26a8051",
+    "0x7Ec3543702FA8F2C7b2bD84C034aAc36C263cA8b"
+  ]
+}
 ```
 
 ---
