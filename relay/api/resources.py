@@ -166,6 +166,9 @@ class SpendableTo(Resource):
 
 class MaxCapacityPath(Resource):
 
+    def __init__(self, trustlines: TrustlinesRelay) -> None:
+        self.trustlines = trustlines
+
     args = {
         'maxHops': fields.Int(required=False, missing=None),
         'from': custom_fields.Address(required=True),
@@ -185,7 +188,7 @@ class MaxCapacityPath(Resource):
             target=target,
             max_hops=max_hops)
 
-        return {'capacity': capacity,
+        return {'capacity': str(capacity),
                 'path': path}
 
 
