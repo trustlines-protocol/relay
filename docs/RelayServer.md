@@ -229,6 +229,9 @@ cd ~
 THREADING_BACKEND=gevent ~/opt/relay/bin/tl-relay
 ```
 
+The relay server needs access to the parity node and the PostgreSQL database.
+`ethindex runsync` also has to be running for a fully functioning system.
+
 #### using firebase
 <!-- do we even want to describe this -->
 
