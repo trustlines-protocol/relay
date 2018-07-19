@@ -1,4 +1,4 @@
-from typing import Tuple, Sequence
+from typing import Tuple, Sequence, Optional
 
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy import Column, Integer, String, Float
@@ -102,7 +102,7 @@ class OrderBookDB(object):
         for order in orders:
             self.add_order(order)
 
-    def get_order_by_hash(self, order_hash: bytes) -> Order:
+    def get_order_by_hash(self, order_hash: bytes) -> Optional[Order]:
         order_orm = self.session.query(OrderORM).get(order_hash.hex())
         if order_orm is None:
             return None

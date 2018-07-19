@@ -2,18 +2,16 @@ flask
 flask_restful
 flask_cors
 webargs
-gevent==1.1.2
+gevent
 web3[gevent]<4
-ethereum==1.6.1
 networkx>=2.0
 pygraphviz
-pysha3
 git+https://github.com/trustlines-network/contracts.git@develop
 sqlalchemy
-eth-utils==0.7.4
+eth-utils
 tinyrpc
 gevent-websocket
-marshmallow
+marshmallow<3
 flask-sockets
 firebase-admin
 psycopg2 --no-binary psycopg2
@@ -26,5 +24,5 @@ flake8-invalid-escape-sequences
 flake8-per-file-ignores
 coverage
 mypy
-pytest==3.2.5
+pytest
 eth-testrpc
