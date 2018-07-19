@@ -86,7 +86,7 @@ class Orders(Resource):
 
     @use_args(args)
     def get(self, args):
-        return [order_as_dict(order) for order in
+        return OrderSchema().dump(
             self.trustlines.orderbook.get_orders(
                 filter_exchange_address=args['exchangeContractAddress'],
                 filter_token_address=args['tokenAddress'],
@@ -95,7 +95,8 @@ class Orders(Resource):
                 filter_trader_address=args['maker'],
                 filter_maker_address=args['taker'],
                 filter_taker_address=args['trader'],
-                filter_fee_recipient_address=args['feeRecipient'])]
+                filter_fee_recipient_address=args['feeRecipient']),
+            many=True)
 
 
 class OrderSubmission(Resource):
