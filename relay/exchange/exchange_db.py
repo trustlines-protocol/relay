@@ -116,6 +116,38 @@ class OrderBookDB(object):
                                 OrderORM.expiration_timestamp_in_sec))
         return [order_orm.to_order() for order_orm in orders_orm]
 
+    def get_orders(self,
+                   filter_exchange_address: str = None,
+                   filter_token_address: str = None,
+                   filter_maker_token_address: str = None,
+                   filter_taker_token_address: str = None,
+                   filter_trader_address: str = None,
+                   filter_maker_address: str = None,
+                   filter_taker_address: str = None,
+                   filter_fee_recipient_address: str = None) -> Sequence[Order]:
+        orders_orm = self.session.query(OrderORM)
+
+        if (filter_exchange_address is not None):
+            orders_orm.filter(OrderORM.exchange_address == filter_exchange_address)
+        if (filter_token_address is not None):
+            orders_orm.filter((OrderORM.maker_token == filter_token_address) |
+                              (OrderORM.taker_token == filter_token_address))
+        if (filter_maker_token_address is not None):
+            orders_orm.filter(OrderORM.maker_token == filter_maker_token_address)
+        if (filter_taker_token_address is not None):
+            orders_orm.filter(OrderORM.taker_token == filter_taker_token_address)
+        if (filter_trader_address is not None):
+            orders_orm.filter((OrderORM.maker_address == filter_trader_address) |
+                              (OrderORM.taker_address == filter_trader_address))
+        if (filter_maker_address is not None):
+            orders_orm.filter(OrderORM.maker_address == filter_maker_address)
+        if (filter_taker_address is not None):
+            orders_orm.filter(OrderORM.taker_address == filter_taker_address)
+        if (filter_fee_recipient_address is not None):
+            orders_orm.filter(OrderORM.fee_recipient == filter_fee_recipient_address)
+
+        return [order_orm.to_order() for order_orm in orders_orm]
+
     def delete_order_by_hash(self, order_hash: bytes) -> None:
         self.session.query(OrderORM).filter_by(msg_hash=order_hash.hex()).delete(synchronize_session=False)
         self.session.commit()
