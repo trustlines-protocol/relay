@@ -86,6 +86,26 @@ class OrderBook(object):
         if self._db is not None:
             return self._db.order_filled(orderhash, filled_maker_amount, filled_taker_amount)
 
+    def get_orders(self,
+                   filter_exchange_address,
+                   filter_token_address,
+                   filter_maker_token_address,
+                   filter_taker_token_address,
+                   filter_trader_address,
+                   filter_maker_address,
+                   filter_taker_address,
+                   filter_fee_recipient_address) -> Sequence[Order]:
+        if self._db is not None:
+            return self._db.get_orders(filter_exchange_address,
+                                       filter_token_address,
+                                       filter_maker_token_address,
+                                       filter_taker_token_address,
+                                       filter_trader_address,
+                                       filter_maker_address,
+                                       filter_taker_address,
+                                       filter_fee_recipient_address)
+        return []
+
     def order_cancelled(self,
                         orderhash: bytes,
                         cancelled_maker_amount: int,

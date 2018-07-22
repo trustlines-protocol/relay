@@ -68,6 +68,37 @@ class OrderDetail(Resource):
         return OrderSchema().dump(order)
 
 
+class Orders(Resource):
+
+    def __init__(self, trustlines: TrustlinesRelay) -> None:
+        self.trustlines = trustlines
+
+    args = {
+        'exchangeContractAddress': fields.Address(required=False, missing=None),
+        'tokenAddress': fields.Address(required=False, missing=None),
+        'makerTokenAddress': fields.Address(required=False, missing=None),
+        'takerTokenAddress': fields.Address(required=False, missing=None),
+        'maker': fields.Address(required=False, missing=None),
+        'taker': fields.Address(required=False, missing=None),
+        'trader': fields.Address(required=False, missing=None),
+        'feeRecipient': fields.Address(required=False, missing=None)
+    }
+
+    @use_args(args)
+    def get(self, args):
+        return OrderSchema().dump(
+            self.trustlines.orderbook.get_orders(
+                filter_exchange_address=args['exchangeContractAddress'],
+                filter_token_address=args['tokenAddress'],
+                filter_maker_token_address=args['makerTokenAddress'],
+                filter_taker_token_address=args['takerTokenAddress'],
+                filter_trader_address=args['maker'],
+                filter_maker_address=args['taker'],
+                filter_taker_address=args['trader'],
+                filter_fee_recipient_address=args['feeRecipient']),
+            many=True)
+
+
 class OrderSubmission(Resource):
 
     def __init__(self, trustlines: TrustlinesRelay) -> None:
