@@ -73,7 +73,7 @@ def test_get_events(currency_network_with_events, accounts):
     currency_network = currency_network_with_events
     creditline_update_events = currency_network.get_network_events(CreditlineUpdateEventType, user_address=accounts[0])
     e1, e2, e3 = creditline_update_events
-    assert (e1.other_party, e2.other_party, e3.other_party) == (accounts[1], accounts[2], accounts[4])
+    assert (e1.counter_party, e2.counter_party, e3.counter_party) == (accounts[1], accounts[2], accounts[4])
 
 
 def test_get_transfer_event(currency_network_with_events, accounts):
@@ -83,7 +83,7 @@ def test_get_transfer_event(currency_network_with_events, accounts):
     assert transfer_event.to == accounts[0]
     assert transfer_event.from_ == accounts[1]
     assert transfer_event.user == accounts[0]
-    assert transfer_event.other_party == accounts[1]
+    assert transfer_event.counter_party == accounts[1]
     assert transfer_event.direction == 'received'
 
 
