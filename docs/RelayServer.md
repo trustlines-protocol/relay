@@ -25,11 +25,11 @@ The installation instructions assume you create a dedicated user account and put
 files directly into the users home directory. The paths should be adapted to
 your needs.
 
-### parity/geth
+### parity
 
-You need to run a parity or geth node, which provides the JSONRPC API to the
-relay server and the indexer. At the moment we recommend using parity together
-with the kovan chain.
+You need to run a parity node, which provides the JSONRPC API to the relay
+server and the indexer. At the moment we recommend using parity together with
+the kovan chain.
 
 Please follow the [official documentation](https://wiki.parity.io/Setup) in
 order to install parity. Paritytech provides [binary
