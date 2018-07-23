@@ -226,7 +226,7 @@ The relay server reads  both files from the current directory, so we need to sta
 
 ```
 cd ~
-THREADING_BACKEND=gevent ~/opt/relay/bin/tl-relay
+THREADING_BACKEND=gevent ETHINDEX=1 ~/opt/relay/bin/tl-relay
 ```
 
 The relay server needs access to the parity node and the PostgreSQL database.
