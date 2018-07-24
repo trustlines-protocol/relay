@@ -688,15 +688,15 @@ Following additional attributes for `Transfer` events:
 
 ---
 
-### Transaction infos of user
+### Transaction infos for user
 Returns information that is needed to sign a transaction.
 #### Request
 ```
-GET /users/:userAddress/tx-infos
+GET /users/:userAddress/txinfos
 ```
 #### Example Request
 ```
-curl https://relay0.testnet.trustlines.network/api/v1/users/0xcbF1153F6e5AC01D363d432e24112e8aA56c55ce/tx-infos
+curl https://relay0.testnet.trustlines.network/api/v1/users/0xcbF1153F6e5AC01D363d432e24112e8aA56c55ce/txinfos
 ```
 #### URL Parameters
 |Name|Type|Required|Description|
