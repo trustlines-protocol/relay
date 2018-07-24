@@ -48,10 +48,10 @@ class OrderBook(Resource):
         return {
             'bids': OrderSchema().dump(
                 self.trustlines.orderbook.get_bids_by_tokenpair((base_token_address, quote_token_address)),
-                many=True),
+                many=True).data,
             'asks': OrderSchema().dump(
                 self.trustlines.orderbook.get_asks_by_tokenpair((base_token_address, quote_token_address)),
-                many=True),
+                many=True).data,
         }
 
 
@@ -65,7 +65,7 @@ class OrderDetail(Resource):
         order = self.trustlines.orderbook.get_order_by_hash(bytes.fromhex(order_hash[2:]))
         if order is None:
             abort(404, message='Order does not exist')
-        return OrderSchema().dump(order)
+        return OrderSchema().dump(order).data
 
 
 class Orders(Resource):
@@ -96,7 +96,7 @@ class Orders(Resource):
                 filter_maker_address=args['taker'],
                 filter_taker_address=args['trader'],
                 filter_fee_recipient_address=args['feeRecipient']),
-            many=True)
+            many=True).data
 
 
 class OrderSubmission(Resource):
