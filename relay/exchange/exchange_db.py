@@ -1,7 +1,7 @@
 from typing import Tuple, Sequence, Optional
 
 from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy import Column, Integer, String, Float
+from sqlalchemy import Column, Integer, String, Float, BigInteger
 from sqlalchemy.orm import sessionmaker
 
 from .order import Order
@@ -18,17 +18,17 @@ class OrderORM(Base):  # type: ignore
     maker_token = Column(String)
     taker_token = Column(String)
     fee_recipient = Column(String)
-    maker_token_amount = Column(Integer)
-    taker_token_amount = Column(Integer)
-    filled_maker_token_amount = Column(Integer)
-    filled_taker_token_amount = Column(Integer)
-    cancelled_maker_token_amount = Column(Integer)
-    cancelled_taker_token_amount = Column(Integer)
+    maker_token_amount = Column(BigInteger)
+    taker_token_amount = Column(BigInteger)
+    filled_maker_token_amount = Column(BigInteger)
+    filled_taker_token_amount = Column(BigInteger)
+    cancelled_maker_token_amount = Column(BigInteger)
+    cancelled_taker_token_amount = Column(BigInteger)
     price = Column(Float)
     maker_fee = Column(Integer)
     taker_fee = Column(Integer)
-    expiration_timestamp_in_sec = Column(Integer)
-    salt = Column(Integer)
+    expiration_timestamp_in_sec = Column(BigInteger)
+    salt = Column(BigInteger)
     v = Column(Integer)
     r = Column(String)
     s = Column(String)

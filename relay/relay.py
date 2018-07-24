@@ -11,7 +11,8 @@ from typing import Dict, Iterable, List, Union  # noqa: F401
 import gevent
 from eth_utils import is_checksum_address, to_checksum_address
 from gevent import sleep
-from sqlalchemy import create_engine
+import sqlalchemy
+from sqlalchemy.engine.url import URL
 from web3 import Web3, RPCProvider
 
 from .blockchain.proxy import sorted_events
@@ -409,7 +410,7 @@ class TrustlinesRelay:
 
     def _load_orderbook(self):
         self.orderbook = OrderBookGreenlet()
-        self.orderbook.connect_db(create_engine('sqlite:///:memory:'))
+        self.orderbook.connect_db(engine=create_engine())
         self.orderbook.start()
 
     def _load_addresses(self):
@@ -451,7 +452,7 @@ class TrustlinesRelay:
         path = self.config.get('firebase', {}).get('credentialsPath', None)
         if path is not None:
             self._firebase_raw_push_service = FirebaseRawPushService(path)
-            self._client_token_db = ClientTokenDB(create_engine('sqlite:///client_token.db'))
+            self._client_token_db = ClientTokenDB(engine=create_engine())
             logger.info('Firebase pushservice started')
             self._start_pushnotifications_for_registered_users()
         else:
@@ -545,3 +546,11 @@ def _create_on_full_sync(graph):
         graph.gen_network(graph_rep)
 
     return update_community
+
+
+def create_engine():
+    return sqlalchemy.create_engine(URL(drivername='postgresql',
+                                    database=os.environ.get("PGDATABASE", ""),
+                                    host=os.environ.get("PGHOST", ""),
+                                    username=os.environ.get("PGUSER", ""),
+                                    password=os.environ.get("PGPASSWORD", "")))
