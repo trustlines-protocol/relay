@@ -36,7 +36,8 @@ services:
       - "db"
       - "parity"
     build:
-      context: https://github.com/trustlines-network/relay.git#develop
+      #context: https://github.com/trustlines-network/relay.git#develop
+      context: ../..
     volumes:
       - ./config.json:/relay/config.json
       - ./addresses.json:/relay/addresses.json
