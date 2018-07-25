@@ -1,9 +1,0 @@
-{
-  "rpc":
-  {
-    "host": "localhost",
-    "port": 8545,
-    "ssl": false
-  },
-  "tokens": []
-}

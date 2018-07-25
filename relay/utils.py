@@ -1,11 +1,19 @@
-import re
+import web3  # type: ignore
 
 
-def add_0x_prefix(value):
-    if value[0:2] == '0x':
-        return value
-    return '0x' + value
+def merge_two_dicts(x, y):
+    """Given two dicts, merge them into a new dict as a shallow copy."""
+    z = x.copy()
+    z.update(y)
+    return z
 
 
-def is_address(address):
-    return re.match(r"^(0x)?[0-9a-f]{40}", str(address)) is not None
+def trim_args(args):
+    trimmed_args = {}
+    for key in args:
+        trimmed_args[key[1:len(key)]] = args[key]
+    return trimmed_args
+
+
+def sha3(text: str) -> str:
+    return web3.Web3.sha3(text=text)

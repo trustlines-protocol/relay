@@ -1,12 +1,28 @@
 flask
 flask_restful
 flask_cors
+webargs
 gevent
-web3[gevent]
-py-solc
-ethereum
-networkx
+web3[gevent]<4
+networkx>=2.0
 pygraphviz
-pysha3
-pytest
+git+https://github.com/trustlines-network/contracts.git@develop
+sqlalchemy
+eth-utils
+tinyrpc
+gevent-websocket
+marshmallow<3
+flask-sockets
+firebase-admin
+psycopg2 --no-binary psycopg2
+psycogreen
 
+# --- development dependencies, i.e. dependencies not needed for running tl-relay
+flake8
+flake8-string-format
+flake8-invalid-escape-sequences
+flake8-per-file-ignores
+coverage
+mypy
+pytest
+eth-testrpc
