@@ -31,19 +31,11 @@ curl -O https://releases.parity.io/v1.11.7/x86_64-unknown-linux-gnu/parity_1.11.
 sudo dpkg -i parity_1.11.7_ubuntu_amd64.deb
 ```
 
-The relay server needs an unlocked account. Therefore, make sure you're not
-exposing the JSONRPC endpoint. By default parity listens on the local interface
-for new connections, so any user with a login on the machine could also access
-the JSONRPC endpoint.
 
-
-The following command line starts parity with the kovan chain. Please adapt the
---author, --unlock and --password arguments
+The following command line starts parity with the kovan chain.
 
 ```
-parity --no-warp --auto-update none --no-download --chain kovan \
-    --author 0x987654321 --unlock 0x987654321 --password /path/to/password-file \
-    --jsonrpc-hosts all
+parity --no-warp --auto-update none --no-download --chain kovan --jsonrpc-hosts all
 ```
 
 One command line option we like to highlight is the `--no-warp` option. If you
@@ -64,7 +56,7 @@ results if you run with warp mode enabled.
 The [trustlines-contracts
 repository](https://github.com/trustlines-network/contracts) contains the
 solidity contracts to be deployed on the blockchain and a commandline tool to deploy the contracts. The [how to deploy the
-contracts guide](https://github.com/trustlines-network/contracts) contains more information on how to deploy the contracts. 
+contracts guide](https://github.com/trustlines-network/contracts) contains more information on how to deploy the contracts.
 The tool will return the addresses of the deployed contracts. You need to provide that information to the relay server with as json file `addresses.json` with the following format:
 
 ```
