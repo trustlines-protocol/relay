@@ -63,8 +63,29 @@ results if you run with warp mode enabled.
 ### Contracts
 The [trustlines-contracts
 repository](https://github.com/trustlines-network/contracts) contains the
-solidity contracts to be deployed on the blockchain. The ('how to deploy the
-contracts guide')[https://github.com/trustlines-network/contracts] contains more information on how to deploy the contracts. We assume from now on that the contracts have already been deployed
+solidity contracts to be deployed on the blockchain and a commandline tool to deploy the contracts. The [how to deploy the
+contracts guide](https://github.com/trustlines-network/contracts) contains more information on how to deploy the contracts. 
+The tool will return the addresses of the deployed contracts. You need to provide that information to the relay server with as json file `addresses.json` with the following format:
+
+```
+{"networks":
++  [<list of currency network addresses>],
++ "unwEth": <address of unw_eth_contract>,
++ "exchange": <address of exchange>
++}
+```
+
+For the already deployed contracts on kovan use this file:
+```
+{"networks":
++  ["0x55bdaaf9f941a5bb3eacc8d876eeff90b90ddac9",
++   "0xc0b33d88c704455075a0724aa167a286da778dde"],
++ "unwEth": "0x14971f39fa4024bf1a4824c39c6d274f3bcb123e",
++ "exchange": "0x51e5cf3f7e763c4e9b1154576838815e489cb2f7"
++}
+```
+
+We assume from now on that the contracts have already been deployed
 and that the `addresses.json` file has been copied to the user's home directory.
 
 ### PostgreSQL
