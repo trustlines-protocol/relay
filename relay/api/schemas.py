@@ -30,7 +30,9 @@ class CurrencyNetworkEventSchema(BlockchainEventSchema):
 
 class UserCurrencyNetworkEventSchema(CurrencyNetworkEventSchema):
     direction = fields.Str()
-    address = Address(attribute='other_party')
+    address = Address(attribute='counter_party')
+    counterParty = Address(attribute='counter_party')
+    user = Address()
 
 
 class TokenEventSchema(BlockchainEventSchema):
@@ -42,7 +44,9 @@ class TokenEventSchema(BlockchainEventSchema):
 
 class UserTokenEventSchema(TokenEventSchema):
     direction = fields.Str()
-    address = Address(attribute='other_party')
+    address = Address(attribute='counter_party')
+    counterParty = Address(attribute='counter_party')
+    user = Address()
 
 
 class ExchangeEventSchema(BlockchainEventSchema):

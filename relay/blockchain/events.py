@@ -46,7 +46,7 @@ class TLNetworkEvent(BlockchainEvent):
             return 'received'
 
     @property
-    def other_party(self):
+    def counter_party(self):
         if self.user is None:
             return None
         if self.from_ == self.user:

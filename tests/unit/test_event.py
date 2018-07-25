@@ -66,7 +66,7 @@ def test_trustline_update_event(web3_event_trustline_update):
     assert event.from_ == '0x123'
     assert event.to == '0x1234'
     assert event.user == '0x1234'
-    assert event.other_party == '0x123'
+    assert event.counter_party == '0x123'
     assert event.given == 50
     assert event.received == 100
     assert event.status == 'confirmed'
@@ -79,7 +79,7 @@ def test_transfer_event(web3_event_transfer):
     assert event.from_ == '0x123'
     assert event.to == '0x1234'
     assert event.user == '0x123'
-    assert event.other_party == '0x1234'
+    assert event.counter_party == '0x1234'
     assert event.value == 150
     assert event.status == 'pending'
     assert event.direction == 'sent'

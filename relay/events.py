@@ -46,7 +46,7 @@ class BalanceEvent(AccountEvent):
                          timestamp)
         self.from_ = from_
         self.to = to
-        self.other_party = to
+        self.counter_party = to
 
 
 class NetworkBalanceEvent(AccountEvent):
