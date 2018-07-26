@@ -7,6 +7,7 @@ from relay.streams import Client, Subject, MessagingSubject, DisconnectedError
 class LogClient(Client):
 
     def __init__(self):
+        super().__init__()
         self.events = []
 
     def send(self, id, event):
@@ -18,6 +19,7 @@ class LogClient(Client):
 class SafeLogClient(Client):
     "this client does not raise DisconnectedError"
     def __init__(self):
+        super().__init__()
         self.events = []
 
     def send(self, id, event):

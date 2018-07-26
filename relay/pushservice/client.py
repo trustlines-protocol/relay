@@ -15,6 +15,7 @@ class PushNotificationClient(Client):
     """
 
     def __init__(self, rawPushService: FirebaseRawPushService, client_token: str) -> None:
+        super().__init__()
         self._rawPushService = rawPushService
         self.client_token = client_token
 
