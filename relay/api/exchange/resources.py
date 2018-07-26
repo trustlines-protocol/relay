@@ -230,7 +230,8 @@ class UserEventsAllExchanges(Resource):
                                                                   from_block=from_block)
         except TimeoutException:
             logger.warning(
-                "User exchange events from all exchanges: event_name=%s user_address=%s from_block=%s. could not get events in time",
+                """User exchange events from all exchanges:
+                   event_name=%s user_address=%s from_block=%s. could not get events in time""",
                 type,
                 user_address,
                 from_block)
