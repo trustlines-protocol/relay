@@ -18,6 +18,7 @@ class RPCWebSocketApplication(WebSocketApplication):
         super().__init__(ws)
         self.rpc = rpc_protocol
         self.dispatcher = dispatcher
+        self.client = RPCWebSocketClient(self.ws, self.rpc)
 
     def on_open(self):
         logger.debug('Websocket connected')
@@ -25,7 +26,7 @@ class RPCWebSocketApplication(WebSocketApplication):
     def on_message(self, message):
 
         def caller(method, args, kwargs):
-            return validating_rpc_caller(method, args, kwargs, client=RPCWebSocketClient(self.ws, self.rpc))
+            return validating_rpc_caller(method, args, kwargs, client=self.client)
 
         try:
             request = self.rpc.parse_request(message)
@@ -44,11 +45,13 @@ class RPCWebSocketApplication(WebSocketApplication):
 
     def on_close(self, reason):
         logger.debug('Websocket disconnected')
+        self.client.close()
 
 
 class RPCWebSocketClient(Client):
 
     def __init__(self, ws, rpc_protocol):
+        super().__init__()
         self.ws = ws
         self.rpc = rpc_protocol
 
