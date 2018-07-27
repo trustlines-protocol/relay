@@ -10,6 +10,8 @@ class ExchangeEvent(TLNetworkEvent):
     def __init__(self, web3_event, current_blocknumber, timestamp, user=None):
         super().__init__(web3_event, current_blocknumber, timestamp, from_to_types, user)
         self.exchange_address = web3_event.get('address')
+        # NOTE: The argument orderHash can be a hex string because the indexer currently can
+        #       not save bytes in the database. See issue https://github.com/trustlines-network/py-eth-index/issues/16
         if (is_hex(web3_event.get('args').get('orderHash'))):
             self.order_hash = decode_hex(web3_event.get('args').get('orderHash'))
         else:
