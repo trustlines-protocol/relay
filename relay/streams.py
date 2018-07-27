@@ -16,6 +16,7 @@ class Client(object):
 
     def __init__(self) -> None:
         self.subscriptions = []  # type: List[Subscription]
+        self.closed = False
 
     def register(self, subscription: 'Subscription') -> None:
         """
@@ -31,11 +32,23 @@ class Client(object):
         """
         self.subscriptions.remove(subscription)
 
-    def send(self, subscription_id: str, event: Publishable) -> None:
+    def send(self, subscription: 'Subscription', event: Publishable) -> None:
         """
         Sends an event to the client that belongs to a subscription with the given subscription id
         Raises:
             DisconnectedError: This is raised if the client has already disconnected.
+        """
+        if subscription not in self.subscriptions:
+            raise ValueError('Unknown subscription')
+        if self.closed:
+            raise RuntimeError('Client connection is closed')
+        self._execute_send(subscription, event)
+
+    def _execute_send(self, subscription: 'Subscription', event: Publishable) -> None:
+        """
+        Executes the sending
+        Should be implemented by sub class
+        may raise DisconnectedError
         """
         raise NotImplementedError
 
@@ -44,8 +57,11 @@ class Client(object):
         Should be called when the connection to this client is closed.
         This will unsubscribe all registered subscriptions
         """
-        for subscription in self.subscriptions:
-            subscription.unsubscribe()
+        if not self.closed:
+            self.closed = True
+            for subscription in self.subscriptions[:]:  # copy, because we are deleting from that list
+                subscription.unsubscribe()
+            assert len(self.subscriptions) == 0
 
 
 class DisconnectedError(Exception):
@@ -106,7 +122,7 @@ class Subscription():
     def notify(self, event: Publishable) -> bool:
         if not self.closed:
             try:
-                self.client.send(self.id, event)
+                self.client.send(self, event)
                 return True
             except DisconnectedError:
                 self.unsubscribe()

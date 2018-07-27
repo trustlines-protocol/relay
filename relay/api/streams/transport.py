@@ -3,7 +3,7 @@ import logging
 from geventwebsocket import WebSocketApplication, WebSocketError
 from tinyrpc import BadRequestError
 
-from relay.streams import Client, DisconnectedError
+from relay.streams import Client, DisconnectedError, Subscription, Publishable
 from .rpc_protocol import validating_rpc_caller
 from ..schemas import UserCurrencyNetworkEventSchema
 from relay.blockchain.events import Event
@@ -55,14 +55,14 @@ class RPCWebSocketClient(Client):
         self.ws = ws
         self.rpc = rpc_protocol
 
-    def send(self, id, event):
+    def _execute_send(self, subscription: Subscription, event: Publishable) -> None:
         if isinstance(event, str) or isinstance(event, dict):
             event = event
         elif isinstance(event, Event):
             event = UserCurrencyNetworkEventSchema().dump(event).data
         else:
             raise ValueError('Unexpected Type: ' + type(event))
-        request = self.rpc.create_request('subscription_' + str(id), args={'event': event}, one_way=True)
+        request = self.rpc.create_request('subscription_' + str(subscription.id), args={'event': event}, one_way=True)
         try:
             self.ws.send(request.serialize())
         except WebSocketError as e:
