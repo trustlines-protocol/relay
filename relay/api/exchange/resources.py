@@ -208,6 +208,37 @@ class UserEventsExchange(Resource):
         return UserExchangeEventSchema().dump(events, many=True).data
 
 
+class UserEventsAllExchanges(Resource):
+
+    def __init__(self, trustlines: TrustlinesRelay) -> None:
+        self.trustlines = trustlines
+
+    args = {
+        'fromBlock': webfields.Int(required=False, missing=0),
+        'type': webfields.Str(required=False,
+                              validate=validate.OneOf(ExchangeProxy.event_types),
+                              missing=None)
+    }
+
+    @use_args(args)
+    def get(self, args, user_address: str):
+        from_block = args['fromBlock']
+        type = args['type']
+        try:
+            events = self.trustlines.get_all_user_exchange_events(user_address,
+                                                                  type=type,
+                                                                  from_block=from_block)
+        except TimeoutException:
+            logger.warning(
+                """User exchange events from all exchanges:
+                   event_name=%s user_address=%s from_block=%s. could not get events in time""",
+                type,
+                user_address,
+                from_block)
+            abort(504, TIMEOUT_MESSAGE)
+        return UserExchangeEventSchema().dump(events, many=True).data
+
+
 class EventsExchange(Resource):
 
     def __init__(self, trustlines: TrustlinesRelay) -> None:
