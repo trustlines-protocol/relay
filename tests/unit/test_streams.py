@@ -1,7 +1,7 @@
 import pytest
 import gevent
 
-from relay.streams import Client, Subject, MessagingSubject, DisconnectedError
+from relay.streams import Client, Subject, MessagingSubject, DisconnectedError, Subscription, Publishable
 
 
 class LogClient(Client):
@@ -10,10 +10,10 @@ class LogClient(Client):
         super().__init__()
         self.events = []
 
-    def send(self, id, event):
+    def _execute_send(self, subscription: Subscription, event: Publishable) -> None:
         if event == 'disconnect':
             raise DisconnectedError
-        self.events.append((id, event))
+        self.events.append((subscription.id, event))
 
 
 class SafeLogClient(Client):
@@ -22,13 +22,13 @@ class SafeLogClient(Client):
         super().__init__()
         self.events = []
 
-    def send(self, id, event):
-        self.events.append((id, event))
+    def _execute_send(self, subscription: Subscription, event: Publishable) -> None:
+        self.events.append((subscription.id, event))
 
 
 class GeventClient(Client):
 
-    def send(self, id, event):
+    def _execute_send(self, subscription: Subscription, event: Publishable) -> None:
         gevent.sleep(0.1)
         raise DisconnectedError
 
@@ -120,3 +120,29 @@ def test_unsubscription_race_condition(subject):
     # publish will unsubscribe because client is disconnected. Because it is delayed it will try to unsubscribe twice
     gevent.joinall((gevent.spawn(subject.publish, 'test1'), gevent.spawn(subject.publish, 'test2')), raise_error=True)
     assert subject.subscriptions == []
+
+
+def test_many_subscription(subject):
+    client = SafeLogClient()
+    subject.subscribe(client)
+    subject.subscribe(client)
+    assert len(client.subscriptions) == 2
+
+
+def test_stop_subscription(subject):
+    client = SafeLogClient()
+    subscription1 = subject.subscribe(client)
+    subject.subscribe(client)
+    subscription1.unsubscribe()
+    assert len(client.subscriptions) == 1
+
+
+def test_close_client(subject):
+    client = SafeLogClient()
+    subscription1 = subject.subscribe(client)
+    subscription2 = subject.subscribe(client)
+    client.close()
+    assert client.closed
+    assert len(client.subscriptions) == 0
+    assert subscription1.closed
+    assert subscription2.closed
