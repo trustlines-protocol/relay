@@ -51,9 +51,9 @@ class CurrencyNetworkProxy(Proxy):
 
     def __init__(self, web3, abi, address: str) -> None:
         super().__init__(web3, abi, address)
-        self.name = self._proxy.functions.name().call().strip('\0')  # type: str
-        self.decimals = self._proxy.functions.decimals().call()  # typ: str
-        self.symbol = self._proxy.functions.symbol().call().strip('\0')  # type: str
+        self.name: str = self._proxy.functions.name().call().strip('\0')
+        self.decimals: int = self._proxy.functions.decimals().call()
+        self.symbol: str = self._proxy.functions.symbol().call().strip('\0')
         try:
             self.capacityImbalanceFeeDivisor = self._proxy.functions.capacityImbalanceFeeDivisor().call()
         except (BadFunctionCallOutput, ValidationError, MismatchedABI) as e:
