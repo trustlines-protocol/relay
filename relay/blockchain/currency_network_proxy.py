@@ -49,9 +49,9 @@ class CurrencyNetworkProxy(Proxy):
 
     def __init__(self, web3, abi, address: str) -> None:
         super().__init__(web3, abi, address)
-        self.name = self._proxy.call().name().strip('\0')  # type: str
-        self.decimals = self._proxy.call().decimals()  # typ: str
-        self.symbol = self._proxy.call().symbol().strip('\0')  # type: str
+        self.name: str = self._proxy.call().name().strip('\0')
+        self.decimals: int = self._proxy.call().decimals()
+        self.symbol: str = self._proxy.call().symbol().strip('\0')
 
     @property
     def users(self) -> List[str]:
