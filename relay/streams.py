@@ -12,9 +12,56 @@ Publishable = Union[str, dict, Event]
 
 
 class Client(object):
+    """Represents the connection to a client. Different subscriptions can be connected to the same client"""
 
-    def send(self, id: str, event: Publishable):
+    def __init__(self) -> None:
+        self.subscriptions = []  # type: List[Subscription]
+        self.closed = False
+
+    def register(self, subscription: 'Subscription') -> None:
+        """
+        Registers a subscription that this client has done.
+        On closing the connection with `close` these subscription will get unsubscribed
+        """
+        self.subscriptions.append(subscription)
+
+    def unregister(self, subscription: 'Subscription') -> None:
+        """
+        Unregisters a subscription that this client is not listing for anymore.
+        On closing the connection with `close` these subscription will get unsubscribed
+        """
+        self.subscriptions.remove(subscription)
+
+    def send(self, subscription: 'Subscription', event: Publishable) -> None:
+        """
+        Sends an event to the client that belongs to a subscription with the given subscription id
+        Raises:
+            DisconnectedError: This is raised if the client has already disconnected.
+        """
+        if subscription not in self.subscriptions:
+            raise ValueError('Unknown subscription')
+        if self.closed:
+            raise RuntimeError('Client connection is closed')
+        self._execute_send(subscription, event)
+
+    def _execute_send(self, subscription: 'Subscription', event: Publishable) -> None:
+        """
+        Executes the sending
+        Should be implemented by sub class
+        may raise DisconnectedError
+        """
         raise NotImplementedError
+
+    def close(self) -> None:
+        """
+        Should be called when the connection to this client is closed.
+        This will unsubscribe all registered subscriptions
+        """
+        if not self.closed:
+            self.closed = True
+            for subscription in self.subscriptions[:]:  # copy, because we are deleting from that list
+                subscription.unsubscribe()
+            assert len(self.subscriptions) == 0
 
 
 class DisconnectedError(Exception):
@@ -22,11 +69,22 @@ class DisconnectedError(Exception):
 
 
 class Subject(object):
+    """
+    A subject that clients can subscribe to to get notifications
+    """
 
     def __init__(self) -> None:
         self.subscriptions: List[Subscription] = []
 
     def subscribe(self, client: Client) -> 'Subscription':
+        """
+        Subscribe to the topic to get notified about updates
+        Args:
+            client: the client that wants to subscribe
+
+        Returns: The subscription. Can be used to cancel these updates
+
+        """
         logger.debug('New Subscription')
         subscription = Subscription(client, self._create_id(), self)
         self.subscriptions.append(subscription)
@@ -59,11 +117,12 @@ class Subscription():
         self.id = id
         self.subject = subject
         self.closed = False
+        self.client.register(self)
 
     def notify(self, event: Publishable) -> bool:
         if not self.closed:
             try:
-                self.client.send(self.id, event)
+                self.client.send(self, event)
                 return True
             except DisconnectedError:
                 self.unsubscribe()
@@ -74,6 +133,7 @@ class Subscription():
         if not self.closed:
             self.closed = True
             self.subject.unsubscribe(self)
+            self.client.unregister(self)
 
 
 class MessagingSubject(Subject):
