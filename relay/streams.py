@@ -1,6 +1,6 @@
 import random
 import logging
-from typing import Union, List  # noqa: F401
+from typing import Union, List
 
 from .blockchain.events import Event
 from .logger import get_logger
@@ -74,7 +74,7 @@ class Subject(object):
     """
 
     def __init__(self) -> None:
-        self.subscriptions = []  # type: List[Subscription]
+        self.subscriptions: List[Subscription] = []
 
     def subscribe(self, client: Client) -> 'Subscription':
         """
@@ -140,7 +140,7 @@ class MessagingSubject(Subject):
 
     def __init__(self):
         super().__init__()
-        self.events = []  # type: List[Publishable]
+        self.events: List[Publishable] = []
 
     def get_missed_messages(self):
         events = self.events

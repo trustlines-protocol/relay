@@ -2,7 +2,7 @@ import logging
 import math
 import time
 import functools
-from typing import List, Dict, Callable, Any  # noqa: F401
+from typing import List, Dict, Callable, Any
 
 import gevent
 import itertools
@@ -23,8 +23,8 @@ reconnect_interval = 3  # 3s
 
 
 class Proxy(object):
-    event_builders = {}  # type: Dict[str, Callable[[Any, int, int], BlockchainEvent]]
-    standard_event_types = []  # type: List[str]
+    event_builders: Dict[str, Callable[[Any, int, int], BlockchainEvent]] = {}
+    standard_event_types: List[str] = []
 
     def __init__(self, web3, abi, address: str) -> None:
         self._web3 = web3
@@ -95,11 +95,11 @@ class Proxy(object):
         return [self._build_event(event, current_blocknumber) for event in events]
 
     def _build_event(self, event: Any, current_blocknumber: int = None) -> BlockchainEvent:
-        event_type = event.get('event')  # type: str
-        blocknumber = event.get('blockNumber')  # type: int
+        event_type: str = event.get('event')
+        blocknumber: int = event.get('blockNumber')
         if current_blocknumber is None:
             current_blocknumber = blocknumber
-        timestamp = self._get_block_timestamp(blocknumber)  # type: int
+        timestamp: int = self._get_block_timestamp(blocknumber)
         return self.event_builders[event_type](event, current_blocknumber, timestamp)
 
     def _get_block_timestamp(self, blocknumber: int) -> int:
