@@ -22,7 +22,8 @@ flake8
 flake8-string-format
 flake8-invalid-escape-sequences
 flake8-per-file-ignores
-coverage
-mypy
 pytest
+pytest-xdist
+pytest-cov
+mypy
 eth-testrpc
