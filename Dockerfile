@@ -12,7 +12,7 @@ FROM ubuntu:18.04 as builder
 ENV LANG C.UTF-8
 
 RUN apt-get update \
-    && apt-get install -y apt-utils libssl-dev curl graphviz \
+    && apt-get install -y apt-utils libssl-dev curl graphviz libsecp256k1-dev \
     python3 python3-distutils python3-dev python3-venv git build-essential libpq-dev libgraphviz-dev libsecp256k1-dev pkg-config \
     && rm -rf /var/lib/apt/lists/*
 

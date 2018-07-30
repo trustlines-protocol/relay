@@ -1,4 +1,4 @@
-import web3  # type: ignore
+import web3
 
 
 def merge_two_dicts(x, y):
