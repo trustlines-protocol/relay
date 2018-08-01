@@ -1,29 +1,40 @@
 language: python
 python:
-  - "3.6"
+- '3.6'
 install:
-  - curl -L -o $HOME/bin/solc https://github.com/ethereum/solidity/releases/download/v0.4.21/solc-static-linux && chmod +x $HOME/bin/solc
-  - pip install -c constraints.txt populus
-  - pip install codecov
-  - pip install -c constraints.txt -r requirements.txt
+- curl -L -o $HOME/bin/solc https://github.com/ethereum/solidity/releases/download/v0.4.21/solc-static-linux
+  && chmod +x $HOME/bin/solc
+- pip install -c constraints.txt populus
+- pip install codecov
+- pip install -c constraints.txt -r requirements.txt
+- pip install -c constraints.txt -e .
 script:
-  - flake8
-  - mypy --ignore-missing-imports relay
-  - pytest --cov=relay tests
-  - docker build -t relay .
+- flake8
+- mypy --ignore-missing-imports relay
+- pytest --cov=relay tests
+- docker build -t relay .
 after_success:
-  - codecov
+- codecov
+deploy:
+  skip_cleanup: true
+  provider: script
+  script: ".travis/push-docker-image"
+  on:
+    branch: develop
 branches:
   only:
   - master
   - develop
 services:
-  - docker
+- docker
 env:
+  global:
+  - DOCKER_USER=trustlinesautomation
   - THREADING_BACKEND=gevent
+  - secure: TMCObpO6yl9vW0Yp2skrRa9Exph5LO8aWniePHJKbldt3wKV+x7Ab0V2hD2/dZES85Pdqs7a1nSMOGMB60EZ9CiAr07LOZfltH7NsDuK+c5jqDffi+Wa8KW+CrNT/2lQ1Hz/eyVMHLUhUJEatUB4JzmhvaeRMkqRtkP+M6NaXub3mg9AFigr+aHZ/5Zl2l2z8CekAS4sLtrdcIR2cKYmUCJySpg9CVSM8VCOGouw+I7Y6QC6vn7MABGcpeUxsgdbUQag0xe5uBlTR6pOEp4UGHWC0kpvipNIdh8HhTECe9GhN0NltqL4HqBs1hsrnntta3bOFFjph/LljuWExo5X/w++Oy3p30wOuO7VSWjSPOXOiIFaADwlHzn08WerQextZmr/Q6c7VbH/BxJk/GMpG5CCvMCRUI4lON5zXLC6Z3N26w2PgA2cHnu792znInuVfW+qrGFVAo1owD9o18BBVlBJ1u4TjMr3viTy0enKJw7ksECg9Mh6mOtTiD+jhAZQlwH/eX0O3PbK3FQuu9p9x1O6OP3IKZIzGVJm3nS7jgqMYFONeHhoFKf7x1fPLfPbCSZrgu3tJnzxBFFAfi015uzUSk0mN9DALfTO04G7W9x4xxke8czn4EZyaFzP11zvft3T8VfQeh6fTTju+FEwRBgDiGyxRwO9okz31GYyQ0o=
 notifications:
   webhooks:
     urls:
-      - secure: "GQq5gi4oaDgJ6QQvNb1xnGMHlTzY38g/IePsURExefZi4AXUlaCbJOmR+XVZv+Dhz4GzSZ+BQ7WoWRZTu2wvyn/b/00JSieBmyMMobGSaNE1wjSdDTVTYnZV3TQgoHvlSQWpEPiuTFPVsvvbTkJgf2n5vtv+MsvkZHTHjsjtM4GC7Xi0ykzqiREsJlBf+mwqz5gsu7kVANeTtsBPBPEDM4ELhm5exa/fvvsw5N/9nmfFWkOTtZvVx03vacTJowZB2mIczmq6amdQ76ZwPAuzXsVTAT/vivBEEFm0Enicki2k3rj7JKdG+x2uerVsRGUHF3AbvI0Jcb/KOx7YtCgxU4KUDy0b6DdRn4uN72g3lt5eMhaOF9NP9DMIp0+4PSSQQRubuKgnHR5u40hbc2cz/sVaprrq4I+mTiubwaAwjD4AXMYOAqwTJ8DYwxHE1qo94w/bJ/FvNn+L0aTR/cWb0r002RDIGT0NPGm43Q3Me1VPA4o71bO/erllorvo5wuBRsPCHQinXBe9a1FVnkSd+MSxx5DXSG3p5HJnhKJTJLrJDLtDGVVVD8YOZEZDly4pli/27yAgoD6OcIaWdk0yGcPvzLaYgu4W8fdA1E6BTKnqq04lylUEeXKpXBzogeL1nlZBTxG6sIrVVSmXTTAH1Kt5I7kAiXt07V9o8kLmZAY="
+    - secure: GQq5gi4oaDgJ6QQvNb1xnGMHlTzY38g/IePsURExefZi4AXUlaCbJOmR+XVZv+Dhz4GzSZ+BQ7WoWRZTu2wvyn/b/00JSieBmyMMobGSaNE1wjSdDTVTYnZV3TQgoHvlSQWpEPiuTFPVsvvbTkJgf2n5vtv+MsvkZHTHjsjtM4GC7Xi0ykzqiREsJlBf+mwqz5gsu7kVANeTtsBPBPEDM4ELhm5exa/fvvsw5N/9nmfFWkOTtZvVx03vacTJowZB2mIczmq6amdQ76ZwPAuzXsVTAT/vivBEEFm0Enicki2k3rj7JKdG+x2uerVsRGUHF3AbvI0Jcb/KOx7YtCgxU4KUDy0b6DdRn4uN72g3lt5eMhaOF9NP9DMIp0+4PSSQQRubuKgnHR5u40hbc2cz/sVaprrq4I+mTiubwaAwjD4AXMYOAqwTJ8DYwxHE1qo94w/bJ/FvNn+L0aTR/cWb0r002RDIGT0NPGm43Q3Me1VPA4o71bO/erllorvo5wuBRsPCHQinXBe9a1FVnkSd+MSxx5DXSG3p5HJnhKJTJLrJDLtDGVVVD8YOZEZDly4pli/27yAgoD6OcIaWdk0yGcPvzLaYgu4W8fdA1E6BTKnqq04lylUEeXKpXBzogeL1nlZBTxG6sIrVVSmXTTAH1Kt5I7kAiXt07V9o8kLmZAY=
     on_success: change
     on_failure: always

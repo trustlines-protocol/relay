@@ -1,0 +1,18 @@
+#! /usr/bin/env bash
+
+set -e
+
+echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USER" --password-stdin
+
+version=$(python -c 'import pkg_resources; print(pkg_resources.get_distribution("trustlines-relay").version.replace("+", "_"))')
+
+echo "Tagging with $version"
+echo "=====> pushing to dockerhub"
+
+set -x
+
+docker tag relay trustlines/relay:$version
+docker push trustlines/relay:$version
+
+docker tag relay trustlines/relay:latest
+docker push trustlines/relay:latest
