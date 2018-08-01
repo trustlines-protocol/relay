@@ -2,7 +2,7 @@
 
 This document explains how to run your own [trustlines network](https://trustlines.network/) relay server infrastructure. We will walk you through setting up a relay server and all dependent components. The current documentation is written for a Debian-based Linux system.
 
-If you are low on time, you may jump to the description of the [docker-compose based setup](docker/trustlines/README.md).
+If you are low on time, you may jump to the description of the [docker-compose based setup](../docker/trustlines/README.md).
 
 ## Dependencies
 
