@@ -13,7 +13,7 @@ class PostMessage(Resource):
 
     args = {
         'message': fields.String(required=True),
-        'type': fields.String(default=None)
+        'type': fields.String(missing=None)
     }
 
     @use_args(args)
