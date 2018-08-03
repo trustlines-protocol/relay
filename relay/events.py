@@ -52,3 +52,19 @@ class BalanceEvent(AccountEvent):
 class NetworkBalanceEvent(AccountEvent):
 
     type = 'NetworkBalance'
+
+
+class MessageEvent(Event):
+
+    type = 'Message'
+
+    def __init__(self,
+                 message: str,
+                 type: str = None,
+                 timestamp: int = None) -> None:
+        if timestamp is None:
+            timestamp = int(time.time())
+        super().__init__(timestamp)
+        if type is not None:
+            self.type = type
+        self.message = message

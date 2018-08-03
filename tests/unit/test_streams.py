@@ -1,7 +1,13 @@
+from collections import namedtuple
+
 import pytest
 import gevent
 
-from relay.streams import Client, Subject, MessagingSubject, DisconnectedError, Subscription, Publishable
+from relay.streams import Client, Subject, MessagingSubject, DisconnectedError, Subscription, Event
+from relay.events import MessageEvent
+
+
+IdEventTuple = namedtuple('IdEventTuple', 'id, event')
 
 
 class LogClient(Client):
@@ -10,10 +16,10 @@ class LogClient(Client):
         super().__init__()
         self.events = []
 
-    def _execute_send(self, subscription: Subscription, event: Publishable) -> None:
-        if event == 'disconnect':
-            raise DisconnectedError
-        self.events.append((subscription.id, event))
+    def _execute_send(self, subscription: Subscription, event: Event) -> None:
+        if isinstance(event, MessageEvent) and event.message == 'disconnect':
+                raise DisconnectedError
+        self.events.append(IdEventTuple(subscription.id, event))
 
 
 class SafeLogClient(Client):
@@ -22,13 +28,13 @@ class SafeLogClient(Client):
         super().__init__()
         self.events = []
 
-    def _execute_send(self, subscription: Subscription, event: Publishable) -> None:
-        self.events.append((subscription.id, event))
+    def _execute_send(self, subscription: Subscription, event: Event) -> None:
+        self.events.append(IdEventTuple(subscription.id, event))
 
 
 class GeventClient(Client):
 
-    def _execute_send(self, subscription: Subscription, event: Publishable) -> None:
+    def _execute_send(self, subscription: Subscription, event: Event) -> None:
         gevent.sleep(0.1)
         raise DisconnectedError
 
@@ -50,9 +56,11 @@ def client():
 
 def test_subscription(subject, client):
     subscription = subject.subscribe(client)
-    subject.publish(event='test')
+    subject.publish(event=MessageEvent('test'))
     id = subscription.id
-    assert client.events == [(id, 'test')]
+    item = client.events[0]
+    assert item.id == id
+    assert item.event.message == 'test'
     assert not subscription.closed
     assert len(subject.subscriptions) == 1
 
@@ -60,7 +68,7 @@ def test_subscription(subject, client):
 def test_cancel_subscription(subject, client):
     subscription = subject.subscribe(client)
     subscription.unsubscribe()
-    subject.publish(event='test')
+    subject.publish(event=MessageEvent('test'))
     assert client.events == []
     assert subscription.closed
     assert len(subject.subscriptions) == 0
@@ -68,8 +76,8 @@ def test_cancel_subscription(subject, client):
 
 def test_auto_unsubscribe(subject, client):
     subscription = subject.subscribe(client)
-    subject.publish(event='disconnect')  # throws disconnected error, should unsubscribe
-    subject.publish(event='test')
+    subject.publish(event=MessageEvent('disconnect'))  # throws disconnected error, should unsubscribe
+    subject.publish(event=MessageEvent('test'))
     assert client.events == []
     assert subscription.closed
     assert len(subject.subscriptions) == 0
@@ -81,19 +89,21 @@ def test_auto_unsubscribe_dont_skip(subject):
     clients = [LogClient(), SafeLogClient()]
     for c in clients:
         subject.subscribe(c)
-    subject.publish(event='disconnect')  # the first one throws and get's auto-unsubscribed
+    subject.publish(event=MessageEvent('disconnect'))  # the first one throws and get's auto-unsubscribed
     assert clients[1].events, "second client not notified"
 
 
 def test_subscription_after_puplish(messaging_subject, client):
-    assert not messaging_subject.publish(event='test')
+    assert not messaging_subject.publish(event=MessageEvent('test'))
     subscription = messaging_subject.subscribe(client)
-    assert messaging_subject.get_missed_messages() == ['test']
+    missed_messages = messaging_subject.get_missed_messages()
+    assert len(missed_messages) == 1
+    assert missed_messages[0].message == 'test'
     assert not subscription.closed
 
 
 def test_subscription_after_resubscribe(messaging_subject, client):
-    messaging_subject.publish(event='test')
+    messaging_subject.publish(event=MessageEvent('test'))
     subscription = messaging_subject.subscribe(client)
     messaging_subject.get_missed_messages()
     subscription.unsubscribe()
@@ -104,12 +114,16 @@ def test_subscription_after_resubscribe(messaging_subject, client):
 
 
 def test_subscription_both(messaging_subject, client):
-    assert not messaging_subject.publish(event='test1')
+    assert not messaging_subject.publish(event=MessageEvent('test1'))
     subscription = messaging_subject.subscribe(client)
-    assert messaging_subject.publish(event='test2')
+    assert messaging_subject.publish(event=MessageEvent('test2'))
     id = subscription.id
-    assert messaging_subject.get_missed_messages() == ['test1']
-    assert client.events == [(id, 'test2')]
+    missed_messages = messaging_subject.get_missed_messages()
+    assert len(missed_messages) == 1
+    assert missed_messages[0].message == 'test1'
+    item = client.events[0]
+    assert item.id == id
+    assert item.event.message == 'test2'
     assert not subscription.closed
 
 
@@ -118,7 +132,9 @@ def test_unsubscription_race_condition(subject):
     client1 = GeventClient()
     subject.subscribe(client1)
     # publish will unsubscribe because client is disconnected. Because it is delayed it will try to unsubscribe twice
-    gevent.joinall((gevent.spawn(subject.publish, 'test1'), gevent.spawn(subject.publish, 'test2')), raise_error=True)
+    gevent.joinall(
+        (gevent.spawn(subject.publish, MessageEvent('test1')), gevent.spawn(subject.publish, MessageEvent('test2'))),
+        raise_error=True)
     assert subject.subscriptions == []
 
 

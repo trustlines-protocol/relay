@@ -229,8 +229,12 @@ class TrustlinesRelay:
                     subscription.client.client_token == client_token):
                 return  # Token already registered
         logger.debug('Add client token {} for address {}'.format(client_token, user_address))
+        client = PushNotificationClient(self._firebase_raw_push_service, client_token)
         self.subjects[user_address].subscribe(
-            PushNotificationClient(self._firebase_raw_push_service, client_token)
+            client
+        )
+        self.messaging[user_address].subscribe(
+            client
         )
 
     def _stop_pushnotifications(self, user_address: str, client_token: str) -> None:
@@ -240,7 +244,7 @@ class TrustlinesRelay:
             if (isinstance(subscription.client, PushNotificationClient) and
                     subscription.client.client_token == client_token):
                 logger.debug('Remove client token {} for address {}'.format(client_token, user_address))
-                subscription.unsubscribe()
+                subscription.client.close()
                 success = True
         if not success:
             raise TokenNotFoundException
