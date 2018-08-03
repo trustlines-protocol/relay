@@ -1,7 +1,7 @@
-FROM python:3.6
+FROM python:3.5
 
 RUN apt-get update && \
-    apt-get install -y apt-utils libsecp256k1-dev libssl-dev curl graphviz
+    apt-get install -y apt-utils libssl-dev curl graphviz
 
 RUN curl -L -o /usr/bin/solc https://github.com/ethereum/solidity/releases/download/v0.4.21/solc-static-linux && \
     chmod +x /usr/bin/solc

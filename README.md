@@ -3,7 +3,7 @@
 ## Installation
 
 ### Prerequisites
-- Python 3.6 or up
+- Python 3.5 or up
 - pip
 
 #### Installation on Ubuntu
