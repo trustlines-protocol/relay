@@ -9,6 +9,10 @@ class EventSchema(Schema):
     timestamp = fields.Integer()
 
 
+class MessageEventSchema(EventSchema):
+    message = fields.Str()
+
+
 class BlockchainEventSchema(EventSchema):
     blockNumber = fields.Integer(attribute='blocknumber')
     type = fields.Str(default='event')

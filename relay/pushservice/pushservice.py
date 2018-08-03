@@ -1,12 +1,20 @@
 import json
+import logging
+from typing import Optional
 
 import firebase_admin
 from firebase_admin import credentials, messaging
 
-from relay.events import Event
+from relay.events import Event, MessageEvent, AccountEvent
+from relay.blockchain.events import TLNetworkEvent
 from relay.blockchain.currency_network_events import TransferEvent, TrustlineRequestEvent, TrustlineUpdateEvent
-from relay.api.schemas import UserCurrencyNetworkEventSchema
+from relay.api.schemas import UserCurrencyNetworkEventSchema, MessageEventSchema
 from .client_token_db import ClientTokenDB
+from relay.logger import get_logger
+
+
+logger = get_logger('pushservice', logging.DEBUG)
+
 
 # see https://firebase.google.com/docs/cloud-messaging/admin/errors
 INVALID_CLIENT_TOKEN_ERRORS = [
@@ -42,15 +50,18 @@ class FirebaseRawPushService:
 
     def send_event(self, client_token, event: Event):
         message = _build_event_message(client_token, event)
-        try:
-            messaging.send(message, app=self._app)
-        except messaging.ApiCallError as e:
-            # Check if error code is because token is invalid
-            # see https://firebase.google.com/docs/cloud-messaging/admin/errors
-            if e.code in INVALID_CLIENT_TOKEN_ERRORS:
-                raise InvalidClientTokenException from e
-            else:
-                raise MessageNotSentException from e
+        if message is not None:
+            try:
+                messaging.send(message, app=self._app)
+            except messaging.ApiCallError as e:
+                # Check if error code is because token is invalid
+                # see https://firebase.google.com/docs/cloud-messaging/admin/errors
+                if e.code in INVALID_CLIENT_TOKEN_ERRORS:
+                    raise InvalidClientTokenException from e
+                else:
+                    raise MessageNotSentException from e
+        else:
+            logger.warning('Could not sent event of type: %s', type(event))
 
     def check_client_token(self, client_token: str) -> bool:
         """
@@ -78,8 +89,13 @@ class FirebaseRawPushService:
         return True
 
 
-def _build_event_message(client_token: str, event: Event) -> messaging.Message:
-    data = UserCurrencyNetworkEventSchema().dump(event).data
+def _build_event_message(client_token: str, event: Event) -> Optional[messaging.Message]:
+    if isinstance(event, TLNetworkEvent) or isinstance(event, AccountEvent):
+        data = UserCurrencyNetworkEventSchema().dump(event).data
+    elif isinstance(event, MessageEvent):
+        data = MessageEventSchema().dump(event).data
+    else:
+        return None
 
     message = messaging.Message(
         notification=_build_notification(event),
@@ -111,6 +127,12 @@ def _build_notification(event: Event) -> messaging.Notification:
             title='Trustline Update',
             body='A trustline was updated',
         )
+    elif isinstance(event, MessageEvent):
+        if event.type == 'PaymentRequest':
+            notification = messaging.Notification(
+                title='Payment Request',
+                body='Click for more details',
+            )
 
     return notification
 

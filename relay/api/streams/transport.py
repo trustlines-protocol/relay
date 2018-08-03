@@ -3,10 +3,11 @@ import logging
 from geventwebsocket import WebSocketApplication, WebSocketError
 from tinyrpc import BadRequestError
 
-from relay.streams import Client, DisconnectedError, Subscription, Publishable
+from relay.streams import Client, DisconnectedError, Subscription
 from .rpc_protocol import validating_rpc_caller
-from ..schemas import UserCurrencyNetworkEventSchema
-from relay.blockchain.events import Event
+from ..schemas import UserCurrencyNetworkEventSchema, MessageEventSchema
+from relay.blockchain.events import Event, TLNetworkEvent
+from relay.events import MessageEvent, AccountEvent
 from relay.logger import get_logger
 
 logger = get_logger('websockets', logging.DEBUG)
@@ -55,14 +56,16 @@ class RPCWebSocketClient(Client):
         self.ws = ws
         self.rpc = rpc_protocol
 
-    def _execute_send(self, subscription: Subscription, event: Publishable) -> None:
-        if isinstance(event, str) or isinstance(event, dict):
-            event = event
-        elif isinstance(event, Event):
-            event = UserCurrencyNetworkEventSchema().dump(event).data
+    def _execute_send(self, subscription: Subscription, event: Event) -> None:
+        if isinstance(event, TLNetworkEvent) or isinstance(event, AccountEvent):
+            data = UserCurrencyNetworkEventSchema().dump(event).data
+        elif isinstance(event, MessageEvent):
+            data = MessageEventSchema().dump(event).data
         else:
-            raise ValueError('Unexpected Type: ' + type(event))
-        request = self.rpc.create_request('subscription_' + str(subscription.id), args={'event': event}, one_way=True)
+            logger.warning('Could not sent event of type: %s', type(event))
+            return
+        assert isinstance(data, dict)
+        request = self.rpc.create_request('subscription_' + str(subscription.id), args={'event': data}, one_way=True)
         try:
             self.ws.send(request.serialize())
         except WebSocketError as e:
