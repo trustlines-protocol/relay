@@ -6,7 +6,7 @@ If you are low on time, you may jump to the description of the [docker-compose b
 
 ## Dependencies
 
-Since the trustlines infrastructure components are implemented in python 3, you need to install relevant dependencies. You will need at least python 3.6.
+Since the trustlines infrastructure components are implemented in python 3, you need to install relevant dependencies.
 
 ```
 sudo apt install build-essential python3-dev python3-venv pkg-config \
