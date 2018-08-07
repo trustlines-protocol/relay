@@ -428,16 +428,25 @@ class TrustlinesRelay:
         self.orderbook.start()
 
     def _load_addresses(self):
+        addresses = {}
         with open('addresses.json') as data_file:
-            try:
-                addresses = json.load(data_file)
-            except json.decoder.JSONDecodeError as e:
-                logger.error('Could not read addresses.json:' + str(e))
-                return
-        for address in addresses['networks']:
+            content = data_file.read()
+            if content:
+                try:
+                    addresses = json.loads(content)
+                except json.decoder.JSONDecodeError as e:
+                    logger.error('Could not read addresses.json:' + str(e))
+            else:
+                logger.warning('addresses.json file is empty')
+        network_addresses = addresses.get('networks', [])
+        for address in network_addresses:
             self.new_network(to_checksum_address(address))
-        self.new_exchange(to_checksum_address(addresses['exchange']))
-        self.new_unw_eth(to_checksum_address(addresses['unwEth']))
+        exchange_address = addresses.get('exchange', None)
+        if exchange_address is not None:
+            self.new_exchange(to_checksum_address(exchange_address))
+        new_unw_eth_address = addresses.get('unwEth', None)
+        if new_unw_eth_address is not None:
+            self.new_unw_eth(to_checksum_address(new_unw_eth_address))
 
     def _start_listen_network(self, address):
         assert is_checksum_address(address)
