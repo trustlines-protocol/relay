@@ -195,7 +195,8 @@ curl https://relay0.testnet.trustlines.network/api/v1/networks/0xC0B33D88C704455
 #### Response
 |Attribute|Type|Description|
 |---------|----|-----------|
-|address|string|Address of trustline counterparty|
+|counterParty|string|Address of trustline counterparty|
+|user|string|Address of trustline user|
 |balance|string|Balance of trustline from point of view of user|
 |given|string|Creditline given to counterparty|
 |received|string|Creditline received by counterparty|
@@ -205,15 +206,16 @@ curl https://relay0.testnet.trustlines.network/api/v1/networks/0xC0B33D88C704455
 #### Example Response
 ```json
 [
-	{
-		"address": "0x7Ec3543702FA8F2C7b2bD84C034aAc36C263cA8b",
-		"balance": "-102",
-		"given": "10000",
-		"received": "10000",
-		"leftGiven": "10102",
-		"leftReceived": "9898",
-		"id": "0x314338891c370d4c77657386c676b6cd2e4862af1244820f9e7b9166d181057f"
-	}
+  {
+    "id": "0xe4332c0bc15bf97933ce54c93af772bb13fad2c4c44e2516eb62d4f6c041e9ab",
+    "leftReceived": "19848",
+    "counterParty": "0xB5A3ad8d5A23e5DDD8b8917F709b01396e4d55e4",
+    "balance": "-152",
+    "given": "10000",
+    "leftGiven": "10152",
+    "received": "20000",
+    "user": "0x04f9b217b334507c42Ad3b74BFf024c724aBB166"
+  }
 ]
 ```
 
@@ -238,7 +240,8 @@ curl https://relay0.testnet.trustlines.network/api/v1/networks/0xC0B33D88C704455
 ### Response
 |Attribute|Type|Description|
 |---------|----|-----------|
-|address|string|Address of trustline counterparty (B)|
+|counterParty|string|Address of trustline counterparty|
+|user|string|Address of trustline user|
 |balance|string|Balance of trustline from point of view of user (A)|
 |given|string|Creditline given to counterparty|
 |received|string|Creditline received by counterparty|
@@ -248,13 +251,14 @@ curl https://relay0.testnet.trustlines.network/api/v1/networks/0xC0B33D88C704455
 ### Example Response
 ```json
 {
-	"address": "0x7Ec3543702FA8F2C7b2bD84C034aAc36C263cA8b",
-	"balance": "-102",
-	"given": "10000",
-	"received": "10000",
-	"leftGiven": "10102",
-	"leftReceived": "9898",
-	"id": "0x314338891c370d4c77657386c676b6cd2e4862af1244820f9e7b9166d181057f"
+    "id": "0xe4332c0bc15bf97933ce54c93af772bb13fad2c4c44e2516eb62d4f6c041e9ab",
+    "leftReceived": "19848",
+    "counterParty": "0xB5A3ad8d5A23e5DDD8b8917F709b01396e4d55e4",
+    "balance": "-152",
+    "given": "10000",
+    "leftGiven": "10152",
+    "received": "20000",
+    "user": "0x04f9b217b334507c42Ad3b74BFf024c724aBB166"
 }
 ```
 

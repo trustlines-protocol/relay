@@ -90,8 +90,6 @@ class TrustlineSchema(Schema):
     given = BigInteger(attribute='creditline_given')
     received = BigInteger(attribute='creditline_received')
     balance = BigInteger()
-    id = fields.Str()
-    address = Address(attribute='other_party')
 
 
 class TxInfosSchema(Schema):
