@@ -37,8 +37,8 @@ services:
       - "db"
       - "parity"
     volumes:
-      - ./config.json:/relay/config.json
-      - ./addresses.json:/relay/addresses.json
+      - ./config.json:/opt/relay/config.json
+      - ./addresses.json:/opt/relay/addresses.json
     # make relay server listen on port 5000. In a real scenario you will want to
     # put a proxy like nginx, apache or traefik in front of the relay server
     ports:

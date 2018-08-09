@@ -38,7 +38,7 @@ docker-compose up --no-start
 
 We need the compiled contracts, which are installed in the relay server image. Copy them with:
 ```
-docker run --rm -it -v $(pwd):/tmp --entrypoint /bin/bash trustlines_relay -c "cp /usr/local/trustlines-contracts/build/contracts.json /tmp"
+docker-compose run --rm --no-deps -v $(pwd):/here --entrypoint /bin/bash relay -c "cp /opt/relay/trustlines-contracts/build/contracts.json /here"
 ```
 
 We need to start the index container for initial database setup:
