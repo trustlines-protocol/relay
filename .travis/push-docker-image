@@ -2,17 +2,20 @@
 
 set -e
 
+DOCKER_REPO=trustlines/relay
+LOCAL_IMAGE=relay
+
 echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USER" --password-stdin
 
-version=$(python -c 'import pkg_resources; print(pkg_resources.get_distribution("trustlines-relay").version.replace("+", "_"))')
+version=$(docker run --entrypoint '' --rm $LOCAL_IMAGE cat VERSION | tr '+' '_')
 
 echo "Tagging with $version"
 echo "=====> pushing to dockerhub"
 
 set -x
 
-docker tag relay trustlines/relay:$version
-docker push trustlines/relay:$version
+docker tag $LOCAL_IMAGE $DOCKER_REPO:$version
+docker push $DOCKER_REPO:$version
 
-docker tag relay trustlines/relay:latest
-docker push trustlines/relay:latest
+docker tag $LOCAL_IMAGE $DOCKER_REPO:latest
+docker push $DOCKER_REPO:latest

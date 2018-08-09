@@ -6,7 +6,7 @@ import functools
 import itertools
 from collections import defaultdict
 from copy import deepcopy
-from typing import Dict, Iterable, List, Union, Optional
+from typing import Dict, Iterable, List, Union  # noqa: F401
 
 import gevent
 from eth_utils import is_checksum_address, to_checksum_address
@@ -47,19 +47,19 @@ class TokenNotFoundException(Exception):
 class TrustlinesRelay:
 
     def __init__(self):
-        self.currency_network_proxies: Dict[str, CurrencyNetworkProxy] = {}
-        self.currency_network_graphs: Dict[str, CurrencyNetworkGraph] = {}
+        self.currency_network_proxies = {}  # type: Dict[str, CurrencyNetworkProxy]
+        self.currency_network_graphs = {}  # type: Dict[str, CurrencyNetworkGraph]
         self.subjects = defaultdict(Subject)
         self.messaging = defaultdict(MessagingSubject)
         self.config = {}
         self.contracts = {}
-        self.node: Node = None
+        self.node = None  # type: Node
         self._web3 = None
-        self.orderbook: OrderBookGreenlet = None
-        self.unw_eth_proxies: Dict[str, UnwEthProxy] = {}
-        self.token_proxies: Dict[str, TokenProxy] = {}
-        self._firebase_raw_push_service: Optional[FirebaseRawPushService] = None
-        self._client_token_db: Optional[ClientTokenDB] = None
+        self.orderbook = None  # type: OrderBookGreenlet
+        self.unw_eth_proxies = {}  # type: Dict[str, UnwEthProxy]
+        self.token_proxies = {}  # type: Dict[str, TokenProxy]
+        self._firebase_raw_push_service = None
+        self._client_token_db = None  # type: ClientTokenDB
 
     @property
     def networks(self) -> Iterable[str]:
@@ -202,7 +202,7 @@ class TrustlinesRelay:
 
     def get_networks_of_user(self, user_address: str) -> List[str]:
         assert is_checksum_address(user_address)
-        networks_of_user: List[str] = []
+        networks_of_user = []  # type: List[str]
         for network_address in self.networks:
             if user_address in self.currency_network_graphs[network_address].users:
                 networks_of_user.append(network_address)
@@ -212,19 +212,16 @@ class TrustlinesRelay:
         if self._firebase_raw_push_service is not None:
             self._start_pushnotifications(user_address, client_token)
             try:
-                if self._client_token_db is not None:
-                    self._client_token_db.add_client_token(user_address, client_token)
+                self._client_token_db.add_client_token(user_address, client_token)
             except ClientTokenAlreadyExistsException:
                 pass  # all good
 
     def delete_push_client_token(self, user_address: str, client_token: str) -> None:
         if self._firebase_raw_push_service is not None:
-            if self._client_token_db is not None:
-                self._client_token_db.delete_client_token(user_address, client_token)
+            self._client_token_db.delete_client_token(user_address, client_token)
             self._stop_pushnotifications(user_address, client_token)
 
     def _start_pushnotifications(self, user_address: str, client_token: str) -> None:
-        assert self._firebase_raw_push_service is not None
         if not self._firebase_raw_push_service.check_client_token(client_token):
             raise InvalidClientTokenException
         for subscription in self.subjects[user_address].subscriptions:
@@ -232,8 +229,12 @@ class TrustlinesRelay:
                     subscription.client.client_token == client_token):
                 return  # Token already registered
         logger.debug('Add client token {} for address {}'.format(client_token, user_address))
+        client = PushNotificationClient(self._firebase_raw_push_service, client_token)
         self.subjects[user_address].subscribe(
-            PushNotificationClient(self._firebase_raw_push_service, client_token)
+            client
+        )
+        self.messaging[user_address].subscribe(
+            client
         )
 
     def _stop_pushnotifications(self, user_address: str, client_token: str) -> None:
@@ -243,7 +244,7 @@ class TrustlinesRelay:
             if (isinstance(subscription.client, PushNotificationClient) and
                     subscription.client.client_token == client_token):
                 logger.debug('Remove client token {} for address {}'.format(client_token, user_address))
-                subscription.unsubscribe()
+                subscription.client.close()
                 success = True
         if not success:
             raise TokenNotFoundException
@@ -344,7 +345,7 @@ class TrustlinesRelay:
                               type: str = None,
                               from_block: int = 0) -> List[BlockchainEvent]:
         if token_address in self.unw_eth_addresses:
-            proxy: Union[UnwEthProxy, TokenProxy] = self.get_event_selector_for_unw_eth(token_address)
+            proxy = self.get_event_selector_for_unw_eth(token_address)  # type: Union[UnwEthProxy, TokenProxy]
             func_names = ['get_unw_eth_events', 'get_all_unw_eth_events']
         else:
             proxy = self.get_event_selector_for_token(token_address)
@@ -363,8 +364,8 @@ class TrustlinesRelay:
                          from_block: int = 0) -> List[BlockchainEvent]:
 
         if token_address in self.unw_eth_addresses:
-            proxy: Union[UnwEthProxy, TokenProxy] = self.get_event_selector_for_unw_eth(
-                token_address)
+            proxy = self.get_event_selector_for_unw_eth(
+                token_address)  # type: Union[UnwEthProxy, TokenProxy]
         else:
             proxy = self.get_event_selector_for_token(token_address)
 
@@ -427,16 +428,25 @@ class TrustlinesRelay:
         self.orderbook.start()
 
     def _load_addresses(self):
+        addresses = {}
         with open('addresses.json') as data_file:
-            try:
-                addresses = json.load(data_file)
-            except json.decoder.JSONDecodeError as e:
-                logger.error('Could not read addresses.json:' + str(e))
-                return
-        for address in addresses['networks']:
+            content = data_file.read()
+            if content:
+                try:
+                    addresses = json.loads(content)
+                except json.decoder.JSONDecodeError as e:
+                    logger.error('Could not read addresses.json:' + str(e))
+            else:
+                logger.warning('addresses.json file is empty')
+        network_addresses = addresses.get('networks', [])
+        for address in network_addresses:
             self.new_network(to_checksum_address(address))
-        self.new_exchange(to_checksum_address(addresses['exchange']))
-        self.new_unw_eth(to_checksum_address(addresses['unwEth']))
+        exchange_address = addresses.get('exchange', None)
+        if exchange_address is not None:
+            self.new_exchange(to_checksum_address(exchange_address))
+        new_unw_eth_address = addresses.get('unwEth', None)
+        if new_unw_eth_address is not None:
+            self.new_unw_eth(to_checksum_address(new_unw_eth_address))
 
     def _start_listen_network(self, address):
         assert is_checksum_address(address)

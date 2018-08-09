@@ -1,6 +1,6 @@
 import logging
 
-from relay.streams import Client, DisconnectedError, Subscription, Publishable
+from relay.streams import Client, DisconnectedError, Subscription
 from relay.events import Event
 from relay.logger import get_logger
 from .pushservice import FirebaseRawPushService, InvalidClientTokenException
@@ -19,11 +19,8 @@ class PushNotificationClient(Client):
         self._rawPushService = rawPushService
         self.client_token = client_token
 
-    def _execute_send(self, subscription: Subscription, event: Publishable) -> None:
-        if isinstance(event, str) or isinstance(event, dict):
-            raise NotImplementedError
-        elif not isinstance(event, Event):
-            raise ValueError('Unexpected Type: ' + type(event))
+    def _execute_send(self, subscription: Subscription, event: Event) -> None:
+        assert isinstance(event, Event)
         try:
             self._rawPushService.send_event(self.client_token, event)
         except InvalidClientTokenException as e:

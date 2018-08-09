@@ -1,14 +1,11 @@
 import random
 import logging
-from typing import Union, List
+from typing import List, Iterable  # noqa: F401
 
-from .blockchain.events import Event
+from .events import MessageEvent, Event
 from .logger import get_logger
 
 logger = get_logger('streams', logging.DEBUG)
-
-
-Publishable = Union[str, dict, Event]
 
 
 class Client(object):
@@ -32,7 +29,7 @@ class Client(object):
         """
         self.subscriptions.remove(subscription)
 
-    def send(self, subscription: 'Subscription', event: Publishable) -> None:
+    def send(self, subscription: 'Subscription', event: Event) -> None:
         """
         Sends an event to the client that belongs to a subscription with the given subscription id
         Raises:
@@ -44,7 +41,7 @@ class Client(object):
             raise RuntimeError('Client connection is closed')
         self._execute_send(subscription, event)
 
-    def _execute_send(self, subscription: 'Subscription', event: Publishable) -> None:
+    def _execute_send(self, subscription: 'Subscription', event: Event) -> None:
         """
         Executes the sending
         Should be implemented by sub class
@@ -74,7 +71,7 @@ class Subject(object):
     """
 
     def __init__(self) -> None:
-        self.subscriptions: List[Subscription] = []
+        self.subscriptions = []  # type: List[Subscription]
 
     def subscribe(self, client: Client) -> 'Subscription':
         """
@@ -94,7 +91,8 @@ class Subject(object):
         logger.debug('Unsubscription')
         self.subscriptions.remove(subscription)
 
-    def publish(self, event: Publishable):
+    def publish(self, event: Event):
+        assert isinstance(event, Event)
         if self.subscriptions:
             logger.debug('Sent event to {} subscribers'.format(len(self.subscriptions)))
         result = 0
@@ -119,7 +117,8 @@ class Subscription():
         self.closed = False
         self.client.register(self)
 
-    def notify(self, event: Publishable) -> bool:
+    def notify(self, event: Event) -> bool:
+        assert isinstance(event, Event)
         if not self.closed:
             try:
                 self.client.send(self, event)
@@ -140,14 +139,17 @@ class MessagingSubject(Subject):
 
     def __init__(self):
         super().__init__()
-        self.events: List[Publishable] = []
+        self.events = []  # type: List[MessageEvent]
 
-    def get_missed_messages(self):
+    def get_missed_messages(self) -> Iterable[MessageEvent]:
         events = self.events
         self.events = []
         return events
 
-    def publish(self, event: Publishable):
+    def publish(self, event: Event) -> int:
+        logger.debug('Publish Message')
+        if not isinstance(event, MessageEvent):
+            raise RuntimeError('Can only send MessageEvent over message subject')
         result = super().publish(event)
         if result == 0:
             self.events.append(event)

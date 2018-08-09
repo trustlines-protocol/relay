@@ -9,6 +9,10 @@ class EventSchema(Schema):
     timestamp = fields.Integer()
 
 
+class MessageEventSchema(EventSchema):
+    message = fields.Str()
+
+
 class BlockchainEventSchema(EventSchema):
     blockNumber = fields.Integer(attribute='blocknumber')
     type = fields.Str(default='event')
@@ -30,7 +34,6 @@ class CurrencyNetworkEventSchema(BlockchainEventSchema):
 
 class UserCurrencyNetworkEventSchema(CurrencyNetworkEventSchema):
     direction = fields.Str()
-    address = Address(attribute='counter_party')
     counterParty = Address(attribute='counter_party')
     user = Address()
 
@@ -44,7 +47,6 @@ class TokenEventSchema(BlockchainEventSchema):
 
 class UserTokenEventSchema(TokenEventSchema):
     direction = fields.Str()
-    address = Address(attribute='counter_party')
     counterParty = Address(attribute='counter_party')
     user = Address()
 
@@ -86,8 +88,6 @@ class TrustlineSchema(Schema):
     given = BigInteger(attribute='creditline_given')
     received = BigInteger(attribute='creditline_received')
     balance = BigInteger()
-    id = fields.Str()
-    address = Address(attribute='other_party')
 
 
 class TxInfosSchema(Schema):

@@ -32,12 +32,10 @@ services:
     restart: unless-stopped
 
   relay:
+    image: trustlines/relay
     depends_on:
       - "db"
       - "parity"
-    build:
-      #context: https://github.com/trustlines-network/relay.git#develop
-      context: ../..
     volumes:
       - ./config.json:/relay/config.json
       - ./addresses.json:/relay/addresses.json
@@ -56,11 +54,10 @@ services:
     restart: unless-stopped
 
   index:
+    image: trustlines/py-eth-index
     depends_on:
       - "db"
       - "parity"
-    build:
-      context: https://github.com/trustlines-network/py-eth-index.git#develop
     environment:
       - PGHOST
       - PGUSER

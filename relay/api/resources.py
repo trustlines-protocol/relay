@@ -118,6 +118,8 @@ class Trustline(Resource):
         graph = self.trustlines.currency_network_graphs[network_address]
         data = TrustlineSchema().dump(graph.get_account_sum(a_address, b_address)).data
         data.update({
+            'user': a_address,
+            'counterParty': b_address,
             'address': b_address,
             'id': _id(network_address, a_address, b_address)
         })
@@ -138,6 +140,8 @@ class TrustlineList(Resource):
             data = TrustlineSchema().dump(graph.get_account_sum(user_address, friend_address)).data
             data.update(
                 {
+                    'user': user_address,
+                    'counterParty': friend_address,
                     'address': friend_address,
                     'id': _id(network_address, user_address, friend_address)
                 }

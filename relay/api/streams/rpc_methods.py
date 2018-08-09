@@ -1,5 +1,8 @@
+from typing import Iterable, Dict
+
 from marshmallow import fields, Schema, ValidationError
 
+from ..schemas import MessageEventSchema
 from .rpc_protocol import check_args
 from ..fields import Address
 
@@ -40,9 +43,9 @@ def messaging_subscribe(trustlines: TrustlinesRelay, client: Client, type: str, 
 
 
 @check_args(MessagingSchema())
-def get_missed_messages(trustlines: TrustlinesRelay, client: Client, type: str, user: str):
+def get_missed_messages(trustlines: TrustlinesRelay, client: Client, type: str, user: str) -> Iterable[Dict]:
     if type == 'all':
-        messages = trustlines.messaging[user].get_missed_messages()
+        messages = MessageEventSchema().dump(trustlines.messaging[user].get_missed_messages(), many=True).data
     else:
         raise ValidationError('Invalid message type')
     return messages
