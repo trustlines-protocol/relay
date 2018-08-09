@@ -1,9 +1,10 @@
-FROM python:3.5 as base
+FROM python:3.5 as builder
 
-RUN apt-get update && \
-    apt-get install -y apt-utils libssl-dev curl graphviz
+RUN apt-get update \
+    && apt-get install -y apt-utils libssl-dev curl graphviz \
+    && rm -rf /var/lib/apt/lists/*
 
-FROM base AS builder
+
 RUN curl -L -o /usr/bin/solc https://github.com/ethereum/solidity/releases/download/v0.4.21/solc-static-linux && \
     chmod +x /usr/bin/solc
 
@@ -15,6 +16,9 @@ COPY ./requirements.txt /relay/requirements.txt
 
 WORKDIR /relay
 
+# remove development dependencies from the end of the file
+RUN sed -i -e '/development dependencies/q' requirements.txt
+
 RUN /opt/relay/bin/pip install -c constraints.txt populus
 RUN /opt/relay/bin/pip install -c constraints.txt -r requirements.txt
 
@@ -25,11 +29,14 @@ COPY . /relay
 RUN /opt/relay/bin/pip install -c constraints.txt .
 RUN /opt/relay/bin/python -c 'import pkg_resources; print(pkg_resources.get_distribution("trustlines-relay").version)' >/opt/relay/VERSION
 
-FROM base
-RUN rm -rf /var/lib/apt/lists/*
-ENV THREADING_BACKEND gevent
+FROM python:3.5
 COPY --from=builder /opt/relay /opt/relay
-RUN ln -s /opt/relay/bin/tl-relay /usr/local/bin/
-WORKDIR /opt/relay
 
+RUN apt-get update \
+    && apt-get install -y apt-utils libssl-dev curl graphviz \
+    && rm -rf /var/lib/apt/lists/* \
+    && ln -s /opt/relay/bin/tl-relay /usr/local/bin/
+
+ENV THREADING_BACKEND gevent
+WORKDIR /opt/relay
 ENTRYPOINT ["tl-relay"]
