@@ -33,7 +33,7 @@ setup(
 
     # Author details
     author='Trustlines-Network',
-    author_email='',
+    author_email='contact@brainbot.com',
 
     # Choose your license
     license='MIT',
@@ -48,7 +48,6 @@ setup(
 
         # Indicate who your project is intended for
         'Intended Audience :: Developers',
-        'Topic :: Software Development :: Build Tools',
 
         # Pick your license as you wish (should match "license" above)
         'License :: OSI Approved :: MIT License',
@@ -58,7 +57,6 @@ setup(
 
         'Programming Language :: Python :: 3',
         'Programming Language :: Python :: 3.5',
-        'Programming Language :: Python :: 3.6',
     ],
 
     # What does your project relate to?
