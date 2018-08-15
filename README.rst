@@ -70,3 +70,8 @@ Docs
 ----
 
 -  `REST API Documentation <./docs/RelayAPI.md>`__
+
+Change log
+----------
+
+See `CHANGELOG <https://github.com/trustlines-network/relay/blob/develop/CHANGELOG.rst>`_.
