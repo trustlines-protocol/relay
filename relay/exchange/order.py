@@ -2,7 +2,7 @@ from collections import namedtuple
 
 from eth_utils import is_checksum_address
 
-from tlcontracts.signing import keccak256, eth_sign, eth_validate
+from relay.signing import keccak256, eth_sign, eth_validate
 
 
 EcSignature = namedtuple('EcSignature', 'v r s')

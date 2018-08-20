@@ -82,7 +82,6 @@ setup(
                       'web3[gevent]',
                       'networkx>=2.0',
                       'pygraphviz',
-                      'trustlines-contracts',
                       'sqlalchemy',
                       'eth-utils',
                       'tinyrpc',
