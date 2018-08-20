@@ -6,7 +6,7 @@ gevent
 web3[gevent]<4
 networkx>=2.0
 pygraphviz
-git+https://github.com/trustlines-network/contracts.git@develop
+trustlines-contracts-bin
 sqlalchemy
 eth-utils
 tinyrpc

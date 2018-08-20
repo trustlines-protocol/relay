@@ -187,10 +187,6 @@ sudo make install
 sudo ldconfig
 ```
 
-##### Solidity
-```
-curl -L -o $HOME/bin/solc https://github.com/ethereum/solidity/releases/download/v0.4.21/solc-static-linux && chmod +x $HOME/bin/solc
-```
 
 #### Installation of the relay server
 
@@ -202,7 +198,6 @@ cd ~
 git clone https://github.com/trustlines-network/relay
 python3 -m venv ~/opt/relay; ~/opt/relay/bin/pip install -U pip
 cd ~/relay;
-~/opt/relay/bin/pip install -c constraints.txt populus
 ~/opt/relay/bin/pip install -c constraints.txt -r requirements.txt
 ~/opt/relay/bin/pip install -c constraints.txt .
 ```

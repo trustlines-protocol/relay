@@ -35,17 +35,10 @@ have to run the following to install the secp256k1 C library:
 Setup
 ~~~~~
 
-Download solc and install it into ~/bin:
-
-::
-
-    curl -L -o $HOME/bin/solc https://github.com/ethereum/solidity/releases/download/v0.4.21/solc-static-linux && chmod +x $HOME/bin/solc
-
 ::
 
     git clone https://github.com/trustlines-network/relay.git
     cd relay
-    pip install -c constraints.txt populus
     pip install -c constraints.txt -r requirements.txt
     pip install -c constraints.txt -e .
     export PYTHONPATH=`pwd`

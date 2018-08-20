@@ -28,9 +28,6 @@ jobs:
   include:
     - stage: testing
       install:
-      - curl -L -o $HOME/bin/solc https://github.com/ethereum/solidity/releases/download/v0.4.21/solc-static-linux
-        && chmod +x $HOME/bin/solc
-      - pip install -c constraints.txt populus
       - pip install -c constraints.txt codecov
       - pip install -c constraints.txt -r requirements.txt
       - pip install -c constraints.txt -e .
