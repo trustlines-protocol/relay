@@ -13,7 +13,7 @@ from os import path
 here = path.abspath(path.dirname(__file__))
 
 # Get the long description from the README file
-with open(path.join(here, 'README.md'), encoding='utf-8') as f:
+with open(path.join(here, 'README.rst'), encoding='utf-8') as f:
     long_description = f.read()
 
 
@@ -33,7 +33,7 @@ setup(
 
     # Author details
     author='Trustlines-Network',
-    author_email='',
+    author_email='contact@brainbot.com',
 
     # Choose your license
     license='MIT',
@@ -48,7 +48,6 @@ setup(
 
         # Indicate who your project is intended for
         'Intended Audience :: Developers',
-        'Topic :: Software Development :: Build Tools',
 
         # Pick your license as you wish (should match "license" above)
         'License :: OSI Approved :: MIT License',
@@ -58,7 +57,6 @@ setup(
 
         'Programming Language :: Python :: 3',
         'Programming Language :: Python :: 3.5',
-        'Programming Language :: Python :: 3.6',
     ],
 
     # What does your project relate to?
@@ -84,7 +82,7 @@ setup(
                       'web3[gevent]',
                       'networkx>=2.0',
                       'pygraphviz',
-                      'trustlines-contracts',
+                      'trustlines-contracts-bin',
                       'sqlalchemy',
                       'eth-utils',
                       'tinyrpc',
