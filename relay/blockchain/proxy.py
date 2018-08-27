@@ -81,13 +81,12 @@ class Proxy(object):
         if filter_ is None:
             filter_ = {}
 
-        params = {
-            'filter': filter_,
-            'fromBlock': from_block,
-            'toBlock': queryBlock
-        }
+        logfilter = getattr(self._proxy.events, event_name).createFilter(
+            fromBlock=from_block,
+            toBlock="latest",
+            argument_filters=filter_)
 
-        queries = [lambda: self._proxy.pastEvents(event_name, params).get(False)]
+        queries = [logfilter.get_all_entries]
         results = concurrency_utils.joinall(queries, timeout=timeout)
         return sorted_events(self._build_events(results[0]))
 
