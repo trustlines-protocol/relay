@@ -34,7 +34,7 @@ jobs:
       script:
       - flake8
       - mypy --ignore-missing-imports relay
-      - pytest --cov=relay tests
+      - ./pytest --cov=relay tests
       after_success:
       - codecov
 
