@@ -1,7 +1,7 @@
 import pytest
 from sqlalchemy import create_engine
 from eth_utils import to_checksum_address
-from ethereum import tester
+from ethereum.tools import tester
 
 from relay.exchange.order import SignableOrder
 from relay.constants import NULL_ADDRESS

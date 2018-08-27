@@ -1,4 +1,4 @@
-from ethereum import tester
+from ethereum.tools import tester
 from eth_utils import to_checksum_address
 from relay.signing import eth_validate, eth_sign
 

@@ -1,5 +1,5 @@
 import pytest
-from ethereum import tester
+from ethereum.tools import tester
 from eth_utils import to_checksum_address
 
 from relay.exchange.order import Order, SignableOrder

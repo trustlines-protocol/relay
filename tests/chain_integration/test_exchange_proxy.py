@@ -1,7 +1,7 @@
 import gevent
 import pytest
 from eth_utils import to_checksum_address
-from ethereum import tester
+from ethereum.tools import tester
 
 from relay.blockchain.exchange_proxy import ExchangeProxy
 from relay.constants import NULL_ADDRESS
