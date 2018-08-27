@@ -26,4 +26,3 @@ pytest
 pytest-cov
 mypy
 eth-tester[py-evm]
-ethereum
