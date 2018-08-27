@@ -22,6 +22,19 @@ updateBlock = 'pending'
 reconnect_interval = 3  # 3s
 
 
+def get_new_entries(filter, callback):
+    new_entries = filter.get_new_entries()
+    logger.debug("new entries for filter %s: %s", filter, new_entries)
+    for event in new_entries:
+        callback(event)
+
+
+def watch_filter(filter, callback):
+    while 1:
+        get_new_entries(filter, callback)
+        gevent.sleep(1.0)
+
+
 class Proxy(object):
     event_builders = {}  # type: Dict[str, Callable[[Any, int, int], BlockchainEvent]]
     standard_event_types = []  # type: List[str]
@@ -34,10 +47,10 @@ class Proxy(object):
     def _watch_filter(self, eventname: str, function, params=None):
         while True:
             try:
-                filter = self._proxy.on(eventname, params)
-                filter.watch(function)
+                filter = getattr(self._proxy.events, eventname).createFilter(**params)
+                watch_filter_greenlet = gevent.spawn(watch_filter, filter, function)
                 logger.info('Connected to filter for {}:{}'.format(self.address, eventname))
-                return filter
+                return watch_filter_greenlet
             except socket.timeout as err:
                 logger.warning('Timeout in filter creation, try to reconnect: ' + str(err))
                 gevent.sleep(reconnect_interval)
@@ -58,8 +71,8 @@ class Proxy(object):
             params = {}
         params.setdefault('fromBlock', updateBlock)
         params.setdefault('toBlock', updateBlock)
-        filter = self._watch_filter(eventname, function, params)
-        filter.link_exception(on_exception)
+        watch_filter_greenlet = self._watch_filter(eventname, function, params)
+        watch_filter_greenlet.link_exception(on_exception)
 
     def get_events(self, event_name, filter_=None, from_block=0, timeout: float = None) -> List[BlockchainEvent]:
         if event_name not in self.event_builders.keys():

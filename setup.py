@@ -79,7 +79,7 @@ setup(
                       'flask_cors',
                       'webargs',
                       'gevent',
-                      'web3[gevent]',
+                      'web3>=4.4.1',
                       'networkx>=2.0',
                       'pygraphviz',
                       'trustlines-contracts-bin',

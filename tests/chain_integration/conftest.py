@@ -1,32 +1,42 @@
 import json
 import os
 import sys
-import subprocess
 
 import pytest
-import gevent
-from web3 import Web3, HTTPProvider
-from web3.utils.transactions import wait_for_transaction_receipt
+from web3 import Web3
+from web3.providers.eth_tester import EthereumTesterProvider
 from eth_utils import to_checksum_address
 from tlcontracts_deploy import deploy_networks, deploy_network
 
 from relay.blockchain.currency_network_proxy import CurrencyNetworkProxy
+import eth_tester
 
 
 NETWORKS = [('Fugger', 'FUG', 2), ('Hours', 'HOU', 2), ('Testcoin', 'T', 6)]
 
 
-@pytest.fixture(autouse=True, scope='session')
-def blockchain():
-    p = subprocess.Popen('testrpc-py')
-    gevent.sleep(3)  # give it some time to set up
-    yield
-    p.terminate()
+@pytest.fixture(scope="session")
+def ethereum_tester():
+    """Returns an instance of an Ethereum tester"""
+    tester = eth_tester.EthereumTester(eth_tester.PyEVMBackend())
+    return tester
+
+
+# @pytest.fixture(autouse=True, scope='session')
+# def blockchain():
+#     p = subprocess.Popen('testrpc-py')
+#     gevent.sleep(3)  # give it some time to set up
+#     yield
+#     p.terminate()
 
 
 @pytest.fixture(scope='session')
-def web3():
-    return Web3(HTTPProvider('http://127.0.0.1:8545'))
+def web3(ethereum_tester):
+    web3 = Web3(EthereumTesterProvider(ethereum_tester))
+    web3.eth.defaultAccount = web3.eth.accounts[0]
+    return web3
+
+    # return Web3(HTTPProvider('http://127.0.0.1:8545'))
 
 
 @pytest.fixture(scope='session')
@@ -41,23 +51,24 @@ class CurrencyNetworkProxy(CurrencyNetworkProxy):
     def setup_trustlines(self, trustlines):
         for (A, B, clAB, clBA) in trustlines:
             txid = self._proxy.transact().setAccount(A, B, clAB, clBA, 0, 0, 0, 0, 0, 0)
-            wait_for_transaction_receipt(self._web3, txid)
+            print("WAIT", txid)
+            self._web3.eth.waitForTransactionReceipt(txid)
 
     def update_creditline(self, from_, to, value):
         txid = self._proxy.transact({"from": from_}).updateCreditline(to, value)
-        wait_for_transaction_receipt(self._web3, txid)
+        self._web3.eth.waitForTransactionReceipt(txid)
 
     def accept_creditline(self, from_, to, value):
         txid = self._proxy.transact({"from": from_}).acceptCreditline(to, value)
-        wait_for_transaction_receipt(self._web3, txid)
+        self._web3.eth.waitForTransactionReceipt(txid)
 
     def update_trustline(self, from_, to, creditline_given, creditline_received):
         txid = self._proxy.transact({"from": from_}).updateTrustline(to, creditline_given, creditline_received)
-        wait_for_transaction_receipt(self._web3, txid)
+        self._web3.eth.waitForTransactionReceipt(txid)
 
     def transfer(self, from_, to, value, max_fee, path):
         txid = self._proxy.transact({"from": from_}).transfer(to, value, max_fee, path)
-        wait_for_transaction_receipt(self._web3, txid)
+        self._web3.eth.waitForTransactionReceipt(txid)
 
 
 @pytest.fixture(scope='session')

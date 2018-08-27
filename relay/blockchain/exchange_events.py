@@ -1,5 +1,6 @@
-from eth_utils import force_bytes, is_hex, decode_hex
+from eth_utils import is_hex, decode_hex
 from .events import TLNetworkEvent, BlockchainEvent  # NOQA
+from relay.compat import force_bytes
 
 LogFillEventType = 'LogFill'
 LogCancelEventType = 'LogCancel'

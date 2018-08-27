@@ -13,7 +13,7 @@ from eth_utils import is_checksum_address, to_checksum_address
 from gevent import sleep
 import sqlalchemy
 from sqlalchemy.engine.url import URL
-from web3 import Web3, RPCProvider
+from web3 import Web3
 
 from .blockchain.proxy import sorted_events
 from relay.pushservice.client import PushNotificationClient
@@ -152,13 +152,14 @@ class TrustlinesRelay:
         self._load_contracts()
         self._load_orderbook()
         self._start_push_service()
-        logger.info('using RPCProvider with parameters {}'.format(self.config['rpc']))
+        url = "{}://{}:{}".format(
+            "https" if self.config['rpc']['ssl'] else "http",
+            self.config['rpc']['host'],
+            self.config['rpc']['port'],
+        )
+        logger.info('using web3 URL {}'.format(url))
         self._web3 = Web3(
-            RPCProvider(
-                self.config['rpc']['host'],
-                self.config['rpc']['port'],
-                ssl=self.config['rpc']['ssl']
-            )
+            Web3.HTTPProvider(url)
         )
         self.node = Node(self._web3)
         self._start_listen_on_new_addresses()

@@ -5,7 +5,7 @@ from sqlalchemy import Column, Integer, String, Float, BigInteger
 from sqlalchemy.orm import sessionmaker
 
 from .order import Order
-from eth_utils import force_bytes
+from relay.compat import force_bytes
 
 Base = declarative_base()
 
