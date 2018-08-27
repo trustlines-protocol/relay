@@ -63,7 +63,7 @@ class Proxy(object):
 
     def start_listen_on(self, eventname: str, function, params=None) -> None:
         def on_exception(filter):
-            logger.warning('Filter {} disconnected, trying to reconnect'.format(filter.filter_id))
+            logger.warning('Filter {} disconnected, trying to reconnect'.format(filter))
             gevent.sleep(reconnect_interval)
             filter = self._watch_filter(eventname, function, params)
             filter.link_exception(on_exception)
