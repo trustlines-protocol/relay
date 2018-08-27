@@ -1,15 +1,23 @@
 import gevent
 import pytest
 from eth_utils import to_checksum_address
-from ethereum.tools import tester
 
 from relay.blockchain.exchange_proxy import ExchangeProxy
 from relay.constants import NULL_ADDRESS
 from relay.exchange.order import SignableOrder
 
 
+@pytest.fixture
+def accounts(tester, web3):
+    """XXX the code here uses maker, taker, *rest = accounts
+    so, let's make the first element of this array the maker
+    """
+    accounts = [tester.a0] + web3.personal.listAccounts[0:5]
+    return [to_checksum_address(account) for account in accounts]
+
+
 @pytest.fixture()
-def order_token(exchange_address, network_addresses_with_exchange, unw_eth_address):
+def order_token(exchange_address, network_addresses_with_exchange, unw_eth_address, tester):
     maker = to_checksum_address(tester.a0)
     order = SignableOrder(
         exchange_address=exchange_address,
@@ -30,7 +38,7 @@ def order_token(exchange_address, network_addresses_with_exchange, unw_eth_addre
 
 
 @pytest.fixture()
-def order_trustlines(exchange_address, network_addresses_with_exchange, unw_eth_address):
+def order_trustlines(exchange_address, network_addresses_with_exchange, unw_eth_address, tester):
     maker = to_checksum_address(tester.a0)
     order = SignableOrder(
         exchange_address=exchange_address,
@@ -182,7 +190,7 @@ def test_listen_on_fill(order_trustlines, exchange_proxy, testnetworks, accounts
     gevent.sleep(1)
 
     log1 = logs[0]
-    assert log1[0].encode('Latin-1') == order.hash()  # encoding because of bug in web3
+    assert log1[0] == order.hash()  # encoding because of bug in web3
     assert log1[1] == 50
     assert log1[2] == 100
 
@@ -209,6 +217,6 @@ def test_listen_on_cancel(order_token, exchange_proxy, testnetworks, accounts):
     gevent.sleep(1)
 
     log1 = logs[0]
-    assert log1[0].encode('Latin-1') == order.hash()  # encoding because of bug in web3
+    assert log1[0] == order.hash()  # encoding because of bug in web3
     assert log1[1] == 50
     assert log1[2] == 100
