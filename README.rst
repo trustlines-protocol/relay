@@ -41,8 +41,6 @@ Setup
     cd relay
     pip install -c constraints.txt -r requirements.txt
     pip install -c constraints.txt -e .
-    export PYTHONPATH=`pwd`
-    export THREADING_BACKEND=gevent
 
 We also need to deploy trustlines smart contracts on a local node or
 testrpc as described

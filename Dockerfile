@@ -17,8 +17,6 @@ RUN sed -i -e '/development dependencies/q' requirements.txt
 
 RUN /opt/relay/bin/pip install -c constraints.txt -r requirements.txt
 
-ENV THREADING_BACKEND gevent
-
 COPY . /relay
 
 RUN /opt/relay/bin/pip install -c constraints.txt .
@@ -32,6 +30,5 @@ RUN apt-get update \
     && rm -rf /var/lib/apt/lists/* \
     && ln -s /opt/relay/bin/tl-relay /usr/local/bin/
 
-ENV THREADING_BACKEND gevent
 WORKDIR /opt/relay
 ENTRYPOINT ["tl-relay"]

@@ -14,9 +14,6 @@ stages:
   - name: testing
   - name: deploying
 
-env:
-  global:
-  - THREADING_BACKEND=gevent
 notifications:
   webhooks:
     urls:
