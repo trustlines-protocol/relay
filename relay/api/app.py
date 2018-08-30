@@ -8,7 +8,7 @@ from werkzeug.exceptions import HTTPException
 from eth_utils import is_address, to_checksum_address, is_checksum_address
 
 from .resources import GraphDump, GraphImage, RequestEther, User, UserList, Network, NetworkList, \
-    ContactList, TrustlineList, Trustline, Spendable, SpendableTo, MaxCapacityPath, Path, ReduceDebtPath, \
+    ContactList, TrustlineList, Trustline, MaxCapacityPath, Path, ReduceDebtPath, \
     UserEventsNetwork, UserEvents, Relay, Balance, TransactionInfos, Block, EventsNetwork
 from .streams.app import WebSocketRPCHandler, MessagingWebSocketRPCHandler
 
@@ -55,9 +55,6 @@ def ApiApp(trustlines):
     add_resource(TrustlineList, '/networks/<address:network_address>/users/<address:user_address>/trustlines')
     add_resource(Trustline,
                  '/networks/<address:network_address>/users/<address:a_address>/trustlines/<address:b_address>')
-    add_resource(Spendable, '/networks/<address:network_address>/users/<address:a_address>/spendable')
-    add_resource(SpendableTo,
-                 '/networks/<address:network_address>/users/<address:a_address>/spendables/<address:b_address>')
     add_resource(MaxCapacityPath, '/networks/<address:network_address>/max-capacity-path-info')
     add_resource(UserEventsNetwork, '/networks/<address:network_address>/users/<address:user_address>/events')
     add_resource(Path, '/networks/<address:network_address>/path-info')

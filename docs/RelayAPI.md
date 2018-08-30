@@ -29,8 +29,6 @@ https://relay0.testnet.trustlines.network/api/v1
 - [User details in currency network](#user-details-in-currency-network)
 - [Trustlines of user in currency network](#trustlines-of-user-in-currency-network)
 - [Trustline details of user in currency network](#trustline-details-of-user-in-currency-network)
-- [Total spendable amount of user in currency network](#total-spendable-amount-of-user-in-currency-network)
-- [Spendable amount to adjacent user in currency network](#spendable-amount-to-adjacent-user-in-currency-network)
 - [Spendable amount and path to any user in currency network](#spendable-amount-and-path-to-any-user-in-currency-network)
 - [Transfer path in currency network](#transfer-path-in-currency-network)
 - [Debt reduction path in currency network](#debt-reduction-path-in-currency-network)
@@ -260,55 +258,6 @@ curl https://relay0.testnet.trustlines.network/api/v1/networks/0xC0B33D88C704455
     "received": "20000",
     "user": "0x04f9b217b334507c42Ad3b74BFf024c724aBB166"
 }
-```
-
----
-
-### Total spendable amount of user in currency network
-Returns the total amount a user can spend in a currency network.
-#### Request
-```
-GET /networks/:networkAddress/users/:userAddress/spendable
-```
-#### URL Parameters
-|Name|Type|Required|Description|
-|-|-|-|-|
-|networkAddress|string|YES|Address of currency network|
-|userAddress|string|YES|Address of user|
-#### Example Request
-```
-curl https://relay0.testnet.trustlines.network/api/v1/networks/0xC0B33D88C704455075a0724AA167a286da778DDE/users/0xcbF1153F6e5AC01D363d432e24112e8aA56c55ce/spendable
-```
-#### Response
-`string` - Total amount in smallest unit user can spend in a currency network
-#### Example Response
-```json
-"1000"
-```
-
----
-
-### Spendable amount to adjacent user in currency network
-Returns amount user A can spend to adjacent user B in a currency network.
-#### Request
-```
-GET /networks/:networkAddress/users/:userAddressA/spendables/:userAddressB
-```
-#### URL Parameters
-|Name|Type|Required|Description|
-|-|-|-|-|
-|networkAddress|string|YES|Address of currency network|
-|userAddressA|string|YES|Address of user A|
-|userAddressB|string|YES|Address of user B|
-#### Example Request
-```
-curl https://relay0.testnet.trustlines.network/api/v1/networks/0xC0B33D88C704455075a0724AA167a286da778DDE/users/0xcbF1153F6e5AC01D363d432e24112e8aA56c55ce/spendables/0x7Ec3543702FA8F2C7b2bD84C034aAc36C263cA8b
-```
-#### Response
-`string` - Amount user A can spend to user B in a currency network
-#### Example Response
-```json
-"90"
 ```
 
 ---
