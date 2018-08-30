@@ -6,9 +6,8 @@ TxInfos = namedtuple('TxInfos', 'balance, nonce, gas_price')
 
 class Node:
 
-    def __init__(self, web3, is_parity=True):
+    def __init__(self, web3):
         self._web3 = web3
-        self.is_parity = is_parity
 
     def relay_tx(self, rawtxn):
         return self._web3.eth.sendRawTransaction(rawtxn)
@@ -16,14 +15,9 @@ class Node:
     def transaction_receipt(self, txn_hash):
         return self._web3.eth.getTransactionReceipt(txn_hash)
 
-    def get_tx_infos(self, user_address, block_identifier='pending'):
-        if self.is_parity and block_identifier == 'pending':
-            nonce = int(self._web3.manager.request_blocking('parity_nextNonce', [user_address]), 16)
-            print('paritynonce')
-        else:
-            nonce = self._web3.eth.getTransactionCount(user_address, block_identifier=block_identifier)
-        return TxInfos(balance=self._web3.eth.getBalance(user_address, block_identifier=block_identifier),
-                       nonce=nonce,
+    def get_tx_infos(self, user_address):
+        return TxInfos(balance=self._web3.eth.getBalance(user_address),
+                       nonce=self._web3.eth.getTransactionCount(user_address),
                        gas_price=self._web3.eth.gasPrice)
 
     @property
