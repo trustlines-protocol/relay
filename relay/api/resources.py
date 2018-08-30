@@ -150,26 +150,6 @@ class TrustlineList(Resource):
         return accounts
 
 
-class Spendable(Resource):
-
-    def __init__(self, trustlines: TrustlinesRelay) -> None:
-        self.trustlines = trustlines
-
-    def get(self, network_address: str, a_address: str):
-        abort_if_unknown_network(self.trustlines, network_address)
-        return self.trustlines.currency_network_proxies[network_address].spendable(a_address)
-
-
-class SpendableTo(Resource):
-
-    def __init__(self, trustlines: TrustlinesRelay) -> None:
-        self.trustlines = trustlines
-
-    def get(self, network_address, a_address, b_address):
-        abort_if_unknown_network(self.trustlines, network_address)
-        return self.trustlines.currency_network_proxies[network_address].spendableTo(a_address, b_address)
-
-
 class MaxCapacityPath(Resource):
 
     def __init__(self, trustlines: TrustlinesRelay) -> None:
