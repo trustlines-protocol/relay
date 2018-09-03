@@ -5,7 +5,6 @@ from sqlalchemy import Column, Integer, String, Float, BigInteger
 from sqlalchemy.orm import sessionmaker
 
 from .order import Order
-from relay.compat import force_bytes
 
 Base = declarative_base()
 
@@ -166,9 +165,7 @@ class OrderBookDB(object):
                      order_hash: bytes,
                      filled_maker_token_amount: int,
                      filled_taker_token_amount: int) -> None:
-        # NOTE old version of web3.py returns bytes as string from contract, so we have to use force_bytes
-        order_hash_bytes = force_bytes(order_hash)
-        order_orm = self.session.query(OrderORM).filter_by(msg_hash=order_hash_bytes.hex()).first()
+        order_orm = self.session.query(OrderORM).filter_by(msg_hash=order_hash.hex()).first()
         if order_orm is not None:
             order_orm.filled_maker_token_amount += filled_maker_token_amount
             order_orm.filled_taker_token_amount += filled_taker_token_amount
@@ -180,9 +177,7 @@ class OrderBookDB(object):
                         order_hash: bytes,
                         cancelled_maker_token_amount: int,
                         cancelled_taker_token_amount: int) -> None:
-        # NOTE old version of web3.py returns bytes as string from contract, so we have to use force_bytes
-        order_hash_bytes = force_bytes(order_hash)
-        order_orm = self.session.query(OrderORM).filter_by(msg_hash=order_hash_bytes.hex()).first()
+        order_orm = self.session.query(OrderORM).filter_by(msg_hash=order_hash.hex()).first()
         if order_orm is not None:
             order_orm.cancelled_maker_token_amount += cancelled_maker_token_amount
             order_orm.cancelled_taker_token_amount += cancelled_taker_token_amount
