@@ -54,6 +54,18 @@ def accounts(web3):
     return [to_checksum_address(account) for account in accounts]
 
 
+@pytest.fixture
+def maker(tester):
+    """checksum maker address"""
+    return to_checksum_address(tester.a0)
+
+
+@pytest.fixture
+def taker(web3):
+    """checksum taker address"""
+    return to_checksum_address(web3.personal.listAccounts[0])
+
+
 class CurrencyNetworkProxy(CurrencyNetworkProxy):
 
     def setup_trustlines(self, trustlines):
@@ -134,8 +146,7 @@ def testnetwork3_address(web3):
 
 
 @pytest.fixture()
-def testnetworks(accounts, web3):
-    maker, taker, *rest = accounts
+def testnetworks(web3, maker, taker):
     currency_network_contracts, exchange_contract, unw_eth_contract = deploy_test_networks(web3)
 
     unw_eth_contract.transact({'from': taker, 'value': 200}).deposit()
