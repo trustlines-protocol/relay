@@ -110,7 +110,7 @@ def test_filled_amount(order_trustlines, exchange_proxy, testnetworks, maker, ta
     assert not exchange_proxy.validate_filled_amount(order)
 
 
-def test_cancelled_amout(order_trustlines, exchange_proxy, testnetworks, maker, taker):
+def test_cancelled_amount(order_trustlines, exchange_proxy, testnetworks, maker, taker):
     order = order_trustlines
 
     exchange_contract = testnetworks[1]
