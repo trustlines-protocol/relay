@@ -190,7 +190,7 @@ def test_listen_on_fill(order_trustlines, exchange_proxy, testnetworks, accounts
     gevent.sleep(1)
 
     log1 = logs[0]
-    assert log1[0] == order.hash()  # encoding because of bug in web3
+    assert log1[0] == order.hash()
     assert log1[1] == 50
     assert log1[2] == 100
 
@@ -217,6 +217,6 @@ def test_listen_on_cancel(order_token, exchange_proxy, testnetworks, accounts):
     gevent.sleep(1)
 
     log1 = logs[0]
-    assert log1[0] == order.hash()  # encoding because of bug in web3
+    assert log1[0] == order.hash()
     assert log1[1] == 50
     assert log1[2] == 100
