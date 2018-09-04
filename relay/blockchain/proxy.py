@@ -24,7 +24,8 @@ reconnect_interval = 3  # 3s
 
 def get_new_entries(filter, callback):
     new_entries = filter.get_new_entries()
-    logger.debug("new entries for filter %s: %s", filter, new_entries)
+    if new_entries:
+        logger.debug("new entries for filter %s: %s", filter, new_entries)
     for event in new_entries:
         callback(event)
 
