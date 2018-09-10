@@ -1,6 +1,17 @@
 ==========
 Change Log
 ==========
+`0.3.0`_ (not released yet)
+-------------------------------
+* web3 has been upgraded from 3.16.5 to 4.6.0.
+* The spendable endpoints have been removed::
+
+    /networks/<address:network_address>/users/<address:a_address>/spendable
+    /networks/<address:network_address>/users/<address:a_address>/spendables/<address:b_address>
+
+* The nonce is queried from the pending transaction. This will allow multiple
+  transactions per block.
+* The docker image is now based on ubuntu 18.04 and python 3.6
 
 `0.2.0`_ (2018-08-21)
 -------------------------------
