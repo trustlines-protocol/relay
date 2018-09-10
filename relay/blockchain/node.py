@@ -47,7 +47,7 @@ class Node:
                 'from': self._web3.eth.coinbase,
                 'to': address,
                 'value': 1000000000000000000
-            })
+            }).hex()
         else:
             return None
 
