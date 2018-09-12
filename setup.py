@@ -92,6 +92,7 @@ setup(
                       'firebase-admin',
                       'psycopg2',
                       'psycogreen',
+                      'wrapt',
     ],
 
     # List additional groups of dependencies here (e.g. development

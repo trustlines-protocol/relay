@@ -117,4 +117,5 @@ web3==4.6.0
 webargs==4.0.0
 websockets==6.0
 Werkzeug==0.14.1
+wrapt==1.10.11
 zeroconf==0.20.0
