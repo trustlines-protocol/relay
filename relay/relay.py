@@ -498,7 +498,8 @@ class TrustlinesRelay:
         graph = self.currency_network_graphs[balance_update_event.network_address]
         graph.update_balance(balance_update_event.from_,
                              balance_update_event.to,
-                             balance_update_event.value)
+                             balance_update_event.value,
+                             balance_update_event.timestamp)
         self._publish_balance_event(balance_update_event.from_, balance_update_event.to,
                                     balance_update_event.network_address)
         self._publish_balance_event(balance_update_event.to, balance_update_event.from_,

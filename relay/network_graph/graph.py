@@ -19,10 +19,11 @@ balance_ab = 'balance_ab'
 class Account(object):
     """account from the view of a"""
 
-    def __init__(self, data, src, dest):
+    def __init__(self, data, src, dest, m_time = 0):
         self.a = src
         self.b = dest
         self.data = data
+        self.m_time = m_time
 
     @property
     def balance(self):
@@ -223,7 +224,7 @@ class CurrencyNetworkGraph(object):
         account.creditline = creditline_given
         account.reverse_creditline = creditline_received
 
-    def update_balance(self, a, b, balance):
+    def update_balance(self, a, b, balance, timestamp):
         """to update the balance, used to react on changes on the blockchain"""
         if not self.graph.has_edge(a, b):
             self.graph.add_edge(a,
@@ -238,6 +239,7 @@ class CurrencyNetworkGraph(object):
                                 balance_ab=0)
         account = Account(self.graph[a][b], a, b)
         account.balance = balance
+        account.m_time = timestamp
 
     def get_account_sum(self, a, b=None):
         if b is None:
