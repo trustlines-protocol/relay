@@ -5,6 +5,7 @@ import networkx as nx
 
 from .dijkstra_weighted import find_path, find_path_triangulation, find_maximum_capacity_path
 from .fees import new_balance, imbalance_fee, estimate_fees_from_capacity
+from .interests import apply_interests
 
 creditline_ab = 'creditline_ab'
 creditline_ba = 'creditline_ba'
@@ -19,14 +20,14 @@ balance_ab = 'balance_ab'
 class Account(object):
     """account from the view of a"""
 
-    def __init__(self, data, src, dest, m_time = 0):
+    def __init__(self, data, src, dest):
         self.a = src
         self.b = dest
         self.data = data
-        self.m_time = m_time
 
     @property
     def balance(self):
+        apply_interests(self.a, self.b, self.data)
         if self.a < self.b:
             return self.data[balance_ab]
         else:
@@ -38,6 +39,14 @@ class Account(object):
             self.data[balance_ab] = balance
         else:
             self.data[balance_ab] = -balance
+
+    @property
+    def m_time(self):
+        return self.data[m_time]
+
+    @m_time.setter
+    def m_time(self, mtime):
+        self.data[m_time] = mtime
 
     @property
     def creditline(self):
@@ -151,8 +160,14 @@ class AccountSummary(object):
 class CurrencyNetworkGraph(object):
     """The whole graph of a Token Network"""
 
-    def __init__(self, capacity_imbalance_fee_divisor=0):
+    def __init__(self, capacity_imbalance_fee_divisor=0, default_interests = 0,
+                 custom_interests = False, safe_interest_rippling = False):
+
+
         self.capacity_imbalance_fee_divisor = capacity_imbalance_fee_divisor
+        self.default_interests = default_interests
+        self.custom_interests = custom_interests
+        self.safe_interest_rippling = safe_interest_rippling
         self.graph = nx.Graph()
 
     def gen_network(self, friendsdict):
@@ -178,7 +193,7 @@ class CurrencyNetworkGraph(object):
 
     @property
     def money_created(self):
-        return sum([abs(edge[2]) for edge in self.graph.edges(data=balance_ab)])
+        return sum([abs(edge[2]) for edge in self.graph.edges(data=balance_ab)])  # does not include interests
 
     @property
     def total_creditlines(self):
@@ -224,8 +239,9 @@ class CurrencyNetworkGraph(object):
         account.creditline = creditline_given
         account.reverse_creditline = creditline_received
 
-    def update_balance(self, a, b, balance, timestamp):
-        """to update the balance, used to react on changes on the blockchain"""
+    def update_balance(self, a, b, balance, timestamp = 0):
+        """to update the balance, used to react on changes on the blockchain
+        the last modification time of the balance is also updated to keep track of the interests"""
         if not self.graph.has_edge(a, b):
             self.graph.add_edge(a,
                                 b,
@@ -241,7 +257,7 @@ class CurrencyNetworkGraph(object):
         account.balance = balance
         account.m_time = timestamp
 
-    def get_account_sum(self, a, b=None):
+    def get_account_sum(self, a, b=None):  # this function is broken
         if b is None:
             account_summary = AccountSummary(0, 0, 0)
             for b in self.get_friends(a):
@@ -291,6 +307,8 @@ class CurrencyNetworkGraph(object):
     def _cost_func_fast_reverse(self, b, a, data, value):
         # this func should be as fast as possible, as it's called often
         # don't use Account which allocs memory
+        # this func is responsible for updating the data to take into account the interests for pathfinding
+        apply_interests(a, b, data)
         if a < b:
             pre_balance = data[balance_ab]
             creditline = data[creditline_ba]
