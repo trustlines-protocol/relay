@@ -42,7 +42,7 @@ class Node:
         return str(self._web3.fromWei(wei, 'ether'))
 
     def send_ether(self, address):
-        if self._web3.eth.getBalance(address) == 0:
+        if self._web3.eth.getBalance(address) <= 5:
             return self._web3.eth.sendTransaction({
                 'from': self._web3.eth.coinbase,
                 'to': address,
