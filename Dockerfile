@@ -8,6 +8,8 @@
 #   docker build . -t relay
 
 FROM ubuntu:18.04 as builder
+# python needs LANG
+ENV LANG C.UTF-8
 
 RUN apt-get update \
     && apt-get install -y apt-utils libssl-dev curl graphviz \
@@ -33,6 +35,7 @@ RUN /opt/relay/bin/pip install -c constraints.txt .
 RUN /opt/relay/bin/python -c 'import pkg_resources; print(pkg_resources.get_distribution("trustlines-relay").version)' >/opt/relay/VERSION
 
 FROM ubuntu:18.04 as runner
+ENV LANG C.UTF-8
 RUN apt-get update \
     && apt-get install -y apt-utils libssl-dev curl graphviz \
                           python3 libpq5 libsecp256k1-0 \
