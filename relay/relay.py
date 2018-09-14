@@ -87,7 +87,7 @@ class TrustlinesRelay:
 
     @property
     def use_eth_index(self) -> bool:
-        return os.environ.get("ETHINDEX", "") == "1"
+        return os.environ.get("ETHINDEX", "1") == "1"
 
     def get_event_selector_for_currency_network(self, network_address):
         """return either a CurrencyNetworkProxy or a EthindexDB instance
