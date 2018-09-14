@@ -1,5 +1,4 @@
 import pytest
-from ethereum import tester
 from eth_utils import to_checksum_address
 
 from relay.exchange.order import Order, SignableOrder
@@ -28,7 +27,7 @@ def invalid_signature_order(addresses):
 
 
 @pytest.fixture()
-def invalid_exchange_order(addresses):
+def invalid_exchange_order(addresses, tester):
     A, B, C, D = addresses
     maker = tester.a0
     order = SignableOrder(
@@ -49,7 +48,7 @@ def invalid_exchange_order(addresses):
 
 
 @pytest.fixture()
-def invalid_taker_order(addresses):
+def invalid_taker_order(addresses, tester):
     A, B, C, D = addresses
     maker = tester.a0
     order = SignableOrder(
@@ -70,7 +69,7 @@ def invalid_taker_order(addresses):
 
 
 @pytest.fixture()
-def expired_order(addresses):
+def expired_order(addresses, tester):
     A, B, C, D = addresses
     maker = tester.a0
     order = SignableOrder(
@@ -91,7 +90,7 @@ def expired_order(addresses):
 
 
 @pytest.fixture()
-def valid_order(addresses):
+def valid_order(addresses, tester):
     A, B, C, D = addresses
     maker = tester.a0
     order = SignableOrder(

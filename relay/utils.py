@@ -16,4 +16,4 @@ def trim_args(args):
 
 
 def sha3(text: str) -> str:
-    return web3.Web3.sha3(text=text)
+    return web3.Web3.sha3(text=text).hex()

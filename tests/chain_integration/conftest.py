@@ -1,39 +1,69 @@
 import json
 import os
 import sys
-import subprocess
 
 import pytest
-import gevent
-from web3 import Web3, HTTPProvider
-from web3.utils.transactions import wait_for_transaction_receipt
-from eth_utils import to_checksum_address
+from web3 import Web3
+from web3.providers.eth_tester import EthereumTesterProvider
+from eth_utils import to_checksum_address, encode_hex
 from tlcontracts_deploy import deploy_networks, deploy_network
 
 from relay.blockchain.currency_network_proxy import CurrencyNetworkProxy
+import eth_tester
 
 
 NETWORKS = [('Fugger', 'FUG', 2), ('Hours', 'HOU', 2), ('Testcoin', 'T', 6)]
 
 
-@pytest.fixture(autouse=True, scope='session')
-def blockchain():
-    p = subprocess.Popen('testrpc-py')
-    gevent.sleep(3)  # give it some time to set up
-    yield
-    p.terminate()
+@pytest.fixture(scope="session")
+def ethereum_tester_session():
+    """Returns an instance of an Ethereum tester"""
+    tester = eth_tester.EthereumTester(eth_tester.PyEVMBackend())
+    k0 = b'\x04HR\xb2\xa6p\xad\xe5@~x\xfb(c\xc5\x1d\xe9\xfc\xb9eB\xa0q\x86\xfe:\xed\xa6\xbb\x8a\x11m'
+    a0 = tester.add_account(encode_hex(k0))
+    faucet = tester.get_accounts()[0]
+    tester.send_transaction(
+        {"from": faucet,
+         "to": to_checksum_address(a0),
+         "gas": 21000,
+         "value": 10000000})
+    return tester
 
 
-@pytest.fixture(scope='session')
-def web3():
-    return Web3(HTTPProvider('http://127.0.0.1:8545'))
+@pytest.fixture
+def ethereum_tester(ethereum_tester_session):
+    tester = ethereum_tester_session
+    snapshot = tester.take_snapshot()
+    yield tester
+    tester.revert_to_snapshot(snapshot)
 
 
-@pytest.fixture(scope='session')
+@pytest.fixture()
+def web3(ethereum_tester):
+    web3 = Web3(EthereumTesterProvider(ethereum_tester))
+    web3.eth.defaultAccount = web3.eth.accounts[0]
+    return web3
+
+    # return Web3(HTTPProvider('http://127.0.0.1:8545'))
+
+
+@pytest.fixture()
 def accounts(web3):
     accounts = web3.personal.listAccounts[0:5]
     assert len(accounts) == 5
     return [to_checksum_address(account) for account in accounts]
+
+
+@pytest.fixture
+def maker(tester):
+    """checksum maker address"""
+    return to_checksum_address(tester.a0)
+
+
+@pytest.fixture
+def taker(web3):
+    """checksum taker address"""
+    return to_checksum_address(web3.personal.listAccounts[0])
 
 
 class CurrencyNetworkProxy(CurrencyNetworkProxy):
@@ -41,26 +71,26 @@ class CurrencyNetworkProxy(CurrencyNetworkProxy):
     def setup_trustlines(self, trustlines):
         for (A, B, clAB, clBA) in trustlines:
             txid = self._proxy.transact().setAccount(A, B, clAB, clBA, 0, 0, 0, 0, 0, 0)
-            wait_for_transaction_receipt(self._web3, txid)
+            self._web3.eth.waitForTransactionReceipt(txid)
 
     def update_creditline(self, from_, to, value):
         txid = self._proxy.transact({"from": from_}).updateCreditline(to, value)
-        wait_for_transaction_receipt(self._web3, txid)
+        self._web3.eth.waitForTransactionReceipt(txid)
 
     def accept_creditline(self, from_, to, value):
         txid = self._proxy.transact({"from": from_}).acceptCreditline(to, value)
-        wait_for_transaction_receipt(self._web3, txid)
+        self._web3.eth.waitForTransactionReceipt(txid)
 
     def update_trustline(self, from_, to, creditline_given, creditline_received):
         txid = self._proxy.transact({"from": from_}).updateTrustline(to, creditline_given, creditline_received)
-        wait_for_transaction_receipt(self._web3, txid)
+        self._web3.eth.waitForTransactionReceipt(txid)
 
     def transfer(self, from_, to, value, max_fee, path):
         txid = self._proxy.transact({"from": from_}).transfer(to, value, max_fee, path)
-        wait_for_transaction_receipt(self._web3, txid)
+        self._web3.eth.waitForTransactionReceipt(txid)
 
 
-@pytest.fixture(scope='session')
+@pytest.fixture()
 def trustlines(accounts):
     return [(accounts[0], accounts[1], 100, 150),
             (accounts[1], accounts[2], 200, 250),
@@ -99,12 +129,12 @@ def token_abi(contracts):
     return contracts['Token']['abi']
 
 
-@pytest.fixture(scope='session')
+@pytest.fixture()
 def testnetwork1_address(web3):
     return deploy_test_network(web3).address
 
 
-@pytest.fixture(scope='session')
+@pytest.fixture()
 def testnetwork2_address(web3):
     return deploy_test_network(web3).address
 
@@ -115,8 +145,7 @@ def testnetwork3_address(web3):
 
 
 @pytest.fixture()
-def testnetworks(accounts, web3):
-    maker, taker, *rest = accounts
+def testnetworks(web3, maker, taker):
     currency_network_contracts, exchange_contract, unw_eth_contract = deploy_test_networks(web3)
 
     unw_eth_contract.transact({'from': taker, 'value': 200}).deposit()
@@ -143,7 +172,7 @@ def network_addresses_with_exchange(testnetworks):
     return [network.address for network in testnetworks[0]]
 
 
-@pytest.fixture(scope='session')
+@pytest.fixture()
 def currency_network(web3, currency_network_abi, testnetwork1_address):
     """this currency network is not reset for speed reasons,
        only use it for constant tests"""
@@ -151,7 +180,7 @@ def currency_network(web3, currency_network_abi, testnetwork1_address):
     return currency_network
 
 
-@pytest.fixture(scope='session')
+@pytest.fixture()
 def currency_network_with_trustlines(web3, currency_network_abi, testnetwork2_address, trustlines):
     """this currency network is not reset for speed reasons,
         only use it for constant tests"""

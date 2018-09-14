@@ -217,7 +217,7 @@ The relay server reads both files from the current directory, so we need to star
 
 ```
 cd ~
-THREADING_BACKEND=gevent ETHINDEX=1 ~/opt/relay/bin/tl-relay
+ETHINDEX=1 ~/opt/relay/bin/tl-relay
 ```
 
 The relay server needs access to the parity node and the PostgreSQL database.

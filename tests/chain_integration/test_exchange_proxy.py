@@ -1,7 +1,5 @@
 import gevent
 import pytest
-from eth_utils import to_checksum_address
-from ethereum import tester
 
 from relay.blockchain.exchange_proxy import ExchangeProxy
 from relay.constants import NULL_ADDRESS
@@ -9,8 +7,7 @@ from relay.exchange.order import SignableOrder
 
 
 @pytest.fixture()
-def order_token(exchange_address, network_addresses_with_exchange, unw_eth_address):
-    maker = to_checksum_address(tester.a0)
+def order_token(exchange_address, network_addresses_with_exchange, unw_eth_address, tester, maker):
     order = SignableOrder(
         exchange_address=exchange_address,
         maker_address=maker,
@@ -30,8 +27,7 @@ def order_token(exchange_address, network_addresses_with_exchange, unw_eth_addre
 
 
 @pytest.fixture()
-def order_trustlines(exchange_address, network_addresses_with_exchange, unw_eth_address):
-    maker = to_checksum_address(tester.a0)
+def order_trustlines(exchange_address, network_addresses_with_exchange, unw_eth_address, tester, maker):
     order = SignableOrder(
         exchange_address=exchange_address,
         maker_address=maker,
@@ -81,9 +77,8 @@ def test_no_filled_amount(order_token, exchange_proxy):
     assert exchange_proxy.get_filled_amount(order_token) == 0
 
 
-def test_filled_amount(order_trustlines, exchange_proxy, testnetworks, accounts):
+def test_filled_amount(order_trustlines, exchange_proxy, testnetworks, maker, taker):
     order = order_trustlines
-    maker, taker, *rest = accounts
 
     exchange_contract = testnetworks[1]
     exchange_contract.transact({'from': taker}).fillOrderTrustlines(
@@ -115,9 +110,8 @@ def test_filled_amount(order_trustlines, exchange_proxy, testnetworks, accounts)
     assert not exchange_proxy.validate_filled_amount(order)
 
 
-def test_cancelled_amout(order_trustlines, exchange_proxy, testnetworks, accounts):
+def test_cancelled_amount(order_trustlines, exchange_proxy, testnetworks, maker, taker):
     order = order_trustlines
-    maker, taker, *rest = accounts
 
     exchange_contract = testnetworks[1]
     exchange_contract.transact({'from': maker}).cancelOrder(
@@ -129,9 +123,8 @@ def test_cancelled_amout(order_trustlines, exchange_proxy, testnetworks, account
     assert exchange_proxy.get_cancelled_amount(order) == 100
 
 
-def test_unavailable_amount(order_trustlines, exchange_proxy, testnetworks, accounts):
+def test_unavailable_amount(order_trustlines, exchange_proxy, testnetworks, maker, taker):
     order = order_trustlines
-    maker, taker, *rest = accounts
 
     exchange_contract = testnetworks[1]
 
@@ -155,14 +148,13 @@ def test_unavailable_amount(order_trustlines, exchange_proxy, testnetworks, acco
     assert exchange_proxy.get_unavailable_amount(order) == 20
 
 
-def test_listen_on_fill(order_trustlines, exchange_proxy, testnetworks, accounts):
+def test_listen_on_fill(order_trustlines, exchange_proxy, testnetworks, maker, taker):
     logs = []
 
     def log(order_hash, maker_token_amount, taker_token_amount):
         logs.append((order_hash, maker_token_amount, taker_token_amount))
 
     order = order_trustlines
-    maker, taker, *rest = accounts
 
     exchange_proxy.start_listen_on_fill(log)
     gevent.sleep(0.001)
@@ -182,19 +174,18 @@ def test_listen_on_fill(order_trustlines, exchange_proxy, testnetworks, accounts
     gevent.sleep(1)
 
     log1 = logs[0]
-    assert log1[0].encode('Latin-1') == order.hash()  # encoding because of bug in web3
+    assert log1[0] == order.hash()
     assert log1[1] == 50
     assert log1[2] == 100
 
 
-def test_listen_on_cancel(order_token, exchange_proxy, testnetworks, accounts):
+def test_listen_on_cancel(order_token, exchange_proxy, testnetworks, maker, taker):
     logs = []
 
     def log(order_hash, maker_token_amount, taker_token_amount):
         logs.append((order_hash, maker_token_amount, taker_token_amount))
 
     order = order_token
-    maker, taker, *rest = accounts
 
     exchange_proxy.start_listen_on_cancel(log)
     gevent.sleep(0.001)
@@ -209,6 +200,6 @@ def test_listen_on_cancel(order_token, exchange_proxy, testnetworks, accounts):
     gevent.sleep(1)
 
     log1 = logs[0]
-    assert log1[0].encode('Latin-1') == order.hash()  # encoding because of bug in web3
+    assert log1[0] == order.hash()
     assert log1[1] == 50
     assert log1[2] == 100

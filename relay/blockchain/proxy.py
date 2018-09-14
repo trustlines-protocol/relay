@@ -7,11 +7,12 @@ from typing import List, Dict, Callable, Any  # noqa: F401
 import gevent
 import itertools
 import socket
+import hexbytes
 
 import relay.concurrency_utils as concurrency_utils
 from .events import BlockchainEvent
 from relay.logger import get_logger
-
+from web3.datastructures import AttributeDict
 
 logger = get_logger('proxy', logging.DEBUG)
 
@@ -20,6 +21,41 @@ queryBlock = 'latest'
 updateBlock = 'pending'
 
 reconnect_interval = 3  # 3s
+
+
+def event_fix_hexbytes(event):
+    """replace HexBytes instances inside event
+
+    In web3 3.x they we're being deserialized as hex-encoded string.
+    """
+    if isinstance(event, (int, str)):
+        return event
+    elif isinstance(event, AttributeDict):
+        return AttributeDict(event_fix_hexbytes(dict(event)))
+    elif isinstance(event, hexbytes.HexBytes):
+        return event.hex()
+    elif isinstance(event, bytes):
+        return event
+    elif isinstance(event, list):
+        return [event_fix_hexbytes(x) for x in event]
+    elif isinstance(event, dict):
+        return {x: event_fix_hexbytes(event[x]) for x in event}
+    else:
+        return event
+
+
+def get_new_entries(filter, callback):
+    new_entries = [event_fix_hexbytes(event) for event in filter.get_new_entries()]
+    if new_entries:
+        logger.debug("new entries for filter %s: %s", filter, new_entries)
+    for event in new_entries:
+        callback(event)
+
+
+def watch_filter(filter, callback):
+    while 1:
+        get_new_entries(filter, callback)
+        gevent.sleep(1.0)
 
 
 class Proxy(object):
@@ -34,10 +70,10 @@ class Proxy(object):
     def _watch_filter(self, eventname: str, function, params=None):
         while True:
             try:
-                filter = self._proxy.on(eventname, params)
-                filter.watch(function)
+                filter = getattr(self._proxy.events, eventname).createFilter(**params)
+                watch_filter_greenlet = gevent.spawn(watch_filter, filter, function)
                 logger.info('Connected to filter for {}:{}'.format(self.address, eventname))
-                return filter
+                return watch_filter_greenlet
             except socket.timeout as err:
                 logger.warning('Timeout in filter creation, try to reconnect: ' + str(err))
                 gevent.sleep(reconnect_interval)
@@ -50,7 +86,7 @@ class Proxy(object):
 
     def start_listen_on(self, eventname: str, function, params=None) -> None:
         def on_exception(filter):
-            logger.warning('Filter {} disconnected, trying to reconnect'.format(filter.filter_id))
+            logger.warning('Filter {} disconnected, trying to reconnect'.format(filter))
             gevent.sleep(reconnect_interval)
             filter = self._watch_filter(eventname, function, params)
             filter.link_exception(on_exception)
@@ -58,8 +94,8 @@ class Proxy(object):
             params = {}
         params.setdefault('fromBlock', updateBlock)
         params.setdefault('toBlock', updateBlock)
-        filter = self._watch_filter(eventname, function, params)
-        filter.link_exception(on_exception)
+        watch_filter_greenlet = self._watch_filter(eventname, function, params)
+        watch_filter_greenlet.link_exception(on_exception)
 
     def get_events(self, event_name, filter_=None, from_block=0, timeout: float = None) -> List[BlockchainEvent]:
         if event_name not in self.event_builders.keys():
@@ -68,13 +104,12 @@ class Proxy(object):
         if filter_ is None:
             filter_ = {}
 
-        params = {
-            'filter': filter_,
-            'fromBlock': from_block,
-            'toBlock': queryBlock
-        }
+        logfilter = getattr(self._proxy.events, event_name).createFilter(
+            fromBlock=from_block,
+            toBlock="latest",
+            argument_filters=filter_)
 
-        queries = [lambda: self._proxy.pastEvents(event_name, params).get(False)]
+        queries = [logfilter.get_all_entries]
         results = concurrency_utils.joinall(queries, timeout=timeout)
         return sorted_events(self._build_events(results[0]))
 

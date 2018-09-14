@@ -14,9 +14,6 @@ stages:
   - name: testing
   - name: deploying
 
-env:
-  global:
-  - THREADING_BACKEND=gevent
 notifications:
   webhooks:
     urls:
@@ -34,7 +31,7 @@ jobs:
       script:
       - flake8
       - mypy --ignore-missing-imports relay
-      - pytest --cov=relay tests
+      - ./pytest --cov=relay tests
       after_success:
       - codecov
 

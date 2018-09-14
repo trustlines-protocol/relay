@@ -8,7 +8,7 @@ import json
 from contextlib import contextmanager
 
 from web3 import Web3
-from web3.utils.compat import (
+from web3.utils.threads import (
     Timeout,
 )
 

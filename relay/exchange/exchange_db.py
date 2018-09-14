@@ -5,7 +5,8 @@ from sqlalchemy import Column, Integer, String, Float, BigInteger
 from sqlalchemy.orm import sessionmaker
 
 from .order import Order
-from eth_utils import force_bytes
+from relay.concurrency_utils import synchronized
+
 
 Base = declarative_base()
 
@@ -91,6 +92,7 @@ class OrderBookDB(object):
         Base.metadata.create_all(engine)
         self.session = Session()
 
+    @synchronized
     def add_order(self, order: Order) -> None:
         order_orm = self.session.query(OrderORM).get(order.hash().hex())
         if order_orm is None:
@@ -98,16 +100,19 @@ class OrderBookDB(object):
             self.session.add(order_orm)
             self.session.commit()
 
+    @synchronized
     def add_orders(self, orders: Sequence[Order]) -> None:
         for order in orders:
             self.add_order(order)
 
+    @synchronized
     def get_order_by_hash(self, order_hash: bytes) -> Optional[Order]:
         order_orm = self.session.query(OrderORM).get(order_hash.hex())
         if order_orm is None:
             return None
         return order_orm.to_order()
 
+    @synchronized
     def get_orderbook_by_tokenpair(self, token_pair: Tuple[str, str], desc_price: bool = False) -> Sequence[Order]:
         orders_orm = (self.session.query(OrderORM)
                       .filter(OrderORM.maker_token == token_pair[0],
@@ -116,6 +121,7 @@ class OrderBookDB(object):
                                 OrderORM.expiration_timestamp_in_sec))
         return [order_orm.to_order() for order_orm in orders_orm]
 
+    @synchronized
     def get_orders(self,
                    filter_exchange_address: str = None,
                    filter_token_address: str = None,
@@ -148,27 +154,29 @@ class OrderBookDB(object):
 
         return [order_orm.to_order() for order_orm in orders_orm]
 
+    @synchronized
     def delete_order_by_hash(self, order_hash: bytes) -> None:
         self.session.query(OrderORM).filter_by(msg_hash=order_hash.hex()).delete(synchronize_session=False)
         self.session.commit()
 
+    @synchronized
     def delete_orders_by_hash(self, order_hashes: Sequence[bytes]) -> None:
         for order_hash in order_hashes:
             self.session.query(OrderORM).filter_by(msg_hash=order_hash.hex()).delete(synchronize_session=False)
         self.session.commit()
 
+    @synchronized
     def delete_old_orders(self, timestamp: int) -> None:
         self.session.query(OrderORM).filter(OrderORM.expiration_timestamp_in_sec < timestamp)\
                                     .delete(synchronize_session=False)
         self.session.commit()
 
+    @synchronized
     def order_filled(self,
                      order_hash: bytes,
                      filled_maker_token_amount: int,
                      filled_taker_token_amount: int) -> None:
-        # NOTE old version of web3.py returns bytes as string from contract, so we have to use force_bytes
-        order_hash_bytes = force_bytes(order_hash)
-        order_orm = self.session.query(OrderORM).filter_by(msg_hash=order_hash_bytes.hex()).first()
+        order_orm = self.session.query(OrderORM).filter_by(msg_hash=order_hash.hex()).first()
         if order_orm is not None:
             order_orm.filled_maker_token_amount += filled_maker_token_amount
             order_orm.filled_taker_token_amount += filled_taker_token_amount
@@ -176,13 +184,12 @@ class OrderBookDB(object):
                 self.session.delete(order_orm)
             self.session.commit()
 
+    @synchronized
     def order_cancelled(self,
                         order_hash: bytes,
                         cancelled_maker_token_amount: int,
                         cancelled_taker_token_amount: int) -> None:
-        # NOTE old version of web3.py returns bytes as string from contract, so we have to use force_bytes
-        order_hash_bytes = force_bytes(order_hash)
-        order_orm = self.session.query(OrderORM).filter_by(msg_hash=order_hash_bytes.hex()).first()
+        order_orm = self.session.query(OrderORM).filter_by(msg_hash=order_hash.hex()).first()
         if order_orm is not None:
             order_orm.cancelled_maker_token_amount += cancelled_maker_token_amount
             order_orm.cancelled_taker_token_amount += cancelled_taker_token_amount

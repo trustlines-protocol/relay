@@ -1,4 +1,4 @@
-from eth_utils import force_bytes, is_hex, decode_hex
+from eth_utils import is_hex, decode_hex
 from .events import TLNetworkEvent, BlockchainEvent  # NOQA
 
 LogFillEventType = 'LogFill'
@@ -15,7 +15,7 @@ class ExchangeEvent(TLNetworkEvent):
         if (is_hex(web3_event.get('args').get('orderHash'))):
             self.order_hash = decode_hex(web3_event.get('args').get('orderHash'))
         else:
-            self.order_hash = force_bytes(web3_event.get('args').get('orderHash'))
+            self.order_hash = web3_event.get('args').get('orderHash')
         self.maker_token = web3_event.get('args').get('makerToken')
         self.taker_token = web3_event.get('args').get('takerToken')
 

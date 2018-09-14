@@ -1,6 +1,24 @@
 ==========
 Change Log
 ==========
+`0.3.0`_ (not released yet)
+-------------------------------
+* web3 has been upgraded from 3.16.5 to 4.7.1. As a result you should be able to
+  install py-eth-index and trustlines-watch into the same virtualenv.
+  Also `THREADING_BACKEND` doesn't have to be set anymore.
+* `ETHINDEX` doesn't have to be set anymore. The relay server uses the ethindex
+  backend by default.
+* A gevent aware wrapper of pytest has been added. Please run `./pytest` inside
+  the relay repository now.
+* The spendable endpoints have been removed::
+
+    /networks/<address:network_address>/users/<address:a_address>/spendable
+    /networks/<address:network_address>/users/<address:a_address>/spendables/<address:b_address>
+
+* The nonce is queried from the pending transaction. This will allow multiple
+  transactions per block. Please make sure to start parity with the
+  `--jsonrpc-apis=all` or `--jsonrpc-apis=parity` option.
+* The docker image is now based on ubuntu 18.04 and python 3.6
 
 `0.2.0`_ (2018-08-21)
 -------------------------------
@@ -11,3 +29,4 @@ Change Log
   required anymore. Therefore tl-deploy isn't being installed anymore.
 
 .. _0.2.0: https://github.com/trustlines-network/relay/compare/0.1.0...0.2.0
+.. _0.3.0: https://github.com/trustlines-network/relay/compare/0.2.0...0.3.0

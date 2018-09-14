@@ -79,7 +79,7 @@ setup(
                       'flask_cors',
                       'webargs',
                       'gevent',
-                      'web3[gevent]',
+                      'web3>=4.7.1',
                       'networkx>=2.0',
                       'pygraphviz',
                       'trustlines-contracts-bin',
@@ -92,6 +92,7 @@ setup(
                       'firebase-admin',
                       'psycopg2',
                       'psycogreen',
+                      'wrapt',
     ],
 
     # List additional groups of dependencies here (e.g. development

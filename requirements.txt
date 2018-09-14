@@ -3,7 +3,7 @@ flask_restful
 flask_cors
 webargs
 gevent
-web3[gevent]<4
+web3>=4.7.1
 networkx>=2.0
 pygraphviz
 trustlines-contracts-bin
@@ -16,6 +16,7 @@ flask-sockets
 firebase-admin
 psycopg2 --no-binary psycopg2
 psycogreen
+wrapt
 
 # --- development dependencies, i.e. dependencies not needed for running tl-relay
 flake8
@@ -25,4 +26,4 @@ flake8-per-file-ignores
 pytest
 pytest-cov
 mypy
-eth-testrpc
+eth-tester[py-evm]

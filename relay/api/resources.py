@@ -303,7 +303,7 @@ class Relay(Resource):
         except ValueError:  # should mean error in relaying the transaction
             abort(409, 'There was an error while relaying this transaction')
 
-        return transaction_id
+        return transaction_id.hex()
 
 
 class Balance(Resource):

@@ -1,7 +1,6 @@
 import pytest
 from sqlalchemy import create_engine
 from eth_utils import to_checksum_address
-from ethereum import tester
 
 from relay.exchange.order import SignableOrder
 from relay.constants import NULL_ADDRESS
@@ -13,7 +12,7 @@ def engine():
 
 
 @pytest.fixture()
-def orders(addresses):
+def orders(addresses, tester):
     A, B, C, D = addresses
     maker = to_checksum_address(tester.a0)
     orders = [
