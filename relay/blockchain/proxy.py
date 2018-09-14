@@ -12,7 +12,7 @@ import hexbytes
 import relay.concurrency_utils as concurrency_utils
 from .events import BlockchainEvent
 from relay.logger import get_logger
-from web3.utils.datastructures import AttributeDict
+from web3.datastructures import AttributeDict
 
 logger = get_logger('proxy', logging.DEBUG)
 
