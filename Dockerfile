@@ -32,14 +32,15 @@ COPY . /relay
 RUN /opt/relay/bin/pip install -c constraints.txt .
 RUN /opt/relay/bin/python -c 'import pkg_resources; print(pkg_resources.get_distribution("trustlines-relay").version)' >/opt/relay/VERSION
 
-FROM ubuntu:18.04
-COPY --from=builder /opt/relay /opt/relay
-
+FROM ubuntu:18.04 as runner
 RUN apt-get update \
     && apt-get install -y apt-utils libssl-dev curl graphviz \
-       python3 libpq5 libsecp256k1-0 \
+                          python3 libpq5 libsecp256k1-0 \
     && rm -rf /var/lib/apt/lists/* \
     && ln -s /opt/relay/bin/tl-relay /usr/local/bin/
 
+
+FROM runner
+COPY --from=builder /opt/relay /opt/relay
 WORKDIR /opt/relay
 ENTRYPOINT ["tl-relay"]
