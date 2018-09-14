@@ -10,6 +10,7 @@ import gevent
 import relay.concurrency_utils as concurrency_utils
 from .proxy import Proxy, reconnect_interval, sorted_events
 from relay.logger import get_logger
+from web3.exceptions import BadFunctionCallOutput, ValidationError
 
 from .events import BlockchainEvent
 from .currency_network_events import (
@@ -52,6 +53,25 @@ class CurrencyNetworkProxy(Proxy):
         self.name = self._proxy.call().name().strip('\0')  # type: str
         self.decimals = self._proxy.call().decimals()  # typ: str
         self.symbol = self._proxy.call().symbol().strip('\0')  # type: str
+        try:
+            self.capacityImbalanceFeeDivisor = self._proxy.call().capacityImbalanceFeeDivisor()
+        except (BadFunctionCallOutput, ValidationError) as e:
+            self.capacityImbalanceFeeDivisor = 100
+
+        try:
+            self.defaultInterests = self._proxy.call().defaultInterests()
+        except (BadFunctionCallOutput, ValidationError) as e:
+            self.defaultInterests = 0
+
+        try:
+            self.customInterests = self._proxy.call().customInterests()
+        except (BadFunctionCallOutput, ValidationError) as e:
+            self.customInterests = False
+
+        try:
+            self.safeInterestRippling = self._proxy.call().safeInterestRippling()
+        except (BadFunctionCallOutput, ValidationError) as e:
+            self.safeInterestRippling = False
 
     @property
     def users(self) -> List[str]:

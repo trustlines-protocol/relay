@@ -169,10 +169,15 @@ class TrustlinesRelay:
         if address in self.networks:
             return
         logger.info('New network: {}'.format(address))
-        self.currency_network_graphs[address] = CurrencyNetworkGraph(100)
         self.currency_network_proxies[address] = CurrencyNetworkProxy(self._web3,
                                                                       self.contracts['CurrencyNetwork']['abi'],
                                                                       address)
+        self.currency_network_graphs[address] = CurrencyNetworkGraph(
+            self.currency_network_proxies[address].capacityImbalanceFeeDivisor,
+            self.currency_network_proxies[address].defaultInterests,
+            self.currency_network_proxies[address].customInterests,
+            self.currency_network_proxies[address].safeInterestRippling
+        )
         self._start_listen_network(address)
 
     def new_exchange(self, address: str) -> None:
