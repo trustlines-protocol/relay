@@ -100,7 +100,7 @@ def test_interests_calculation_from_A_balance_negative_irrelevant_interests(basi
     data = basic_data
     data[m_time] = 1505260800
     data[balance_ab] = -100  # A owes to B
-    data[interest_ab] = 1000  # interest given by B to A
+    data[interest_ab] = 1000  # interest given by A to B
     acc_AB = Account(data, A, B)
     assert acc_AB.balance == -100
 
@@ -136,15 +136,26 @@ def test_interests_calculation_from_B_balance_negative_irrelevant_interests(basi
     data = basic_data
     data[m_time] = 1505260800
     data[balance_ab] = -100  # A owes to B
-    data[interest_ab] = 1000  # interest given by B to A
+    data[interest_ab] = 1000  # interest given by A to B
     acc_BA = Account(data, B, A)
     assert acc_BA.balance == 100
 
 
-def test_path_prevented_by_interests(community_with_simple_trustlines):
+def test_interests_path_from_A_balance_positive_relevant_interests(community_with_simple_trustlines):
+    dict = {A: [Trustline(B, 200, 200, balance_ab = 100, m_time = 1505260800, interest_ab=1000)]}
+    # B owes to A
+    # 1% interest given by A to B
+    community = CurrencyNetworkGraph()
+    community.gen_network(dict)
+
+    cost, path = community.find_path(A, B, 100)
+    assert path == [A, B]
+
+
+def test_interests_path_from_A_balance_negative_relevant_interests(community_with_simple_trustlines):
     dict = {A: [Trustline(B, 200, 200, balance_ab = -100, m_time = 1505260800, interest_ba=1000)]}
-    # A owes to B since more than a year and has 1% interests.
-    # A only has < 100 available
+    # A owes to B
+    # 1% interest given by B to A
     community = CurrencyNetworkGraph()
     community.gen_network(dict)
 
@@ -152,22 +163,67 @@ def test_path_prevented_by_interests(community_with_simple_trustlines):
     assert path == []
 
 
-def test_path_not_prevented_by_interests(community_with_simple_trustlines):
-    dict = {A: [Trustline(B, 200, 200, balance_ab = -100, m_time = 1505260800, interest_ab=1000)]}
-    # A owes to B since more than a year but the 1% interests are given to B not to A
+def test_interests_path_from_A_balance_positive_irrelevant_interests(community_with_simple_trustlines):
+    dict = {A: [Trustline(B, 200, 200, balance_ab = 100, m_time = 1505260800, interest_ba=1000)]}
+    # B owes to A
+    # 1% interest given by B to A
     community = CurrencyNetworkGraph()
     community.gen_network(dict)
 
     cost, path = community.find_path(A, B, 100)
-    assert path == [A,B]
+    assert path == [A, B]
 
 
-def test_path_prevented_by_interests_reverse(community_with_simple_trustlines):
+def test_interests_path_from_A_balance_negative_irrelevant_interests(community_with_simple_trustlines):
+    dict = {A: [Trustline(B, 200, 200, balance_ab = -100, m_time = 1505260800, interest_ab=1000)]}
+    # A owes to B
+    # 1% interest given by A to B
+    community = CurrencyNetworkGraph()
+    community.gen_network(dict)
+
+    cost, path = community.find_path(A, B, 100)
+    assert path == [A, B]
+
+
+def test_interests_path_from_B_balance_positive_relevant_interests(community_with_simple_trustlines):
     dict = {A: [Trustline(B, 200, 200, balance_ab = 100, m_time = 1505260800, interest_ab=1000)]}
-    # B owes to A since more than a year and has 1% interests.
-    # B only has < 100 available
+    # B owes to A
+    # 1% interest given by A to B
     community = CurrencyNetworkGraph()
     community.gen_network(dict)
 
     cost, path = community.find_path(B, A, 100)
     assert path == []
+
+
+def test_interests_path_from_B_balance_negative_relevant_interests(community_with_simple_trustlines):
+    dict = {A: [Trustline(B, 200, 200, balance_ab = -100, m_time = 1505260800, interest_ba=1000)]}
+    # A owes to B
+    # 1% interest given by B to A
+    community = CurrencyNetworkGraph()
+    community.gen_network(dict)
+
+    cost, path = community.find_path(B, A, 100)
+    assert path == [B, A]
+
+
+def test_interests_path_from_B_balance_positive_irrelevant_interests(community_with_simple_trustlines):
+    dict = {A: [Trustline(B, 200, 200, balance_ab = 100, m_time = 1505260800, interest_ba=1000)]}
+    # B owes to A
+    # 1% interest given by B to A
+    community = CurrencyNetworkGraph()
+    community.gen_network(dict)
+
+    cost, path = community.find_path(B, A, 100)
+    assert path == [B, A]
+
+
+def test_interests_path_from_B_balance_negative_irrelevant_interests(community_with_simple_trustlines):
+    dict = {A: [Trustline(B, 200, 200, balance_ab = -100, m_time = 1505260800, interest_ab=1000)]}
+    # A owes to B
+    # 1% interest given by A to B
+    community = CurrencyNetworkGraph()
+    community.gen_network(dict)
+
+    cost, path = community.find_path(B, A, 100)
+    assert path == [B, A]

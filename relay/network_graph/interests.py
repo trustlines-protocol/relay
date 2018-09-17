@@ -1,7 +1,9 @@
 import time
 
+
 def calculate_interests(balance, rate, old_time, new_time):
     return balance * (new_time - old_time) / (60 * 60 * 24 * 365) * rate / 100000
+
 
 def apply_interests(a, b, data):
     """Applies the interest to the balance in data. The interpretation of data depends on whether a < b.

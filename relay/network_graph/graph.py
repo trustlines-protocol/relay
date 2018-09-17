@@ -160,9 +160,8 @@ class AccountSummary(object):
 class CurrencyNetworkGraph(object):
     """The whole graph of a Token Network"""
 
-    def __init__(self, capacity_imbalance_fee_divisor=0, default_interests = 0,
-                 custom_interests = False, safe_interest_rippling = False):
-
+    def __init__(self, capacity_imbalance_fee_divisor=0, default_interests=0,
+                 custom_interests=False, safe_interest_rippling=False):
 
         self.capacity_imbalance_fee_divisor = capacity_imbalance_fee_divisor
         self.default_interests = default_interests
@@ -239,7 +238,7 @@ class CurrencyNetworkGraph(object):
         account.creditline = creditline_given
         account.reverse_creditline = creditline_received
 
-    def update_balance(self, a, b, balance, timestamp = 0):
+    def update_balance(self, a, b, balance, timestamp=0):
         """to update the balance, used to react on changes on the blockchain
         the last modification time of the balance is also updated to keep track of the interests"""
         if not self.graph.has_edge(a, b):
@@ -257,7 +256,7 @@ class CurrencyNetworkGraph(object):
         account.balance = balance
         account.m_time = timestamp
 
-    def get_account_sum(self, a, b=None):  # this function is broken
+    def get_account_sum(self, a, b=None):
         if b is None:
             account_summary = AccountSummary(0, 0, 0)
             for b in self.get_friends(a):
