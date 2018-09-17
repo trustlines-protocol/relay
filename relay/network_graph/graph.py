@@ -316,8 +316,8 @@ class CurrencyNetworkGraph(object):
     def _cost_func_fast_reverse(self, b, a, data, value):
         # this func should be as fast as possible, as it's called often
         # don't use Account which allocs memory
-        # this func is responsible for updating the data to take into account the interests for pathfinding
-        apply_interests(a, b, data)
+        # this function does not update the data to take into account the interests.
+        # It expect the interests be already applied to date.
         if a < b:
             pre_balance = data[balance_ab]
             creditline = data[creditline_ba]

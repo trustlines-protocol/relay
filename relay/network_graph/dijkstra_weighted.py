@@ -4,6 +4,8 @@ from itertools import count
 import networkx as nx
 import math
 
+from .interests import apply_interests
+
 
 def find_path(G, source, target, get_fee, value, max_hops=None, max_fees=None, ignore=None):
     G_adj = G.adj
@@ -30,6 +32,7 @@ def find_path(G, source, target, get_fee, value, max_hops=None, max_fees=None, i
             break
 
         for u, e in G_adj[v].items():
+            apply_interests(v, u, e)
             cost = get_fee(v, u, e, d)  # fee of transferring from u to v
             if cost is None:
                 continue
@@ -92,6 +95,7 @@ def find_maximum_capacity_path(G, source, target, max_hops=None):
             break
 
         for v, e in G_adj[u].items():
+            apply_interests(u, v, e)
             if v in seen:
                 continue
             if max_hops is not None:
@@ -135,6 +139,7 @@ def find_path_triangulation(G, source, target_reduce, target_increase, get_fee, 
     """
     def get_fee_wrapper(b, a, value):
         # used to get the data from the graph in the right order and query the fees
+        apply_interests(b, a, G[b][a])
         if b < a:
             output = get_fee(b, a, G[b][a], value)
         else:
