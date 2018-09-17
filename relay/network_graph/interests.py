@@ -8,10 +8,10 @@ def calculate_interests(balance, rate, old_time, new_time):
 def apply_interests(a, b, data):
     """Applies the interest to the balance in data. The interpretation of data depends on whether a < b.
     a and b play symmetrical roles"""
-    # apparently not, need to refactor
     new_time = time.time()
 
-    # I assume interest_ba is the interest given by b to a. This might be wrong.
+    """I assume interest_ba is the interest given by b to a. This might be wrong. I could refactor by removing the
+    if a < b, else... but I do not find a logical reason behind the similarity of the two code blocks."""
     if a < b:
         if data['balance_ab'] > 0:  # b owes a
             interest = calculate_interests(data['balance_ab'], data['interest_ab'], data['m_time'], new_time)

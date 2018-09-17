@@ -85,6 +85,8 @@ class TrustlineSchema(Schema):
 
     leftGiven = BigInteger(attribute='creditline_left_given')
     leftReceived = BigInteger(attribute='creditline_left_received')
+    interestGiven = BigInteger(attribute='creditline_interest_given')
+    interestReceived = BigInteger(attribute='creditline_interest_received')
     given = BigInteger(attribute='creditline_given')
     received = BigInteger(attribute='creditline_received')
     balance = BigInteger()

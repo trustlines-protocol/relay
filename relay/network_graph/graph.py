@@ -157,6 +157,16 @@ class AccountSummary(object):
         return self.balance + self.creditline_received
 
 
+class AccountSummaryWithInterests(AccountSummary):
+    """Representing an account summary with interests
+    It makes no sense to aggregate interests so they are not added to AccountSummary"""
+
+    def __init__(self, balance, creditline_given, creditline_received, interests_given, interests_received):
+        super().__init__(balance, creditline_given, creditline_received)
+        self.interests_given = interests_given
+        self.interests_received = interests_received
+
+
 class CurrencyNetworkGraph(object):
     """The whole graph of a Token Network"""
 
@@ -261,16 +271,16 @@ class CurrencyNetworkGraph(object):
             account_summary = AccountSummary(0, 0, 0)
             for b in self.get_friends(a):
                 account = Account(self.graph[a][b], a, b)
-                accountr = Account(self.graph[b][a], b, a)
                 account_summary.balance += account.balance
                 account_summary.creditline_given += account.creditline
-                account_summary.creditline_received += accountr.creditline
+                account_summary.creditline_received += account.reverse_creditline
             return account_summary
         else:
             if self.graph.has_edge(a, b):
                 account = Account(self.graph[a][b], a, b)
-                accountr = Account(self.graph[b][a], b, a)
-                return AccountSummary(account.balance, account.creditline, accountr.creditline)
+                return AccountSummaryWithInterests(account.balance, account.creditline, account.reverse_creditline,
+                                                   account.interest, account.reverse_interest)
+                return AccountSummary(account.balance, account.creditline, account.reverse_creditline)
             else:
                 return AccountSummary(0, 0, 0)
 

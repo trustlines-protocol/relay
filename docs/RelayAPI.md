@@ -99,6 +99,9 @@ curl https://relay0.testnet.trustlines.network/api/v1/networks/0xC0B33D88C704455
 |decimals|int|Decimals specified in currency network|
 |name|string|Full name of the currency network|
 |numUsers|int|Total number of users in currency network|
+|defaultInterests|int|The default interest interest rate for every user in the network in 0.001% per year|
+|customInterests|bool|Whether custom interest rate can be set by users|
+|safeInterestRippling|bool|Whether the safe rippling strategy is set|
 #### Example Response
 ```json
 {
@@ -106,7 +109,10 @@ curl https://relay0.testnet.trustlines.network/api/v1/networks/0xC0B33D88C704455
   "address": "0xC0B33D88C704455075a0724AA167a286da778DDE",
   "decimals": 2,
   "name": "Hours",
-  "numUsers": 3
+  "numUsers": 3,
+  "defaultInterests": 1000,
+  "customInterests": false,
+  "safeInterestRippling": false
 }
 ```
 
@@ -140,7 +146,7 @@ curl https://relay0.testnet.trustlines.network/api/v1/networks/0xC0B33D88C704455
 ---
 
 ### User details in currency network
-Returns detailed information of an user in a currency network.
+Returns detailed information of a user in a currency network.
 #### Request
 ```
 GET /networks/:networkAddress/users/:userAddress
@@ -176,7 +182,7 @@ curl https://relay0.testnet.trustlines.network/api/v1/networks/0xC0B33D88C704455
 ---
 
 ### Trustlines of user in currency network
-Returns a list of trustlines an user has in a currency network.
+Returns a list of trustlines a user has in a currency network.
 #### Request
 ```
 GET /networks/:networkAddress/users/:userAddress/trustlines
@@ -200,6 +206,8 @@ curl https://relay0.testnet.trustlines.network/api/v1/networks/0xC0B33D88C704455
 |received|string|Creditline received by counterparty|
 |leftGiven|string|given - balance|
 |leftReceived|string|received + balance|
+|interestGiven|string|Interest received from point of view of user|
+|interestReceived|string|Interest given from point of view of user|
 |id|string|Identifier of trustline|
 #### Example Response
 ```json
@@ -212,6 +220,8 @@ curl https://relay0.testnet.trustlines.network/api/v1/networks/0xC0B33D88C704455
     "given": "10000",
     "leftGiven": "10152",
     "received": "20000",
+    "interestGiven": "1000",
+    "interestReceived": "2000",
     "user": "0x04f9b217b334507c42Ad3b74BFf024c724aBB166"
   }
 ]
@@ -245,6 +255,8 @@ curl https://relay0.testnet.trustlines.network/api/v1/networks/0xC0B33D88C704455
 |received|string|Creditline received by counterparty|
 |leftGiven|string|given - balance|
 |leftReceived|string|received + balance|
+|interestGiven|string|Interest received from point of view of user|
+|interestReceived|string|Interest given from point of view of user|
 |id|string|Identifier of trustline|
 ### Example Response
 ```json
@@ -256,6 +268,8 @@ curl https://relay0.testnet.trustlines.network/api/v1/networks/0xC0B33D88C704455
     "given": "10000",
     "leftGiven": "10152",
     "received": "20000",
+    "interestGiven": "1000",
+    "interestReceived": "2000",
     "user": "0x04f9b217b334507c42Ad3b74BFf024c724aBB166"
 }
 ```

@@ -66,7 +66,10 @@ class Network(Resource):
             'name': self.trustlines.currency_network_proxies[network_address].name,
             'abbreviation': self.trustlines.currency_network_proxies[network_address].symbol,
             'decimals': self.trustlines.currency_network_proxies[network_address].decimals,
-            'numUsers': len(self.trustlines.currency_network_graphs[network_address].users)
+            'numUsers': len(self.trustlines.currency_network_graphs[network_address].users),
+            'defaultInterests': self.trustlines.currency_network_proxies[network_address].defaultInterests,
+            'customInterests': self.trustlines.currency_network_proxies[network_address].customInterests,
+            'safeInterestRippling': self.trustlines.currency_network_proxies[network_address].safeInterestRippling
         }
 
 
