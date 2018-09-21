@@ -42,21 +42,22 @@ class ExchangeProxy(Proxy):
             return True
         else:
             maker_token = self._token_contract(address=order.maker_token)
-            return (maker_token.call().balanceOf(order.maker_address) >= order.maker_token_amount and
+            return (maker_token.functions.balanceOf(order.maker_address).call() >= order.maker_token_amount and
                     (self._is_trusted_token(order.maker_token) or
-                     maker_token.call().allowance(order.maker_address, self.address) >= order.maker_token_amount))
+                     maker_token.functions.allowance(order.maker_address,
+                                                     self.address).call() >= order.maker_token_amount))
 
     def validate_filled_amount(self, order: Order) -> bool:
-        return self._proxy.call().getUnavailableTakerTokenAmount(order.hash()) < order.taker_token_amount
+        return self._proxy.functions.getUnavailableTakerTokenAmount(order.hash()).call() < order.taker_token_amount
 
     def get_filled_amount(self, order: Order) -> int:
-        return self._proxy.call().filled(order.hash())
+        return self._proxy.functions.filled(order.hash()).call()
 
     def get_cancelled_amount(self, order: Order) -> int:
-        return self._proxy.call().cancelled(order.hash())
+        return self._proxy.functions.cancelled(order.hash()).call()
 
     def get_unavailable_amount(self, order: Order) -> int:
-        return self._proxy.call().getUnavailableTakerTokenAmount(order.hash())
+        return self._proxy.functions.getUnavailableTakerTokenAmount(order.hash()).call()
 
     def start_listen_on_fill(self, f) -> None:
         def log(log_entry):

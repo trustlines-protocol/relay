@@ -29,7 +29,7 @@ class TokenProxy(Proxy):
         super().__init__(web3, token_abi, address)
 
     def balance_of(self, user_address: str):
-        return self._proxy.call().balanceOf(user_address)
+        return self._proxy.functions.balanceOf(user_address).call()
 
     def get_token_events(self,
                          event_name: str,

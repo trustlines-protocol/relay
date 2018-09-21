@@ -51,7 +51,6 @@ def get_version():
 
 def main():
     logger.info('Starting relay server version %s', get_version())
-    patch_warnings_module()
     trustlines = TrustlinesRelay()
     trustlines.start()
     ipport = ('', 5000)
