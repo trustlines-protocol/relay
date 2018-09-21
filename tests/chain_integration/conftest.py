@@ -69,23 +69,24 @@ class CurrencyNetworkProxy(CurrencyNetworkProxy):
 
     def setup_trustlines(self, trustlines):
         for (A, B, clAB, clBA) in trustlines:
-            txid = self._proxy.transact().setAccount(A, B, clAB, clBA, 0, 0, 0, 0, 0, 0)
+            txid = self._proxy.functions.setAccount(A, B, clAB, clBA, 0, 0, 0, 0, 0, 0).transact()
             self._web3.eth.waitForTransactionReceipt(txid)
 
     def update_creditline(self, from_, to, value):
-        txid = self._proxy.transact({"from": from_}).updateCreditline(to, value)
+        txid = self._proxy.functions.updateCreditline(to, value).transact({"from": from_})
         self._web3.eth.waitForTransactionReceipt(txid)
 
     def accept_creditline(self, from_, to, value):
-        txid = self._proxy.transact({"from": from_}).acceptCreditline(to, value)
+        txid = self._proxy.functions.acceptCreditline(to, value).transact({"from": from_})
         self._web3.eth.waitForTransactionReceipt(txid)
 
     def update_trustline(self, from_, to, creditline_given, creditline_received):
-        txid = self._proxy.transact({"from": from_}).updateTrustline(to, creditline_given, creditline_received)
+        txid = self._proxy.functions.updateTrustline(to, creditline_given, creditline_received).transact(
+            {"from": from_})
         self._web3.eth.waitForTransactionReceipt(txid)
 
     def transfer(self, from_, to, value, max_fee, path):
-        txid = self._proxy.transact({"from": from_}).transfer(to, value, max_fee, path)
+        txid = self._proxy.functions.transfer(to, value, max_fee, path).transact({"from": from_})
         self._web3.eth.waitForTransactionReceipt(txid)
 
 
@@ -147,11 +148,11 @@ def testnetwork3_address(web3):
 def testnetworks(web3, maker, taker):
     currency_network_contracts, exchange_contract, unw_eth_contract = deploy_test_networks(web3)
 
-    unw_eth_contract.transact({'from': taker, 'value': 200}).deposit()
+    unw_eth_contract.functions.deposit().transact({'from': taker, 'value': 200})
 
     currency_network = currency_network_contracts[0]
-    currency_network.transact({'from': taker}).updateCreditline(maker, 300)
-    currency_network.transact({'from': maker}).acceptCreditline(taker, 300)
+    currency_network.functions.updateCreditline(maker, 300).transact({'from': taker})
+    currency_network.functions.acceptCreditline(taker, 300).transact({'from': maker})
 
     return currency_network_contracts, exchange_contract, unw_eth_contract
 

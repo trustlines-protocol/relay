@@ -10,7 +10,7 @@ import gevent
 import relay.concurrency_utils as concurrency_utils
 from .proxy import Proxy, reconnect_interval, sorted_events
 from relay.logger import get_logger
-from web3.exceptions import BadFunctionCallOutput, ValidationError
+from web3.exceptions import BadFunctionCallOutput, ValidationError, MismatchedABI
 
 
 from .events import BlockchainEvent
@@ -51,29 +51,29 @@ class CurrencyNetworkProxy(Proxy):
 
     def __init__(self, web3, abi, address: str) -> None:
         super().__init__(web3, abi, address)
-        self.name = self._proxy.call().name().strip('\0')  # type: str
-        self.decimals = self._proxy.call().decimals()  # typ: str
-        self.symbol = self._proxy.call().symbol().strip('\0')  # type: str
+        self.name = self._proxy.functions.name().call().strip('\0')  # type: str
+        self.decimals = self._proxy.functions.decimals().call()  # typ: str
+        self.symbol = self._proxy.functions.symbol().call().strip('\0')  # type: str
         try:
-            self.capacityImbalanceFeeDivisor = self._proxy.call().capacityImbalanceFeeDivisor()
-        except (BadFunctionCallOutput, ValidationError) as e:
+            self.capacityImbalanceFeeDivisor = self._proxy.functions.capacityImbalanceFeeDivisor().call()
+        except (BadFunctionCallOutput, ValidationError, MismatchedABI) as e:
             self.capacityImbalanceFeeDivisor = 100
 
     @property
     def users(self) -> List[str]:
-        return list(self._proxy.call().getUsers())
+        return list(self._proxy.functions.getUsers().call())
 
     def friends(self, user_address: str) -> List[str]:
-        return list(self._proxy.call().getFriends(user_address))
+        return list(self._proxy.functions.getFriends(user_address).call())
 
     def account(self, a_address: str, b_address: str):
-        return self._proxy.call().getAccount(a_address, b_address)
+        return self._proxy.functions.getAccount(a_address, b_address).call()
 
     def spendable(self, a_address: str):
-        return self._proxy.call().spendable(a_address)
+        return self._proxy.functions.spendable(a_address).call()
 
     def spendableTo(self, a_address: str, b_address: str):
-        return self._proxy.call().spendableTo(a_address, b_address)
+        return self._proxy.functions.spendableTo(a_address, b_address).call()
 
     def gen_graph_representation(self) -> Dict[str, List[Trustline]]:
         """Returns the trustlines network as a dict address -> list of Friendships"""

@@ -12,12 +12,6 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')
 Account = namedtuple('Account', 'address private_key')
 
 
-@pytest.fixture(scope="session", autouse=True)
-def silence_deprecation_warnings():
-    from relay.main import patch_warnings_module
-    patch_warnings_module()
-
-
 @pytest.fixture(scope="session")
 def addresses() -> Sequence[str]:
     return [
