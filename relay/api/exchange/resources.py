@@ -1,10 +1,13 @@
 import logging
+
+import hexbytes
 from flask_restful import Resource
 from webargs.flaskparser import use_args
 from webargs import fields as webfields
 from webargs.flaskparser import abort
 from eth_utils import to_checksum_address, is_hex
 from marshmallow import validate
+
 from relay.relay import TrustlinesRelay
 from relay.api import fields
 from relay.api.exchange.schemas import OrderSchema
@@ -62,7 +65,7 @@ class OrderDetail(Resource):
 
     def get(self, order_hash: str):
         abort_if_invalid_order_hash(order_hash)
-        order = self.trustlines.orderbook.get_order_by_hash(bytes.fromhex(order_hash[2:]))
+        order = self.trustlines.orderbook.get_order_by_hash(hexbytes.HexBytes(order_hash))
         if order is None:
             abort(404, message='Order does not exist')
         return OrderSchema().dump(order).data

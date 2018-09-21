@@ -1,4 +1,5 @@
-from eth_utils import is_hex, decode_hex
+import hexbytes
+
 from .events import TLNetworkEvent, BlockchainEvent  # NOQA
 
 LogFillEventType = 'LogFill'
@@ -12,10 +13,11 @@ class ExchangeEvent(TLNetworkEvent):
         self.exchange_address = web3_event.get('address')
         # NOTE: The argument orderHash can be a hex string because the indexer currently can
         #       not save bytes in the database. See issue https://github.com/trustlines-network/py-eth-index/issues/16
-        if (is_hex(web3_event.get('args').get('orderHash'))):
-            self.order_hash = decode_hex(web3_event.get('args').get('orderHash'))
+        order_hash = web3_event.get('args').get('orderHash')
+        if not isinstance(order_hash, hexbytes.HexBytes):
+            self.order_hash = hexbytes.HexBytes(order_hash)
         else:
-            self.order_hash = web3_event.get('args').get('orderHash')
+            self.order_hash = order_hash
         self.maker_token = web3_event.get('args').get('makerToken')
         self.taker_token = web3_event.get('args').get('takerToken')
 

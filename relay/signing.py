@@ -1,3 +1,5 @@
+from typing import Tuple
+
 from eth_keys import keys
 from eth_keys.exceptions import BadSignature
 from eth_utils import (
@@ -50,7 +52,7 @@ def keccak256(*args) -> bytes:
     return keccak(pack(*args))
 
 
-def eth_sign(hash, key):
+def eth_sign(hash: bytes, key: bytes) -> Tuple[int, bytes, bytes]:
     v, r, s = keys.PrivateKey(key).sign_msg_hash(keccak256(b'\x19Ethereum Signed Message:\n32', hash)).vrs
     if v < 27:
         v += 27
