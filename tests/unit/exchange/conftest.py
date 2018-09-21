@@ -27,9 +27,9 @@ def invalid_signature_order(addresses):
 
 
 @pytest.fixture()
-def invalid_exchange_order(addresses, tester):
+def invalid_exchange_order(addresses, test_account):
     A, B, C, D = addresses
-    maker = tester.a0
+    maker = test_account.address
     order = SignableOrder(
         exchange_address='0x379162d7682cb8bb6435c47E0b8b562eafe66971',
         maker_address=to_checksum_address(maker),
@@ -43,14 +43,14 @@ def invalid_exchange_order(addresses, tester):
         taker_fee=0,
         expiration_timestamp_in_sec=123,
         salt=123)
-    order.sign(tester.k0)
+    order.sign(test_account.private_key)
     return order
 
 
 @pytest.fixture()
-def invalid_taker_order(addresses, tester):
+def invalid_taker_order(addresses, test_account):
     A, B, C, D = addresses
-    maker = tester.a0
+    maker = test_account.address
     order = SignableOrder(
         exchange_address=A,
         maker_address=to_checksum_address(maker),
@@ -64,14 +64,14 @@ def invalid_taker_order(addresses, tester):
         taker_fee=0,
         expiration_timestamp_in_sec=123,
         salt=123)
-    order.sign(tester.k0)
+    order.sign(test_account.private_key)
     return order
 
 
 @pytest.fixture()
-def expired_order(addresses, tester):
+def expired_order(addresses, test_account):
     A, B, C, D = addresses
-    maker = tester.a0
+    maker = test_account.address
     order = SignableOrder(
         exchange_address=A,
         maker_address=to_checksum_address(maker),
@@ -85,14 +85,14 @@ def expired_order(addresses, tester):
         taker_fee=0,
         expiration_timestamp_in_sec=123,
         salt=123)
-    order.sign(tester.k0)
+    order.sign(test_account.private_key)
     return order
 
 
 @pytest.fixture()
-def valid_order(addresses, tester):
+def valid_order(addresses, test_account):
     A, B, C, D = addresses
-    maker = tester.a0
+    maker = test_account.address
     order = SignableOrder(
         exchange_address=A,
         maker_address=to_checksum_address(maker),
@@ -106,6 +106,6 @@ def valid_order(addresses, tester):
         taker_fee=0,
         expiration_timestamp_in_sec=1517161470000,
         salt=123)
-    order.sign(tester.k0)
+    order.sign(test_account.private_key)
 
     return order

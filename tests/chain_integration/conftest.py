@@ -16,11 +16,10 @@ NETWORKS = [('Fugger', 'FUG', 2), ('Hours', 'HOU', 2), ('Testcoin', 'T', 6)]
 
 
 @pytest.fixture(scope="session")
-def ethereum_tester_session():
+def ethereum_tester_session(test_account):
     """Returns an instance of an Ethereum tester"""
     tester = eth_tester.EthereumTester(eth_tester.PyEVMBackend())
-    k0 = b'\x04HR\xb2\xa6p\xad\xe5@~x\xfb(c\xc5\x1d\xe9\xfc\xb9eB\xa0q\x86\xfe:\xed\xa6\xbb\x8a\x11m'
-    a0 = tester.add_account(encode_hex(k0))
+    a0 = tester.add_account(encode_hex(test_account.private_key))
     faucet = tester.get_accounts()[0]
     tester.send_transaction(
         {"from": faucet,
@@ -55,9 +54,9 @@ def accounts(web3):
 
 
 @pytest.fixture
-def maker(tester):
+def maker(test_account):
     """checksum maker address"""
-    return to_checksum_address(tester.a0)
+    return test_account.address
 
 
 @pytest.fixture
@@ -174,43 +173,29 @@ def network_addresses_with_exchange(testnetworks):
 
 @pytest.fixture()
 def currency_network(web3, currency_network_abi, testnetwork1_address):
-    """this currency network is not reset for speed reasons,
-       only use it for constant tests"""
     currency_network = CurrencyNetworkProxy(web3, currency_network_abi, testnetwork1_address)
     return currency_network
 
 
 @pytest.fixture()
 def currency_network_with_trustlines(web3, currency_network_abi, testnetwork2_address, trustlines):
-    """this currency network is not reset for speed reasons,
-        only use it for constant tests"""
     currency_network = CurrencyNetworkProxy(web3, currency_network_abi, testnetwork2_address)
-
     currency_network.setup_trustlines(trustlines)
 
     return currency_network
 
 
 @pytest.fixture()
-def fresh_currency_network(web3, currency_network_abi, testnetwork3_address, trustlines):
-    """this currency network is reset on every use which is very slow,
-            only use it if you need it"""
-    currency_network = CurrencyNetworkProxy(web3, currency_network_abi, testnetwork3_address)
+def currency_network_with_events(currency_network, accounts):
+    currency_network.update_creditline(accounts[0], accounts[1], 25)
+    currency_network.accept_creditline(accounts[1], accounts[0], 25)
+    currency_network.transfer(accounts[1], accounts[0], 10, 10, [accounts[0]])
+    currency_network.update_creditline(accounts[0], accounts[2], 25)
+    currency_network.accept_creditline(accounts[2], accounts[0], 25)
+    currency_network.update_creditline(accounts[0], accounts[4], 25)
+    currency_network.accept_creditline(accounts[4], accounts[0], 25)
 
     return currency_network
-
-
-@pytest.fixture()
-def currency_network_with_events(fresh_currency_network, accounts):
-    fresh_currency_network.update_creditline(accounts[0], accounts[1], 25)
-    fresh_currency_network.accept_creditline(accounts[1], accounts[0], 25)
-    fresh_currency_network.transfer(accounts[1], accounts[0], 10, 10, [accounts[0]])
-    fresh_currency_network.update_creditline(accounts[0], accounts[2], 25)
-    fresh_currency_network.accept_creditline(accounts[2], accounts[0], 25)
-    fresh_currency_network.update_creditline(accounts[0], accounts[4], 25)
-    fresh_currency_network.accept_creditline(accounts[4], accounts[0], 25)
-
-    return fresh_currency_network
 
 
 @pytest.fixture()

@@ -49,9 +49,9 @@ def community_with_trustlines(currency_network_with_trustlines):
 
 
 @pytest.fixture()
-def fresh_community(fresh_currency_network):
+def fresh_community(currency_network):
     community = CurrencyNetworkGraph(100)
-    link_graph(fresh_currency_network, community)
+    link_graph(currency_network, community)
     gevent.sleep(0.0001)
     return community
 
@@ -78,11 +78,11 @@ def test_no_capacity(community_with_trustlines, accounts):
     assert path == []
 
 
-def test_creditline_update(fresh_community, fresh_currency_network, accounts):
+def test_creditline_update(fresh_community, currency_network, accounts):
     A, B, *rest = accounts
 
-    fresh_currency_network.update_creditline(A, B, 50)
-    fresh_currency_network.accept_creditline(B, A, 50)
+    currency_network.update_creditline(A, B, 50)
+    currency_network.accept_creditline(B, A, 50)
 
     gevent.sleep(1)
 
@@ -90,11 +90,11 @@ def test_creditline_update(fresh_community, fresh_currency_network, accounts):
     assert fresh_community.get_account_sum(A, B).creditline_received == 0
 
 
-def test_trustline_update(fresh_community, fresh_currency_network, accounts):
+def test_trustline_update(fresh_community, currency_network, accounts):
     A, B, *rest = accounts
 
-    fresh_currency_network.update_trustline(A, B, 50, 100)
-    fresh_currency_network.update_trustline(B, A, 100, 50)
+    currency_network.update_trustline(A, B, 50, 100)
+    currency_network.update_trustline(B, A, 100, 50)
 
     gevent.sleep(1)
 
@@ -102,12 +102,12 @@ def test_trustline_update(fresh_community, fresh_currency_network, accounts):
     assert fresh_community.get_account_sum(A, B).creditline_received == 100
 
 
-def test_transfer_update(fresh_community, fresh_currency_network, accounts):
+def test_transfer_update(fresh_community, currency_network, accounts):
     A, B, *rest = accounts
 
-    fresh_currency_network.update_trustline(A, B, 50, 100)
-    fresh_currency_network.update_trustline(B, A, 100, 50)
-    fresh_currency_network.transfer(B, A, 20, 1, [A])
+    currency_network.update_trustline(A, B, 50, 100)
+    currency_network.update_trustline(B, A, 100, 50)
+    currency_network.transfer(B, A, 20, 1, [A])
 
     gevent.sleep(1)
 
