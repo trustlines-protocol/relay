@@ -1,8 +1,10 @@
 from typing import Tuple, Sequence, Optional
 
+import hexbytes
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy import Column, Integer, String, Float, BigInteger
 from sqlalchemy.orm import sessionmaker
+from eth_utils.hexadecimal import remove_0x_prefix
 
 from .order import Order
 from relay.concurrency_utils import synchronized
@@ -56,9 +58,9 @@ class OrderORM(Base):  # type: ignore
             expiration_timestamp_in_sec=order.expiration_timestamp_in_sec,
             salt=order.salt,
             v=order.v,
-            r=order.r.hex(),
-            s=order.s.hex(),
-            msg_hash=order.hash().hex()
+            r=remove_0x_prefix(order.r.hex()),  # remove 0x to keep backwards compatibility
+            s=remove_0x_prefix(order.s.hex()),  # remove 0x to keep backwards compatibility
+            msg_hash=remove_0x_prefix(order.hash().hex())  # remove 0x to keep backwards compatibility
         )
 
     def to_order(self) -> Order:
@@ -80,8 +82,8 @@ class OrderORM(Base):  # type: ignore
             expiration_timestamp_in_sec=self.expiration_timestamp_in_sec,
             salt=self.salt,
             v=self.v,
-            r=bytes.fromhex(self.r),
-            s=bytes.fromhex(self.s)
+            r=hexbytes.HexBytes(self.r),
+            s=hexbytes.HexBytes(self.s)
         )
 
 
@@ -94,7 +96,8 @@ class OrderBookDB(object):
 
     @synchronized
     def add_order(self, order: Order) -> None:
-        order_orm = self.session.query(OrderORM).get(order.hash().hex())
+        # remove 0x to keep backwards compatibility
+        order_orm = self.session.query(OrderORM).get(remove_0x_prefix(order.hash().hex()))
         if order_orm is None:
             order_orm = OrderORM.from_order(order)
             self.session.add(order_orm)
@@ -106,8 +109,9 @@ class OrderBookDB(object):
             self.add_order(order)
 
     @synchronized
-    def get_order_by_hash(self, order_hash: bytes) -> Optional[Order]:
-        order_orm = self.session.query(OrderORM).get(order_hash.hex())
+    def get_order_by_hash(self, order_hash: hexbytes.HexBytes) -> Optional[Order]:
+        # remove 0x to keep backwards compatibility
+        order_orm = self.session.query(OrderORM).get(remove_0x_prefix(order_hash.hex()))
         if order_orm is None:
             return None
         return order_orm.to_order()
@@ -155,14 +159,18 @@ class OrderBookDB(object):
         return [order_orm.to_order() for order_orm in orders_orm]
 
     @synchronized
-    def delete_order_by_hash(self, order_hash: bytes) -> None:
-        self.session.query(OrderORM).filter_by(msg_hash=order_hash.hex()).delete(synchronize_session=False)
+    def delete_order_by_hash(self, order_hash: hexbytes.HexBytes) -> None:
+        # remove 0x to keep backwards compatibility
+        self.session.query(OrderORM).filter_by(msg_hash=remove_0x_prefix(order_hash.hex())).delete(
+            synchronize_session=False)
         self.session.commit()
 
     @synchronized
-    def delete_orders_by_hash(self, order_hashes: Sequence[bytes]) -> None:
+    def delete_orders_by_hash(self, order_hashes: Sequence[hexbytes.HexBytes]) -> None:
         for order_hash in order_hashes:
-            self.session.query(OrderORM).filter_by(msg_hash=order_hash.hex()).delete(synchronize_session=False)
+            # remove 0x to keep backwards compatibility
+            self.session.query(OrderORM).filter_by(msg_hash=remove_0x_prefix(order_hash.hex())).delete(
+                synchronize_session=False)
         self.session.commit()
 
     @synchronized
@@ -173,10 +181,11 @@ class OrderBookDB(object):
 
     @synchronized
     def order_filled(self,
-                     order_hash: bytes,
+                     order_hash: hexbytes.HexBytes,
                      filled_maker_token_amount: int,
                      filled_taker_token_amount: int) -> None:
-        order_orm = self.session.query(OrderORM).filter_by(msg_hash=order_hash.hex()).first()
+        # remove 0x to keep backwards compatibility
+        order_orm = self.session.query(OrderORM).filter_by(msg_hash=remove_0x_prefix(order_hash.hex())).first()
         if order_orm is not None:
             order_orm.filled_maker_token_amount += filled_maker_token_amount
             order_orm.filled_taker_token_amount += filled_taker_token_amount
@@ -186,10 +195,11 @@ class OrderBookDB(object):
 
     @synchronized
     def order_cancelled(self,
-                        order_hash: bytes,
+                        order_hash: hexbytes.HexBytes,
                         cancelled_maker_token_amount: int,
                         cancelled_taker_token_amount: int) -> None:
-        order_orm = self.session.query(OrderORM).filter_by(msg_hash=order_hash.hex()).first()
+        # remove 0x to keep backwards compatibility
+        order_orm = self.session.query(OrderORM).filter_by(msg_hash=remove_0x_prefix(order_hash.hex())).first()
         if order_orm is not None:
             order_orm.cancelled_maker_token_amount += cancelled_maker_token_amount
             order_orm.cancelled_taker_token_amount += cancelled_taker_token_amount

@@ -2,6 +2,7 @@ import time
 from typing import Tuple, Sequence, Iterable
 
 import gevent
+import hexbytes
 
 from relay.blockchain.exchange_proxy import ExchangeProxy
 from relay.constants import NULL_ADDRESS
@@ -61,7 +62,7 @@ class OrderBook(object):
     def delete_order(self, order: Order) -> None:
         self.delete_order_by_hash(order.hash())
 
-    def delete_order_by_hash(self, order_hash: bytes) -> None:
+    def delete_order_by_hash(self, order_hash: hexbytes.HexBytes) -> None:
         if self._db is not None:
             self._db.delete_order_by_hash(order_hash)
 
@@ -107,13 +108,13 @@ class OrderBook(object):
         return []
 
     def order_cancelled(self,
-                        orderhash: bytes,
+                        orderhash: hexbytes.HexBytes,
                         cancelled_maker_amount: int,
                         cancelled_taker_amount: int) -> None:
         if self._db is not None:
             return self._db.order_cancelled(orderhash, cancelled_maker_amount, cancelled_taker_amount)
 
-    def get_order_by_hash(self, order_hash: bytes):
+    def get_order_by_hash(self, order_hash: hexbytes.HexBytes):
         if self._db is not None:
             return self._db.get_order_by_hash(order_hash)
 

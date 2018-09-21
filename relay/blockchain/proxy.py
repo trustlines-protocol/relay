@@ -7,12 +7,10 @@ from typing import List, Dict, Callable, Any  # noqa: F401
 import gevent
 import itertools
 import socket
-import hexbytes
 
 import relay.concurrency_utils as concurrency_utils
 from .events import BlockchainEvent
 from relay.logger import get_logger
-from web3.datastructures import AttributeDict
 
 logger = get_logger('proxy', logging.DEBUG)
 
@@ -23,29 +21,8 @@ updateBlock = 'pending'
 reconnect_interval = 3  # 3s
 
 
-def event_fix_hexbytes(event):
-    """replace HexBytes instances inside event
-
-    In web3 3.x they we're being deserialized as hex-encoded string.
-    """
-    if isinstance(event, (int, str)):
-        return event
-    elif isinstance(event, AttributeDict):
-        return AttributeDict(event_fix_hexbytes(dict(event)))
-    elif isinstance(event, hexbytes.HexBytes):
-        return event.hex()
-    elif isinstance(event, bytes):
-        return event
-    elif isinstance(event, list):
-        return [event_fix_hexbytes(x) for x in event]
-    elif isinstance(event, dict):
-        return {x: event_fix_hexbytes(event[x]) for x in event}
-    else:
-        return event
-
-
 def get_new_entries(filter, callback):
-    new_entries = [event_fix_hexbytes(event) for event in filter.get_new_entries()]
+    new_entries = filter.get_new_entries()
     if new_entries:
         logger.debug("new entries for filter %s: %s", filter, new_entries)
     for event in new_entries:
@@ -55,7 +32,7 @@ def get_new_entries(filter, callback):
 def watch_filter(filter, callback):
     while 1:
         get_new_entries(filter, callback)
-        gevent.sleep(1.0)
+        gevent.sleep(0.1)
 
 
 class Proxy(object):
