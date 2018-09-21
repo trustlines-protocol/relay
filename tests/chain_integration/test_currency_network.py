@@ -92,8 +92,7 @@ def test_number_of_get_all_events(currency_network_with_events, accounts):
     assert len(currency_network.get_all_network_events(user_address=accounts[0])) == 7
 
 
-def test_listen_on_creditline_update(fresh_currency_network, accounts):
-    currency_network = fresh_currency_network
+def test_listen_on_creditline_update(currency_network, accounts):
     events = []
 
     def f(event):
@@ -111,8 +110,7 @@ def test_listen_on_creditline_update(fresh_currency_network, accounts):
     assert events[0].value == 25
 
 
-def test_listen_on_balance_update(fresh_currency_network, accounts):
-    currency_network = fresh_currency_network
+def test_listen_on_balance_update(currency_network, accounts):
     events = []
 
     def f(event):
@@ -131,8 +129,7 @@ def test_listen_on_balance_update(fresh_currency_network, accounts):
     assert (-12 < events[0].value < 12)  # because there might be fees
 
 
-def test_listen_on_transfer(fresh_currency_network, accounts):
-    currency_network = fresh_currency_network
+def test_listen_on_transfer(currency_network, accounts):
     events = []
 
     def f(event):
@@ -151,8 +148,7 @@ def test_listen_on_transfer(fresh_currency_network, accounts):
     assert events[0].value == 10
 
 
-def test_listen_on_trustline_update(fresh_currency_network, accounts):
-    currency_network = fresh_currency_network
+def test_listen_on_trustline_update(currency_network, accounts):
     events = []
 
     def f(event):
