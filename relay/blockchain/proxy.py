@@ -44,7 +44,7 @@ class Proxy(object):
         self._proxy = web3.eth.contract(abi=abi, address=address)
         self.address = address
 
-    def _watch_filter(self, eventname: str, function, params=None):
+    def _watch_filter(self, eventname: str, function: Callable, params: Dict = None):
         while True:
             try:
                 filter = getattr(self._proxy.events, eventname).createFilter(**params)
@@ -61,7 +61,7 @@ class Proxy(object):
                 logger.warning('ValueError in filter creation, try to reconnect:' + str(err))
                 gevent.sleep(reconnect_interval)
 
-    def start_listen_on(self, eventname: str, function, params=None) -> None:
+    def start_listen_on(self, eventname: str, function: Callable, params: Dict = None) -> None:
         def on_exception(filter):
             logger.warning('Filter {} disconnected, trying to reconnect'.format(filter))
             gevent.sleep(reconnect_interval)
@@ -83,7 +83,7 @@ class Proxy(object):
 
         logfilter = getattr(self._proxy.events, event_name).createFilter(
             fromBlock=from_block,
-            toBlock="latest",
+            toBlock=queryBlock,
             argument_filters=filter_)
 
         queries = [logfilter.get_all_entries]
