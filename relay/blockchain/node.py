@@ -1,7 +1,9 @@
+import os
 import logging
 from collections import namedtuple
 
 from relay.logger import get_logger
+from relay.concurrency_utils import synchronized
 
 
 TxInfos = namedtuple('TxInfos', 'balance, nonce, gas_price')
@@ -53,3 +55,16 @@ class Node:
 
     def get_block_timestamp(self, block_number):
         return self._web3.eth.getBlock(block_number).timestamp
+
+
+# the end2end tests don't run when we we relay multiple transactions at the
+# same time. It looks like parity just does not create a new block for the
+# second transaction it sees. When we make the relay_tx method synchronized,
+# transactions will not end up at parity at the same time.
+# This makes it possible to run the end2end tests.
+# Somehow this only became an issue after the upgrade to web3 4.x
+# See https://github.com/paritytech/parity-ethereum/issues/4494
+
+if os.environ.get("TRUSTLINES_END2END", "") == "1":
+    logger.warning("synchronizing tx relaying because TRUSTLINES_END2END is set")
+    Node.relay_tx = synchronized(Node.relay_tx)
