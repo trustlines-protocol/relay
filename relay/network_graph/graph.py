@@ -5,7 +5,7 @@ import networkx as nx
 
 from .dijkstra_weighted import find_path, find_path_triangulation, find_maximum_capacity_path
 from .fees import new_balance, imbalance_fee, estimate_fees_from_capacity
-from .interests import apply_interests
+from .interests import balance_with_interest_estimation
 
 creditline_ab = 'creditline_ab'
 creditline_ba = 'creditline_ba'
@@ -27,11 +27,10 @@ class Account(object):
 
     @property
     def balance(self):
-        apply_interests(self.a, self.b, self.data)
         if self.a < self.b:
-            return self.data[balance_ab]
+            return balance_with_interest_estimation(self.data)
         else:
-            return -self.data[balance_ab]
+            return -balance_with_interest_estimation(self.data)
 
     @balance.setter
     def balance(self, balance):
@@ -280,7 +279,6 @@ class CurrencyNetworkGraph(object):
                 account = Account(self.graph[a][b], a, b)
                 return AccountSummaryWithInterests(account.balance, account.creditline, account.reverse_creditline,
                                                    account.interest, account.reverse_interest)
-                return AccountSummary(account.balance, account.creditline, account.reverse_creditline)
             else:
                 return AccountSummary(0, 0, 0)
 
@@ -316,13 +314,12 @@ class CurrencyNetworkGraph(object):
     def _cost_func_fast_reverse(self, b, a, data, value):
         # this func should be as fast as possible, as it's called often
         # don't use Account which allocs memory
-        # this function does not update the data to take into account the interests.
-        # It expect the interests be already applied to date.
+        # this function calculate the interests to take into account an updated balance
+        pre_balance = balance_with_interest_estimation(data)
         if a < b:
-            pre_balance = data[balance_ab]
             creditline = data[creditline_ba]
         else:
-            pre_balance = -data[balance_ab]
+            pre_balance = -pre_balance
             creditline = data[creditline_ab]
         post_balance = new_balance(self.capacity_imbalance_fee_divisor, pre_balance, value)
         assert post_balance <= pre_balance

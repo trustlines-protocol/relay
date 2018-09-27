@@ -4,7 +4,7 @@ from itertools import count
 import networkx as nx
 import math
 
-from .interests import apply_interests
+from .interests import balance_with_interest_estimation
 
 
 def find_path(G, source, target, get_fee, value, max_hops=None, max_fees=None, ignore=None):
@@ -32,7 +32,6 @@ def find_path(G, source, target, get_fee, value, max_hops=None, max_fees=None, i
             break
 
         for u, e in G_adj[v].items():
-            apply_interests(v, u, e)
             cost = get_fee(v, u, e, d)  # fee of transferring from u to v
             if cost is None:
                 continue
@@ -76,9 +75,10 @@ def find_maximum_capacity_path(G, source, target, max_hops=None):
     fringe = []  # use heapq with (distance,label) tuples
 
     def get_capacity(u, v, data):  # gets the capacity from u to v
+        balance_with_interest = balance_with_interest_estimation(data)
         if (u < v):
-            return data['creditline_ba'] + data['balance_ab']
-        return data['creditline_ab'] - data['balance_ab']
+            return data['creditline_ba'] + balance_with_interest
+        return data['creditline_ab'] - balance_with_interest
 
     capacity[source] = math.inf
     paths[source] = [source]
@@ -95,7 +95,6 @@ def find_maximum_capacity_path(G, source, target, max_hops=None):
             break
 
         for v, e in G_adj[u].items():
-            apply_interests(u, v, e)
             if v in seen:
                 continue
             if max_hops is not None:
@@ -139,7 +138,6 @@ def find_path_triangulation(G, source, target_reduce, target_increase, get_fee, 
     """
     def get_fee_wrapper(b, a, value):
         # used to get the data from the graph in the right order and query the fees
-        apply_interests(b, a, G[b][a])
         if b < a:
             output = get_fee(b, a, G[b][a], value)
         else:
@@ -151,9 +149,9 @@ def find_path_triangulation(G, source, target_reduce, target_increase, get_fee, 
     def verify_balance_greater_than_value(a, b, value):
         # used to verify that we reduce the amount source owes to target_reduce and do not misuse the function
         if a < b:
-            return -G[a][b]['balance_ab'] >= value
+            return -balance_with_interest_estimation(G[a][b]) >= value
         else:
-            return G[b][a]['balance_ab'] >= value
+            return balance_with_interest_estimation(G[b][a]) >= value
 
     # verification that the funtion is used properly
     if value <= 0:
