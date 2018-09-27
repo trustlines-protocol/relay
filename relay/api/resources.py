@@ -289,8 +289,6 @@ class TransactionInfos(Resource):
 
 class Relay(Resource):
 
-    txcounter = 0
-
     def __init__(self, trustlines: TrustlinesRelay) -> None:
         self.trustlines = trustlines
 
@@ -300,15 +298,10 @@ class Relay(Resource):
 
     @use_args(args)
     def post(self, args):
-        Relay.txcounter += 1
-        txcounter = Relay.txcounter
         try:
-            logger.info("start relaying transaction #%s", txcounter)
             transaction_id = self.trustlines.node.relay_tx(args['rawTransaction'])
         except ValueError:  # should mean error in relaying the transaction
             abort(409, 'There was an error while relaying this transaction')
-
-        logger.info("relayed transaction #%s with transaction id %s", txcounter, transaction_id.hex())
         return transaction_id.hex()
 
 
