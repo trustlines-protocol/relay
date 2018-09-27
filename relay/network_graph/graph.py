@@ -6,15 +6,7 @@ import networkx as nx
 from .dijkstra_weighted import find_path, find_path_triangulation, find_maximum_capacity_path
 from .fees import new_balance, imbalance_fee, estimate_fees_from_capacity
 from .interests import balance_with_interest_estimation
-
-creditline_ab = 'creditline_ab'
-creditline_ba = 'creditline_ba'
-interest_ab = 'interest_ab'
-interest_ba = 'interest_ba'
-fees_outstanding_a = 'fees_outstanding_a'
-fees_outstanding_b = 'fees_outstanding_b'
-m_time = 'm_time'
-balance_ab = 'balance_ab'
+from .graph_constants import *
 
 
 class Account(object):
@@ -49,6 +41,7 @@ class Account(object):
 
     @property
     def creditline(self):
+        # credit limit given by a to b (b can spend up to that amount)
         if self.a < self.b:
             return self.data[creditline_ab]
         else:
@@ -63,6 +56,7 @@ class Account(object):
 
     @property
     def reverse_creditline(self):
+        # credit limit given by b to a (a can spend up to that amount)
         if self.a < self.b:
             return self.data[creditline_ba]
         else:
@@ -77,6 +71,7 @@ class Account(object):
 
     @property
     def interest(self):
+        # interest given by a to b
         if self.a < self.b:
             return self.data[interest_ab]
         else:
@@ -91,6 +86,7 @@ class Account(object):
 
     @property
     def reverse_interest(self):
+        # interest received by a from b
         if self.a < self.b:
             return self.data[interest_ba]
         else:

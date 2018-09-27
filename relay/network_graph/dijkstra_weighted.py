@@ -5,6 +5,7 @@ import networkx as nx
 import math
 
 from .interests import balance_with_interest_estimation
+from .graph_constants import *
 
 
 def find_path(G, source, target, get_fee, value, max_hops=None, max_fees=None, ignore=None):
@@ -77,8 +78,8 @@ def find_maximum_capacity_path(G, source, target, max_hops=None):
     def get_capacity(u, v, data):  # gets the capacity from u to v
         balance_with_interest = balance_with_interest_estimation(data)
         if (u < v):
-            return data['creditline_ba'] + balance_with_interest
-        return data['creditline_ab'] - balance_with_interest
+            return data[creditline_ba] + balance_with_interest
+        return data[creditline_ab] - balance_with_interest
 
     capacity[source] = math.inf
     paths[source] = [source]

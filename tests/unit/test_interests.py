@@ -2,21 +2,13 @@ import pytest
 
 from relay.blockchain.currency_network_proxy import Trustline
 from relay.network_graph.graph import CurrencyNetworkGraph, Account
+from relay.network_graph.graph_constants import *
 
 addresses = ['0x0A', '0x0B', '0x0C', '0x0D', '0x0E']
 A, B, C, D, E = addresses
 F = '0x0F'
 G = '0x10'
 H = '0x11'
-
-creditline_ab = 'creditline_ab'
-creditline_ba = 'creditline_ba'
-interest_ab = 'interest_ab'
-interest_ba = 'interest_ba'
-fees_outstanding_a = 'fees_outstanding_a'
-fees_outstanding_b = 'fees_outstanding_b'
-m_time = 'm_time'
-balance_ab = 'balance_ab'
 
 
 @pytest.fixture
