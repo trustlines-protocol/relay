@@ -20,8 +20,22 @@ class Node:
         if is_parity:
             logger.info('Assuming connected to parity node: Enabling parity-only rpc methods.')
 
+        # the instant seal engine used in the e2e tests does not work properly,
+        # when we we relay multiple transactions at the same time.
+        # It looks like parity just does not create a new block for the
+        # second transaction it sees. When we make the relay_tx method synchronized,
+        # transactions will not end up at parity at the same time.
+        # This makes it possible to run the end2end tests.
+        # Somehow this only became an issue after the upgrade to web3 4.x
+        # Opened an upstream issue https://github.com/paritytech/parity-ethereum/issues/9660
+        if os.environ.get("TRUSTLINES_SYNC_TX_RELAY", "") == "1":
+            logger.warning("synchronizing tx relaying because TRUSTLINES_SYNC_TX_RELAY is set")
+            self._send_tx = synchronized(self._web3.eth.sendRawTransaction)
+        else:
+            self._send_tx = self._web3.eth.sendRawTransaction
+
     def relay_tx(self, rawtxn):
-        return self._web3.eth.sendRawTransaction(rawtxn)
+        return self._send_tx(rawtxn)
 
     def transaction_receipt(self, txn_hash):
         return self._web3.eth.getTransactionReceipt(txn_hash)
@@ -55,16 +69,3 @@ class Node:
 
     def get_block_timestamp(self, block_number):
         return self._web3.eth.getBlock(block_number).timestamp
-
-
-# the end2end tests don't run when we we relay multiple transactions at the
-# same time. It looks like parity just does not create a new block for the
-# second transaction it sees. When we make the relay_tx method synchronized,
-# transactions will not end up at parity at the same time.
-# This makes it possible to run the end2end tests.
-# Somehow this only became an issue after the upgrade to web3 4.x
-# See https://github.com/paritytech/parity-ethereum/issues/4494
-
-if os.environ.get("TRUSTLINES_END2END", "") == "1":
-    logger.warning("synchronizing tx relaying because TRUSTLINES_END2END is set")
-    Node.relay_tx = synchronized(Node.relay_tx)
