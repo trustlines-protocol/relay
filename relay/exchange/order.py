@@ -139,8 +139,8 @@ class SignableOrder(Order):
                          expiration_timestamp_in_sec,
                          salt,
                          v=0,
-                         r=hexbytes.HexBytes('0x00'),
-                         s=hexbytes.HexBytes('0x00'))
+                         r=hexbytes.HexBytes(b''),
+                         s=hexbytes.HexBytes(b''))
 
     def sign(self, key) -> None:
         v, r, s = eth_sign(self.hash(), key)
