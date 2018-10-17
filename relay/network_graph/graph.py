@@ -327,7 +327,7 @@ class CurrencyNetworkGraph(object):
     def find_path_triangulation(self, source, target_reduce, target_increase,
                                 value=None, max_hops=None, max_fees=None):
         """
-        find a path to update the the creditline between source and target with value, via target_increasae
+        find a path to update the creditline between source and target with value, via target_increase
         the shortest path is found based on
             - the number of hops
             - the imbalance it adds or reduces in the accounts
@@ -343,8 +343,8 @@ class CurrencyNetworkGraph(object):
                                                  value,
                                                  max_hops=max_hops,
                                                  max_fees=max_fees)
-        except (nx.NetworkXNoPath, KeyError):  # key error for if source or target is not in graph
-            cost, path = 0, []  # cost is the total fee, not the actual amount to be transfered
+        except (nx.NetworkXNoPath, KeyError):  # KeyError is thrown if source or target is not in graph
+            cost, path = 0, []  # cost is the total fee, not the actual amount to be transferred
         return cost, list(path)
 
     def find_maximum_capacity_path(self, source, target, max_hops=None):

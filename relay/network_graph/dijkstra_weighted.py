@@ -58,7 +58,7 @@ def find_path(G, source, target, get_fee, value, max_hops=None, max_fees=None, i
 def find_maximum_capacity_path(G, source, target, max_hops=None):
     """
     The logic is the same as dijkstra's Algorithm
-    We visit nodes with the maximum capacity untill we reach the destination.
+    We visit nodes with the maximum capacity until we reach the destination.
     At this point we are sure it is the maximum capacity path since every path
     already have a smaller capacity and the capacity can only decrease.
     """
@@ -150,7 +150,7 @@ def find_path_triangulation(G, source, target_reduce, target_increase, get_fee, 
         else:
             return G[b][a]['balance_ab'] >= value
 
-    # verification that the funtion is used properly
+    # verification that the function is used properly
     if value <= 0:
         raise ValueError('This value cannot be handled yet : %d' % value)
     elif not verify_balance_greater_than_value(source, target_reduce, value):
