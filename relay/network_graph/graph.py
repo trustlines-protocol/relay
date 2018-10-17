@@ -3,7 +3,8 @@ import io
 
 import networkx as nx
 
-from .dijkstra_weighted import find_path, find_path_triangulation, find_maximum_capacity_path
+from .dijkstra_weighted import find_path, find_path_triangulation, find_maximum_capacity_path, \
+    find_possible_path_triangulations
 from .fees import new_balance, imbalance_fee, estimate_fees_from_capacity
 
 creditline_ab = 'creditline_ab'
@@ -346,6 +347,18 @@ class CurrencyNetworkGraph(object):
         except (nx.NetworkXNoPath, KeyError):  # KeyError is thrown if source or target is not in graph
             cost, path = 0, []  # cost is the total fee, not the actual amount to be transferred
         return cost, list(path)
+
+    def find_possible_path_triangulations(self, source, target, value=None, max_hops=None, max_fees=None):
+        if value is None:
+            value = 1
+
+        return find_possible_path_triangulations(self.graph,
+                                                 source,
+                                                 target,
+                                                 self._cost_func_fast_reverse,
+                                                 value,
+                                                 max_hops=max_hops,
+                                                 max_fees=max_fees)
 
     def find_maximum_capacity_path(self, source, target, max_hops=None):
         """

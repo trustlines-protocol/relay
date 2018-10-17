@@ -4,6 +4,9 @@ from itertools import count
 import networkx as nx
 import math
 
+from typing import List
+import attr
+
 
 def find_path(G, source, target, get_fee, value, max_hops=None, max_fees=None, ignore=None):
     G_adj = G.adj
@@ -185,3 +188,35 @@ def find_path_triangulation(G, source, target_reduce, target_increase, get_fee, 
         raise nx.NetworkXNoPath(
             "operation impossible due to fees: %d with max_fees: %d" % (final_fee, max_fees))
     return (final_fee, list(reversed([source] + intermediary_path + [source])))
+
+
+@attr.s(auto_attribs=True)
+class PaymentPath:
+    fee: int
+    path: List
+    value: int
+
+
+def find_possible_path_triangulations(G, source, target_reduce, get_fee, value, max_hops=None, max_fees=None):
+    """find ways to reduce sources' debt with it's neighbor target_reduce by value.
+
+    source will have an increased debt to another neighbor
+    This function returns a list of possible payment paths.
+    """
+    triangulations = []
+    neighbors = {x[0] for x in G.adj[source].items()} - {target_reduce}
+    for target_increase in neighbors:
+        try:
+            final_fee, path = find_path_triangulation(
+                G,
+                source,
+                target_reduce,
+                target_increase,
+                get_fee,
+                value,
+                max_hops=max_hops,
+                max_fees=max_fees)
+        except (nx.NetworkXNoPath, KeyError) as e:
+            continue
+        triangulations.append(PaymentPath(final_fee, path, value))
+    return triangulations
