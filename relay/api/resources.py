@@ -436,6 +436,72 @@ class ReduceDebtPath(Resource):
                 'fees': cost}
 
 
+# CloseTrustline is similar to the above ReduceDebtPath, though it does not
+# take `via` and `value` as parameters. Instead it tries to reduce the debt to
+# zero and uses any contact to do so.
+
+class CloseTrustline(Resource):
+
+    def __init__(self, trustlines: TrustlinesRelay) -> None:
+        self.trustlines = trustlines
+
+    args = {
+        'maxHops': fields.Int(required=False, missing=None),
+        'maxFees': fields.Int(required=False, missing=None),
+        'from': custom_fields.Address(required=True),
+        'to': custom_fields.Address(required=True),
+    }
+
+    @use_args(args)
+    def post(self, args, network_address: str):
+        abort_if_unknown_network(self.trustlines, network_address)
+
+        source = args['from']
+        target_reduce = args['to']
+        max_fees = args['maxFees']
+        max_hops = args['maxHops']
+
+        graph = self.trustlines.currency_network_graphs[network_address]
+        balance = graph.get_balance(source, target_reduce)
+        if balance == 0:
+            return {'path': [],
+                    'estimatedGas': 0,
+                    'fees': 0,
+                    'value': 0}
+
+        if balance >= 0:
+            raise RuntimeError("balance is positive. Cannot reduce debt in CloseTrustline resource.")
+
+        value = -balance
+
+        # XXX same/similar code as above in ReduceDebtPath, should probably be refactored
+        cost, path = graph.find_best_path_triangulation(source,
+                                                        target_reduce,
+                                                        value,
+                                                        max_hops=max_hops,
+                                                        max_fees=max_fees)
+
+        if path:
+            try:
+                gas = self.trustlines.currency_network_proxies[network_address].estimate_gas_for_transfer(
+                    source,
+                    source,
+                    value,
+                    cost,  # max_fee for smart contract
+                    path[1:])  # the smart contract takes the sender of the message as source
+            except ValueError as e:  # should mean out of gas, so path was not right.
+                gas = 0
+                path = []
+                cost = 0
+        else:
+            gas = 0
+
+        return {'path': path,
+                'estimatedGas': gas,
+                'fees': cost,
+                'value': value}
+
+
 class GraphImage(MethodView):
 
     def __init__(self, trustlines: TrustlinesRelay) -> None:

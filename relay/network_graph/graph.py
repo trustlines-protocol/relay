@@ -1,5 +1,6 @@
 import csv
 import io
+import operator
 
 import networkx as nx
 
@@ -224,6 +225,11 @@ class CurrencyNetworkGraph(object):
         account.creditline = creditline_given
         account.reverse_creditline = creditline_received
 
+    def get_balance(self, a, b):
+        if not self.graph.has_edge(a, b):
+            return 0
+        return Account(self.graph[a][b], a, b).balance
+
     def update_balance(self, a, b, balance):
         """to update the balance, used to react on changes on the blockchain"""
         if not self.graph.has_edge(a, b):
@@ -347,6 +353,27 @@ class CurrencyNetworkGraph(object):
         except (nx.NetworkXNoPath, KeyError):  # KeyError is thrown if source or target is not in graph
             cost, path = 0, []  # cost is the total fee, not the actual amount to be transferred
         return cost, list(path)
+
+    def find_best_path_triangulation(self, source, target, value, max_hops=None, max_fees=None):
+        """find a path to reduce the creditline between source and target. This
+        works like find_path_triangulation, but uses the best neighbor to
+        reduce the debt."""
+        triangulations = find_possible_path_triangulations(self.graph,
+                                                           source,
+                                                           target,
+                                                           self._cost_func_fast_reverse,
+                                                           value,
+                                                           max_hops=max_hops,
+                                                           max_fees=max_fees)
+
+        # we return a tuple here like in find_path and find_path_triangulation
+        # Actually I'd rather return a PaymentPath object, but for
+        # consistency's sake with the above methods, let's return a tuple
+        if not triangulations:
+            return 0, []
+
+        best_payment_path = min(triangulations, key=operator.attrgetter("fee"))
+        return best_payment_path.fee, best_payment_path.path
 
     def find_possible_path_triangulations(self, source, target, value=None, max_hops=None, max_fees=None):
         if value is None:
