@@ -97,3 +97,16 @@ class TxInfosSchema(Schema):
     balance = BigInteger()
     nonce = fields.Integer()
     gasPrice = BigInteger(attribute='gas_price')
+
+
+class PaymentPathSchema(Schema):
+    class Meta:
+        strict = True
+    fees = BigInteger(required=True)
+    path = fields.List(Address(), required=True)
+    estimatedGas = BigInteger()
+    value = BigInteger()
+
+
+class CloseTrustlineResultSchema(PaymentPathSchema):
+    pass

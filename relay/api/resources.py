@@ -1,6 +1,7 @@
 import tempfile
 import logging
 
+import wrapt
 from flask import request, send_file, make_response, abort
 from flask.views import MethodView
 from flask_restful import Resource
@@ -21,7 +22,8 @@ from .schemas import (CurrencyNetworkEventSchema,
                       ExchangeEventSchema,
                       AccountSummarySchema,
                       TrustlineSchema,
-                      TxInfosSchema)
+                      TxInfosSchema,
+                      CloseTrustlineResultSchema)
 from relay.relay import TrustlinesRelay
 from relay.concurrency_utils import TimeoutException
 from relay.logger import get_logger
@@ -36,6 +38,17 @@ TIMEOUT_MESSAGE = 'The server could not handle the request in time'
 def abort_if_unknown_network(trustlines, network_address):
     if network_address not in trustlines.networks:
         abort(404, 'Unknown network: {}'.format(network_address))
+
+
+def dump_result_with_schema(schema):
+    """returns a decorator that calls schema.dump on the functions or methods
+    return value"""
+    @wrapt.decorator
+    def dump_result(wrapped, instance, args, kwargs):
+        result = schema.dump(wrapped(*args, **kwargs)).data
+        # schema.validate(result)
+        return result
+    return dump_result
 
 
 class NetworkList(Resource):
@@ -440,6 +453,7 @@ class ReduceDebtPath(Resource):
 # take `via` and `value` as parameters. Instead it tries to reduce the debt to
 # zero and uses any contact to do so.
 
+
 class CloseTrustline(Resource):
 
     def __init__(self, trustlines: TrustlinesRelay) -> None:
@@ -453,6 +467,7 @@ class CloseTrustline(Resource):
     }
 
     @use_args(args)
+    @dump_result_with_schema(CloseTrustlineResultSchema())
     def post(self, args, network_address: str):
         abort_if_unknown_network(self.trustlines, network_address)
 
