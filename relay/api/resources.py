@@ -28,6 +28,7 @@ from relay.relay import TrustlinesRelay
 from relay.concurrency_utils import TimeoutException
 from relay.logger import get_logger
 
+from relay.network_graph.dijkstra_weighted import PaymentPath
 
 logger = get_logger('apiresources', logging.DEBUG)
 
@@ -470,7 +471,6 @@ class CloseTrustline(Resource):
     @dump_result_with_schema(CloseTrustlineResultSchema())
     def post(self, args, network_address: str):
         abort_if_unknown_network(self.trustlines, network_address)
-
         source = args['from']
         target_reduce = args['to']
         max_fees = args['maxFees']
@@ -478,43 +478,30 @@ class CloseTrustline(Resource):
 
         graph = self.trustlines.currency_network_graphs[network_address]
         balance = graph.get_balance(source, target_reduce)
-        if balance == 0:
-            return {'path': [],
-                    'estimatedGas': 0,
-                    'fees': 0,
-                    'value': 0}
-
-        if balance >= 0:
-            raise RuntimeError("balance is positive. Cannot reduce debt in CloseTrustline resource.")
-
         value = -balance
 
-        # XXX same/similar code as above in ReduceDebtPath, should probably be refactored
-        cost, path = graph.find_best_path_triangulation(source,
-                                                        target_reduce,
-                                                        value,
-                                                        max_hops=max_hops,
-                                                        max_fees=max_fees)
+        def make_empty_payment_path():
+            return PaymentPath(fee=0, path=[], value=value, estimated_gas=0)
 
-        if path:
-            try:
-                gas = self.trustlines.currency_network_proxies[network_address].estimate_gas_for_transfer(
-                    source,
-                    source,
-                    value,
-                    cost,  # max_fee for smart contract
-                    path[1:])  # the smart contract takes the sender of the message as source
-            except ValueError as e:  # should mean out of gas, so path was not right.
-                gas = 0
-                path = []
-                cost = 0
-        else:
-            gas = 0
+        if balance == 0:
+            return make_empty_payment_path()
 
-        return {'path': path,
-                'estimatedGas': gas,
-                'fees': cost,
-                'value': value}
+        if balance > 0:
+            raise RuntimeError("balance is positive. Cannot reduce debt in CloseTrustline resource.")
+
+        payment_path = graph.find_best_path_triangulation(source,
+                                                          target_reduce,
+                                                          value,
+                                                          max_hops=max_hops,
+                                                          max_fees=max_fees)
+
+        proxy = self.trustlines.currency_network_proxies[network_address]
+        payment_path.estimated_gas = proxy.estimate_gas_for_payment_path(payment_path)
+
+        if payment_path.estimated_gas == 0:
+            return make_empty_payment_path()
+
+        return payment_path
 
 
 class GraphImage(MethodView):

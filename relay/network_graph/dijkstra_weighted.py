@@ -195,6 +195,7 @@ class PaymentPath:
     fee: int
     path: List
     value: int
+    estimated_gas: int = attr.ib(default=None)
 
 
 def find_possible_path_triangulations(G, source, target_reduce, get_fee, value, max_hops=None, max_fees=None):

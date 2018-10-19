@@ -102,9 +102,9 @@ class TxInfosSchema(Schema):
 class PaymentPathSchema(Schema):
     class Meta:
         strict = True
-    fees = BigInteger(required=True)
+    fees = BigInteger(required=True, attribute="fee")
     path = fields.List(Address(), required=True)
-    estimatedGas = BigInteger()
+    estimatedGas = BigInteger(attribute="estimated_gas")
     value = BigInteger()
 
 

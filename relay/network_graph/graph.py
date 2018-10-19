@@ -5,7 +5,7 @@ import operator
 import networkx as nx
 
 from .dijkstra_weighted import find_path, find_path_triangulation, find_maximum_capacity_path, \
-    find_possible_path_triangulations
+    find_possible_path_triangulations, PaymentPath
 from .fees import new_balance, imbalance_fee, estimate_fees_from_capacity
 
 creditline_ab = 'creditline_ab'
@@ -366,14 +366,11 @@ class CurrencyNetworkGraph(object):
                                                            max_hops=max_hops,
                                                            max_fees=max_fees)
 
-        # we return a tuple here like in find_path and find_path_triangulation
-        # Actually I'd rather return a PaymentPath object, but for
-        # consistency's sake with the above methods, let's return a tuple
         if not triangulations:
-            return 0, []
+            return PaymentPath(fee=0, path=[], value=value)
 
         best_payment_path = min(triangulations, key=operator.attrgetter("fee"))
-        return best_payment_path.fee, best_payment_path.path
+        return best_payment_path
 
     def find_possible_path_triangulations(self, source, target, value=None, max_hops=None, max_fees=None):
         if value is None:
