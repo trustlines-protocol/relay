@@ -12,18 +12,14 @@ from marshmallow import validate
 from relay.utils import sha3
 from relay.blockchain.currency_network_proxy import CurrencyNetworkProxy
 from relay.blockchain.unw_eth_proxy import UnwEthProxy
-from relay.blockchain.unw_eth_events import UnwEthEvent
-from relay.blockchain.exchange_events import ExchangeEvent
-from relay.blockchain.currency_network_events import CurrencyNetworkEvent
 from relay.api import fields as custom_fields
 from .schemas import (CurrencyNetworkEventSchema,
                       UserCurrencyNetworkEventSchema,
-                      UserTokenEventSchema,
-                      ExchangeEventSchema,
                       AccountSummarySchema,
                       ExtendedAccountSummarySchema,
                       TxInfosSchema,
-                      PaymentPathSchema)
+                      PaymentPathSchema,
+                      AnyEventSchema)
 from relay.relay import TrustlinesRelay
 from relay.concurrency_utils import TimeoutException
 from relay.logger import get_logger
@@ -232,14 +228,15 @@ class UserEvents(Resource):
     }
 
     @use_args(args)
+    @dump_result_with_schema(AnyEventSchema(many=True))
     def get(self, args, user_address: str):
         type = args['type']
         from_block = args['fromBlock']
         try:
-            events = self.trustlines.get_user_events(user_address,
-                                                     type=type,
-                                                     from_block=from_block,
-                                                     timeout=self.trustlines.event_query_timeout)
+            return self.trustlines.get_user_events(user_address,
+                                                   type=type,
+                                                   from_block=from_block,
+                                                   timeout=self.trustlines.event_query_timeout)
         except TimeoutException:
             logger.warning(
                 "User events: event_name=%s user_address=%s from_block=%s. could not get events in time",
@@ -247,15 +244,6 @@ class UserEvents(Resource):
                 user_address,
                 from_block)
             abort(504, TIMEOUT_MESSAGE)
-        serialized_events = []
-        for event in events:
-            if isinstance(event, CurrencyNetworkEvent):
-                serialized_events.append(UserCurrencyNetworkEventSchema().dump(event).data)
-            if isinstance(event, UnwEthEvent):
-                serialized_events.append(UserTokenEventSchema().dump(event).data)
-            if isinstance(event, ExchangeEvent):
-                serialized_events.append(ExchangeEventSchema().dump(event).data)
-        return serialized_events
 
 
 class EventsNetwork(Resource):

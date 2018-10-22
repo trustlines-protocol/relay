@@ -34,27 +34,45 @@ class Client:
             {"from": user, "to": other_user},
         )
 
+    def user_events(self, network, user):
+        return self.get(f"users/{user}/events")
 
-def run_all_close_trustline_path_info():
+
+def run_all_close_trustline_path_info(client):
     """try to run close_trustline_path_info on all combinations"""
-    c = Client("http://localhost:5000/api/v1/")
-    all_networks = c.networks()
+    all_networks = client.networks()
     for network_info in all_networks:
         print("=====> Using network", network_info)
         network_address = network_info["address"]
 
-        users = c.users(network_address)
+        users = client.users(network_address)
         print(f"have {len(users)} users")
         for user in users:
-            trustlines = c.trustlines(network_address, user)
+            trustlines = client.trustlines(network_address, user)
             print(f"user {user} has {len(trustlines)} trustlines")
             for t in trustlines:
-                res = c.close_trustline_path_info(
+                res = client.close_trustline_path_info(
                     network_address, user, t["counterParty"]
                 )
                 if res.get("path"):
                     print(res, t)
 
 
+def show_all_user_events(client):
+    all_networks = client.networks()
+    for network_info in all_networks:
+        print("=====> Using network", network_info)
+        network_address = network_info["address"]
+
+        users = client.users(network_address)
+        print(f"have {len(users)} users")
+        for user in users:
+            events = client.user_events(network_address, user)
+            print(user, network_address, events)
+
+
 if __name__ == "__main__":
-    run_all_close_trustline_path_info()
+    client = Client("http://localhost:5000/api/v1/")
+
+    # run_all_close_trustline_path_info(client)
+    show_all_user_events(client)
