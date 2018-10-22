@@ -23,7 +23,7 @@ from .schemas import (CurrencyNetworkEventSchema,
                       AccountSummarySchema,
                       TrustlineSchema,
                       TxInfosSchema,
-                      CloseTrustlineResultSchema)
+                      PaymentPathSchema)
 from relay.relay import TrustlinesRelay
 from relay.concurrency_utils import TimeoutException
 from relay.logger import get_logger
@@ -210,6 +210,7 @@ class UserEventsNetwork(Resource):
         from_block = args['fromBlock']
         type = args['type']
         try:
+
             events = self.trustlines.get_user_network_events(network_address,
                                                              user_address,
                                                              type=type,
@@ -468,7 +469,7 @@ class CloseTrustline(Resource):
     }
 
     @use_args(args)
-    @dump_result_with_schema(CloseTrustlineResultSchema())
+    @dump_result_with_schema(PaymentPathSchema())
     def post(self, args, network_address: str):
         abort_if_unknown_network(self.trustlines, network_address)
         source = args['from']

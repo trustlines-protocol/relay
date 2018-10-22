@@ -106,7 +106,3 @@ class PaymentPathSchema(Schema):
     path = fields.List(Address(), required=True)
     estimatedGas = BigInteger(attribute="estimated_gas")
     value = BigInteger()
-
-
-class CloseTrustlineResultSchema(PaymentPathSchema):
-    pass
