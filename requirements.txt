@@ -12,6 +12,7 @@ eth-utils
 tinyrpc
 gevent-websocket
 marshmallow<3
+marshmallow-oneofschema
 flask-sockets
 firebase-admin
 psycopg2 --no-binary psycopg2

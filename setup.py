@@ -88,6 +88,7 @@ setup(
                       'tinyrpc',
                       'gevent-websocket',
                       'marshmallow<3',
+                      'marshmallow-oneofschema',
                       'flask-sockets',
                       'firebase-admin',
                       'psycopg2',
