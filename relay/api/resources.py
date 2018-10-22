@@ -329,6 +329,18 @@ class RequestEther(Resource):
         return self.trustlines.node.send_ether(address)
 
 
+def _estimate_gas_for_transfer(trustlines: TrustlinesRelay,
+                               payment_path: PaymentPath,
+                               network_address: str) -> PaymentPath:
+    proxy = trustlines.currency_network_proxies[network_address]
+    payment_path.estimated_gas = proxy.estimate_gas_for_payment_path(payment_path)
+
+    if payment_path.estimated_gas == 0:
+        return PaymentPath(fee=0, path=[], value=payment_path.value, estimated_gas=0)
+
+    return payment_path
+
+
 class Path(Resource):
 
     def __init__(self, trustlines: TrustlinesRelay) -> None:
@@ -343,6 +355,7 @@ class Path(Resource):
     }
 
     @use_args(args)
+    @dump_result_with_schema(PaymentPathSchema())
     def post(self, args, network_address: str):
         abort_if_unknown_network(self.trustlines, network_address)
 
@@ -359,24 +372,7 @@ class Path(Resource):
             max_fees=max_fees,
             max_hops=max_hops)
 
-        if path:
-            try:
-                gas = self.trustlines.currency_network_proxies[network_address].estimate_gas_for_transfer(
-                    source,
-                    target,
-                    value,
-                    cost,
-                    path[1:])
-            except ValueError as e:  # should mean out of gas, so path was not right.
-                gas = 0
-                path = []
-                cost = 0
-        else:
-            gas = 0
-
-        return {'path': path,
-                'estimatedGas': gas,
-                'fees': cost}
+        return _estimate_gas_for_transfer(self.trustlines, PaymentPath(cost, path, value), network_address)
 
 
 class ReduceDebtPath(Resource):
@@ -394,6 +390,7 @@ class ReduceDebtPath(Resource):
     }
 
     @use_args(args)
+    @dump_result_with_schema(PaymentPathSchema())
     def post(self, args, network_address: str):
         abort_if_unknown_network(self.trustlines, network_address)
 
@@ -412,24 +409,7 @@ class ReduceDebtPath(Resource):
             max_fees=max_fees,
             max_hops=max_hops)
 
-        if path:
-            try:
-                gas = self.trustlines.currency_network_proxies[network_address].estimate_gas_for_transfer(
-                    source,
-                    source,
-                    value,
-                    cost,  # max_fee for smart contract
-                    path[1:])  # the smart contract takes the sender of the message as source
-            except ValueError as e:  # should mean out of gas, so path was not right.
-                gas = 0
-                path = []
-                cost = 0
-        else:
-            gas = 0
-
-        return {'path': path,
-                'estimatedGas': gas,
-                'fees': cost}
+        return _estimate_gas_for_transfer(self.trustlines, PaymentPath(cost, path, value), network_address)
 
 
 # CloseTrustline is similar to the above ReduceDebtPath, though it does not
@@ -462,11 +442,8 @@ class CloseTrustline(Resource):
         balance = graph.get_balance(source, target_reduce)
         value = -balance
 
-        def make_empty_payment_path():
-            return PaymentPath(fee=0, path=[], value=value, estimated_gas=0)
-
         if balance == 0:
-            return make_empty_payment_path()
+            return PaymentPath(fee=0, path=[], value=value, estimated_gas=0)
 
         if balance > 0:
             raise RuntimeError("balance is positive. Cannot reduce debt in CloseTrustline resource.")
@@ -476,14 +453,7 @@ class CloseTrustline(Resource):
                                                           value,
                                                           max_hops=max_hops,
                                                           max_fees=max_fees)
-
-        proxy = self.trustlines.currency_network_proxies[network_address]
-        payment_path.estimated_gas = proxy.estimate_gas_for_payment_path(payment_path)
-
-        if payment_path.estimated_gas == 0:
-            return make_empty_payment_path()
-
-        return payment_path
+        return _estimate_gas_for_transfer(self.trustlines, payment_path, network_address)
 
 
 class GraphImage(MethodView):
