@@ -21,7 +21,7 @@ from .schemas import (CurrencyNetworkEventSchema,
                       UserTokenEventSchema,
                       ExchangeEventSchema,
                       AccountSummarySchema,
-                      TrustlineSchema,
+                      ExtendedAccountSummarySchema,
                       TxInfosSchema,
                       PaymentPathSchema)
 from relay.relay import TrustlinesRelay
@@ -99,10 +99,10 @@ class User(Resource):
     def __init__(self, trustlines: TrustlinesRelay) -> None:
         self.trustlines = trustlines
 
+    @dump_result_with_schema(AccountSummarySchema())
     def get(self, network_address: str, user_address: str):
         abort_if_unknown_network(self.trustlines, network_address)
-        return AccountSummarySchema().dump(
-            self.trustlines.currency_network_graphs[network_address].get_account_sum(user_address)).data
+        return self.trustlines.currency_network_graphs[network_address].get_account_sum(user_address)
 
 
 class ContactList(Resource):
@@ -122,22 +122,25 @@ def _id(network_address, a_address, b_address):
             return sha3(network_address + b_address + a_address)
 
 
+def _get_extended_account_summary(graph, network_address, a_address, b_address):
+    account_summary = graph.get_account_sum(a_address, b_address)
+    account_summary.user = a_address
+    account_summary.counterParty = b_address
+    account_summary.address = b_address
+    account_summary.id = _id(network_address, a_address, b_address)
+    return account_summary
+
+
 class Trustline(Resource):
 
     def __init__(self, trustlines: TrustlinesRelay) -> None:
         self.trustlines = trustlines
 
+    @dump_result_with_schema(ExtendedAccountSummarySchema())
     def get(self, network_address, a_address, b_address):
         abort_if_unknown_network(self.trustlines, network_address)
         graph = self.trustlines.currency_network_graphs[network_address]
-        data = TrustlineSchema().dump(graph.get_account_sum(a_address, b_address)).data
-        data.update({
-            'user': a_address,
-            'counterParty': b_address,
-            'address': b_address,
-            'id': _id(network_address, a_address, b_address)
-        })
-        return data
+        return _get_extended_account_summary(graph, network_address, a_address, b_address)
 
 
 class TrustlineList(Resource):
@@ -145,23 +148,13 @@ class TrustlineList(Resource):
     def __init__(self, trustlines: TrustlinesRelay) -> None:
         self.trustlines = trustlines
 
+    @dump_result_with_schema(ExtendedAccountSummarySchema(many=True))
     def get(self, network_address: str, user_address: str):
         abort_if_unknown_network(self.trustlines, network_address)
         graph = self.trustlines.currency_network_graphs[network_address]
         friends = graph.get_friends(user_address)
-        accounts = []
-        for friend_address in friends:
-            data = TrustlineSchema().dump(graph.get_account_sum(user_address, friend_address)).data
-            data.update(
-                {
-                    'user': user_address,
-                    'counterParty': friend_address,
-                    'address': friend_address,
-                    'id': _id(network_address, user_address, friend_address)
-                }
-            )
-            accounts.append(data)
-        return accounts
+        return [_get_extended_account_summary(graph, network_address, user_address, friend_address)
+                for friend_address in friends]
 
 
 class MaxCapacityPath(Resource):

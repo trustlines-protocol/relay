@@ -79,6 +79,13 @@ class AccountSummarySchema(Schema):
     balance = BigInteger()
 
 
+class ExtendedAccountSummarySchema(AccountSummarySchema):
+    user = Address()
+    counterParty = Address()
+    address = Address()
+    id = Address()
+
+
 class TrustlineSchema(Schema):
     class Meta:
         strict = True
