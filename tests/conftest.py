@@ -4,9 +4,36 @@ from typing import Sequence
 from collections import namedtuple
 
 import pytest
+import py
+import operator
 
 # import the relay module so no pip install is necessary
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+
+
+@pytest.hookimpl(tryfirst=True)
+def pytest_collection_modifyitems(session, config, items):
+    """mark tests in unit directory as unit tests and run them first
+
+    this is not compatibe with the pytest-ordering plugin at the moment
+    """
+    unit_directory = py.path.local(__file__).dirpath().join("unit")
+
+    def inside_unit_directory(item):
+        return unit_directory.common(item.fspath) == unit_directory
+
+    for item in items:
+        if item.get_closest_marker("unit"):
+            item._trustlines_sort_order = 0
+        elif item.get_closest_marker("integration"):
+            item._trustlines_sort_order = 1
+        elif inside_unit_directory(item):
+            item.add_marker(pytest.mark.unit)
+            item._trustlines_sort_order = 0
+        else:
+            item.add_marker(pytest.mark.integration)
+            item._trustlines_sort_order = 1
+    items.sort(key=operator.attrgetter("_trustlines_sort_order"))
 
 
 Account = namedtuple('Account', 'address private_key')
