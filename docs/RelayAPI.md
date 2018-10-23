@@ -481,15 +481,19 @@ curl https://relay0.testnet.trustlines.network/api/v1/networks/0xC0B33D88C704455
 |transactionId|string|Transaction hash|
 
 Following additional attributes for `TrustlineUpdate` and `TrustlineUpdateRequest` events:
-|Attribute|Type|Description|
-|---------|----|-----------|
-|given|string|Proposed or accepted amount `from -> to`|
-|received|string|Proposed or accepted amount `to -> from`|
+
+| Attribute | Type   | Description                              |
+|-----------|--------|------------------------------------------|
+| given     | string | Proposed or accepted amount `from -> to` |
+| received  | string | Proposed or accepted amount `to -> from` |
+|           |        |                                          |
 
 Following additional attributes for `Transfer` events:
-|Attribute|Type|Description|
-|---------|----|-----------|
-|amount|string|Transfer amount `from -> to`|
+
+| Attribute | Type   | Description                  |
+|-----------|--------|------------------------------|
+| amount    | string | Transfer amount `from -> to` |
+|           |        |                              |
 #### Example Response
 ```json
 [
@@ -563,15 +567,19 @@ curl https://relay0.testnet.trustlines.network/api/v1/networks/0xC0B33D88C704455
 |transactionId|string|Transaction hash|
 
 Following additional attributes for `TrustlineUpdate` and `TrustlineUpdateRequest` events:
-|Attribute|Type|Description|
-|---------|----|-----------|
-|given|string|Proposed or accepted amount `from -> to`|
-|received|string|Proposed or accepted amount `to -> from`|
+
+| Attribute | Type   | Description                              |
+|-----------|--------|------------------------------------------|
+| given     | string | Proposed or accepted amount `from -> to` |
+| received  | string | Proposed or accepted amount `to -> from` |
+|           |        |                                          |
 
 Following additional attributes for `Transfer` events:
-|Attribute|Type|Description|
-|---------|----|-----------|
-|amount|string|Transfer amount `from -> to`|
+
+| Attribute | Type   | Description                  |
+|-----------|--------|------------------------------|
+| amount    | string | Transfer amount `from -> to` |
+|           |        |                              |
 #### Example Response
 ```json
 [
@@ -644,15 +652,18 @@ curl https://relay0.testnet.trustlines.network/api/v1/users/0xcbF1153F6e5AC01D36
 |transactionId|string|Transaction hash|
 
 Following additional attributes for `TrustlineUpdate` and `TrustlineUpdateRequest` events:
-|Attribute|Type|Description|
-|---------|----|-----------|
-|given|string|Proposed or accepted amount `from -> to`|
-|received|string|Proposed or accepted amount `to -> from`|
+
+| Attribute | Type   | Description                              |
+|-----------|--------|------------------------------------------|
+| given     | string | Proposed or accepted amount `from -> to` |
+| received  | string | Proposed or accepted amount `to -> from` |
 
 Following additional attributes for `Transfer` events:
-|Attribute|Type|Description|
-|---------|----|-----------|
-|amount|string|Transfer amount `from -> to`|
+
+| Attribute | Type   | Description                  |
+|-----------|--------|------------------------------|
+| amount    | string | Transfer amount `from -> to` |
+
 #### Example Response
 ```json
 [
