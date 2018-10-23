@@ -32,6 +32,7 @@ https://relay0.testnet.trustlines.network/api/v1
 - [Spendable amount and path to any user in currency network](#spendable-amount-and-path-to-any-user-in-currency-network)
 - [Transfer path in currency network](#transfer-path-in-currency-network)
 - [Debt reduction path in currency network](#debt-reduction-path-in-currency-network)
+- [Closing trustline path in currency network](#closing-trustline-path-in-currency-network)
 - [All events in currency network](#all-events-in-currency-network)
 - [Events of user in currency network](#events-of-user-in-currency-network)
 ### User context
@@ -384,7 +385,7 @@ curl --header "Content-Type: application/json" \
 #### Example Response
 ```json
 {
-	"path": [
+    "path": [
     "0xcbF1153F6e5AC01D363d432e24112e8aA56c55ce",
     "0xc257274276a4e539741ca11b590b9447b26a8051",
     "0x7Ec3543702FA8F2C7b2bD84C034aAc36C263cA8b",
@@ -392,6 +393,60 @@ curl --header "Content-Type: application/json" \
   ],
   "fees": "2",
   "estimatedGas": 76324
+}
+```
+
+---
+
+### Closing trustline path in currency network
+This endpoint is used in preparation for closing a trustline. It returns the
+cheapest path, the estimated gas costs and fees and a value for a payment,
+which reduces the balance to zero. At the moment this only works for negative
+balances.
+
+#### Request
+```
+POST /networks/:networkAddress/close-trustline-path-info
+```
+#### URL Parameters
+| Name           | Type   | Required | Description                 |
+|----------------|--------|----------|-----------------------------|
+| networkAddress | string | YES      | Address of currency network |
+#### Data Parameters
+| Name    | Type   | Required | Description                                              |
+|---------|--------|----------|----------------------------------------------------------|
+| from    | string | YES      | Address of user who wants to close a trustline           |
+| to      | string | YES      | Address of user with whom the trustline should be closed |
+| maxFees | string | NO       | Upper bound for transfer fees                            |
+| maxHops | string | NO       | Upper bound for hops in transfer path                    |
+|         |        |          |                                                          |
+#### Example Request
+```bash
+curl --header "Content-Type: application/json" \
+  --request POST \
+  --data '{"from":"0x186ec4A5E2c9Ed2B392599843375383D40C94F57","to":"0xaE8446e5ea18F6d7647b28eEf01e568BE672AF6c"}' \
+https://relay0.testnet.trustlines.network/api/v1/networks/0xc5F45B680e81759E3FBc4b4a5A94FBd40BAB3fAd/close-trustline-path-info
+```
+#### Response
+| Attribute    | Type     | Description                               |
+|--------------|----------|-------------------------------------------|
+| path         | string[] | Addresses of users on transfer path       |
+| fees         | string   | Estimated transfer fees                   |
+| estimatedGas | int      | Estimated gas costs for transfer          |
+| value        | string   | Amount to be transferred in smallest unit |
+
+#### Example Response
+```json
+{
+    "estimatedGas": "175165",
+    "fees": "6",
+    "path": [
+        "0x186ec4A5E2c9Ed2B392599843375383D40C94F57",
+        "0x37605B30874452551F959811C5F8662329E51EB2",
+        "0xaE8446e5ea18F6d7647b28eEf01e568BE672AF6c",
+        "0x186ec4A5E2c9Ed2B392599843375383D40C94F57"
+    ],
+    "value": "410"
 }
 ```
 
