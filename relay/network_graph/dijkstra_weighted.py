@@ -138,13 +138,10 @@ def find_path_triangulation(G, source, target_reduce, target_increase, get_fee, 
     """
     def get_fee_wrapper(b, a, value):
         # used to get the data from the graph in the right order and query the fees
-        if b < a:
-            output = get_fee(b, a, G[b][a], value)
-        else:
-            output = get_fee(b, a, G[a][b], value)
-        if output is None:
+        fee = get_fee(b, a, G[b][a], value)
+        if fee is None:
             raise nx.NetworkXNoPath("node %s not reachable from %s" % (a, b))
-        return output
+        return fee
 
     def verify_balance_greater_than_value(a, b, value):
         # used to verify that we reduce the amount source owes to target_reduce and do not misuse the function
