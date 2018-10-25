@@ -294,6 +294,10 @@ class CurrencyNetworkGraph(object):
         return output.getvalue()
 
     def _cost_func_fast_reverse(self, b, a, data, value):
+        """computes the cost (i.e. the fee) for transferring value from a to b
+
+        returns None if the transfer would exceed the creditline.
+        """
         # this func should be as fast as possible, as it's called often
         # don't use Account which allocs memory
         if a < b:
@@ -302,12 +306,12 @@ class CurrencyNetworkGraph(object):
         else:
             pre_balance = -data[balance_ab]
             creditline = data[creditline_ab]
-        post_balance = new_balance(self.capacity_imbalance_fee_divisor, pre_balance, value)
+        cost = imbalance_fee(self.capacity_imbalance_fee_divisor, pre_balance, value)
+        assert cost >= 0
+        post_balance = pre_balance - value - cost
         assert post_balance <= pre_balance
         if -post_balance > creditline:
             return None  # no valid path
-        cost = imbalance_fee(self.capacity_imbalance_fee_divisor, pre_balance, value)
-        assert cost >= 0
         return cost
 
     def find_path(self, source, target, value=None, max_hops=None, max_fees=None):
