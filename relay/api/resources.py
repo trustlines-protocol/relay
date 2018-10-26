@@ -444,7 +444,7 @@ class CloseTrustline(Resource):
             return PaymentPath(fee=0, path=[], value=value, estimated_gas=0)
 
         if balance > 0:
-            raise RuntimeError("balance is positive. Cannot reduce debt in CloseTrustline resource.")
+            abort(501, 'cannot reduce positive balance')
 
         payment_path = graph.find_best_path_triangulation(source,
                                                           target_reduce,
