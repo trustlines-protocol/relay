@@ -127,6 +127,15 @@ def find_maximum_capacity_path(G, source, target, max_hops=None):
             "node %s not reachable from %s" % (source, target))
 
 
+def get_balance(G, a, b):
+    """return the balance as seen by a"""
+    balance = G[a][b]['balance_ab']
+    if a < b:
+        return balance
+    else:
+        return -balance
+
+
 def find_path_triangulation(G, source, target_reduce, target_increase, get_fee, value, max_hops=None, max_fees=None):
     """
     target_reduce is the node we want to reduce our credit with
@@ -143,19 +152,12 @@ def find_path_triangulation(G, source, target_reduce, target_increase, get_fee, 
             raise nx.NetworkXNoPath("node %s not reachable from %s" % (a, b))
         return fee
 
-    def verify_balance_greater_than_value(a, b, value):
-        # used to verify that we reduce the amount source owes to target_reduce and do not misuse the function
-        if a < b:
-            return -G[a][b]['balance_ab'] >= value
-        else:
-            return G[b][a]['balance_ab'] >= value
-
     # verification that the function is used properly
     if value <= 0:
         raise ValueError('This value cannot be handled yet : %d' % value)
-    elif not verify_balance_greater_than_value(source, target_reduce, value):
+    elif get_balance(G, target_reduce, source) < value:
         raise nx.NetworkXNoPath(
-            "The balance of target_reduce is lower than value %d" % value)
+            f"The balance of target_reduce is lower than value {value}")
 
     G_adj = G.adj
     neighbors = [x[0] for x in G_adj[source].items()]
