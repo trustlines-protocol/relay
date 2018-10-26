@@ -331,9 +331,9 @@ def _estimate_gas_for_transfer(trustlines: TrustlinesRelay,
                                payment_path: PaymentPath,
                                network_address: str) -> PaymentPath:
     proxy = trustlines.currency_network_proxies[network_address]
-    payment_path.estimated_gas = proxy.estimate_gas_for_payment_path(payment_path)
-
-    if payment_path.estimated_gas == 0:
+    try:
+        payment_path.estimated_gas = proxy.estimate_gas_for_payment_path(payment_path)
+    except ValueError:  # should mean out of gas, so path was not right.
         return PaymentPath(fee=0, path=[], value=payment_path.value, estimated_gas=0)
 
     return payment_path
