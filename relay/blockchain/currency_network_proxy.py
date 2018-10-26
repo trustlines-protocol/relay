@@ -198,3 +198,14 @@ class CurrencyNetworkProxy(Proxy):
 
     def estimate_gas_for_transfer(self, sender, receiver, value, max_fee, path):
         return self._proxy.estimateGas({'from': sender}).transfer(receiver, value, max_fee, path)
+
+    def estimate_gas_for_payment_path(self, payment_path):
+        """estimate gas for doing a transfer for the given payment_path"""
+        if not payment_path.path:
+            return 0
+        source = payment_path.path[0]
+        target = payment_path.path[-1]
+        return self._proxy.estimateGas({'from': source}).transfer(target,
+                                                                  payment_path.value,
+                                                                  payment_path.fee,
+                                                                  payment_path.path[1:])

@@ -88,11 +88,13 @@ setup(
                       'tinyrpc',
                       'gevent-websocket',
                       'marshmallow<3',
+                      'marshmallow-oneofschema',
                       'flask-sockets',
                       'firebase-admin',
                       'psycopg2',
                       'psycogreen',
                       'wrapt',
+                      'attrs',
     ],
 
     # List additional groups of dependencies here (e.g. development

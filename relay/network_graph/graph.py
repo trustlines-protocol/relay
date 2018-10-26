@@ -1,9 +1,11 @@
 import csv
 import io
+import operator
 
 import networkx as nx
 
-from .dijkstra_weighted import find_path, find_path_triangulation, find_maximum_capacity_path
+from .dijkstra_weighted import find_path, find_path_triangulation, find_maximum_capacity_path, \
+    find_possible_path_triangulations, PaymentPath
 from .fees import new_balance, imbalance_fee, estimate_fees_from_capacity
 
 creditline_ab = 'creditline_ab'
@@ -223,6 +225,11 @@ class CurrencyNetworkGraph(object):
         account.creditline = creditline_given
         account.reverse_creditline = creditline_received
 
+    def get_balance(self, a, b):
+        if not self.graph.has_edge(a, b):
+            return 0
+        return Account(self.graph[a][b], a, b).balance
+
     def update_balance(self, a, b, balance):
         """to update the balance, used to react on changes on the blockchain"""
         if not self.graph.has_edge(a, b):
@@ -327,7 +334,7 @@ class CurrencyNetworkGraph(object):
     def find_path_triangulation(self, source, target_reduce, target_increase,
                                 value=None, max_hops=None, max_fees=None):
         """
-        find a path to update the the creditline between source and target with value, via target_increasae
+        find a path to update the creditline between source and target with value, via target_increase
         the shortest path is found based on
             - the number of hops
             - the imbalance it adds or reduces in the accounts
@@ -343,9 +350,39 @@ class CurrencyNetworkGraph(object):
                                                  value,
                                                  max_hops=max_hops,
                                                  max_fees=max_fees)
-        except (nx.NetworkXNoPath, KeyError):  # key error for if source or target is not in graph
-            cost, path = 0, []  # cost is the total fee, not the actual amount to be transfered
+        except (nx.NetworkXNoPath, KeyError):  # KeyError is thrown if source or target is not in graph
+            cost, path = 0, []  # cost is the total fee, not the actual amount to be transferred
         return cost, list(path)
+
+    def find_best_path_triangulation(self, source, target, value, max_hops=None, max_fees=None):
+        """find a path to reduce the creditline between source and target. This
+        works like find_path_triangulation, but uses the best neighbor to
+        reduce the debt."""
+        triangulations = find_possible_path_triangulations(self.graph,
+                                                           source,
+                                                           target,
+                                                           self._cost_func_fast_reverse,
+                                                           value,
+                                                           max_hops=max_hops,
+                                                           max_fees=max_fees)
+
+        if not triangulations:
+            return PaymentPath(fee=0, path=[], value=value)
+
+        best_payment_path = min(triangulations, key=operator.attrgetter("fee"))
+        return best_payment_path
+
+    def find_possible_path_triangulations(self, source, target, value=None, max_hops=None, max_fees=None):
+        if value is None:
+            value = 1
+
+        return find_possible_path_triangulations(self.graph,
+                                                 source,
+                                                 target,
+                                                 self._cost_func_fast_reverse,
+                                                 value,
+                                                 max_hops=max_hops,
+                                                 max_fees=max_fees)
 
     def find_maximum_capacity_path(self, source, target, max_hops=None):
         """

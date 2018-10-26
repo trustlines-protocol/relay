@@ -1,4 +1,7 @@
+import pytest
 from relay.signing import eth_validate, eth_sign
+
+pytestmark = pytest.mark.unit
 
 
 def test_eth_validate(test_account):

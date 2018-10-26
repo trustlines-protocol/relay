@@ -4,6 +4,9 @@ from itertools import count
 import networkx as nx
 import math
 
+from typing import List
+import attr
+
 
 def find_path(G, source, target, get_fee, value, max_hops=None, max_fees=None, ignore=None):
     G_adj = G.adj
@@ -58,7 +61,7 @@ def find_path(G, source, target, get_fee, value, max_hops=None, max_fees=None, i
 def find_maximum_capacity_path(G, source, target, max_hops=None):
     """
     The logic is the same as dijkstra's Algorithm
-    We visit nodes with the maximum capacity untill we reach the destination.
+    We visit nodes with the maximum capacity until we reach the destination.
     At this point we are sure it is the maximum capacity path since every path
     already have a smaller capacity and the capacity can only decrease.
     """
@@ -150,7 +153,7 @@ def find_path_triangulation(G, source, target_reduce, target_increase, get_fee, 
         else:
             return G[b][a]['balance_ab'] >= value
 
-    # verification that the funtion is used properly
+    # verification that the function is used properly
     if value <= 0:
         raise ValueError('This value cannot be handled yet : %d' % value)
     elif not verify_balance_greater_than_value(source, target_reduce, value):
@@ -185,3 +188,36 @@ def find_path_triangulation(G, source, target_reduce, target_increase, get_fee, 
         raise nx.NetworkXNoPath(
             "operation impossible due to fees: %d with max_fees: %d" % (final_fee, max_fees))
     return (final_fee, list(reversed([source] + intermediary_path + [source])))
+
+
+@attr.s(auto_attribs=True)
+class PaymentPath:
+    fee: int
+    path: List
+    value: int
+    estimated_gas: int = attr.ib(default=None)
+
+
+def find_possible_path_triangulations(G, source, target_reduce, get_fee, value, max_hops=None, max_fees=None):
+    """find ways to reduce sources' debt with it's neighbor target_reduce by value.
+
+    source will have an increased debt to another neighbor
+    This function returns a list of possible payment paths.
+    """
+    triangulations = []
+    neighbors = {x[0] for x in G.adj[source].items()} - {target_reduce}
+    for target_increase in neighbors:
+        try:
+            final_fee, path = find_path_triangulation(
+                G,
+                source,
+                target_reduce,
+                target_increase,
+                get_fee,
+                value,
+                max_hops=max_hops,
+                max_fees=max_fees)
+        except (nx.NetworkXNoPath, KeyError) as e:
+            continue
+        triangulations.append(PaymentPath(final_fee, path, value))
+    return triangulations
