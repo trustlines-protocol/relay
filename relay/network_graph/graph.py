@@ -1,9 +1,11 @@
 import csv
 import io
+import operator
 
 import networkx as nx
 
-from .dijkstra_weighted import find_path, find_path_triangulation, find_maximum_capacity_path
+from .dijkstra_weighted import find_path, find_path_triangulation, find_maximum_capacity_path, \
+    find_possible_path_triangulations, PaymentPath
 from .fees import new_balance, imbalance_fee, estimate_fees_from_capacity
 from .interests import balance_with_interest_estimation
 from relay.network_graph.graph_constants import (
@@ -260,6 +262,11 @@ class CurrencyNetworkGraph(object):
         elif self.has_interests:
             raise RuntimeError('No timestamp was given. When using interests a timestamp is mandatory')
 
+    def get_balance(self, a, b):
+        if not self.graph.has_edge(a, b):
+            return 0
+        return Account(self.graph[a][b], a, b).balance
+
     def update_balance(self, a: str, b: str, balance: int, timestamp: int = None):
         """to update the balance, used to react on changes on the blockchain
         the last modification time of the balance is also updated to keep track of the interests"""
@@ -328,6 +335,10 @@ class CurrencyNetworkGraph(object):
         return output.getvalue()
 
     def _cost_func_fast_reverse(self, b, a, data, value):
+        """computes the cost (i.e. the fee) for transferring value from a to b
+
+        returns None if the transfer would exceed the creditline.
+        """
         # this func should be as fast as possible, as it's called often
         # don't use Account which allocs memory
         # this function calculate the interests to take into account an updated balance
@@ -337,12 +348,12 @@ class CurrencyNetworkGraph(object):
         else:
             pre_balance = -pre_balance
             creditline = data[creditline_ab]
-        post_balance = new_balance(self.capacity_imbalance_fee_divisor, pre_balance, value)
+        cost = imbalance_fee(self.capacity_imbalance_fee_divisor, pre_balance, value)
+        assert cost >= 0
+        post_balance = pre_balance - value - cost
         assert post_balance <= pre_balance
         if -post_balance > creditline:
             return None  # no valid path
-        cost = imbalance_fee(self.capacity_imbalance_fee_divisor, pre_balance, value)
-        assert cost >= 0
         return cost
 
     def find_path(self, source, target, value=None, max_hops=None, max_fees=None):
@@ -369,7 +380,7 @@ class CurrencyNetworkGraph(object):
     def find_path_triangulation(self, source, target_reduce, target_increase,
                                 value=None, max_hops=None, max_fees=None):
         """
-        find a path to update the the creditline between source and target with value, via target_increasae
+        find a path to update the creditline between source and target with value, via target_increase
         the shortest path is found based on
             - the number of hops
             - the imbalance it adds or reduces in the accounts
@@ -385,9 +396,39 @@ class CurrencyNetworkGraph(object):
                                                  value,
                                                  max_hops=max_hops,
                                                  max_fees=max_fees)
-        except (nx.NetworkXNoPath, KeyError):  # key error for if source or target is not in graph
-            cost, path = 0, []  # cost is the total fee, not the actual amount to be transfered
+        except (nx.NetworkXNoPath, KeyError):  # KeyError is thrown if source or target is not in graph
+            cost, path = 0, []  # cost is the total fee, not the actual amount to be transferred
         return cost, list(path)
+
+    def find_best_path_triangulation(self, source, target, value, max_hops=None, max_fees=None):
+        """find a path to reduce the creditline between source and target. This
+        works like find_path_triangulation, but uses the best neighbor to
+        reduce the debt."""
+        triangulations = find_possible_path_triangulations(self.graph,
+                                                           source,
+                                                           target,
+                                                           self._cost_func_fast_reverse,
+                                                           value,
+                                                           max_hops=max_hops,
+                                                           max_fees=max_fees)
+
+        if not triangulations:
+            return PaymentPath(fee=0, path=[], value=value)
+
+        best_payment_path = min(triangulations, key=operator.attrgetter("fee"))
+        return best_payment_path
+
+    def find_possible_path_triangulations(self, source, target, value=None, max_hops=None, max_fees=None):
+        if value is None:
+            value = 1
+
+        return find_possible_path_triangulations(self.graph,
+                                                 source,
+                                                 target,
+                                                 self._cost_func_fast_reverse,
+                                                 value,
+                                                 max_hops=max_hops,
+                                                 max_fees=max_fees)
 
     def find_maximum_capacity_path(self, source, target, max_hops=None):
         """

@@ -5,7 +5,7 @@ import logging
 import collections
 import psycopg2
 import psycopg2.extras
-from typing import List, Any
+from typing import List, Any, Dict
 from relay.blockchain import currency_network_events
 from relay.blockchain import token_events
 from relay.blockchain import unw_eth_events
@@ -39,21 +39,21 @@ class EventBuilder:
     So, this could be merged with the implementation in Proxy.
     """
 
-    def __init__(self, _event_builders=None) -> None:
+    def __init__(self, _event_builders: Dict[str, Any]) -> None:
         self.event_builders = _event_builders
 
-    def build_events(self, events: List[Any], current_blocknumber: int):
+    def build_events(self, events: List[Any], current_blocknumber: int) -> List[BlockchainEvent]:
         return [self._build_event(event, current_blocknumber) for event in events]
 
     @property
-    def event_types(self):
+    def event_types(self)-> List[str]:
         return list(self.event_builders.keys())
 
     def _build_event(
         self, event: Any, current_blocknumber: int
     ) -> BlockchainEvent:
-        event_type = event.get("event")  # type: str
-        timestamp = event.get("timestamp")  # type: int
+        event_type: str = event.get("event")
+        timestamp: int = event.get("timestamp")
         return self.event_builders[event_type](event, current_blocknumber, timestamp)
 
 

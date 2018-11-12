@@ -1,6 +1,5 @@
 import pytest
 from sqlalchemy import create_engine
-from eth_utils import to_checksum_address
 
 from relay.exchange.order import SignableOrder
 from relay.constants import NULL_ADDRESS
@@ -12,9 +11,9 @@ def engine():
 
 
 @pytest.fixture()
-def orders(addresses, tester):
+def orders(addresses, test_account):
     A, B, C, D = addresses
-    maker = to_checksum_address(tester.a0)
+    maker = test_account.address
     orders = [
         SignableOrder(
             exchange_address=A,
@@ -83,7 +82,7 @@ def orders(addresses, tester):
             salt=123
         )]
     for order in orders:
-        order.sign(tester.k0)
+        order.sign(test_account.private_key)
     return orders
 
 

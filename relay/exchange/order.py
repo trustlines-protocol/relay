@@ -1,5 +1,6 @@
 from collections import namedtuple
 
+import hexbytes
 from eth_utils import is_checksum_address
 
 from relay.signing import keccak256, eth_sign, eth_validate
@@ -25,8 +26,8 @@ class Order(object):
         expiration_timestamp_in_sec: int,
         salt: int,
         v: int,
-        r: bytes,
-        s: bytes,
+        r: hexbytes.HexBytes,
+        s: hexbytes.HexBytes,
         filled_maker_token_amount: int = 0,
         filled_taker_token_amount: int = 0,
         cancelled_maker_token_amount: int = 0,
@@ -86,8 +87,8 @@ class Order(object):
     def is_filled(self) -> bool:
         return self.available_maker_token_amount <= 0 or self.available_taker_token_amount <= 0
 
-    def hash(self) -> bytes:
-        return keccak256(
+    def hash(self) -> hexbytes.HexBytes:
+        return hexbytes.HexBytes(keccak256(
             self.exchange_address,
             self.maker_address,
             self.taker_address,
@@ -100,7 +101,7 @@ class Order(object):
             self.taker_fee,
             self.expiration_timestamp_in_sec,
             self.salt
-        )
+        ))
 
     def __eq__(self, other: object) -> bool:
         if isinstance(other, Order):
@@ -138,11 +139,11 @@ class SignableOrder(Order):
                          expiration_timestamp_in_sec,
                          salt,
                          v=0,
-                         r=b'',
-                         s=b'')
+                         r=hexbytes.HexBytes(b''),
+                         s=hexbytes.HexBytes(b''))
 
     def sign(self, key) -> None:
         v, r, s = eth_sign(self.hash(), key)
         self.v = v
-        self.r = r
-        self.s = s
+        self.r = hexbytes.HexBytes(r)
+        self.s = hexbytes.HexBytes(s)

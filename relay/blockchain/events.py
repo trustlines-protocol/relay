@@ -1,3 +1,7 @@
+from typing import Optional
+
+import hexbytes
+
 from ..events import Event
 
 
@@ -6,9 +10,17 @@ class BlockchainEvent(Event):
     def __init__(self, web3_event, current_blocknumber: int, timestamp: int) -> None:
         super().__init__(timestamp)
         self._web3_event = web3_event
-        self.blocknumber = web3_event.get('blockNumber', None)
+        self.blocknumber: Optional[int] = web3_event.get('blockNumber', None)
         self._current_blocknumber = current_blocknumber
-        self.transaction_id = web3_event.get('transactionHash')
+        # NOTE: The field transactionHash is of type HexBytes sind web3 v4. It can also be a hex string because
+        # the indexer currently can not save bytes in the database.
+        # See issue https://github.com/trustlines-network/py-eth-index/issues/16
+        self.transaction_id: hexbytes.HexBytes
+        transaction_id = web3_event.get('transactionHash')
+        if not isinstance(transaction_id, hexbytes.HexBytes):
+            self.transaction_id = hexbytes.HexBytes(web3_event.get('transactionHash'))
+        else:
+            self.transaction_id = transaction_id
         self.type = web3_event.get('event')
 
     @property

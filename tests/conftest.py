@@ -1,20 +1,45 @@
 import os
 import sys
 from typing import Sequence
+from collections import namedtuple
 
 import pytest
+import py
+import operator
 
 # import the relay module so no pip install is necessary
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 
-@pytest.fixture(scope="session", autouse=True)
-def silence_deprecation_warnings():
-    from relay.main import patch_warnings_module
-    patch_warnings_module()
+@pytest.hookimpl(tryfirst=True)
+def pytest_collection_modifyitems(session, config, items):
+    """mark tests in unit directory as unit tests and run them first
+
+    this is not compatibe with the pytest-ordering plugin at the moment
+    """
+    unit_directory = py.path.local(__file__).dirpath().join("unit")
+
+    def inside_unit_directory(item):
+        return unit_directory.common(item.fspath) == unit_directory
+
+    for item in items:
+        if item.get_closest_marker("unit"):
+            item._trustlines_sort_order = 0
+        elif item.get_closest_marker("integration"):
+            item._trustlines_sort_order = 1
+        elif inside_unit_directory(item):
+            item.add_marker(pytest.mark.unit)
+            item._trustlines_sort_order = 0
+        else:
+            item.add_marker(pytest.mark.integration)
+            item._trustlines_sort_order = 1
+    items.sort(key=operator.attrgetter("_trustlines_sort_order"))
 
 
-@pytest.fixture()
+Account = namedtuple('Account', 'address private_key')
+
+
+@pytest.fixture(scope="session")
 def addresses() -> Sequence[str]:
     return [
         '0x379162D7682cb8Bb6435c47E0B8B562eAFE66971',
@@ -24,14 +49,8 @@ def addresses() -> Sequence[str]:
     ]
 
 
-@pytest.fixture()
-def tester():
-    """ethereum.tools.tester compatible class"""
-
-    class tester:
-        pass
-
-    t = tester()
-    t.k0 = b'\x04HR\xb2\xa6p\xad\xe5@~x\xfb(c\xc5\x1d\xe9\xfc\xb9eB\xa0q\x86\xfe:\xed\xa6\xbb\x8a\x11m'
-    t.a0 = b'\x82\xa9x\xb3\xf5\x96*[\tW\xd9\xee\x9e\xefG.\xe5[B\xf1'
-    return t
+@pytest.fixture(scope="session")
+def test_account():
+    return Account(
+        private_key=b'\x04HR\xb2\xa6p\xad\xe5@~x\xfb(c\xc5\x1d\xe9\xfc\xb9eB\xa0q\x86\xfe:\xed\xa6\xbb\x8a\x11m',
+        address='0x82A978B3f5962A5b0957d9ee9eEf472EE55B42F1')

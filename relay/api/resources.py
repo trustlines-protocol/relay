@@ -1,6 +1,7 @@
 import tempfile
 import logging
 
+import wrapt
 from flask import request, send_file, make_response, abort
 from flask.views import MethodView
 from flask_restful import Resource
@@ -11,24 +12,22 @@ from marshmallow import validate
 from relay.utils import sha3
 from relay.blockchain.currency_network_proxy import CurrencyNetworkProxy
 from relay.blockchain.unw_eth_proxy import UnwEthProxy
-from relay.blockchain.unw_eth_events import UnwEthEvent
-from relay.blockchain.exchange_events import ExchangeEvent
-from relay.blockchain.currency_network_events import CurrencyNetworkEvent
 from relay.api import fields as custom_fields
 from .schemas import (CurrencyNetworkEventSchema,
                       UserCurrencyNetworkEventSchema,
-                      UserTokenEventSchema,
-                      ExchangeEventSchema,
                       AccountSummarySchema,
-                      TrustlineSchema,
                       TxInfosSchema,
+                      PaymentPathSchema,
+                      AnyEventSchema,
+                      TrustlineSchema,
                       CurrencyNetworkSchema)
 from relay.relay import TrustlinesRelay
 from relay.concurrency_utils import TimeoutException
 from relay.logger import get_logger
 
+from relay.network_graph.dijkstra_weighted import PaymentPath
 
-logger = get_logger('api.resources', logging.DEBUG)
+logger = get_logger('apiresources', logging.DEBUG)
 
 
 TIMEOUT_MESSAGE = 'The server could not handle the request in time'
@@ -37,6 +36,15 @@ TIMEOUT_MESSAGE = 'The server could not handle the request in time'
 def abort_if_unknown_network(trustlines, network_address):
     if network_address not in trustlines.networks:
         abort(404, 'Unknown network: {}'.format(network_address))
+
+
+def dump_result_with_schema(schema):
+    """returns a decorator that calls schema.dump on the functions or methods
+    return value"""
+    @wrapt.decorator
+    def dump_result(wrapped, instance, args, kwargs):
+        return schema.dump(wrapped(*args, **kwargs)).data
+    return dump_result
 
 
 class NetworkList(Resource):
@@ -58,9 +66,10 @@ class Network(Resource):
     def __init__(self, trustlines: TrustlinesRelay) -> None:
         self.trustlines = trustlines
 
+    @dump_result_with_schema(CurrencyNetworkSchema())
     def get(self, network_address: str):
         abort_if_unknown_network(self.trustlines, network_address)
-        return CurrencyNetworkSchema().dump(self.trustlines.get_network_info(network_address)).data
+        return self.trustlines.get_network_info(network_address)
 
 
 class UserList(Resource):
@@ -78,10 +87,10 @@ class User(Resource):
     def __init__(self, trustlines: TrustlinesRelay) -> None:
         self.trustlines = trustlines
 
+    @dump_result_with_schema(AccountSummarySchema())
     def get(self, network_address: str, user_address: str):
         abort_if_unknown_network(self.trustlines, network_address)
-        return AccountSummarySchema().dump(
-            self.trustlines.currency_network_graphs[network_address].get_account_sum(user_address)).data
+        return self.trustlines.currency_network_graphs[network_address].get_account_sum(user_address)
 
 
 class ContactList(Resource):
@@ -101,22 +110,25 @@ def _id(network_address, a_address, b_address):
             return sha3(network_address + b_address + a_address)
 
 
+def _get_extended_account_summary(graph, network_address, a_address, b_address):
+    account_summary = graph.get_account_sum(a_address, b_address)
+    account_summary.user = a_address
+    account_summary.counterParty = b_address
+    account_summary.address = b_address
+    account_summary.id = _id(network_address, a_address, b_address)
+    return account_summary
+
+
 class Trustline(Resource):
 
     def __init__(self, trustlines: TrustlinesRelay) -> None:
         self.trustlines = trustlines
 
+    @dump_result_with_schema(TrustlineSchema())
     def get(self, network_address, a_address, b_address):
         abort_if_unknown_network(self.trustlines, network_address)
         graph = self.trustlines.currency_network_graphs[network_address]
-        data = TrustlineSchema().dump(graph.get_account_sum(a_address, b_address)).data
-        data.update({
-            'user': a_address,
-            'counterParty': b_address,
-            'address': b_address,
-            'id': _id(network_address, a_address, b_address)
-        })
-        return data
+        return _get_extended_account_summary(graph, network_address, a_address, b_address)
 
 
 class TrustlineList(Resource):
@@ -124,23 +136,13 @@ class TrustlineList(Resource):
     def __init__(self, trustlines: TrustlinesRelay) -> None:
         self.trustlines = trustlines
 
+    @dump_result_with_schema(TrustlineSchema(many=True))
     def get(self, network_address: str, user_address: str):
         abort_if_unknown_network(self.trustlines, network_address)
         graph = self.trustlines.currency_network_graphs[network_address]
         friends = graph.get_friends(user_address)
-        accounts = []
-        for friend_address in friends:
-            data = TrustlineSchema().dump(graph.get_account_sum(user_address, friend_address)).data
-            data.update(
-                {
-                    'user': user_address,
-                    'counterParty': friend_address,
-                    'address': friend_address,
-                    'id': _id(network_address, user_address, friend_address)
-                }
-            )
-            accounts.append(data)
-        return accounts
+        return [_get_extended_account_summary(graph, network_address, user_address, friend_address)
+                for friend_address in friends]
 
 
 class MaxCapacityPath(Resource):
@@ -189,6 +191,7 @@ class UserEventsNetwork(Resource):
         from_block = args['fromBlock']
         type = args['type']
         try:
+
             events = self.trustlines.get_user_network_events(network_address,
                                                              user_address,
                                                              type=type,
@@ -217,14 +220,15 @@ class UserEvents(Resource):
     }
 
     @use_args(args)
+    @dump_result_with_schema(AnyEventSchema(many=True))
     def get(self, args, user_address: str):
         type = args['type']
         from_block = args['fromBlock']
         try:
-            events = self.trustlines.get_user_events(user_address,
-                                                     type=type,
-                                                     from_block=from_block,
-                                                     timeout=self.trustlines.event_query_timeout)
+            return self.trustlines.get_user_events(user_address,
+                                                   type=type,
+                                                   from_block=from_block,
+                                                   timeout=self.trustlines.event_query_timeout)
         except TimeoutException:
             logger.warning(
                 "User events: event_name=%s user_address=%s from_block=%s. could not get events in time",
@@ -232,15 +236,6 @@ class UserEvents(Resource):
                 user_address,
                 from_block)
             abort(504, TIMEOUT_MESSAGE)
-        serialized_events = []
-        for event in events:
-            if isinstance(event, CurrencyNetworkEvent):
-                serialized_events.append(UserCurrencyNetworkEventSchema().dump(event).data)
-            if isinstance(event, UnwEthEvent):
-                serialized_events.append(UserTokenEventSchema().dump(event).data)
-            if isinstance(event, ExchangeEvent):
-                serialized_events.append(ExchangeEventSchema().dump(event).data)
-        return serialized_events
 
 
 class EventsNetwork(Resource):
@@ -295,7 +290,6 @@ class Relay(Resource):
             transaction_id = self.trustlines.node.relay_tx(args['rawTransaction'])
         except ValueError:  # should mean error in relaying the transaction
             abort(409, 'There was an error while relaying this transaction')
-
         return transaction_id.hex()
 
 
@@ -327,6 +321,18 @@ class RequestEther(Resource):
         return self.trustlines.node.send_ether(address)
 
 
+def _estimate_gas_for_transfer(trustlines: TrustlinesRelay,
+                               payment_path: PaymentPath,
+                               network_address: str) -> PaymentPath:
+    proxy = trustlines.currency_network_proxies[network_address]
+    try:
+        payment_path.estimated_gas = proxy.estimate_gas_for_payment_path(payment_path)
+    except ValueError:  # should mean out of gas, so path was not right.
+        return PaymentPath(fee=0, path=[], value=payment_path.value, estimated_gas=0)
+
+    return payment_path
+
+
 class Path(Resource):
 
     def __init__(self, trustlines: TrustlinesRelay) -> None:
@@ -341,6 +347,7 @@ class Path(Resource):
     }
 
     @use_args(args)
+    @dump_result_with_schema(PaymentPathSchema())
     def post(self, args, network_address: str):
         abort_if_unknown_network(self.trustlines, network_address)
 
@@ -357,24 +364,7 @@ class Path(Resource):
             max_fees=max_fees,
             max_hops=max_hops)
 
-        if path:
-            try:
-                gas = self.trustlines.currency_network_proxies[network_address].estimate_gas_for_transfer(
-                    source,
-                    target,
-                    value,
-                    cost,
-                    path[1:])
-            except ValueError as e:  # should mean out of gas, so path was not right.
-                gas = 0
-                path = []
-                cost = 0
-        else:
-            gas = 0
-
-        return {'path': path,
-                'estimatedGas': gas,
-                'fees': cost}
+        return _estimate_gas_for_transfer(self.trustlines, PaymentPath(cost, path, value), network_address)
 
 
 class ReduceDebtPath(Resource):
@@ -392,6 +382,7 @@ class ReduceDebtPath(Resource):
     }
 
     @use_args(args)
+    @dump_result_with_schema(PaymentPathSchema())
     def post(self, args, network_address: str):
         abort_if_unknown_network(self.trustlines, network_address)
 
@@ -410,24 +401,51 @@ class ReduceDebtPath(Resource):
             max_fees=max_fees,
             max_hops=max_hops)
 
-        if path:
-            try:
-                gas = self.trustlines.currency_network_proxies[network_address].estimate_gas_for_transfer(
-                    source,
-                    source,
-                    value,
-                    cost,  # max_fee for smart contract
-                    path[1:])  # the smart contract takes the sender of the message as source
-            except ValueError as e:  # should mean out of gas, so path was not right.
-                gas = 0
-                path = []
-                cost = 0
-        else:
-            gas = 0
+        return _estimate_gas_for_transfer(self.trustlines, PaymentPath(cost, path, value), network_address)
 
-        return {'path': path,
-                'estimatedGas': gas,
-                'fees': cost}
+
+# CloseTrustline is similar to the above ReduceDebtPath, though it does not
+# take `via` and `value` as parameters. Instead it tries to reduce the debt to
+# zero and uses any contact to do so.
+
+
+class CloseTrustline(Resource):
+
+    def __init__(self, trustlines: TrustlinesRelay) -> None:
+        self.trustlines = trustlines
+
+    args = {
+        'maxHops': fields.Int(required=False, missing=None),
+        'maxFees': fields.Int(required=False, missing=None),
+        'from': custom_fields.Address(required=True),
+        'to': custom_fields.Address(required=True),
+    }
+
+    @use_args(args)
+    @dump_result_with_schema(PaymentPathSchema())
+    def post(self, args, network_address: str):
+        abort_if_unknown_network(self.trustlines, network_address)
+        source = args['from']
+        target_reduce = args['to']
+        max_fees = args['maxFees']
+        max_hops = args['maxHops']
+
+        graph = self.trustlines.currency_network_graphs[network_address]
+        balance = graph.get_balance(source, target_reduce)
+        value = -balance
+
+        if balance == 0:
+            return PaymentPath(fee=0, path=[], value=value, estimated_gas=0)
+
+        if balance > 0:
+            abort(501, 'cannot reduce positive balance')
+
+        payment_path = graph.find_best_path_triangulation(source,
+                                                          target_reduce,
+                                                          value,
+                                                          max_hops=max_hops,
+                                                          max_fees=max_fees)
+        return _estimate_gas_for_transfer(self.trustlines, payment_path, network_address)
 
 
 class GraphImage(MethodView):

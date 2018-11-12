@@ -6,7 +6,7 @@ If you are low on time, you may jump to the description of the [docker-compose b
 
 ## Dependencies
 
-Since the trustlines infrastructure components are implemented in python 3, you need to install relevant dependencies.
+Since the trustlines infrastructure components are implemented in python 3, you need to install relevant dependencies. You will need at least python 3.6.
 
 ```
 sudo apt install build-essential python3-dev python3-venv pkg-config \
@@ -217,7 +217,7 @@ The relay server reads both files from the current directory, so we need to star
 
 ```
 cd ~
-ETHINDEX=1 ~/opt/relay/bin/tl-relay
+~/opt/relay/bin/tl-relay
 ```
 
 The relay server needs access to the parity node and the PostgreSQL database.

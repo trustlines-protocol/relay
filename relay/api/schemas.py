@@ -1,6 +1,11 @@
 from marshmallow import Schema, fields
+from marshmallow_oneofschema import OneOfSchema
 
 from .fields import Address, BigInteger, HexBytes
+
+from relay.blockchain.unw_eth_events import UnwEthEvent
+from relay.blockchain.exchange_events import ExchangeEvent
+from relay.blockchain.currency_network_events import CurrencyNetworkEvent
 
 
 class EventSchema(Schema):
@@ -16,7 +21,7 @@ class MessageEventSchema(EventSchema):
 class BlockchainEventSchema(EventSchema):
     blockNumber = fields.Integer(attribute='blocknumber')
     type = fields.Str(default='event')
-    transactionId = fields.Str(attribute='transaction_id')
+    transactionId = HexBytes(attribute='transaction_id')
     status = fields.Str()
 
 
@@ -70,6 +75,26 @@ class UserExchangeEventSchema(ExchangeEventSchema):
     direction = fields.Str()
 
 
+class AnyEventSchema(OneOfSchema):
+    type_schemas = {
+        'CurrencyNetworkEvent': UserCurrencyNetworkEventSchema,
+        'UnwEthEvent': UserTokenEventSchema,
+        'ExchangeEvent': ExchangeEventSchema,
+    }
+
+    type_field = '__class__'
+
+    def get_obj_type(self, obj):
+        if isinstance(obj, CurrencyNetworkEvent):
+            return "CurrencyNetworkEvent"
+        elif isinstance(obj, UnwEthEvent):
+            return "UnwEthEvent"
+        elif isinstance(obj, ExchangeEvent):
+            return "ExchangeEvent"
+
+        raise RuntimeError(f'Unknown object type: {obj.__class__.__name__}')
+
+
 class AccountSummarySchema(Schema):
     class Meta:
         strict = True
@@ -92,6 +117,10 @@ class TrustlineSchema(Schema):
     given = BigInteger(attribute='creditline_given')
     received = BigInteger(attribute='creditline_received')
     balance = BigInteger()
+    user = Address()
+    counterParty = Address()
+    address = Address()
+    id = Address()
 
 
 class TxInfosSchema(Schema):
@@ -116,3 +145,12 @@ class CurrencyNetworkSchema(Schema):
     interestRateDecimals = fields.Int(attribute='interest_rate_decimals')
     customInterests = fields.Bool(attribute='custom_interests')
     preventMediatorInterests = fields.Bool(attribute='prevent_mediator_interests')
+
+
+class PaymentPathSchema(Schema):
+    class Meta:
+        strict = True
+    fees = BigInteger(required=True, attribute="fee")
+    path = fields.List(Address(), required=True)
+    estimatedGas = BigInteger(attribute="estimated_gas")
+    value = BigInteger()

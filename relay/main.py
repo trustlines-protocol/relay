@@ -4,6 +4,7 @@ from gevent import monkey; monkey.patch_all(thread=False)  # noqa: E702
 import psycogreen.gevent; psycogreen.gevent.patch_psycopg()  # noqa: E702
 import logging
 
+import pkg_resources
 from gevent.pywsgi import WSGIServer
 from geventwebsocket.handler import WebSocketHandler
 
@@ -41,9 +42,15 @@ def patch_warnings_module():
     logger.info("the warnings module has been patched. You will not see the DeprecationWarning messages from web3")
 
 
+def get_version():
+    try:
+        return pkg_resources.get_distribution("trustlines-relay").version
+    except pkg_resources.DistributionNotFound:
+        return "<UNKNOWN>"
+
+
 def main():
-    logger.info('Starting relay server')
-    patch_warnings_module()
+    logger.info('Starting relay server version %s', get_version())
     trustlines = TrustlinesRelay()
     trustlines.start()
     ipport = ('', 5000)

@@ -2,6 +2,7 @@ import random
 import logging
 from typing import List, Iterable  # noqa: F401
 
+
 from .events import MessageEvent, Event
 from .logger import get_logger
 
@@ -12,7 +13,7 @@ class Client(object):
     """Represents the connection to a client. Different subscriptions can be connected to the same client"""
 
     def __init__(self) -> None:
-        self.subscriptions = []  # type: List[Subscription]
+        self.subscriptions: List[Subscription] = []
         self.closed = False
 
     def register(self, subscription: 'Subscription') -> None:
@@ -71,7 +72,7 @@ class Subject(object):
     """
 
     def __init__(self) -> None:
-        self.subscriptions = []  # type: List[Subscription]
+        self.subscriptions: List[Subscription] = []
 
     def subscribe(self, client: Client) -> 'Subscription':
         """
@@ -139,7 +140,7 @@ class MessagingSubject(Subject):
 
     def __init__(self):
         super().__init__()
-        self.events = []  # type: List[MessageEvent]
+        self.events: List[MessageEvent] = []
 
     def get_missed_messages(self) -> Iterable[MessageEvent]:
         events = self.events

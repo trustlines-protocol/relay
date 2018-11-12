@@ -7,7 +7,7 @@ Installation
 Prerequisites
 ~~~~~~~~~~~~~
 
--  Python 3.5 or up
+-  Python 3.6 or up
 -  pip
 
 Installation on Ubuntu
@@ -15,22 +15,9 @@ Installation on Ubuntu
 
 ::
 
-    sudo apt install build-essential python3-dev python3-virtualenv virtualenv pkg-config libssl-dev automake autoconf libtool libgraphviz-dev git
+    sudo apt install build-essential python3-dev libsecp256k1-dev python3-virtualenv virtualenv pkg-config libssl-dev automake autoconf libtool libgraphviz-dev git
 
-One of the dependencies used in the relay server is the secp256k1
-library. If you're using python 3.5 on linux you can skip the folowing
-step, since pypi contains binary packages for secp256k1. If not, you'll
-have to run the following to install the secp256k1 C library:
 
-::
-
-    git clone https://github.com/bitcoin-core/secp256k1.git
-    cd secp256k1
-    ./autogen.sh
-    ./configure --enable-module-recovery
-    make
-    sudo make install
-    sudo ldconfig
 
 Setup
 ~~~~~

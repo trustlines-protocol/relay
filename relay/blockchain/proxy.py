@@ -2,17 +2,15 @@ import logging
 import math
 import time
 import functools
-from typing import List, Dict, Callable, Any  # noqa: F401
+from typing import List, Dict, Callable, Any
 
 import gevent
 import itertools
 import socket
-import hexbytes
 
 import relay.concurrency_utils as concurrency_utils
 from .events import BlockchainEvent
 from relay.logger import get_logger
-from web3.datastructures import AttributeDict
 
 logger = get_logger('proxy', logging.DEBUG)
 
@@ -23,29 +21,8 @@ updateBlock = 'pending'
 reconnect_interval = 3  # 3s
 
 
-def event_fix_hexbytes(event):
-    """replace HexBytes instances inside event
-
-    In web3 3.x they we're being deserialized as hex-encoded string.
-    """
-    if isinstance(event, (int, str)):
-        return event
-    elif isinstance(event, AttributeDict):
-        return AttributeDict(event_fix_hexbytes(dict(event)))
-    elif isinstance(event, hexbytes.HexBytes):
-        return event.hex()
-    elif isinstance(event, bytes):
-        return event
-    elif isinstance(event, list):
-        return [event_fix_hexbytes(x) for x in event]
-    elif isinstance(event, dict):
-        return {x: event_fix_hexbytes(event[x]) for x in event}
-    else:
-        return event
-
-
 def get_new_entries(filter, callback):
-    new_entries = [event_fix_hexbytes(event) for event in filter.get_new_entries()]
+    new_entries = filter.get_new_entries()
     if new_entries:
         logger.debug("new entries for filter %s: %s", filter, new_entries)
     for event in new_entries:
@@ -55,19 +32,19 @@ def get_new_entries(filter, callback):
 def watch_filter(filter, callback):
     while 1:
         get_new_entries(filter, callback)
-        gevent.sleep(1.0)
+        gevent.sleep(0.1)
 
 
 class Proxy(object):
-    event_builders = {}  # type: Dict[str, Callable[[Any, int, int], BlockchainEvent]]
-    standard_event_types = []  # type: List[str]
+    event_builders: Dict[str, Callable[[Any, int, int], BlockchainEvent]] = {}
+    standard_event_types: List[str] = []
 
     def __init__(self, web3, abi, address: str) -> None:
         self._web3 = web3
         self._proxy = web3.eth.contract(abi=abi, address=address)
         self.address = address
 
-    def _watch_filter(self, eventname: str, function, params=None):
+    def _watch_filter(self, eventname: str, function: Callable, params: Dict = None):
         while True:
             try:
                 filter = getattr(self._proxy.events, eventname).createFilter(**params)
@@ -84,7 +61,7 @@ class Proxy(object):
                 logger.warning('ValueError in filter creation, try to reconnect:' + str(err))
                 gevent.sleep(reconnect_interval)
 
-    def start_listen_on(self, eventname: str, function, params=None) -> None:
+    def start_listen_on(self, eventname: str, function: Callable, params: Dict = None) -> None:
         def on_exception(filter):
             logger.warning('Filter {} disconnected, trying to reconnect'.format(filter))
             gevent.sleep(reconnect_interval)
@@ -106,7 +83,7 @@ class Proxy(object):
 
         logfilter = getattr(self._proxy.events, event_name).createFilter(
             fromBlock=from_block,
-            toBlock="latest",
+            toBlock=queryBlock,
             argument_filters=filter_)
 
         queries = [logfilter.get_all_entries]
@@ -130,11 +107,11 @@ class Proxy(object):
         return [self._build_event(event, current_blocknumber) for event in events]
 
     def _build_event(self, event: Any, current_blocknumber: int = None) -> BlockchainEvent:
-        event_type = event.get('event')  # type: str
-        blocknumber = event.get('blockNumber')  # type: int
+        event_type: str = event.get('event')
+        blocknumber: int = event.get('blockNumber')
         if current_blocknumber is None:
             current_blocknumber = blocknumber
-        timestamp = self._get_block_timestamp(blocknumber)  # type: int
+        timestamp: int = self._get_block_timestamp(blocknumber)
         return self.event_builders[event_type](event, current_blocknumber, timestamp)
 
     def _get_block_timestamp(self, blocknumber: int) -> int:

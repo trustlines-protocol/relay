@@ -1,8 +1,10 @@
 from heapq import heappush, heappop
 from itertools import count
+from typing import List
+import math
 
 import networkx as nx
-import math
+import attr
 
 from .interests import balance_with_interest_estimation
 from relay.network_graph.graph_constants import (
@@ -64,7 +66,7 @@ def find_path(G, source, target, get_fee, value, max_hops=None, max_fees=None, i
 def find_maximum_capacity_path(G, source, target, max_hops=None):
     """
     The logic is the same as dijkstra's Algorithm
-    We visit nodes with the maximum capacity untill we reach the destination.
+    We visit nodes with the maximum capacity until we reach the destination.
     At this point we are sure it is the maximum capacity path since every path
     already have a smaller capacity and the capacity can only decrease.
     """
@@ -131,6 +133,14 @@ def find_maximum_capacity_path(G, source, target, max_hops=None):
             "node %s not reachable from %s" % (source, target))
 
 
+def get_balance(G, a, b):
+    """return the balance as seen by a"""
+    if a < b:
+        return balance_with_interest_estimation(G[a][b])
+    else:
+        return -balance_with_interest_estimation(G[b][a])
+
+
 def find_path_triangulation(G, source, target_reduce, target_increase, get_fee, value, max_hops=None, max_fees=None):
     """
     target_reduce is the node we want to reduce our credit with
@@ -142,27 +152,17 @@ def find_path_triangulation(G, source, target_reduce, target_increase, get_fee, 
     """
     def get_fee_wrapper(b, a, value):
         # used to get the data from the graph in the right order and query the fees
-        if b < a:
-            output = get_fee(b, a, G[b][a], value)
-        else:
-            output = get_fee(b, a, G[a][b], value)
-        if output is None:
+        fee = get_fee(b, a, G[b][a], value)
+        if fee is None:
             raise nx.NetworkXNoPath("node %s not reachable from %s" % (a, b))
-        return output
+        return fee
 
-    def verify_balance_greater_than_value(a, b, value):
-        # used to verify that we reduce the amount source owes to target_reduce and do not misuse the function
-        if a < b:
-            return -balance_with_interest_estimation(G[a][b]) >= value
-        else:
-            return balance_with_interest_estimation(G[b][a]) >= value
-
-    # verification that the funtion is used properly
+    # verification that the function is used properly
     if value <= 0:
         raise ValueError('This value cannot be handled yet : %d' % value)
-    elif not verify_balance_greater_than_value(source, target_reduce, value):
+    elif get_balance(G, target_reduce, source) < value:
         raise nx.NetworkXNoPath(
-            "The balance of target_reduce is lower than value %d" % value)
+            f"The balance of target_reduce is lower than value {value}")
 
     G_adj = G.adj
     neighbors = [x[0] for x in G_adj[source].items()]
@@ -192,3 +192,36 @@ def find_path_triangulation(G, source, target_reduce, target_increase, get_fee, 
         raise nx.NetworkXNoPath(
             "operation impossible due to fees: %d with max_fees: %d" % (final_fee, max_fees))
     return (final_fee, list(reversed([source] + intermediary_path + [source])))
+
+
+@attr.s(auto_attribs=True)
+class PaymentPath:
+    fee: int
+    path: List
+    value: int
+    estimated_gas: int = attr.ib(default=None)
+
+
+def find_possible_path_triangulations(G, source, target_reduce, get_fee, value, max_hops=None, max_fees=None):
+    """find ways to reduce sources' debt with it's neighbor target_reduce by value.
+
+    source will have an increased debt to another neighbor
+    This function returns a list of possible payment paths.
+    """
+    triangulations = []
+    neighbors = {x[0] for x in G.adj[source].items()} - {target_reduce}
+    for target_increase in neighbors:
+        try:
+            final_fee, path = find_path_triangulation(
+                G,
+                source,
+                target_reduce,
+                target_increase,
+                get_fee,
+                value,
+                max_hops=max_hops,
+                max_fees=max_fees)
+        except (nx.NetworkXNoPath, KeyError) as e:
+            continue
+        triangulations.append(PaymentPath(final_fee, path, value))
+    return triangulations

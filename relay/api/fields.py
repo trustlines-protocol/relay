@@ -1,3 +1,4 @@
+import hexbytes
 from webargs import ValidationError
 from marshmallow import fields
 from eth_utils import is_address, to_checksum_address
@@ -42,8 +43,8 @@ class HexBytes(fields.String):
     def _deserialize(self, value, attr, data):
         value = super()._deserialize(value, attr, data)
         try:
-            int_value = int(value, 16).to_bytes(32, 'big')
+            hex_bytes = hexbytes.HexBytes(value)
         except ValueError:
             raise ValidationError('Could not parse Hex number')
 
-        return int_value
+        return hex_bytes
