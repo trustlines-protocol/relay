@@ -15,8 +15,6 @@ from web3.exceptions import BadFunctionCallOutput, ValidationError, MismatchedAB
 from .events import BlockchainEvent
 from .currency_network_events import (
     CurrencyNetworkEvent,
-    CreditlineUpdateEventType,
-    CreditlineRequestEventType,
     TrustlineUpdateEventType,
     TrustlineRequestEventType,
     BalanceUpdateEventType,
@@ -54,28 +52,33 @@ class CurrencyNetworkProxy(Proxy):
         self.decimals = self._proxy.call().decimals()  # typ: str
         self.symbol = self._proxy.call().symbol().strip('\0')  # type: str
         try:
-            self.capacityImbalanceFeeDivisor = self._proxy.functions.capacityImbalanceFeeDivisor().call()
+            self.capacity_imbalance_fee_divisor = self._proxy.functions.capacityImbalanceFeeDivisor().call()
         except (BadFunctionCallOutput, ValidationError, MismatchedABI) as e:
-            self.capacityImbalanceFeeDivisor = 100
+            self.capacity_imbalance_fee_divisor = 100
 
         try:
-            self.defaultInterests = self._proxy.functions.defaultInterests().call()
+            self.default_interest_rate = self._proxy.functions.defaultInterestRate().call()
         except (BadFunctionCallOutput, ValidationError, MismatchedABI) as e:
-            self.defaultInterests = 0
+            self.default_interest_rate = 0
 
         try:
-            self.customInterests = self._proxy.functions.customInterests().call()
+            self.custom_interests = self._proxy.functions.customInterests().call()
         except (BadFunctionCallOutput, ValidationError, MismatchedABI) as e:
-            self.customInterests = False
+            self.custom_interests = False
 
         try:
-            self.safeInterestRippling = self._proxy.functions.safeInterestRippling().call()
+            self.prevent_mediator_interests = self._proxy.functions.preventMediatorInterests().call()
         except (BadFunctionCallOutput, ValidationError, MismatchedABI) as e:
-            self.safeInterestRippling = False
+            self.prevent_mediator_interests = False
+        self.interest_rate_decimals = 2  # Fixed for now, see contracts
 
     @property
     def users(self) -> List[str]:
         return list(self._proxy.call().getUsers())
+
+    @property
+    def num_users(self) -> int:
+        return len(self.users)
 
     def friends(self, user_address: str) -> List[str]:
         return list(self._proxy.call().getFriends(user_address))
@@ -131,38 +134,26 @@ class CurrencyNetworkProxy(Proxy):
 
         gevent.Greenlet.spawn(sync)
 
-    def start_listen_on_balance(self, f) -> None:
+    def start_listen_on_balance(self, on_balance) -> None:
         def log(log_entry):
-            f(self._build_event(log_entry))
+            on_balance(self._build_event(log_entry))
         self.start_listen_on(BalanceUpdateEventType, log)
 
-    def start_listen_on_creditline(self, f) -> None:
-        def log_creditline(log_entry):
-            f(self._build_event(log_entry))
-
-        self.start_listen_on(CreditlineUpdateEventType, log_creditline)
-
-    def start_listen_on_creditline_request(self, f) -> None:
-        def log_creditline_request(log_entry):
-            f(self._build_event(log_entry))
-
-        self.start_listen_on(CreditlineRequestEventType, log_creditline_request)
-
-    def start_listen_on_trustline(self, f) -> None:
+    def start_listen_on_trustline(self, on_trustline_change) -> None:
         def log_trustline(log_entry):
-            f(self._build_event(log_entry))
+            on_trustline_change(self._build_event(log_entry))
 
         self.start_listen_on(TrustlineUpdateEventType, log_trustline)
 
-    def start_listen_on_trustline_request(self, f) -> None:
+    def start_listen_on_trustline_request(self, on_trustline_request) -> None:
         def log_trustline_request(log_entry):
-            f(self._build_event(log_entry))
+            on_trustline_request(self._build_event(log_entry))
 
         self.start_listen_on(TrustlineRequestEventType, log_trustline_request)
 
-    def start_listen_on_transfer(self, f) -> None:
+    def start_listen_on_transfer(self, on_transfer) -> None:
         def log(log_entry):
-            f(self._build_event(log_entry))
+            on_transfer(self._build_event(log_entry))
         self.start_listen_on(TransferEventType, log)
 
     def get_network_events(self,

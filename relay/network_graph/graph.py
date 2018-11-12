@@ -6,7 +6,16 @@ import networkx as nx
 from .dijkstra_weighted import find_path, find_path_triangulation, find_maximum_capacity_path
 from .fees import new_balance, imbalance_fee, estimate_fees_from_capacity
 from .interests import balance_with_interest_estimation
-from .graph_constants import *
+from relay.network_graph.graph_constants import (
+    creditline_ab,
+    creditline_ba,
+    interest_ab,
+    interest_ba,
+    fees_outstanding_a,
+    fees_outstanding_b,
+    m_time,
+    balance_ab,
+)
 
 
 class Account(object):
@@ -134,7 +143,7 @@ class Account(object):
 class AccountSummary(object):
     """Representing an account summary"""
 
-    def __init__(self, balance, creditline_given, creditline_received):
+    def __init__(self, balance=0, creditline_given=0, creditline_received=0):
         self.balance = balance
         self.creditline_given = creditline_given
         self.creditline_received = creditline_received
@@ -153,25 +162,29 @@ class AccountSummary(object):
 
 
 class AccountSummaryWithInterests(AccountSummary):
-    """Representing an account summary with interests
-    It makes no sense to aggregate interests so they are not added to AccountSummary"""
+    """Representing an account summary with interests """
 
-    def __init__(self, balance, creditline_given, creditline_received, interests_given, interests_received):
+    def __init__(self,
+                 balance=0,
+                 creditline_given=0,
+                 creditline_received=0,
+                 interest_rate_given=0,
+                 interests_received=0):
         super().__init__(balance, creditline_given, creditline_received)
-        self.interests_given = interests_given
-        self.interests_received = interests_received
+        self.interest_rate_given = interest_rate_given
+        self.interest_rate_received = interests_received
 
 
 class CurrencyNetworkGraph(object):
     """The whole graph of a Token Network"""
 
-    def __init__(self, capacity_imbalance_fee_divisor=0, default_interests=0,
-                 custom_interests=False, safe_interest_rippling=False):
+    def __init__(self, capacity_imbalance_fee_divisor=0, default_interest_rate=0,
+                 custom_interests=False, prevent_mediator_interests=False):
 
         self.capacity_imbalance_fee_divisor = capacity_imbalance_fee_divisor
-        self.default_interests = default_interests
+        self.default_interest_rate = default_interest_rate
         self.custom_interests = custom_interests
-        self.safe_interest_rippling = safe_interest_rippling
+        self.prevent_mediator_interests = prevent_mediator_interests
         self.graph = nx.Graph()
 
     def gen_network(self, friendsdict):
@@ -193,11 +206,15 @@ class CurrencyNetworkGraph(object):
 
     @property
     def users(self):
-        return self.graph.nodes()
+        return list(self.graph.nodes())
 
     @property
     def money_created(self):
         return sum([abs(edge[2]) for edge in self.graph.edges(data=balance_ab)])  # does not include interests
+
+    @property
+    def has_interests(self) -> bool:
+        return self.custom_interests or self.default_interest_rate > 0
 
     @property
     def total_creditlines(self):
@@ -210,31 +227,16 @@ class CurrencyNetworkGraph(object):
         else:
             return []
 
-    def update_creditline(self, creditor, debtor, creditline):
-        """to update the creditline, used to react on changes on the blockchain"""
-        if not self.graph.has_edge(creditor, debtor):
-            self.graph.add_edge(creditor,
-                                debtor,
-                                creditline_ab=0,
-                                creditline_ba=0,
-                                interest_ab=0,
-                                interest_ba=0,
-                                fees_outstanding_a=0,
-                                fees_outstanding_b=0,
-                                m_time=0,
-                                balance_ab=0)
-        account = Account(self.graph[creditor][debtor], creditor, debtor)
-        account.creditline = creditline
-
-    def update_trustline(self, creditor, debtor, creditline_given, creditline_received):
+    def update_trustline(self, creditor, debtor, creditline_given: int, creditline_received: int,
+                         interest_rate_given: int = None, interest_rate_received: int = None, timestamp: int = None):
         """to update the creditlines, used to react on changes on the blockchain"""
         if not self.graph.has_edge(creditor, debtor):
             self.graph.add_edge(creditor,
                                 debtor,
                                 creditline_ab=0,
                                 creditline_ba=0,
-                                interest_ab=0,
-                                interest_ba=0,
+                                interest_ab=self.default_interest_rate,
+                                interest_ba=self.default_interest_rate,
                                 fees_outstanding_a=0,
                                 fees_outstanding_b=0,
                                 m_time=0,
@@ -243,7 +245,22 @@ class CurrencyNetworkGraph(object):
         account.creditline = creditline_given
         account.reverse_creditline = creditline_received
 
-    def update_balance(self, a, b, balance, timestamp=0):
+        if interest_rate_given is not None:
+            account.interest = interest_rate_given
+        elif self.custom_interests:
+            raise RuntimeError('Not interests specified even though custom interests are enabled')
+
+        if interest_rate_received is not None:
+            account.reverse_interest = interest_rate_received
+        elif self.custom_interests:
+            raise RuntimeError('Not interests specified even though custom interests are enabled')
+
+        if timestamp is not None:
+            account.m_time = timestamp
+        elif self.has_interests:
+            raise RuntimeError('No timestamp was given. When using interests a timestamp is mandatory')
+
+    def update_balance(self, a: str, b: str, balance: int, timestamp: int = None):
         """to update the balance, used to react on changes on the blockchain
         the last modification time of the balance is also updated to keep track of the interests"""
         if not self.graph.has_edge(a, b):
@@ -259,24 +276,27 @@ class CurrencyNetworkGraph(object):
                                 balance_ab=0)
         account = Account(self.graph[a][b], a, b)
         account.balance = balance
-        account.m_time = timestamp
+        if timestamp is not None:
+            account.m_time = timestamp
+        elif self.has_interests:
+            raise RuntimeError('No timestamp was given. When using interests a timestamp is mandatory')
 
-    def get_account_sum(self, a, b=None):
-        if b is None:
-            account_summary = AccountSummary(0, 0, 0)
-            for b in self.get_friends(a):
-                account = Account(self.graph[a][b], a, b)
+    def get_account_sum(self, user, counter_party=None):
+        if counter_party is None:
+            account_summary = AccountSummary()
+            for counter_party in self.get_friends(user):
+                account = Account(self.graph[user][counter_party], user, counter_party)
                 account_summary.balance += account.balance
                 account_summary.creditline_given += account.creditline
                 account_summary.creditline_received += account.reverse_creditline
             return account_summary
         else:
-            if self.graph.has_edge(a, b):
-                account = Account(self.graph[a][b], a, b)
+            if self.graph.has_edge(user, counter_party):
+                account = Account(self.graph[user][counter_party], user, counter_party)
                 return AccountSummaryWithInterests(account.balance, account.creditline, account.reverse_creditline,
                                                    account.interest, account.reverse_interest)
             else:
-                return AccountSummary(0, 0, 0)
+                return AccountSummaryWithInterests()
 
     def draw(self, filename):
         """draw graph to a file called filename"""

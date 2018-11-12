@@ -1,10 +1,15 @@
 import time
 
-from .graph_constants import *
+from relay.network_graph.graph_constants import (
+    interest_ab,
+    interest_ba,
+    m_time,
+    balance_ab,
+)
 
 
 def calculate_interests(balance, rate, old_time, new_time):
-    return balance * (new_time - old_time) / (60 * 60 * 24 * 365) * rate / 100000
+    return balance * (new_time - old_time) / (60 * 60 * 24 * 365) * rate / 10000
 
 
 def balance_with_interest_estimation(data):
@@ -17,4 +22,4 @@ def balance_with_interest_estimation(data):
     else:  # a owes b
         interest = calculate_interests(data[balance_ab], data[interest_ba], data[m_time], new_time)
 
-    return data[balance_ab] + interest
+    return int(data[balance_ab] + interest)

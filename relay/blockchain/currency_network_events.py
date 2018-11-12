@@ -1,8 +1,6 @@
 from .events import TLNetworkEvent
 
 
-CreditlineRequestEventType = 'CreditlineUpdateRequest'
-CreditlineUpdateEventType = 'CreditlineUpdate'
 TrustlineRequestEventType = 'TrustlineUpdateRequest'
 TrustlineUpdateEventType = 'TrustlineUpdate'
 BalanceUpdateEventType = 'BalanceUpdate'
@@ -31,23 +29,23 @@ class BalanceUpdateEvent(ValueEvent):
     pass
 
 
-class CreditlineUpdateEvent(ValueEvent):
-    pass
-
-
-class CreditlineRequestEvent(ValueEvent):
-    pass
-
-
 class TrustlineEvent(CurrencyNetworkEvent):
 
     @property
-    def given(self):
+    def creditline_given(self):
         return self._web3_event.get('args').get('_creditlineGiven')
 
     @property
-    def received(self):
+    def creditline_received(self):
         return self._web3_event.get('args').get('_creditlineReceived')
+
+    @property
+    def interest_rate_given(self):
+        return self._web3_event.get('args').get('_interestRateGiven', 0)
+
+    @property
+    def interest_rate_received(self):
+        return self._web3_event.get('args').get('_interestRateReceived', 0)
 
 
 class TrustlineUpdateEvent(TrustlineEvent):
@@ -60,8 +58,6 @@ class TrustlineRequestEvent(TrustlineEvent):
 
 event_builders = {
     TransferEventType: TransferEvent,
-    CreditlineRequestEventType: CreditlineRequestEvent,
-    CreditlineUpdateEventType: CreditlineUpdateEvent,
     TrustlineUpdateEventType: TrustlineUpdateEvent,
     TrustlineRequestEventType: TrustlineRequestEvent,
     BalanceUpdateEventType: BalanceUpdateEvent,
@@ -70,15 +66,11 @@ event_builders = {
 
 from_to_types = {
     TransferEventType: ['_from', '_to'],
-    CreditlineRequestEventType: ['_creditor', '_debtor'],
-    CreditlineUpdateEventType: ['_creditor', '_debtor'],
     TrustlineRequestEventType: ['_creditor', '_debtor'],
     TrustlineUpdateEventType: ['_creditor', '_debtor'],
     BalanceUpdateEventType: ['_from',  '_to'],
 }
 
 standard_event_types = [TransferEventType,
-                        CreditlineRequestEventType,
-                        CreditlineUpdateEventType,
                         TrustlineRequestEventType,
                         TrustlineUpdateEventType]

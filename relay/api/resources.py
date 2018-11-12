@@ -21,7 +21,8 @@ from .schemas import (CurrencyNetworkEventSchema,
                       ExchangeEventSchema,
                       AccountSummarySchema,
                       TrustlineSchema,
-                      TxInfosSchema)
+                      TxInfosSchema,
+                      CurrencyNetworkSchema)
 from relay.relay import TrustlinesRelay
 from relay.concurrency_utils import TimeoutException
 from relay.logger import get_logger
@@ -46,11 +47,9 @@ class NetworkList(Resource):
     def get(self):
         result = []
         for address in self.trustlines.networks:
-            result.append({
-                'address': address,
-                'name': self.trustlines.currency_network_proxies[address].name,
-                'abbreviation': self.trustlines.currency_network_proxies[address].symbol,
-            })
+            result.append(
+                CurrencyNetworkSchema().dump(self.trustlines.get_network_info(address)).data
+            )
         return result
 
 
@@ -61,16 +60,7 @@ class Network(Resource):
 
     def get(self, network_address: str):
         abort_if_unknown_network(self.trustlines, network_address)
-        return {
-            'address': network_address,
-            'name': self.trustlines.currency_network_proxies[network_address].name,
-            'abbreviation': self.trustlines.currency_network_proxies[network_address].symbol,
-            'decimals': self.trustlines.currency_network_proxies[network_address].decimals,
-            'numUsers': len(self.trustlines.currency_network_graphs[network_address].users),
-            'defaultInterests': self.trustlines.currency_network_proxies[network_address].defaultInterests,
-            'customInterests': self.trustlines.currency_network_proxies[network_address].customInterests,
-            'safeInterestRippling': self.trustlines.currency_network_proxies[network_address].safeInterestRippling
-        }
+        return CurrencyNetworkSchema().dump(self.trustlines.get_network_info(network_address)).data
 
 
 class UserList(Resource):
@@ -80,7 +70,7 @@ class UserList(Resource):
 
     def get(self, network_address: str):
         abort_if_unknown_network(self.trustlines, network_address)
-        return self.trustlines.currency_network_proxies[network_address].users
+        return self.trustlines.get_users_of_network(network_address)
 
 
 class User(Resource):

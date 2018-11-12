@@ -23,9 +23,11 @@ class BlockchainEventSchema(EventSchema):
 class CurrencyNetworkEventSchema(BlockchainEventSchema):
     networkAddress = Address(attribute='network_address')
     amount = BigInteger(attribute='value')
-    given = BigInteger()
-    received = BigInteger()
+    given = BigInteger('creditline_given')
+    received = BigInteger('creditline_received')
     balance = BigInteger()
+    interestRateGiven = BigInteger(attribute='interest_rate_given')
+    interestRateReceived = BigInteger(attribute='interest_rate_received')
     leftGiven = BigInteger(attribute='left_given')
     leftReceived = BigInteger(attribute='left_received')
     from_ = Address(dump_to='from', load_from='from')
@@ -85,8 +87,8 @@ class TrustlineSchema(Schema):
 
     leftGiven = BigInteger(attribute='creditline_left_given')
     leftReceived = BigInteger(attribute='creditline_left_received')
-    interestGiven = BigInteger(attribute='creditline_interest_given')
-    interestReceived = BigInteger(attribute='creditline_interest_received')
+    interestRateGiven = BigInteger(attribute='interest_rate_given')
+    interestRateReceived = BigInteger(attribute='interest_rate_received')
     given = BigInteger(attribute='creditline_given')
     received = BigInteger(attribute='creditline_received')
     balance = BigInteger()
@@ -99,3 +101,18 @@ class TxInfosSchema(Schema):
     balance = BigInteger()
     nonce = fields.Integer()
     gasPrice = BigInteger(attribute='gas_price')
+
+
+class CurrencyNetworkSchema(Schema):
+    class Meta:
+        strict = True
+
+    abbreviation = fields.Str(attribute='symbol')
+    name = fields.Str()
+    address = Address()
+    decimals = fields.Int()
+    numUsers = fields.Int(attribute='num_users')
+    defaultInterestRate = BigInteger(attribute='default_interests')
+    interestRateDecimals = fields.Int(attribute='interest_rate_decimals')
+    customInterests = fields.Bool(attribute='custom_interests')
+    preventMediatorInterests = fields.Bool(attribute='prevent_mediator_interests')

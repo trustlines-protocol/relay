@@ -5,7 +5,10 @@ import networkx as nx
 import math
 
 from .interests import balance_with_interest_estimation
-from .graph_constants import *
+from relay.network_graph.graph_constants import (
+    creditline_ab,
+    creditline_ba,
+)
 
 
 def find_path(G, source, target, get_fee, value, max_hops=None, max_fees=None, ignore=None):

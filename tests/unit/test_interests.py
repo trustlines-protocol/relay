@@ -2,7 +2,16 @@ import pytest
 
 from relay.blockchain.currency_network_proxy import Trustline
 from relay.network_graph.graph import CurrencyNetworkGraph, Account
-from relay.network_graph.graph_constants import *
+from relay.network_graph.graph_constants import (
+    creditline_ab,
+    creditline_ba,
+    interest_ab,
+    interest_ba,
+    fees_outstanding_a,
+    fees_outstanding_b,
+    m_time,
+    balance_ab,
+)
 
 addresses = ['0x0A', '0x0B', '0x0C', '0x0D', '0x0E']
 A, B, C, D, E = addresses
@@ -23,19 +32,19 @@ def friendsdict():
 
 @pytest.fixture
 def simple_friendsdict():
-    return {A: [Trustline(B, 200, 200, interest_ba = 1000)]}
+    return {A: [Trustline(B, 200, 200, interest_ba=1000)]}
 
 
 @pytest.fixture
 def basic_data():
-    data = {creditline_ab:0,
-            creditline_ba:0,
-            interest_ab:0,
-            interest_ba:0,
-            fees_outstanding_a:0,
-            fees_outstanding_b:0,
-            m_time:0,
-            balance_ab:0}
+    data = {creditline_ab: 0,
+            creditline_ba: 0,
+            interest_ab: 0,
+            interest_ba: 0,
+            fees_outstanding_a: 0,
+            fees_outstanding_b: 0,
+            m_time: 0,
+            balance_ab: 0}
 
     return data
 
@@ -65,25 +74,25 @@ def test_interests_calculation_from_A_balance_positive_relevant_interests(basic_
     data = basic_data
     data[m_time] = 1505260800  # at least one year ago
     data[balance_ab] = 100  # B owes to A
-    data[interest_ab] = 1000  # interest given by A to B
+    data[interest_ab] = 100  # interest given by A to B
     acc_AB = Account(data, A, B)
-    assert acc_AB.balance > 101
+    assert acc_AB.balance >= 101
 
 
 def test_interests_calculation_from_A_balance_negative_relevant_interests(basic_data):
     data = basic_data
     data[m_time] = 1505260800
     data[balance_ab] = -100  # A owes to B
-    data[interest_ba] = 1000  # interest given by B to A
+    data[interest_ba] = 100  # interest given by B to A
     acc_AB = Account(data, A, B)
-    assert acc_AB.balance < -101
+    assert acc_AB.balance <= -101
 
 
 def test_interests_calculation_from_A_balance_positive_irrelevant_interests(basic_data):
     data = basic_data
     data[m_time] = 1505260800
     data[balance_ab] = 100  # B owes to A
-    data[interest_ba] = 1000  # interest given by B to A
+    data[interest_ba] = 100  # interest given by B to A
     acc_AB = Account(data, A, B)
     assert acc_AB.balance == 100
 
@@ -92,7 +101,7 @@ def test_interests_calculation_from_A_balance_negative_irrelevant_interests(basi
     data = basic_data
     data[m_time] = 1505260800
     data[balance_ab] = -100  # A owes to B
-    data[interest_ab] = 1000  # interest given by A to B
+    data[interest_ab] = 100  # interest given by A to B
     acc_AB = Account(data, A, B)
     assert acc_AB.balance == -100
 
@@ -101,25 +110,25 @@ def test_interests_calculation_from_B_balance_positive_relevant_interests(basic_
     data = basic_data
     data[m_time] = 1505260800  # at least one year ago
     data[balance_ab] = 100  # B owes to A
-    data[interest_ab] = 1000  # interest given by A to B
+    data[interest_ab] = 100  # interest given by A to B
     acc_BA = Account(data, B, A)
-    assert acc_BA.balance < -101
+    assert acc_BA.balance <= -101
 
 
 def test_interests_calculation_from_B_balance_negative_relevant_interests(basic_data):
     data = basic_data
     data[m_time] = 1505260800
     data[balance_ab] = -100  # A owes to B
-    data[interest_ba] = 1000  # interest given by B to A
+    data[interest_ba] = 100  # interest given by B to A
     acc_BA = Account(data, B, A)
-    assert acc_BA.balance > 101
+    assert acc_BA.balance >= 101
 
 
 def test_interests_calculation_from_B_balance_positive_irrelevant_interests(basic_data):
     data = basic_data
     data[m_time] = 1505260800
     data[balance_ab] = 100  # B owes to A
-    data[interest_ba] = 1000  # interest given by B to A
+    data[interest_ba] = 100  # interest given by B to A
     acc_BA = Account(data, B, A)
     assert acc_BA.balance == -100
 
@@ -128,13 +137,13 @@ def test_interests_calculation_from_B_balance_negative_irrelevant_interests(basi
     data = basic_data
     data[m_time] = 1505260800
     data[balance_ab] = -100  # A owes to B
-    data[interest_ab] = 1000  # interest given by A to B
+    data[interest_ab] = 100  # interest given by A to B
     acc_BA = Account(data, B, A)
     assert acc_BA.balance == 100
 
 
 def test_interests_path_from_A_balance_positive_relevant_interests(community_with_simple_trustlines):
-    dict = {A: [Trustline(B, 200, 200, balance_ab = 100, m_time = 1505260800, interest_ab=1000)]}
+    dict = {A: [Trustline(B, 200, 200, balance_ab=100, m_time=1505260800, interest_ab=100)]}
     # B owes to A
     # 1% interest given by A to B
     community = CurrencyNetworkGraph()
@@ -145,7 +154,7 @@ def test_interests_path_from_A_balance_positive_relevant_interests(community_wit
 
 
 def test_interests_path_from_A_balance_negative_relevant_interests(community_with_simple_trustlines):
-    dict = {A: [Trustline(B, 200, 200, balance_ab = -100, m_time = 1505260800, interest_ba=1000)]}
+    dict = {A: [Trustline(B, 200, 200, balance_ab=-100, m_time=1505260800, interest_ba=100)]}
     # A owes to B
     # 1% interest given by B to A
     community = CurrencyNetworkGraph()
@@ -156,7 +165,7 @@ def test_interests_path_from_A_balance_negative_relevant_interests(community_wit
 
 
 def test_interests_path_from_A_balance_positive_irrelevant_interests(community_with_simple_trustlines):
-    dict = {A: [Trustline(B, 200, 200, balance_ab = 100, m_time = 1505260800, interest_ba=1000)]}
+    dict = {A: [Trustline(B, 200, 200, balance_ab=100, m_time=1505260800, interest_ba=100)]}
     # B owes to A
     # 1% interest given by B to A
     community = CurrencyNetworkGraph()
@@ -167,7 +176,7 @@ def test_interests_path_from_A_balance_positive_irrelevant_interests(community_w
 
 
 def test_interests_path_from_A_balance_negative_irrelevant_interests(community_with_simple_trustlines):
-    dict = {A: [Trustline(B, 200, 200, balance_ab = -100, m_time = 1505260800, interest_ab=1000)]}
+    dict = {A: [Trustline(B, 200, 200, balance_ab=-100, m_time=1505260800, interest_ab=100)]}
     # A owes to B
     # 1% interest given by A to B
     community = CurrencyNetworkGraph()
@@ -178,7 +187,7 @@ def test_interests_path_from_A_balance_negative_irrelevant_interests(community_w
 
 
 def test_interests_path_from_B_balance_positive_relevant_interests(community_with_simple_trustlines):
-    dict = {A: [Trustline(B, 200, 200, balance_ab = 100, m_time = 1505260800, interest_ab=1000)]}
+    dict = {A: [Trustline(B, 200, 200, balance_ab=100, m_time=1505260800, interest_ab=100)]}
     # B owes to A
     # 1% interest given by A to B
     community = CurrencyNetworkGraph()
@@ -189,7 +198,7 @@ def test_interests_path_from_B_balance_positive_relevant_interests(community_wit
 
 
 def test_interests_path_from_B_balance_negative_relevant_interests(community_with_simple_trustlines):
-    dict = {A: [Trustline(B, 200, 200, balance_ab = -100, m_time = 1505260800, interest_ba=1000)]}
+    dict = {A: [Trustline(B, 200, 200, balance_ab=-100, m_time=1505260800, interest_ba=100)]}
     # A owes to B
     # 1% interest given by B to A
     community = CurrencyNetworkGraph()
@@ -200,7 +209,7 @@ def test_interests_path_from_B_balance_negative_relevant_interests(community_wit
 
 
 def test_interests_path_from_B_balance_positive_irrelevant_interests(community_with_simple_trustlines):
-    dict = {A: [Trustline(B, 200, 200, balance_ab = 100, m_time = 1505260800, interest_ba=1000)]}
+    dict = {A: [Trustline(B, 200, 200, balance_ab=100, m_time=1505260800, interest_ba=100)]}
     # B owes to A
     # 1% interest given by B to A
     community = CurrencyNetworkGraph()
@@ -211,7 +220,7 @@ def test_interests_path_from_B_balance_positive_irrelevant_interests(community_w
 
 
 def test_interests_path_from_B_balance_negative_irrelevant_interests(community_with_simple_trustlines):
-    dict = {A: [Trustline(B, 200, 200, balance_ab = -100, m_time = 1505260800, interest_ab=1000)]}
+    dict = {A: [Trustline(B, 200, 200, balance_ab=-100, m_time=1505260800, interest_ab=100)]}
     # A owes to B
     # 1% interest given by A to B
     community = CurrencyNetworkGraph()
