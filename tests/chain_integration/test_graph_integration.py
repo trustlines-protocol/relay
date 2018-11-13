@@ -79,18 +79,6 @@ def test_no_capacity(community_with_trustlines, accounts):
 def test_trustline_update(fresh_community, currency_network, accounts):
     A, B, *rest = accounts
 
-    currency_network.update_trustline(A, B, 50, 100)
-    currency_network.update_trustline(B, A, 100, 50)
-
-    gevent.sleep(1)
-
-    assert fresh_community.get_account_sum(A, B).creditline_given == 50
-    assert fresh_community.get_account_sum(A, B).creditline_received == 100
-
-
-def test_trustline_update(fresh_community, currency_network, accounts):
-    A, B, *rest = accounts
-
     currency_network.update_trustline(A, B, 50, 100, 2, 3)
     currency_network.update_trustline(B, A, 100, 50, 3, 2)
 

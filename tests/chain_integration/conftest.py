@@ -237,19 +237,6 @@ def currency_network_with_trustlines(web3, currency_network_abi, testnetwork2_ad
 
 @pytest.fixture()
 def currency_network_with_events(currency_network, accounts):
-    currency_network.update_creditline(accounts[0], accounts[1], 25)
-    currency_network.accept_creditline(accounts[1], accounts[0], 25)
-    currency_network.transfer(accounts[1], accounts[0], 10, 10, [accounts[0]])
-    currency_network.update_creditline(accounts[0], accounts[2], 25)
-    currency_network.accept_creditline(accounts[2], accounts[0], 25)
-    currency_network.update_creditline(accounts[0], accounts[4], 25)
-    currency_network.accept_creditline(accounts[4], accounts[0], 25)
-
-    return currency_network
-
-
-@pytest.fixture()
-def currency_network_with_events(currency_network, accounts):
     currency_network.update_trustline_with_accept(accounts[0], accounts[1], 25, 50)
     currency_network.transfer(accounts[1], accounts[0], 10, 10, [accounts[0]])
     currency_network.update_trustline_with_accept(accounts[0], accounts[2], 25, 50)
