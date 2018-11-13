@@ -82,7 +82,7 @@ setup(
                       'web3>=4.7.1',
                       'networkx>=2.0',
                       'pygraphviz',
-                      'trustlines-contracts-bin',
+                      'trustlines-contracts-bin>=0.3.0,<0.4.0',
                       'sqlalchemy',
                       'eth-utils',
                       'tinyrpc',
