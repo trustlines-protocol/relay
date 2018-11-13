@@ -28,8 +28,8 @@ class BlockchainEventSchema(EventSchema):
 class CurrencyNetworkEventSchema(BlockchainEventSchema):
     networkAddress = Address(attribute='network_address')
     amount = BigInteger(attribute='value')
-    given = BigInteger('creditline_given')
-    received = BigInteger('creditline_received')
+    given = BigInteger(attribute='creditline_given')
+    received = BigInteger(attribute='creditline_received')
     balance = BigInteger()
     interestRateGiven = BigInteger(attribute='interest_rate_given')
     interestRateReceived = BigInteger(attribute='interest_rate_received')
