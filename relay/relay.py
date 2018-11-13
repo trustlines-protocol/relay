@@ -147,6 +147,12 @@ class TrustlinesRelay:
     def is_trusted_token(self, address: str) -> bool:
         return address in self.token_addresses or address in self.unw_eth_addresses
 
+    def get_network_info(self, network_address: str):
+        return self.currency_network_proxies[network_address]
+
+    def get_users_of_network(self, network_address: str):
+        return self.currency_network_graphs[network_address].users
+
     def start(self):
         self._load_config()
         self._load_contracts()
@@ -173,7 +179,11 @@ class TrustlinesRelay:
                                                                       self.contracts['CurrencyNetwork']['abi'],
                                                                       address)
         self.currency_network_graphs[address] = CurrencyNetworkGraph(
-            self.currency_network_proxies[address].capacityImbalanceFeeDivisor)
+            capacity_imbalance_fee_divisor=self.currency_network_proxies[address].capacity_imbalance_fee_divisor,
+            default_interest_rate=self.currency_network_proxies[address].default_interest_rate,
+            custom_interests=self.currency_network_proxies[address].custom_interests,
+            prevent_mediator_interests=self.currency_network_proxies[address].prevent_mediator_interests
+        )
         self._start_listen_network(address)
 
     def new_exchange(self, address: str) -> None:
@@ -458,12 +468,10 @@ class TrustlinesRelay:
         graph = self.currency_network_graphs[address]
         proxy = self.currency_network_proxies[address]
         proxy.start_listen_on_full_sync(_create_on_full_sync(graph), self.config.get('syncInterval', 300))
-        proxy.start_listen_on_balance(self._on_balance_update)
-        proxy.start_listen_on_creditline(self._on_creditline_update)
-        proxy.start_listen_on_trustline(self._on_trustline_update)
-        proxy.start_listen_on_transfer(self._on_transfer)
-        proxy.start_listen_on_creditline_request(self._on_creditline_request)
-        proxy.start_listen_on_trustline_request(self._on_trustline_request)
+        proxy.start_listen_on_balance(self._process_balance_update)
+        proxy.start_listen_on_trustline(self._process_trustline_update)
+        proxy.start_listen_on_transfer(self._process_transfer)
+        proxy.start_listen_on_trustline_request(self._process_trustline_request)
 
     def _start_listen_on_new_addresses(self):
         def listen():
@@ -498,11 +506,12 @@ class TrustlinesRelay:
                 pass
         logger.debug('Start pushnotifications for {} registered user devices'.format(number_of_new_listeners))
 
-    def _on_balance_update(self, balance_update_event):
+    def _process_balance_update(self, balance_update_event):
         graph = self.currency_network_graphs[balance_update_event.network_address]
         graph.update_balance(balance_update_event.from_,
                              balance_update_event.to,
-                             balance_update_event.value)
+                             balance_update_event.value,
+                             balance_update_event.timestamp)
         self._publish_balance_event(balance_update_event.from_, balance_update_event.to,
                                     balance_update_event.network_address)
         self._publish_balance_event(balance_update_event.to, balance_update_event.from_,
@@ -510,34 +519,23 @@ class TrustlinesRelay:
         self._publish_network_balance_event(balance_update_event.from_, balance_update_event.network_address)
         self._publish_network_balance_event(balance_update_event.to, balance_update_event.network_address)
 
-    def _on_creditline_update(self, creditline_update_event):
-        graph = self.currency_network_graphs[creditline_update_event.network_address]
-        graph.update_creditline(creditline_update_event.from_,
-                                creditline_update_event.to,
-                                creditline_update_event.value)
-        self._publish_blockchain_event(creditline_update_event)
-        self._publish_balance_event(creditline_update_event.from_, creditline_update_event.to,
-                                    creditline_update_event.network_address)
-        self._publish_balance_event(creditline_update_event.to, creditline_update_event.from_,
-                                    creditline_update_event.network_address)
-        self._publish_network_balance_event(creditline_update_event.from_, creditline_update_event.network_address)
-        self._publish_network_balance_event(creditline_update_event.to, creditline_update_event.network_address)
-
-    def _on_transfer(self, transfer_event):
+    def _process_transfer(self, transfer_event):
         self._publish_blockchain_event(transfer_event)
 
-    def _on_creditline_request(self, creditline_request_event):
-        self._publish_blockchain_event(creditline_request_event)
-
-    def _on_trustline_request(self, trustline_request_event):
+    def _process_trustline_request(self, trustline_request_event):
+        logger.debug('Process trustline request event')
         self._publish_blockchain_event(trustline_request_event)
 
-    def _on_trustline_update(self, trustline_update_event):
+    def _process_trustline_update(self, trustline_update_event):
+        logger.debug('Process trustline update event')
         graph = self.currency_network_graphs[trustline_update_event.network_address]
-        graph.update_trustline(trustline_update_event.from_,
-                               trustline_update_event.to,
-                               trustline_update_event.given,
-                               trustline_update_event.received,
+        graph.update_trustline(creditor=trustline_update_event.from_,
+                               debtor=trustline_update_event.to,
+                               creditline_given=trustline_update_event.creditline_given,
+                               creditline_received=trustline_update_event.creditline_received,
+                               interest_rate_given=trustline_update_event.interest_rate_given,
+                               interest_rate_received=trustline_update_event.interest_rate_received,
+                               timestamp=trustline_update_event.timestamp
                                )
         self._publish_blockchain_event(trustline_update_event)
         self._publish_balance_event(trustline_update_event.from_, trustline_update_event.to,

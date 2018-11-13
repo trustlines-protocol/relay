@@ -100,6 +100,10 @@ curl https://relay0.testnet.trustlines.network/api/v1/networks/0xC0B33D88C704455
 |decimals|int|Decimals specified in currency network|
 |name|string|Full name of the currency network|
 |numUsers|int|Total number of users in currency network|
+|defaultInterestRate|string|The default interest rate for every user in the network|
+|interestRateDecimals|int|Decimals of the interest rate|
+|customInterests|bool|Whether custom interest rate can be set by users|
+|preventMediatorInterests|bool|Whether to prevent mediators from paying interest|
 #### Example Response
 ```json
 {
@@ -107,7 +111,11 @@ curl https://relay0.testnet.trustlines.network/api/v1/networks/0xC0B33D88C704455
   "address": "0xC0B33D88C704455075a0724AA167a286da778DDE",
   "decimals": 2,
   "name": "Hours",
-  "numUsers": 3
+  "numUsers": 3,
+  "defaultInterestRate": "100",
+  "interestRateDecimals": 2,
+  "customInterests": false,
+  "preventMediatorInterests": false
 }
 ```
 
@@ -121,7 +129,7 @@ GET /networks/:networkAddress/users
 ```
 #### URL Parameters
 |Name|Type|Required|Description|
-|-|-|-|-|
+|----|----|--------|-----------|
 |networkAddress|string|YES|Address of currency network|
 #### Example Request
 ```
@@ -141,14 +149,14 @@ curl https://relay0.testnet.trustlines.network/api/v1/networks/0xC0B33D88C704455
 ---
 
 ### User details in currency network
-Returns detailed information of an user in a currency network.
+Returns detailed information of a user in a currency network.
 #### Request
 ```
 GET /networks/:networkAddress/users/:userAddress
 ```
 #### URL Parameters
 |Name|Type|Required|Description|
-|-|-|-|-|
+|----|----|--------|-----------|
 |networkAddress|string|YES|Address of currency network|
 |userAddress|string|YES|Address of user|
 #### Example Request
@@ -166,7 +174,7 @@ curl https://relay0.testnet.trustlines.network/api/v1/networks/0xC0B33D88C704455
 #### Example Response
 ```json
 {
-	"balance": "-1000",
+  "balance": "-1000",
   "given": "2000",
   "received": "3000",
   "leftGiven": "3000",
@@ -177,14 +185,14 @@ curl https://relay0.testnet.trustlines.network/api/v1/networks/0xC0B33D88C704455
 ---
 
 ### Trustlines of user in currency network
-Returns a list of trustlines an user has in a currency network.
+Returns a list of trustlines a user has in a currency network.
 #### Request
 ```
 GET /networks/:networkAddress/users/:userAddress/trustlines
 ```
 #### URL Parameters
 |Name|Type|Required|Description|
-|-|-|-|-|
+|----|----|--------|-----------|
 |networkAddress|string|YES|Address of currency network|
 |userAddress|string|YES|Address of user|
 #### Example Request
@@ -201,6 +209,8 @@ curl https://relay0.testnet.trustlines.network/api/v1/networks/0xC0B33D88C704455
 |received|string|Creditline received by counterparty|
 |leftGiven|string|given - balance|
 |leftReceived|string|received + balance|
+|interestRateGiven|string|Interest Rate given to counterparty|
+|interestRateReceived|string|Interest Rate received from counterparty|
 |id|string|Identifier of trustline|
 #### Example Response
 ```json
@@ -213,6 +223,8 @@ curl https://relay0.testnet.trustlines.network/api/v1/networks/0xC0B33D88C704455
     "given": "10000",
     "leftGiven": "10152",
     "received": "20000",
+    "interestRateGiven": "1000",
+    "interestRateReceived": "2000",
     "user": "0x04f9b217b334507c42Ad3b74BFf024c724aBB166"
   }
 ]
@@ -246,6 +258,8 @@ curl https://relay0.testnet.trustlines.network/api/v1/networks/0xC0B33D88C704455
 |received|string|Creditline received by counterparty|
 |leftGiven|string|given - balance|
 |leftReceived|string|received + balance|
+|interestRateGiven|string|Interest Rate given to counterparty|
+|interestRateReceived|string|Interest Rate received from counterparty|
 |id|string|Identifier of trustline|
 ### Example Response
 ```json
@@ -257,6 +271,8 @@ curl https://relay0.testnet.trustlines.network/api/v1/networks/0xC0B33D88C704455
     "given": "10000",
     "leftGiven": "10152",
     "received": "20000",
+    "interestRateGiven": "1000",
+    "interestRateReceived": "2000",
     "user": "0x04f9b217b334507c42Ad3b74BFf024c724aBB166"
 }
 ```
@@ -482,11 +498,13 @@ curl https://relay0.testnet.trustlines.network/api/v1/networks/0xC0B33D88C704455
 
 Following additional attributes for `TrustlineUpdate` and `TrustlineUpdateRequest` events:
 
-| Attribute | Type   | Description                              |
-|-----------|--------|------------------------------------------|
-| given     | string | Proposed or accepted amount `from -> to` |
-| received  | string | Proposed or accepted amount `to -> from` |
-|           |        |                                          |
+| Attribute            | Type   | Description                                        |
+|----------------------|--------|----------------------------------------------------|
+| given                | string | Proposed or accepted amount `from -> to`           |
+| received             | string | Proposed or accepted amount `to -> from`           |
+| interestRateGiven    | string | Proposed or accepted rate of interests `from -> to`|
+| interestRateReceived | string | Proposed or accepted rate of interests `to -> from`|
+|                      |        |                                                    |
 
 Following additional attributes for `Transfer` events:
 
@@ -507,7 +525,9 @@ Following additional attributes for `Transfer` events:
 		"status": "confirmed",
 		"transactionId": "0xb141aa3baec4e7151d8bd6ecab46d26b1add131e50bcc517c956a7ac979815cd",
 		"given": "20000",
-		"received": "20000"
+		"received": "20000",
+		"interestRateGiven": "1000",
+		"interestRateReceived": "1000"
 	},
 	{
 		"networkAddress": "0xC0B33D88C704455075a0724AA167a286da778DDE",
@@ -519,7 +539,9 @@ Following additional attributes for `Transfer` events:
 		"status": "confirmed",
 		"transactionId": "0x10d4e9acb58d42d433dbc5c995e9a258cd2bb7fe82fedf2ebab82e450d30c643",
 		"given": "10000",
-		"received": "10000"
+		"received": "10000",
+		"interestRateGiven": "1000",
+		"interestRateReceived": "1000"
 	},
 	{
 		"networkAddress": "0xC0B33D88C704455075a0724AA167a286da778DDE",
@@ -568,11 +590,13 @@ curl https://relay0.testnet.trustlines.network/api/v1/networks/0xC0B33D88C704455
 
 Following additional attributes for `TrustlineUpdate` and `TrustlineUpdateRequest` events:
 
-| Attribute | Type   | Description                              |
-|-----------|--------|------------------------------------------|
-| given     | string | Proposed or accepted amount `from -> to` |
-| received  | string | Proposed or accepted amount `to -> from` |
-|           |        |                                          |
+| Attribute            | Type   | Description                                        |
+|----------------------|--------|----------------------------------------------------|
+| given                | string | Proposed or accepted amount `from -> to`           |
+| received             | string | Proposed or accepted amount `to -> from`           |
+| interestRateGiven    | string | Proposed or accepted rate of interests `from -> to`|
+| interestRateReceived | string | Proposed or accepted rate of interests `to -> from`|
+|                      |        |                                                    |
 
 Following additional attributes for `Transfer` events:
 
@@ -593,7 +617,9 @@ Following additional attributes for `Transfer` events:
 		"status": "confirmed",
 		"transactionId": "0xb141aa3baec4e7151d8bd6ecab46d26b1add131e50bcc517c956a7ac979815cd",
 		"given": "20000",
-		"received": "20000"
+		"received": "20000",
+		"interestRateGiven": "1000",
+		"interestRateReceived": "1000"
 	},
 	{
 		"networkAddress": "0xC0B33D88C704455075a0724AA167a286da778DDE",
@@ -605,7 +631,9 @@ Following additional attributes for `Transfer` events:
 		"status": "confirmed",
 		"transactionId": "0x10d4e9acb58d42d433dbc5c995e9a258cd2bb7fe82fedf2ebab82e450d30c643",
 		"given": "10000",
-		"received": "10000"
+		"received": "10000",
+		"interestRateGiven": "1000",
+		"interestRateReceived": "1000"
 	},
 	{
 		"networkAddress": "0xC0B33D88C704455075a0724AA167a286da778DDE",
@@ -653,10 +681,13 @@ curl https://relay0.testnet.trustlines.network/api/v1/users/0xcbF1153F6e5AC01D36
 
 Following additional attributes for `TrustlineUpdate` and `TrustlineUpdateRequest` events:
 
-| Attribute | Type   | Description                              |
-|-----------|--------|------------------------------------------|
-| given     | string | Proposed or accepted amount `from -> to` |
-| received  | string | Proposed or accepted amount `to -> from` |
+| Attribute            | Type   | Description                                        |
+|----------------------|--------|----------------------------------------------------|
+| given                | string | Proposed or accepted amount `from -> to`           |
+| received             | string | Proposed or accepted amount `to -> from`           |
+| interestRateGiven    | string | Proposed or accepted rate of interests `from -> to`|
+| interestRateReceived | string | Proposed or accepted rate of interests `to -> from`|
+|                      |        |                                                    |
 
 Following additional attributes for `Transfer` events:
 
@@ -677,7 +708,9 @@ Following additional attributes for `Transfer` events:
 		"status": "confirmed",
 		"transactionId": "0xb141aa3baec4e7151d8bd6ecab46d26b1add131e50bcc517c956a7ac979815cd",
 		"given": "20000",
-		"received": "20000"
+		"received": "20000",
+		"interestRateGiven": "1000",
+		"interestRateReceived": "1000"
 	},
 	{
 		"networkAddress": "0xC0B33D88C704455075a0724AA167a286da778DDE",
@@ -689,7 +722,9 @@ Following additional attributes for `Transfer` events:
 		"status": "confirmed",
 		"transactionId": "0x10d4e9acb58d42d433dbc5c995e9a258cd2bb7fe82fedf2ebab82e450d30c643",
 		"given": "10000",
-		"received": "10000"
+		"received": "10000",
+		"interestRateGiven": "1000",
+		"interestRateReceived": "1000"
 	},
 	{
 		"networkAddress": "0xC0B33D88C704455075a0724AA167a286da778DDE",

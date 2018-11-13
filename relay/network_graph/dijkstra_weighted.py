@@ -1,11 +1,16 @@
 from heapq import heappush, heappop
 from itertools import count
-
-import networkx as nx
+from typing import List
 import math
 
-from typing import List
+import networkx as nx
 import attr
+
+from .interests import balance_with_interest_estimation
+from relay.network_graph.graph_constants import (
+    creditline_ab,
+    creditline_ba,
+)
 
 
 def find_path(G, source, target, get_fee, value, max_hops=None, max_fees=None, ignore=None):
@@ -76,9 +81,10 @@ def find_maximum_capacity_path(G, source, target, max_hops=None):
     fringe = []  # use heapq with (distance,label) tuples
 
     def get_capacity(u, v, data):  # gets the capacity from u to v
+        balance_with_interest = balance_with_interest_estimation(data)
         if (u < v):
-            return data['creditline_ba'] + data['balance_ab']
-        return data['creditline_ab'] - data['balance_ab']
+            return data[creditline_ba] + balance_with_interest
+        return data[creditline_ab] - balance_with_interest
 
     capacity[source] = math.inf
     paths[source] = [source]
@@ -129,11 +135,10 @@ def find_maximum_capacity_path(G, source, target, max_hops=None):
 
 def get_balance(G, a, b):
     """return the balance as seen by a"""
-    balance = G[a][b]['balance_ab']
     if a < b:
-        return balance
+        return balance_with_interest_estimation(G[a][b])
     else:
-        return -balance
+        return -balance_with_interest_estimation(G[b][a])
 
 
 def find_path_triangulation(G, source, target_reduce, target_increase, get_fee, value, max_hops=None, max_fees=None):

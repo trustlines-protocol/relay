@@ -6,13 +6,44 @@ import pytest
 from web3 import Web3
 from web3.providers.eth_tester import EthereumTesterProvider
 from eth_utils import to_checksum_address, encode_hex
-from tlcontracts_deploy import deploy_networks, deploy_network
+from tldeploy.core import deploy_networks, deploy_network
 
 from relay.blockchain.currency_network_proxy import CurrencyNetworkProxy
 import eth_tester
 
 
-NETWORKS = [('Fugger', 'FUG', 2), ('Hours', 'HOU', 2), ('Testcoin', 'T', 6)]
+NETWORK_SETTINGS = [
+        {
+            'name': 'Cash',
+            'symbol': 'CASH',
+            'decimals': 4,
+            'fee_divisor': 1000,
+            'default_interest_rate': 0,
+            'custom_interests': True
+        },
+        {
+            'name': 'Work Hours',
+            'symbol': 'HOU',
+            'decimals': 4,
+            'fee_divisor': 0,
+            'default_interest_rate': 1000,
+            'custom_interests': False
+        },
+        {
+            'name': 'Beers',
+            'symbol': 'BEER',
+            'decimals': 0,
+            'fee_divisor': 0,
+            'custom_interests': False
+        }]
+
+
+@pytest.fixture(scope="session", autouse=True)
+def increase_gas_limit():
+    """increate eth_tester's GAS_LIMIT
+    Otherwise we can't deploy our contract"""
+    assert eth_tester.backends.pyevm.main.GENESIS_GAS_LIMIT < 6 * 10 ** 6
+    eth_tester.backends.pyevm.main.GENESIS_GAS_LIMIT = 6 * 10 ** 6
 
 
 @pytest.fixture(scope="session")
@@ -72,18 +103,44 @@ class CurrencyNetworkProxy(CurrencyNetworkProxy):
             txid = self._proxy.functions.setAccount(A, B, clAB, clBA, 0, 0, 0, 0, 0, 0).transact()
             self._web3.eth.waitForTransactionReceipt(txid)
 
-    def update_creditline(self, from_, to, value):
-        txid = self._proxy.functions.updateCreditline(to, value).transact({"from": from_})
+    def update_trustline(self,
+                         from_,
+                         to,
+                         creditline_given,
+                         creditline_received,
+                         interest_rate_given=None,
+                         interest_rate_received=None):
+        if interest_rate_given is None or interest_rate_received is None:
+            txid = self._proxy.functions.updateTrustline(to,
+                                                         creditline_given,
+                                                         creditline_received).transact({"from": from_})
+        else:
+            txid = self._proxy.functions.updateTrustline(to,
+                                                         creditline_given,
+                                                         creditline_received,
+                                                         interest_rate_given,
+                                                         interest_rate_received).transact({"from": from_})
         self._web3.eth.waitForTransactionReceipt(txid)
 
-    def accept_creditline(self, from_, to, value):
-        txid = self._proxy.functions.acceptCreditline(to, value).transact({"from": from_})
-        self._web3.eth.waitForTransactionReceipt(txid)
-
-    def update_trustline(self, from_, to, creditline_given, creditline_received):
-        txid = self._proxy.functions.updateTrustline(to, creditline_given, creditline_received).transact(
-            {"from": from_})
-        self._web3.eth.waitForTransactionReceipt(txid)
+    def update_trustline_with_accept(self,
+                                     from_,
+                                     to,
+                                     creditline_given,
+                                     creditline_received,
+                                     interest_rate_given=None,
+                                     interest_rate_received=None):
+        self.update_trustline(from_,
+                              to,
+                              creditline_given,
+                              creditline_received,
+                              interest_rate_given,
+                              interest_rate_received)
+        self.update_trustline(to,
+                              from_,
+                              creditline_received,
+                              creditline_given,
+                              interest_rate_received,
+                              interest_rate_given)
 
     def transfer(self, from_, to, value, max_fee, path):
         txid = self._proxy.functions.transfer(to, value, max_fee, path).transact({"from": from_})
@@ -101,11 +158,11 @@ def trustlines(accounts):
 
 
 def deploy_test_network(web3):
-    return deploy_network(web3, 'Trustlines', 'T', 6)
+    return deploy_network(web3, 'Trustlines', 'T', 6, fee_divisor=100)
 
 
 def deploy_test_networks(web3):
-    return deploy_networks(web3, NETWORKS)
+    return deploy_networks(web3, NETWORK_SETTINGS)
 
 
 @pytest.fixture(scope='session')
@@ -151,8 +208,8 @@ def testnetworks(web3, maker, taker):
     unw_eth_contract.functions.deposit().transact({'from': taker, 'value': 200})
 
     currency_network = currency_network_contracts[0]
-    currency_network.functions.updateCreditline(maker, 300).transact({'from': taker})
-    currency_network.functions.acceptCreditline(taker, 300).transact({'from': maker})
+    currency_network.functions.updateTrustline(maker, 300, 0).transact({'from': taker})
+    currency_network.functions.updateTrustline(taker, 0, 300).transact({'from': maker})
 
     return currency_network_contracts, exchange_contract, unw_eth_contract
 
@@ -188,13 +245,10 @@ def currency_network_with_trustlines(web3, currency_network_abi, testnetwork2_ad
 
 @pytest.fixture()
 def currency_network_with_events(currency_network, accounts):
-    currency_network.update_creditline(accounts[0], accounts[1], 25)
-    currency_network.accept_creditline(accounts[1], accounts[0], 25)
+    currency_network.update_trustline_with_accept(accounts[0], accounts[1], 25, 50)
     currency_network.transfer(accounts[1], accounts[0], 10, 10, [accounts[0]])
-    currency_network.update_creditline(accounts[0], accounts[2], 25)
-    currency_network.accept_creditline(accounts[2], accounts[0], 25)
-    currency_network.update_creditline(accounts[0], accounts[4], 25)
-    currency_network.accept_creditline(accounts[4], accounts[0], 25)
+    currency_network.update_trustline_with_accept(accounts[0], accounts[2], 25, 50)
+    currency_network.update_trustline_with_accept(accounts[0], accounts[4], 25, 50)
 
     return currency_network
 

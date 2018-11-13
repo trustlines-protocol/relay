@@ -16,10 +16,11 @@ from relay.api import fields as custom_fields
 from .schemas import (CurrencyNetworkEventSchema,
                       UserCurrencyNetworkEventSchema,
                       AccountSummarySchema,
-                      ExtendedAccountSummarySchema,
                       TxInfosSchema,
                       PaymentPathSchema,
-                      AnyEventSchema)
+                      AnyEventSchema,
+                      TrustlineSchema,
+                      CurrencyNetworkSchema)
 from relay.relay import TrustlinesRelay
 from relay.concurrency_utils import TimeoutException
 from relay.logger import get_logger
@@ -54,11 +55,9 @@ class NetworkList(Resource):
     def get(self):
         result = []
         for address in self.trustlines.networks:
-            result.append({
-                'address': address,
-                'name': self.trustlines.currency_network_proxies[address].name,
-                'abbreviation': self.trustlines.currency_network_proxies[address].symbol,
-            })
+            result.append(
+                CurrencyNetworkSchema().dump(self.trustlines.get_network_info(address)).data
+            )
         return result
 
 
@@ -67,15 +66,10 @@ class Network(Resource):
     def __init__(self, trustlines: TrustlinesRelay) -> None:
         self.trustlines = trustlines
 
+    @dump_result_with_schema(CurrencyNetworkSchema())
     def get(self, network_address: str):
         abort_if_unknown_network(self.trustlines, network_address)
-        return {
-            'address': network_address,
-            'name': self.trustlines.currency_network_proxies[network_address].name,
-            'abbreviation': self.trustlines.currency_network_proxies[network_address].symbol,
-            'decimals': self.trustlines.currency_network_proxies[network_address].decimals,
-            'numUsers': len(self.trustlines.currency_network_graphs[network_address].users)
-        }
+        return self.trustlines.get_network_info(network_address)
 
 
 class UserList(Resource):
@@ -85,7 +79,7 @@ class UserList(Resource):
 
     def get(self, network_address: str):
         abort_if_unknown_network(self.trustlines, network_address)
-        return self.trustlines.currency_network_proxies[network_address].users
+        return self.trustlines.get_users_of_network(network_address)
 
 
 class User(Resource):
@@ -130,7 +124,7 @@ class Trustline(Resource):
     def __init__(self, trustlines: TrustlinesRelay) -> None:
         self.trustlines = trustlines
 
-    @dump_result_with_schema(ExtendedAccountSummarySchema())
+    @dump_result_with_schema(TrustlineSchema())
     def get(self, network_address, a_address, b_address):
         abort_if_unknown_network(self.trustlines, network_address)
         graph = self.trustlines.currency_network_graphs[network_address]
@@ -142,7 +136,7 @@ class TrustlineList(Resource):
     def __init__(self, trustlines: TrustlinesRelay) -> None:
         self.trustlines = trustlines
 
-    @dump_result_with_schema(ExtendedAccountSummarySchema(many=True))
+    @dump_result_with_schema(TrustlineSchema(many=True))
     def get(self, network_address: str, user_address: str):
         abort_if_unknown_network(self.trustlines, network_address)
         graph = self.trustlines.currency_network_graphs[network_address]

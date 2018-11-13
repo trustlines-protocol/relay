@@ -23,8 +23,8 @@ class AccountEvent(Event):
         super().__init__(timestamp)
         self.user = user
         self.balance = account_summary.balance
-        self.given = account_summary.creditline_given
-        self.received = account_summary.creditline_received
+        self.creditline_given = account_summary.creditline_given
+        self.creditline_received = account_summary.creditline_received
         self.left_given = account_summary.creditline_left_given
         self.left_received = account_summary.creditline_left_received
         self.network_address = network_address

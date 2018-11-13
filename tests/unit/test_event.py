@@ -3,10 +3,8 @@ import pytest
 from relay.blockchain.currency_network_events import (
     TrustlineUpdateEvent,
     TransferEvent,
-    CreditlineUpdateEvent,
     TransferEventType,
     TrustlineUpdateEventType,
-    CreditlineUpdateEventType
 )
 
 
@@ -46,20 +44,6 @@ def web3_event_transfer(web3_event):
     return web3_event
 
 
-@pytest.fixture()
-def web3_event_creditline_update(web3_event):
-    web3_event.update({
-        'args': {
-            '_creditor': '0x123',
-            '_debtor': '0x1234',
-            '_value': 150,
-        },
-        'event': CreditlineUpdateEventType,
-        'blockNumber': None
-    })
-    return web3_event
-
-
 def test_trustline_update_event(web3_event_trustline_update):
     event = TrustlineUpdateEvent(web3_event_trustline_update, 10, 123456, '0x1234')
 
@@ -67,8 +51,8 @@ def test_trustline_update_event(web3_event_trustline_update):
     assert event.to == '0x1234'
     assert event.user == '0x1234'
     assert event.counter_party == '0x123'
-    assert event.given == 50
-    assert event.received == 100
+    assert event.creditline_given == 50
+    assert event.creditline_received == 100
     assert event.status == 'confirmed'
     assert event.direction == 'received'
 
@@ -83,13 +67,3 @@ def test_transfer_event(web3_event_transfer):
     assert event.value == 150
     assert event.status == 'pending'
     assert event.direction == 'sent'
-
-
-def test_creditline_update_event(web3_event_creditline_update):
-    event = CreditlineUpdateEvent(web3_event_creditline_update, 6, 123456)
-
-    assert event.from_ == '0x123'
-    assert event.to == '0x1234'
-    assert event.value == 150
-    assert event.status == 'sent'
-    assert event.timestamp == 123456

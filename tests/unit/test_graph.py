@@ -76,28 +76,28 @@ def balances_community(balances_friendsdict):
 
 @pytest.fixture
 def complex_community_with_trustlines_and_fees(complexfriendsdict):
-    community = CurrencyNetworkGraph(100)
+    community = CurrencyNetworkGraph(capacity_imbalance_fee_divisor=100)
     community.gen_network(complexfriendsdict)
     return community
 
 
 @pytest.fixture
 def complex_community_with_trustlines_and_fees_33(complexfriendsdict):
-    community = CurrencyNetworkGraph(33)
+    community = CurrencyNetworkGraph(capacity_imbalance_fee_divisor=33)
     community.gen_network(complexfriendsdict)
     return community
 
 
 @pytest.fixture
 def complex_community_with_trustlines_and_fees_202(complexfriendsdict):
-    community = CurrencyNetworkGraph(202)
+    community = CurrencyNetworkGraph(capacity_imbalance_fee_divisor=202)
     community.gen_network(complexfriendsdict)
     return community
 
 
 @pytest.fixture
 def complex_community_with_trustlines_and_fees_10(complexfriendsdict):
-    community = CurrencyNetworkGraph(10)
+    community = CurrencyNetworkGraph(capacity_imbalance_fee_divisor=10)
     community.gen_network(complexfriendsdict)
     return community
 
@@ -140,8 +140,12 @@ def test_account_sum(community_with_trustlines):
 def test_update_trustline(community_with_trustlines):
     community = community_with_trustlines
     assert community.get_account_sum(B, A).creditline_received == 100
-    community.update_creditline(A, B, 200)
-    assert community.get_account_sum(B, A).creditline_received == 200
+    community.update_trustline(A, B, 200, 500, 5, 2)
+    account_sum = community.get_account_sum(B, A)
+    assert account_sum.creditline_given == 500
+    assert account_sum.creditline_received == 200
+    assert account_sum.interest_rate_given == 2
+    assert account_sum.interest_rate_received == 5
 
 
 def test_update_balance(community_with_trustlines):
@@ -165,6 +169,10 @@ def test_triangulation_no_cost_exact_amount(complex_community_with_trustlines_an
     complex_community_with_trustlines_and_fees.update_balance(A, C, 10000)
     complex_community_with_trustlines_and_fees.update_balance(B, D, -10000)
     complex_community_with_trustlines_and_fees.update_balance(C, D, 10000)
+    assert complex_community_with_trustlines_and_fees.get_balance(A, B) == -10000
+    assert complex_community_with_trustlines_and_fees.get_balance(A, C) == 10000
+    assert complex_community_with_trustlines_and_fees.get_balance(B, D) == -10000
+    assert complex_community_with_trustlines_and_fees.get_balance(C, D) == 10000
     cost, path = complex_community_with_trustlines_and_fees.find_path_triangulation(
             A, B, C, 10000)
     assert path == [A, C, D, B, A]
@@ -458,7 +466,7 @@ def test_path(community_with_trustlines):
 
 def test_no_path(community_with_trustlines):
     community = community_with_trustlines
-    community.update_creditline(F, G, 100)
+    community.update_trustline(F, G, 100, 0)
     cost, path = community.find_path(G, F, 10)
     assert path == [G, F]
     cost, path = community.find_path(A, G, 10)  # no path at all
@@ -479,7 +487,7 @@ def test_no_capacity(community_with_trustlines):
 
 def test_no_direction(community_with_trustlines):
     community = community_with_trustlines
-    community.update_creditline(F, G, 100)
+    community.update_trustline(F, G, 100, 0)
     cost, path = community.find_path(G, F, 10)
     assert path == [G, F]
     cost, path = community.find_path(F, G, 10)  # no creditline in this direction

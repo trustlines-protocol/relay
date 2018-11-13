@@ -8,7 +8,6 @@ def link_graph(proxy, graph, full_sync_interval=None):
     if full_sync_interval is not None:
         proxy.start_listen_on_full_sync(_create_on_full_sync(graph), full_sync_interval)
     proxy.start_listen_on_balance(_create_on_balance(graph))
-    proxy.start_listen_on_creditline(_create_on_creditline(graph))
     proxy.start_listen_on_trustline(_create_on_trustline(graph))
 
 
@@ -19,16 +18,15 @@ def _create_on_balance(graph):
     return update_balance
 
 
-def _create_on_creditline(graph):
-    def update_creditline(event):
-        graph.update_creditline(event.from_, event.to, event.value)
-
-    return update_creditline
-
-
 def _create_on_trustline(graph):
     def update_trustline(event):
-        graph.update_trustline(event.from_, event.to, event.given, event.received)
+        graph.update_trustline(event.from_,
+                               event.to,
+                               event.creditline_given,
+                               event.creditline_received,
+                               event.interest_rate_given,
+                               event.interest_rate_received,
+                               event.timestamp)
 
     return update_trustline
 
@@ -78,28 +76,18 @@ def test_no_capacity(community_with_trustlines, accounts):
     assert path == []
 
 
-def test_creditline_update(fresh_community, currency_network, accounts):
-    A, B, *rest = accounts
-
-    currency_network.update_creditline(A, B, 50)
-    currency_network.accept_creditline(B, A, 50)
-
-    gevent.sleep(1)
-
-    assert fresh_community.get_account_sum(A, B).creditline_given == 50
-    assert fresh_community.get_account_sum(A, B).creditline_received == 0
-
-
 def test_trustline_update(fresh_community, currency_network, accounts):
     A, B, *rest = accounts
 
-    currency_network.update_trustline(A, B, 50, 100)
-    currency_network.update_trustline(B, A, 100, 50)
+    currency_network.update_trustline(A, B, 50, 100, 2, 3)
+    currency_network.update_trustline(B, A, 100, 50, 3, 2)
 
     gevent.sleep(1)
 
     assert fresh_community.get_account_sum(A, B).creditline_given == 50
     assert fresh_community.get_account_sum(A, B).creditline_received == 100
+    assert fresh_community.get_account_sum(A, B).interest_rate_given == 2
+    assert fresh_community.get_account_sum(A, B).interest_rate_received == 3
 
 
 def test_transfer_update(fresh_community, currency_network, accounts):
