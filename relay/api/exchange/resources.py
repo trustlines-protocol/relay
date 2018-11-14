@@ -8,6 +8,7 @@ from webargs.flaskparser import abort
 from eth_utils import to_checksum_address, is_hex
 from marshmallow import validate
 
+from relay.api.resources import dump_result_with_schema
 from relay.relay import TrustlinesRelay
 from relay.api import fields
 from relay.api.exchange.schemas import OrderSchema
@@ -63,12 +64,13 @@ class OrderDetail(Resource):
     def __init__(self, trustlines: TrustlinesRelay) -> None:
         self.trustlines = trustlines
 
+    @dump_result_with_schema(OrderSchema())
     def get(self, order_hash: str):
         abort_if_invalid_order_hash(order_hash)
         order = self.trustlines.orderbook.get_order_by_hash(hexbytes.HexBytes(order_hash))
         if order is None:
             abort(404, message='Order does not exist')
-        return OrderSchema().dump(order).data
+        return order
 
 
 class Orders(Resource):
@@ -88,18 +90,17 @@ class Orders(Resource):
     }
 
     @use_args(args)
+    @dump_result_with_schema(OrderSchema(many=True))
     def get(self, args):
-        return OrderSchema().dump(
-            self.trustlines.orderbook.get_orders(
-                filter_exchange_address=args['exchangeContractAddress'],
-                filter_token_address=args['tokenAddress'],
-                filter_maker_token_address=args['makerTokenAddress'],
-                filter_taker_token_address=args['takerTokenAddress'],
-                filter_trader_address=args['maker'],
-                filter_maker_address=args['taker'],
-                filter_taker_address=args['trader'],
-                filter_fee_recipient_address=args['feeRecipient']),
-            many=True).data
+        return self.trustlines.orderbook.get_orders(
+            filter_exchange_address=args['exchangeContractAddress'],
+            filter_token_address=args['tokenAddress'],
+            filter_maker_token_address=args['makerTokenAddress'],
+            filter_taker_token_address=args['takerTokenAddress'],
+            filter_trader_address=args['maker'],
+            filter_maker_address=args['taker'],
+            filter_taker_address=args['trader'],
+            filter_fee_recipient_address=args['feeRecipient'])
 
 
 class OrderSubmission(Resource):
@@ -192,15 +193,16 @@ class UserEventsExchange(Resource):
     }
 
     @use_args(args)
+    @dump_result_with_schema(UserExchangeEventSchema(many=True))
     def get(self, args, exchange_address: str, user_address: str):
         abort_if_unknown_exchange(self.trustlines, exchange_address)
         from_block = args['fromBlock']
         type = args['type']
         try:
-            events = self.trustlines.get_user_exchange_events(exchange_address,
-                                                              user_address,
-                                                              type=type,
-                                                              from_block=from_block)
+            return self.trustlines.get_user_exchange_events(exchange_address,
+                                                            user_address,
+                                                            type=type,
+                                                            from_block=from_block)
         except TimeoutException:
             logger.warning(
                 "User exchange events: event_name=%s user_address=%s from_block=%s. could not get events in time",
@@ -208,7 +210,6 @@ class UserEventsExchange(Resource):
                 user_address,
                 from_block)
             abort(504, TIMEOUT_MESSAGE)
-        return UserExchangeEventSchema().dump(events, many=True).data
 
 
 class UserEventsAllExchanges(Resource):
@@ -224,13 +225,14 @@ class UserEventsAllExchanges(Resource):
     }
 
     @use_args(args)
+    @dump_result_with_schema(UserExchangeEventSchema(many=True))
     def get(self, args, user_address: str):
         from_block = args['fromBlock']
         type = args['type']
         try:
-            events = self.trustlines.get_all_user_exchange_events(user_address,
-                                                                  type=type,
-                                                                  from_block=from_block)
+            return self.trustlines.get_all_user_exchange_events(user_address,
+                                                                type=type,
+                                                                from_block=from_block)
         except TimeoutException:
             logger.warning(
                 """User exchange events from all exchanges:
@@ -239,7 +241,6 @@ class UserEventsAllExchanges(Resource):
                 user_address,
                 from_block)
             abort(504, TIMEOUT_MESSAGE)
-        return UserExchangeEventSchema().dump(events, many=True).data
 
 
 class EventsExchange(Resource):
@@ -255,16 +256,16 @@ class EventsExchange(Resource):
     }
 
     @use_args(args)
+    @dump_result_with_schema(ExchangeEventSchema(many=True))
     def get(self, args, exchange_address: str):
         abort_if_unknown_exchange(self.trustlines, exchange_address)
         from_block = args['fromBlock']
         type = args['type']
         try:
-            events = self.trustlines.get_exchange_events(exchange_address, type=type, from_block=from_block)
+            return self.trustlines.get_exchange_events(exchange_address, type=type, from_block=from_block)
         except TimeoutException:
             logger.warning(
                 "Exchange events: event_name=%s from_block=%s. could not get events in time",
                 type,
                 from_block)
             abort(504, TIMEOUT_MESSAGE)
-        return ExchangeEventSchema().dump(events, many=True).data

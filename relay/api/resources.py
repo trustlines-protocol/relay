@@ -34,7 +34,7 @@ TIMEOUT_MESSAGE = 'The server could not handle the request in time'
 
 
 def abort_if_unknown_network(trustlines, network_address):
-    if network_address not in trustlines.networks:
+    if network_address not in trustlines.network_addresses:
         abort(404, 'Unknown network: {}'.format(network_address))
 
 
@@ -52,13 +52,9 @@ class NetworkList(Resource):
     def __init__(self, trustlines: TrustlinesRelay) -> None:
         self.trustlines = trustlines
 
+    @dump_result_with_schema(CurrencyNetworkSchema(many=True))
     def get(self):
-        result = []
-        for address in self.trustlines.networks:
-            result.append(
-                CurrencyNetworkSchema().dump(self.trustlines.get_network_info(address)).data
-            )
-        return result
+        return self.trustlines.get_network_infos()
 
 
 class Network(Resource):
@@ -186,16 +182,17 @@ class UserEventsNetwork(Resource):
     }
 
     @use_args(args)
+    @dump_result_with_schema(UserCurrencyNetworkEventSchema(many=True))
     def get(self, args, network_address: str, user_address: str):
         abort_if_unknown_network(self.trustlines, network_address)
         from_block = args['fromBlock']
         type = args['type']
         try:
 
-            events = self.trustlines.get_user_network_events(network_address,
-                                                             user_address,
-                                                             type=type,
-                                                             from_block=from_block)
+            return self.trustlines.get_user_network_events(network_address,
+                                                           user_address,
+                                                           type=type,
+                                                           from_block=from_block)
         except TimeoutException:
             logger.warning(
                 "User network events: event_name=%s user_address=%s from_block=%s. could not get events in time",
@@ -203,7 +200,6 @@ class UserEventsNetwork(Resource):
                 user_address,
                 from_block)
             abort(504, TIMEOUT_MESSAGE)
-        return UserCurrencyNetworkEventSchema().dump(events, many=True).data
 
 
 class UserEvents(Resource):
@@ -251,19 +247,19 @@ class EventsNetwork(Resource):
     }
 
     @use_args(args)
+    @dump_result_with_schema(CurrencyNetworkEventSchema(many=True))
     def get(self, args, network_address: str):
         abort_if_unknown_network(self.trustlines, network_address)
         from_block = args['fromBlock']
         type = args['type']
         try:
-            events = self.trustlines.get_network_events(network_address, type=type, from_block=from_block)
+            return self.trustlines.get_network_events(network_address, type=type, from_block=from_block)
         except TimeoutException:
             logger.warning(
                 "Network events: event_name=%s from_block=%s. could not get events in time",
                 type,
                 from_block)
             abort(504, TIMEOUT_MESSAGE)
-        return CurrencyNetworkEventSchema().dump(events, many=True).data
 
 
 class TransactionInfos(Resource):
@@ -271,8 +267,9 @@ class TransactionInfos(Resource):
     def __init__(self, trustlines: TrustlinesRelay) -> None:
         self.trustlines = trustlines
 
+    @dump_result_with_schema(TxInfosSchema())
     def get(self, user_address: str):
-        return TxInfosSchema().dump(self.trustlines.node.get_tx_infos(user_address)).data
+        return self.trustlines.node.get_tx_infos(user_address)
 
 
 class Relay(Resource):
@@ -287,10 +284,9 @@ class Relay(Resource):
     @use_args(args)
     def post(self, args):
         try:
-            transaction_id = self.trustlines.node.relay_tx(args['rawTransaction'])
+            return self.trustlines.node.relay_tx(args['rawTransaction']).hex()
         except ValueError:  # should mean error in relaying the transaction
             abort(409, 'There was an error while relaying this transaction')
-        return transaction_id.hex()
 
 
 class Balance(Resource):

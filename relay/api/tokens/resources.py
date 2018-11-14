@@ -1,3 +1,4 @@
+from relay.api.resources import dump_result_with_schema
 from relay.blockchain.unw_eth_proxy import UnwEthProxy
 from relay.blockchain.token_proxy import TokenProxy
 
@@ -50,17 +51,16 @@ class UserEventsToken(Resource):
     }
 
     @use_args(args)
+    @dump_result_with_schema(UserTokenEventSchema(many=True))
     def get(self, args, token_address: str, user_address: str):
         abort_if_unknown_token(self.trustlines, token_address)
         from_block = args['fromBlock']
         type = args['type']
 
-        events = self.trustlines.get_user_token_events(token_address,
-                                                       user_address,
-                                                       type=type,
-                                                       from_block=from_block)
-
-        return UserTokenEventSchema().dump(events, many=True).data
+        return self.trustlines.get_user_token_events(token_address,
+                                                     user_address,
+                                                     type=type,
+                                                     from_block=from_block)
 
 
 class EventsToken(Resource):
@@ -77,11 +77,10 @@ class EventsToken(Resource):
     }
 
     @use_args(args)
+    @dump_result_with_schema(TokenEventSchema(many=True))
     def get(self, args, token_address: str):
         abort_if_unknown_token(self.trustlines, token_address)
         from_block = args['fromBlock']
         type = args['type']
 
-        events = self.trustlines.get_token_events(token_address, type=type, from_block=from_block)
-
-        return TokenEventSchema().dump(events, many=True).data
+        return self.trustlines.get_token_events(token_address, type=type, from_block=from_block)
