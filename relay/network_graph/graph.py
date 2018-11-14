@@ -1,21 +1,36 @@
 import csv
 import io
 import operator
+import time
 
 import networkx as nx
 
-from .dijkstra_weighted import find_path, find_path_triangulation, find_maximum_capacity_path, \
-    find_possible_path_triangulations, PaymentPath
+from relay.network_graph.trustline_data import (
+    get_balance,
+    set_balance,
+    get_mtime,
+    set_mtime,
+    get_creditline,
+    set_creditline,
+    get_interest_rate,
+    set_interest_rate,
+    get_fees_outstanding,
+    set_fees_outstanding
+)
+
+from .dijkstra_weighted import (
+    find_path,
+    find_path_triangulation,
+    find_maximum_capacity_path,
+    find_possible_path_triangulations,
+    PaymentPath
+)
+
 from .fees import new_balance, imbalance_fee, estimate_fees_from_capacity
-from .interests import balance_with_interest_estimation
+from .interests import balance_with_interests
 from relay.network_graph.graph_constants import (
     creditline_ab,
     creditline_ba,
-    interest_ab,
-    interest_ba,
-    fees_outstanding_a,
-    fees_outstanding_b,
-    m_time,
     balance_ab,
 )
 
@@ -23,123 +38,85 @@ from relay.network_graph.graph_constants import (
 class Account(object):
     """account from the view of a"""
 
-    def __init__(self, data, src, dest):
-        self.a = src
-        self.b = dest
+    def __init__(self, data, user, counter_party):
+        self.a = user
+        self.b = counter_party
         self.data = data
 
     @property
-    def balance(self):
-        if self.a < self.b:
-            return balance_with_interest_estimation(self.data)
-        else:
-            return -balance_with_interest_estimation(self.data)
+    def balance(self) -> int:
+        """Returns the balance without interests"""
+        return get_balance(self.data, self.a, self.b)
 
     @balance.setter
-    def balance(self, balance):
-        if self.a < self.b:
-            self.data[balance_ab] = balance
-        else:
-            self.data[balance_ab] = -balance
+    def balance(self, balance: int):
+        set_balance(self.data, self.a, self.b, balance)
+
+    def balance_with_interests(self, timestamp_in_seconds: int) -> int:
+        """Returns the balance at a given time with an estimation of the interests"""
+        return balance_with_interests(self.balance,
+                                      self.interest_rate,
+                                      self.reverse_interest_rate,
+                                      timestamp_in_seconds - self.m_time)
 
     @property
-    def m_time(self):
-        return self.data[m_time]
+    def m_time(self) -> int:
+        return get_mtime(self.data)
 
     @m_time.setter
-    def m_time(self, mtime):
-        self.data[m_time] = mtime
+    def m_time(self, timestamp: int):
+        set_mtime(self.data, timestamp)
 
     @property
     def creditline(self):
-        # credit limit given by a to b (b can spend up to that amount)
-        if self.a < self.b:
-            return self.data[creditline_ab]
-        else:
-            return self.data[creditline_ba]
+        return get_creditline(self.data, self.a, self.b)
 
     @creditline.setter
     def creditline(self, creditline):
-        if self.a < self.b:
-            self.data[creditline_ab] = creditline
-        else:
-            self.data[creditline_ba] = creditline
+        set_creditline(self.data, self.a, self.b, creditline)
 
     @property
     def reverse_creditline(self):
-        # credit limit given by b to a (a can spend up to that amount)
-        if self.a < self.b:
-            return self.data[creditline_ba]
-        else:
-            return self.data[creditline_ab]
+        return get_creditline(self.data, self.b, self.a)
 
     @reverse_creditline.setter
     def reverse_creditline(self, creditline):
-        if self.a < self.b:
-            self.data[creditline_ba] = creditline
-        else:
-            self.data[creditline_ab] = creditline
+        set_creditline(self.data, self.b, self.a, creditline)
 
     @property
-    def interest(self):
-        # interest given by a to b
-        if self.a < self.b:
-            return self.data[interest_ab]
-        else:
-            return self.data[interest_ba]
+    def interest_rate(self):
+        return get_interest_rate(self.data, self.a, self.b)
 
-    @interest.setter
-    def interest(self, interest):
-        if self.a < self.b:
-            self.data[interest_ab] = interest
-        else:
-            self.data[interest_ba] = interest
+    @interest_rate.setter
+    def interest_rate(self, interest_rate):
+        set_interest_rate(self.data, self.a, self.b, interest_rate)
 
     @property
-    def reverse_interest(self):
-        # interest received by a from b
-        if self.a < self.b:
-            return self.data[interest_ba]
-        else:
-            return self.data[interest_ab]
+    def reverse_interest_rate(self):
+        return get_interest_rate(self.data, self.b, self.a)
 
-    @reverse_interest.setter
-    def reverse_interest(self, interest):
-        if self.a < self.b:
-            self.data[interest_ba] = interest
-        else:
-            self.data[interest_ab] = interest
+    @reverse_interest_rate.setter
+    def reverse_interest_rate(self, interest_rate):
+        set_interest_rate(self.data, self.b, self.a, interest_rate)
 
     @property
     def fees_outstanding(self):
-        if self.a < self.b:
-            return self.data[fees_outstanding_a]
-        else:
-            return self.data[fees_outstanding_b]
+        return get_fees_outstanding(self.data, self.a, self.b)
 
     @fees_outstanding.setter
     def fees_outstanding(self, fees):
-        if self.a < self.b:
-            self.data[fees_outstanding_a] = fees
-        else:
-            self.data[fees_outstanding_b] = fees
+        set_fees_outstanding(self.data, self.a, self.b, fees)
 
     @property
     def reverse_fees_outstanding(self):
-        if self.a < self.b:
-            return self.data[fees_outstanding_b]
-        else:
-            return self.data[fees_outstanding_a]
+        return get_fees_outstanding(self.data, self.b, self.a)
 
     @reverse_fees_outstanding.setter
     def reverse_fees_outstanding(self, fees):
-        if self.a < self.b:
-            self.data[fees_outstanding_b] = fees
-        else:
-            self.data[fees_outstanding_a] = fees
+        set_fees_outstanding(self.data, self.b, self.a, fees)
 
     def __repr__(self):
-        return '<Account(balance:{} creditline:{}>'.format(self.balance, self.creditline)
+        return 'Account({}, {}, {})'.format(self.a, self.b, self.data)
 
 
 class AccountSummary(object):
@@ -248,12 +225,12 @@ class CurrencyNetworkGraph(object):
         account.reverse_creditline = creditline_received
 
         if interest_rate_given is not None:
-            account.interest = interest_rate_given
+            account.interest_rate = interest_rate_given
         elif self.custom_interests:
             raise RuntimeError('Not interests specified even though custom interests are enabled')
 
         if interest_rate_received is not None:
-            account.reverse_interest = interest_rate_received
+            account.reverse_interest_rate = interest_rate_received
         elif self.custom_interests:
             raise RuntimeError('Not interests specified even though custom interests are enabled')
 
@@ -265,7 +242,7 @@ class CurrencyNetworkGraph(object):
     def get_balance(self, a, b):
         if not self.graph.has_edge(a, b):
             return 0
-        return Account(self.graph[a][b], a, b).balance
+        return Account(self.graph[a][b], a, b).balance_with_interests(int(time.time()))
 
     def update_balance(self, a: str, b: str, balance: int, timestamp: int = None):
         """to update the balance, used to react on changes on the blockchain
@@ -293,15 +270,16 @@ class CurrencyNetworkGraph(object):
             account_summary = AccountSummary()
             for counter_party in self.get_friends(user):
                 account = Account(self.graph[user][counter_party], user, counter_party)
-                account_summary.balance += account.balance
+                account_summary.balance += account.balance_with_interests(int(time.time()))
                 account_summary.creditline_given += account.creditline
                 account_summary.creditline_received += account.reverse_creditline
             return account_summary
         else:
             if self.graph.has_edge(user, counter_party):
                 account = Account(self.graph[user][counter_party], user, counter_party)
-                return AccountSummaryWithInterests(account.balance, account.creditline, account.reverse_creditline,
-                                                   account.interest, account.reverse_interest)
+                return AccountSummaryWithInterests(account.balance_with_interests(int(time.time())),
+                                                   account.creditline, account.reverse_creditline,
+                                                   account.interest_rate, account.reverse_interest_rate)
             else:
                 return AccountSummaryWithInterests()
 
@@ -334,7 +312,7 @@ class CurrencyNetworkGraph(object):
                              'Creditline BA': account.reverse_creditline})
         return output.getvalue()
 
-    def _cost_func_fast_reverse(self, b, a, data, value):
+    def _get_fee(self, data, u, v, value):
         """computes the cost (i.e. the fee) for transferring value from a to b
 
         returns None if the transfer would exceed the creditline.
@@ -342,19 +320,26 @@ class CurrencyNetworkGraph(object):
         # this func should be as fast as possible, as it's called often
         # don't use Account which allocs memory
         # this function calculate the interests to take into account an updated balance
-        pre_balance = balance_with_interest_estimation(data)
-        if a < b:
-            creditline = data[creditline_ba]
-        else:
-            pre_balance = -pre_balance
-            creditline = data[creditline_ab]
+        pre_balance = self._get_balance(data, u, v)
         cost = imbalance_fee(self.capacity_imbalance_fee_divisor, pre_balance, value)
+
+        creditline = get_creditline(data, v, u)
         assert cost >= 0
         post_balance = pre_balance - value - cost
         assert post_balance <= pre_balance
         if -post_balance > creditline:
             return None  # no valid path
         return cost
+
+    def _get_capacity(self, data, u, v):  # gets the capacity from u to v
+        balance_with_interests = self._get_balance(data, u, v)
+        return get_creditline(data, v, u) + balance_with_interests
+
+    def _get_balance(self, data, u, v):
+        return balance_with_interests(get_balance(data, u, v),
+                                      get_interest_rate(data, u, v),
+                                      get_interest_rate(data, v, u),
+                                      int(time.time()) - get_mtime(data))
 
     def find_path(self, source, target, value=None, max_hops=None, max_fees=None):
         """
@@ -368,7 +353,7 @@ class CurrencyNetworkGraph(object):
         try:
             cost, path = find_path(self.graph,
                                    target, source,
-                                   self._cost_func_fast_reverse,
+                                   self._get_fee,
                                    value,
                                    max_hops=max_hops,
                                    max_fees=max_fees)
@@ -392,11 +377,12 @@ class CurrencyNetworkGraph(object):
                                                  source,
                                                  target_reduce,
                                                  target_increase,
-                                                 self._cost_func_fast_reverse,
+                                                 self._get_fee,
+                                                 self._get_balance,
                                                  value,
                                                  max_hops=max_hops,
                                                  max_fees=max_fees)
-        except (nx.NetworkXNoPath, KeyError):  # KeyError is thrown if source or target is not in graph
+        except (nx.NetworkXNoPath, KeyError) as e:  # KeyError is thrown if source or target is not in graph
             cost, path = 0, []  # cost is the total fee, not the actual amount to be transferred
         return cost, list(path)
 
@@ -407,7 +393,8 @@ class CurrencyNetworkGraph(object):
         triangulations = find_possible_path_triangulations(self.graph,
                                                            source,
                                                            target,
-                                                           self._cost_func_fast_reverse,
+                                                           self._get_fee,
+                                                           self._get_balance,
                                                            value,
                                                            max_hops=max_hops,
                                                            max_fees=max_fees)
@@ -425,7 +412,8 @@ class CurrencyNetworkGraph(object):
         return find_possible_path_triangulations(self.graph,
                                                  source,
                                                  target,
-                                                 self._cost_func_fast_reverse,
+                                                 self._get_fee,
+                                                 self._get_balance,
                                                  value,
                                                  max_hops=max_hops,
                                                  max_fees=max_fees)
@@ -447,6 +435,7 @@ class CurrencyNetworkGraph(object):
             min_capacity, path, path_capacities = find_maximum_capacity_path(self.graph,
                                                                              source,
                                                                              target,
+                                                                             get_capacity=self._get_capacity,
                                                                              max_hops=max_hops)
         except (nx.NetworkXNoPath, KeyError):  # key error for if source or target is not in graph
             min_capacity, path, path_capacities = 0, [], []

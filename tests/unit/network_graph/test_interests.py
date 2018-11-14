@@ -1,4 +1,5 @@
 import pytest
+import math
 
 from relay.blockchain.currency_network_proxy import Trustline
 from relay.network_graph.graph import CurrencyNetworkGraph, Account
@@ -12,12 +13,16 @@ from relay.network_graph.graph_constants import (
     m_time,
     balance_ab,
 )
+from relay.network_graph.interests import calculate_interests
 
 addresses = ['0x0A', '0x0B', '0x0C', '0x0D', '0x0E']
 A, B, C, D, E = addresses
 F = '0x0F'
 G = '0x10'
 H = '0x11'
+
+
+SECONDS_PER_YEAR = 60*60*24*365
 
 
 @pytest.fixture
@@ -49,6 +54,11 @@ def basic_data():
     return data
 
 
+@pytest.fixture()
+def basic_account(basic_data):
+    return Account(basic_data, A, B)
+
+
 @pytest.fixture
 def community_with_trustlines(friendsdict):
     community = CurrencyNetworkGraph()
@@ -70,76 +80,73 @@ def community_with_trustlines_and_fees(friendsdict):
     return community
 
 
-def test_interests_calculation_from_A_balance_positive_relevant_interests(basic_data):
-    data = basic_data
-    data[m_time] = 1505260800  # at least one year ago
-    data[balance_ab] = 100  # B owes to A
-    data[interest_ab] = 100  # interest given by A to B
-    acc_AB = Account(data, A, B)
-    assert acc_AB.balance >= 101
+def test_interests_calculation_zero_interest_rate():
+    assert calculate_interests(balance=1000, internal_interest_rate=0, delta_time_in_seconds=SECONDS_PER_YEAR) == 0
 
 
-def test_interests_calculation_from_A_balance_negative_relevant_interests(basic_data):
-    data = basic_data
-    data[m_time] = 1505260800
-    data[balance_ab] = -100  # A owes to B
-    data[interest_ba] = 100  # interest given by B to A
-    acc_AB = Account(data, A, B)
-    assert acc_AB.balance <= -101
+def test_interests_calculation_returns_integer():
+    assert isinstance(calculate_interests(balance=1000,
+                                          internal_interest_rate=100,
+                                          delta_time_in_seconds=SECONDS_PER_YEAR), int)
 
 
-def test_interests_calculation_from_A_balance_positive_irrelevant_interests(basic_data):
-    data = basic_data
-    data[m_time] = 1505260800
-    data[balance_ab] = 100  # B owes to A
-    data[interest_ba] = 100  # interest given by B to A
-    acc_AB = Account(data, A, B)
-    assert acc_AB.balance == 100
+def test_interests_calculation_low_interest_rate():
+    assert calculate_interests(balance=1000, internal_interest_rate=100, delta_time_in_seconds=SECONDS_PER_YEAR) == 10
 
 
-def test_interests_calculation_from_A_balance_negative_irrelevant_interests(basic_data):
-    data = basic_data
-    data[m_time] = 1505260800
-    data[balance_ab] = -100  # A owes to B
-    data[interest_ab] = 100  # interest given by A to B
-    acc_AB = Account(data, A, B)
-    assert acc_AB.balance == -100
+def test_interests_calculation_high_interest_rate():
+    assert calculate_interests(balance=1000000000000000000, internal_interest_rate=2000,
+                               delta_time_in_seconds=SECONDS_PER_YEAR) == pytest.approx(
+        1000000000000000000 * (math.exp(0.20) - 1),
+        rel=0.01)
 
 
-def test_interests_calculation_from_B_balance_positive_relevant_interests(basic_data):
-    data = basic_data
-    data[m_time] = 1505260800  # at least one year ago
-    data[balance_ab] = 100  # B owes to A
-    data[interest_ab] = 100  # interest given by A to B
-    acc_BA = Account(data, B, A)
-    assert acc_BA.balance <= -101
+def test_interests_calculation_gives_same_result_as_smart_contracts():
+    assert calculate_interests(balance=1000000000000000000,
+                               internal_interest_rate=2000,
+                               delta_time_in_seconds=SECONDS_PER_YEAR
+                               ) == 221402758160169828  # taken from contract calculation
 
 
-def test_interests_calculation_from_B_balance_negative_relevant_interests(basic_data):
-    data = basic_data
-    data[m_time] = 1505260800
-    data[balance_ab] = -100  # A owes to B
-    data[interest_ba] = 100  # interest given by B to A
-    acc_BA = Account(data, B, A)
-    assert acc_BA.balance >= 101
+def tests_interests_calculation_no_time():
+    assert calculate_interests(balance=1000, internal_interest_rate=100, delta_time_in_seconds=0) == 0
 
 
-def test_interests_calculation_from_B_balance_positive_irrelevant_interests(basic_data):
-    data = basic_data
-    data[m_time] = 1505260800
-    data[balance_ab] = 100  # B owes to A
-    data[interest_ba] = 100  # interest given by B to A
-    acc_BA = Account(data, B, A)
-    assert acc_BA.balance == -100
+def test_interests_calculation_negative_balance():
+    assert calculate_interests(balance=-1000,
+                               internal_interest_rate=100,
+                               delta_time_in_seconds=SECONDS_PER_YEAR) == -10
 
 
-def test_interests_calculation_from_B_balance_negative_irrelevant_interests(basic_data):
-    data = basic_data
-    data[m_time] = 1505260800
-    data[balance_ab] = -100  # A owes to B
-    data[interest_ab] = 100  # interest given by A to B
-    acc_BA = Account(data, B, A)
-    assert acc_BA.balance == 100
+def test_interests_calculation_from_A_balance_positive_relevant_interests(basic_account):
+    basic_account.balance = 100  # B owes to A
+    basic_account.interest_rate = 100  # interest given by A to B
+    assert basic_account.balance_with_interests(SECONDS_PER_YEAR) == 101
+
+
+def test_interests_calculation_from_A_balance_negative_relevant_interests(basic_account):
+    basic_account.balance = -100  # A owes to B
+    basic_account.reverse_interest_rate = 100  # interest given by B to A
+    assert basic_account.balance_with_interests(SECONDS_PER_YEAR) == -101
+
+
+def test_interests_calculation_from_A_balance_positive_irrelevant_interests(basic_account):
+    basic_account.balance = 100  # B owes to A
+    basic_account.reverse_interest_rate = 100  # interest given by B to A
+    assert basic_account.balance_with_interests(SECONDS_PER_YEAR) == 100
+
+
+def test_interests_calculation_from_A_balance_negative_irrelevant_interests(basic_account):
+    basic_account.balance = -100  # A owes to B
+    basic_account.interest_rate = 100  # interest given by A to B
+    assert basic_account.balance_with_interests(SECONDS_PER_YEAR) == -100
+
+
+def test_interests_calculation_delta_time(basic_account):
+    basic_account.balance = 100
+    basic_account.m_time = SECONDS_PER_YEAR
+    basic_account.interest_rate = 100
+    assert basic_account.balance_with_interests(2*SECONDS_PER_YEAR) == 101
 
 
 def test_interests_path_from_A_balance_positive_relevant_interests(community_with_simple_trustlines):
