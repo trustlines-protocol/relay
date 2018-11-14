@@ -62,7 +62,7 @@ class TrustlinesRelay:
         self._client_token_db: Optional[ClientTokenDB] = None
 
     @property
-    def networks(self) -> Iterable[str]:
+    def network_addresses(self) -> Iterable[str]:
         return self.currency_network_proxies.keys()
 
     @property
@@ -142,13 +142,16 @@ class TrustlinesRelay:
             return self.orderbook._exchange_proxies[address]
 
     def is_currency_network(self, address: str) -> bool:
-        return address in self.networks
+        return address in self.network_addresses
 
     def is_trusted_token(self, address: str) -> bool:
         return address in self.token_addresses or address in self.unw_eth_addresses
 
     def get_network_info(self, network_address: str):
         return self.currency_network_proxies[network_address]
+
+    def get_network_infos(self):
+        return [self.get_network_info(network_address) for network_address in self.network_addresses]
 
     def get_users_of_network(self, network_address: str):
         return self.currency_network_graphs[network_address].users
@@ -172,7 +175,7 @@ class TrustlinesRelay:
 
     def new_network(self, address: str) -> None:
         assert is_checksum_address(address)
-        if address in self.networks:
+        if address in self.network_addresses:
             return
         logger.info('New network: {}'.format(address))
         self.currency_network_proxies[address] = CurrencyNetworkProxy(self._web3,
@@ -215,7 +218,7 @@ class TrustlinesRelay:
     def get_networks_of_user(self, user_address: str) -> List[str]:
         assert is_checksum_address(user_address)
         networks_of_user: List[str] = []
-        for network_address in self.networks:
+        for network_address in self.network_addresses:
             if user_address in self.currency_network_graphs[network_address].users:
                 networks_of_user.append(network_address)
         return networks_of_user
@@ -309,7 +312,7 @@ class TrustlinesRelay:
     def _get_network_event_queries(self, user_address: str, type: str = None, from_block: int = 0):
         assert is_checksum_address(user_address)
         queries = []
-        for network_address in self.networks:
+        for network_address in self.network_addresses:
             currency_network_proxy = self.get_event_selector_for_currency_network(network_address)
             if type is not None and type in currency_network_proxy.event_types:
                 queries.append(functools.partial(currency_network_proxy.get_network_events,
