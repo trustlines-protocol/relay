@@ -320,22 +320,20 @@ class CurrencyNetworkGraph(object):
         # this func should be as fast as possible, as it's called often
         # don't use Account which allocs memory
         # this function calculate the interests to take into account an updated balance
-        pre_balance = self._get_balance(data, u, v)
+        pre_balance = self._get_balance_with_interests_at_current_time(data, u, v)
         cost = imbalance_fee(self.capacity_imbalance_fee_divisor, pre_balance, value)
 
-        creditline = get_creditline(data, v, u)
         assert cost >= 0
-        post_balance = pre_balance - value - cost
-        assert post_balance <= pre_balance
-        if -post_balance > creditline:
+        if value + cost > self._get_capacity_at_current_time(data, u, v):
             return None  # no valid path
         return cost
 
-    def _get_capacity(self, data, u, v):  # gets the capacity from u to v
-        balance_with_interests = self._get_balance(data, u, v)
+    def _get_capacity_at_current_time(self, data, u, v):  # gets the capacity from u to v
+        balance_with_interests = self._get_balance_with_interests_at_current_time(data, u, v)
         return get_creditline(data, v, u) + balance_with_interests
 
-    def _get_balance(self, data, u, v):
+    def _get_balance_with_interests_at_current_time(self, data, u, v):
+        """Returns the balance of the point of u with interests at the current server time (using time.time())"""
         return balance_with_interests(get_balance(data, u, v),
                                       get_interest_rate(data, u, v),
                                       get_interest_rate(data, v, u),
@@ -378,7 +376,7 @@ class CurrencyNetworkGraph(object):
                                                  target_reduce,
                                                  target_increase,
                                                  self._get_fee,
-                                                 self._get_balance,
+                                                 self._get_balance_with_interests_at_current_time,
                                                  value,
                                                  max_hops=max_hops,
                                                  max_fees=max_fees)
@@ -394,7 +392,7 @@ class CurrencyNetworkGraph(object):
                                                            source,
                                                            target,
                                                            self._get_fee,
-                                                           self._get_balance,
+                                                           self._get_balance_with_interests_at_current_time,
                                                            value,
                                                            max_hops=max_hops,
                                                            max_fees=max_fees)
@@ -413,7 +411,7 @@ class CurrencyNetworkGraph(object):
                                                  source,
                                                  target,
                                                  self._get_fee,
-                                                 self._get_balance,
+                                                 self._get_balance_with_interests_at_current_time,
                                                  value,
                                                  max_hops=max_hops,
                                                  max_fees=max_fees)
@@ -432,11 +430,12 @@ class CurrencyNetworkGraph(object):
             returns the value that can be send in the max capacity path and the path,
         """
         try:
-            min_capacity, path, path_capacities = find_maximum_capacity_path(self.graph,
-                                                                             source,
-                                                                             target,
-                                                                             get_capacity=self._get_capacity,
-                                                                             max_hops=max_hops)
+            min_capacity, path, path_capacities = find_maximum_capacity_path(
+                self.graph,
+                source,
+                target,
+                get_capacity=self._get_capacity_at_current_time,
+                max_hops=max_hops)
         except (nx.NetworkXNoPath, KeyError):  # key error for if source or target is not in graph
             min_capacity, path, path_capacities = 0, [], []
 
