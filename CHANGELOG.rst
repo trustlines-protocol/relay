@@ -1,7 +1,7 @@
 ==========
 Change Log
 ==========
-`0.3.0`_ (not released yet)
+`0.3.0`_ (2018-11-16)
 -------------------------------
 * web3 has been upgraded from 3.16.5 to 4.7.1. As a result you should be able to
   install py-eth-index and trustlines-watch into the same virtualenv.
@@ -19,6 +19,15 @@ Change Log
   transactions per block. Please make sure to start parity with the
   `--jsonrpc-apis=all` or `--jsonrpc-apis=parity` option.
 * The docker image is now based on ubuntu 18.04 and python 3.6
+* Add option to syncronize the sending of transactions if env TRUSTLINES_SYNC_TX_RELAY
+  is set, because of a bug in parity
+* Require python version >= 3.6
+* Add interests: 
+  The returned balances include an estimation of the interests
+  Can work with Trustline Updates that include interests
+  Breaks backwardscompatibilty, will not work anymore with old contracts without interests
+* Add first version of endpoint to find a path to close a trustline via a rebalancing of the
+  trustlines. 
 
 `0.2.0`_ (2018-08-21)
 -------------------------------
