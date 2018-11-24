@@ -5,56 +5,53 @@ import math
 
 import networkx as nx
 import attr
+from . import alg
+
+
+class FeesFirstSenderPaysCostAccumulator(alg.CostAccumulator):
+    def __init__(self, value, get_fee, max_hops=None, max_fees=None, ignore=None):
+        if max_hops is None:
+            max_hops = math.inf
+        if max_fees is None:
+            max_fees = math.inf
+
+        self.value = value
+        self.get_fee = get_fee
+        self.max_hops = max_hops
+        self.max_fees = max_fees
+        self.ignore = ignore
+
+    def zero(self):
+        return (0, 0)
+
+    def accumulate_cost_for_next_hop(
+        self, cost_from_start_to_node, node, dst, graph_data
+    ):
+        if dst == self.ignore or node == self.ignore:
+            return None
+
+        sum_fees, num_hops = cost_from_start_to_node
+
+        if num_hops + 1 > self.max_hops:
+            return None
+
+        fee = self.get_fee(graph_data, dst, node, self.value + sum_fees)
+
+        if fee is None or sum_fees + fee > self.max_fees:
+            return None
+
+        return (sum_fees + fee, num_hops + 1)
 
 
 def find_path(G, source, target, get_fee, value, max_hops=None, max_fees=None, ignore=None):
-    G_adj = G.adj
-
-    paths = {source: [source]}  # dictionary of paths
-
-    push = heappush
-    pop = heappop
-    dist = {}  # dictionary of final distances
-    dist_hop = {}  # dictionary of final distances in terms of hops
-    seen = {source: value}
-    c = count()
-    fringe = []  # use heapq with (distance,label) tuples
-    push(fringe, (0, value, next(c), source))
-    while fringe:
-        (n, d, _, v) = pop(fringe)
-        if v in dist:
-            continue  # already searched this node.
-        if v == ignore:
-            continue
-        dist[v] = d
-        dist_hop[v] = n
-        if v == target:
-            break
-
-        for u, e in G_adj[v].items():
-            cost = get_fee(e, u, v, d)  # fee of transferring from u to v
-            if cost is None:
-                continue
-            vu_dist = d + cost
-            if max_fees is not None:
-                if vu_dist - value > max_fees:
-                    continue
-            if max_hops is not None:
-                if n + 1 > max_hops:
-                    continue
-            if u in dist:
-                if (n+1, vu_dist) < (dist_hop[u], dist[u]):
-                    raise ValueError('Contradictory paths found:',
-                                     'negative weights?')
-            elif u not in seen or vu_dist < seen[u]:
-                seen[u] = vu_dist
-                push(fringe, (n+1, vu_dist, next(c), u))
-                paths[u] = paths[v] + [u]
-    try:
-        return (dist[target]-value, paths[target])  # cost is the total fee, not the actual amount to be transfered
-    except KeyError:
-        raise nx.NetworkXNoPath(
-            "node %s not reachable from %s" % (source, target))
+    cost_accumulator = FeesFirstSenderPaysCostAccumulator(
+        value, get_fee, max_hops=max_hops, max_fees=max_fees, ignore=ignore)
+    cost, path = alg.least_cost_path(
+        graph=G,
+        starting_nodes={source},
+        target_nodes={target},
+        cost_accumulator=cost_accumulator)
+    return cost[0], path
 
 
 def find_maximum_capacity_path(G, source, target, get_capacity, max_hops=None):
