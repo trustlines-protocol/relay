@@ -1,5 +1,6 @@
 import tempfile
 import logging
+import time
 
 import wrapt
 from flask import request, send_file, make_response, abort
@@ -426,8 +427,9 @@ class CloseTrustline(Resource):
         max_fees = args['maxFees']
         max_hops = args['maxHops']
 
+        now = int(time.time())
         graph = self.trustlines.currency_network_graphs[network_address]
-        balance = graph.get_balance(source, target_reduce)
+        balance = graph.get_balance_with_interests(source, target_reduce, now)
         value = -balance
 
         if balance == 0:

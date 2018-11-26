@@ -239,10 +239,10 @@ class CurrencyNetworkGraph(object):
         elif self.has_interests:
             raise RuntimeError('No timestamp was given. When using interests a timestamp is mandatory')
 
-    def get_balance(self, a, b):
+    def get_balance_with_interests(self, a, b, timestamp):
         if not self.graph.has_edge(a, b):
             return 0
-        return Account(self.graph[a][b], a, b).balance_with_interests(int(time.time()))
+        return Account(self.graph[a][b], a, b).balance_with_interests(timestamp)
 
     def update_balance(self, a: str, b: str, balance: int, timestamp: int = None):
         """to update the balance, used to react on changes on the blockchain

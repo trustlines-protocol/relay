@@ -169,10 +169,6 @@ def test_triangulation_no_cost_exact_amount(complex_community_with_trustlines_an
     complex_community_with_trustlines_and_fees.update_balance(A, C, 10000)
     complex_community_with_trustlines_and_fees.update_balance(B, D, -10000)
     complex_community_with_trustlines_and_fees.update_balance(C, D, 10000)
-    assert complex_community_with_trustlines_and_fees.get_balance(A, B) == -10000
-    assert complex_community_with_trustlines_and_fees.get_balance(A, C) == 10000
-    assert complex_community_with_trustlines_and_fees.get_balance(B, D) == -10000
-    assert complex_community_with_trustlines_and_fees.get_balance(C, D) == 10000
     cost, path = complex_community_with_trustlines_and_fees.find_path_triangulation(
             A, B, C, 10000)
     assert path == [A, C, D, B, A]
