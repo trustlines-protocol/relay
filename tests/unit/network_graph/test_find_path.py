@@ -29,9 +29,11 @@ def sanity_check_fees(graph, cost_path):
     assert sum_fees == cost, f"cost for this path is wrong {cost_path}"
 
 
-def test_find_path_cost_wrong_bug(graph):
-    """our current implementation fails to compute the correct cost for some
-    paths"""
+def test_find_path_cost_wrong_bug_issue_219(graph):
+    """our old implementation of find_path failed to compute the correct cost
+    for some paths
+
+    This is a test for https://github.com/trustlines-network/relay/issues/219"""
     cost_path = find_path(
         graph, source=1, target=3, get_fee=lambda e, u, v, d: e["fee"], value=0
     )
