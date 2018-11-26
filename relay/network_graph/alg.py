@@ -47,6 +47,7 @@ class CostAccumulator(metaclass=abc.ABCMeta):
             cost = self.total_cost_from_start_to_dst(
                 cost, source, dst, graph.get_edge_data(source, dst)
             )
+            assert cost is not None, f"transfer not allowed source={source}, dst={dst}"
         return cost
 
 

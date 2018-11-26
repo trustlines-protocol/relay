@@ -2,6 +2,7 @@ import csv
 import io
 import operator
 import time
+import math
 
 import networkx as nx
 
@@ -33,6 +34,8 @@ from relay.network_graph.graph_constants import (
     creditline_ba,
     balance_ab,
 )
+
+from . import alg
 
 
 class Account(object):
@@ -152,6 +155,138 @@ class AccountSummaryWithInterests(AccountSummary):
         super().__init__(balance, creditline_given, creditline_received)
         self.interest_rate_given = interest_rate_given
         self.interest_rate_received = interests_received
+
+
+class SenderPaysCostAccumulatorSnapshot(alg.CostAccumulator):
+    """This is the CostAccumulator being used when using our default 'sender
+    pays fees' style of payments"
+
+    This sorts by the fees first, then the number of hops.
+
+    We need to pass a timestamp in the constructor. This is being used to
+    compute a consistent view of balances in the trustlines network.
+    """
+    def __init__(self, *, timestamp, value, capacity_imbalance_fee_divisor, max_hops=None, max_fees=None, ignore=None):
+        if max_hops is None:
+            max_hops = math.inf
+        if max_fees is None:
+            max_fees = math.inf
+
+        self.timestamp = timestamp
+        self.value = value
+        self.capacity_imbalance_fee_divisor = capacity_imbalance_fee_divisor
+        self.max_hops = max_hops
+        self.max_fees = max_fees
+        self.ignore = ignore
+
+    def zero(self):
+        return (0, 0)
+
+    def total_cost_from_start_to_dst(
+        self, cost_from_start_to_node, node, dst, edge_data
+    ):
+        if dst == self.ignore or node == self.ignore:
+            return None
+
+        sum_fees, num_hops = cost_from_start_to_node
+
+        if num_hops + 1 > self.max_hops:
+            return None
+
+        # fee computation has been inlined here, since the comment in
+        # Graph._get_fee suggests it should be as fast as possible. This means
+        # we do have some code duplication, but I couldn't use some of the
+        # methods in Graph anyway, because they don't take a timestamp argument
+        # and rather use the current time.
+        #
+        # We should profile this at some point in time.
+        #
+        # We do the pathfinding in reverse, when the sender pays. In this
+        # method this means that the payment is done from dst to node, i.e. the
+        # order of arguments node and dst is reversed in the following code
+
+        pre_balance = balance_with_interests(
+            get_balance(edge_data, dst, node),
+            get_interest_rate(edge_data, dst, node),
+            get_interest_rate(edge_data, node, dst),
+            self.timestamp - get_mtime(edge_data))
+
+        fee = imbalance_fee(self.capacity_imbalance_fee_divisor, pre_balance, self.value + sum_fees)
+
+        if sum_fees + fee > self.max_fees:
+            return None
+
+        # check that we don't exceed the creditline
+        capacity = pre_balance + get_creditline(edge_data, node, dst)
+        if self.value + sum_fees + fee > capacity:
+            return None  # creditline exceeded
+
+        return (sum_fees + fee, num_hops + 1)
+
+
+class ReceiverPaysCostAccumulatorSnapshot(alg.CostAccumulator):
+    """This is the CostAccumulator being used when using our 'receiver pays
+    fees' style of payments"
+
+    This sorts by the fees first, then the number of hops.
+
+    We need to pass a timestamp in the constructor. This is being used to
+    compute a consistent view of balances in the trustlines network.
+    """
+    def __init__(self, *, timestamp, value, capacity_imbalance_fee_divisor, max_hops=None, max_fees=None, ignore=None):
+        if max_hops is None:
+            max_hops = math.inf
+        if max_fees is None:
+            max_fees = math.inf
+
+        self.timestamp = timestamp
+        self.value = value
+        self.capacity_imbalance_fee_divisor = capacity_imbalance_fee_divisor
+        self.max_hops = max_hops
+        self.max_fees = max_fees
+        self.ignore = ignore
+
+    def zero(self):
+        return (0, 0)
+
+    def total_cost_from_start_to_dst(
+        self, cost_from_start_to_node, node, dst, edge_data
+    ):
+        if dst == self.ignore or node == self.ignore:
+            return None
+
+        sum_fees, num_hops = cost_from_start_to_node
+
+        if num_hops + 1 > self.max_hops:
+            return None
+
+        # fee computation has been inlined here, since the comment in
+        # Graph._get_fee suggests it should be as fast as possible. This means
+        # we do have some code duplication, but I couldn't use some of the
+        # methods in Graph anyway, because they don't take a timestamp argument
+        # and rather use the current time.
+        #
+        # We should profile this at some point in time.
+        #
+        # For this case the pathfinding is not done in reverse.
+
+        pre_balance = balance_with_interests(
+            get_balance(edge_data, node, dst),
+            get_interest_rate(edge_data, node, dst),
+            get_interest_rate(edge_data, dst, node),
+            self.timestamp - get_mtime(edge_data))
+
+        fee = imbalance_fee(self.capacity_imbalance_fee_divisor, pre_balance, self.value - sum_fees)
+
+        if sum_fees + fee > self.max_fees:
+            return None
+
+        # check that we don't exceed the creditline
+        capacity = pre_balance + get_creditline(edge_data, node, dst)
+        if self.value - sum_fees - fee > capacity:
+            return None  # creditline exceeded
+
+        return (sum_fees + fee, num_hops + 1)
 
 
 class CurrencyNetworkGraph(object):
@@ -359,6 +494,59 @@ class CurrencyNetworkGraph(object):
             cost, path = 0, []
             # cost is the total fee, not the actual amount to be transfered
         return cost, list(reversed(path))
+
+    def close_trustline_path_triangulation(self, timestamp, source, target, max_hops=None, max_fees=None):
+        neighbors = {x[0] for x in self.graph.adj[source].items()} - {target}
+        balance = self.get_balance_with_interests(source, target, timestamp)
+        value = abs(balance)
+        if max_hops is not None:
+            max_hops -= 2  # we compute the path without source at the beginning and end
+
+        if balance == 0:
+            return PaymentPath(fee=0, path=[], value=0)
+        elif balance < 0:
+            # payment looks like
+            #
+            #   source -> neighbor -> ... -> target -> source
+            #
+            # since in this case we use sender pays, we search in reverse from
+            # target to neighbor
+            cost_accumulator_class = SenderPaysCostAccumulatorSnapshot
+        elif balance > 0:
+            # payment looks like
+            #
+            # source -> target -> ... -> neighbor -> source
+            #
+            # in this case we use receiver pays, so we search in right order
+            # from target to neighbor
+            cost_accumulator_class = ReceiverPaysCostAccumulatorSnapshot
+
+        cost_accumulator = cost_accumulator_class(
+            timestamp=timestamp,
+            value=value,
+            capacity_imbalance_fee_divisor=self.capacity_imbalance_fee_divisor,
+            max_hops=max_hops,
+            max_fees=max_fees,
+            ignore=source)
+
+        try:
+            # can't use the cost as returned by alg.least_cost_path since it
+            # doesn't include the source node at the beginning and end
+            _, path = alg.least_cost_path(
+                graph=self.graph,
+                starting_nodes={target},
+                target_nodes=neighbors,
+                cost_accumulator=cost_accumulator)
+        except nx.NetworkXNoPath:
+            return PaymentPath(fee=0, path=[], value=value)
+
+        path = [source] + path + [source]
+        cost_accumulator.ignore = None  # hackish, but otherwise the following compute_cost_for_path won't work
+        cost = cost_accumulator.compute_cost_for_path(self.graph, path)
+        if balance < 0:
+            path.reverse()
+
+        return PaymentPath(fee=cost[0], path=path, value=value)
 
     def find_path_triangulation(self, source, target_reduce, target_increase,
                                 value=None, max_hops=None, max_fees=None):
