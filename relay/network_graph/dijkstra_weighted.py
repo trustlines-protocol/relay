@@ -24,7 +24,7 @@ class FeesFirstSenderPaysCostAccumulator(alg.CostAccumulator):
     def zero(self):
         return (0, 0)
 
-    def accumulate_cost_for_next_hop(
+    def total_cost_from_start_to_dst(
         self, cost_from_start_to_node, node, dst, graph_data
     ):
         if dst == self.ignore or node == self.ignore:
