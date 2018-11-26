@@ -1,6 +1,5 @@
 import csv
 import io
-import operator
 import time
 import math
 
@@ -23,7 +22,6 @@ from .dijkstra_weighted import (
     find_path,
     find_path_triangulation,
     find_maximum_capacity_path,
-    find_possible_path_triangulations,
     PaymentPath
 )
 
@@ -571,38 +569,6 @@ class CurrencyNetworkGraph(object):
         except (nx.NetworkXNoPath, KeyError) as e:  # KeyError is thrown if source or target is not in graph
             cost, path = 0, []  # cost is the total fee, not the actual amount to be transferred
         return cost, list(path)
-
-    def find_best_path_triangulation(self, source, target, value, max_hops=None, max_fees=None):
-        """find a path to reduce the creditline between source and target. This
-        works like find_path_triangulation, but uses the best neighbor to
-        reduce the debt."""
-        triangulations = find_possible_path_triangulations(self.graph,
-                                                           source,
-                                                           target,
-                                                           self._get_fee,
-                                                           self._get_balance_with_interests_at_current_time,
-                                                           value,
-                                                           max_hops=max_hops,
-                                                           max_fees=max_fees)
-
-        if not triangulations:
-            return PaymentPath(fee=0, path=[], value=value)
-
-        best_payment_path = min(triangulations, key=operator.attrgetter("fee"))
-        return best_payment_path
-
-    def find_possible_path_triangulations(self, source, target, value=None, max_hops=None, max_fees=None):
-        if value is None:
-            value = 1
-
-        return find_possible_path_triangulations(self.graph,
-                                                 source,
-                                                 target,
-                                                 self._get_fee,
-                                                 self._get_balance_with_interests_at_current_time,
-                                                 value,
-                                                 max_hops=max_hops,
-                                                 max_fees=max_fees)
 
     def find_maximum_capacity_path(self, source, target, max_hops=None):
         """

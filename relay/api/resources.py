@@ -429,20 +429,16 @@ class CloseTrustline(Resource):
 
         now = int(time.time())
         graph = self.trustlines.currency_network_graphs[network_address]
-        balance = graph.get_balance_with_interests(source, target_reduce, now)
-        value = -balance
 
-        if balance == 0:
-            return PaymentPath(fee=0, path=[], value=value, estimated_gas=0)
+        payment_path = graph.close_trustline_path_triangulation(
+            timestamp=now,
+            source=source,
+            target=target_reduce,
+            max_hops=max_hops,
+            max_fees=max_fees,
+        )
 
-        if balance > 0:
-            abort(501, 'cannot reduce positive balance')
-
-        payment_path = graph.find_best_path_triangulation(source,
-                                                          target_reduce,
-                                                          value,
-                                                          max_hops=max_hops,
-                                                          max_fees=max_fees)
+        # XXX we should estimate the gas costs for calling closeTrustline here!
         return _estimate_gas_for_transfer(self.trustlines, payment_path, network_address)
 
 

@@ -653,29 +653,6 @@ def test_send_more_with_fees(community_with_trustlines_and_fees):
     assert community.get_account_sum(A, B).balance == 80 - 2 + 1
 
 
-def test_possible_triangulations_with_cost_exact_amount(complex_community_with_trustlines_and_fees):
-    """A owes money to B and A wants to reduce that amount with the help of C"""
-    complex_community_with_trustlines_and_fees.update_balance(A, B, -10000)  # amount B owes A
-    complex_community_with_trustlines_and_fees.update_balance(A, C, -10000)
-    complex_community_with_trustlines_and_fees.update_balance(B, D, 10000)
-    complex_community_with_trustlines_and_fees.update_balance(C, D, -10000)
-    triangulations = complex_community_with_trustlines_and_fees.find_possible_path_triangulations(
-            A, B, 10000)
-    assert triangulations == [PaymentPath(fee=306, path=[A, C, D, B, A], value=10000)]
-
-
-def test_possible_triangulations_multi(complex_community_with_trustlines_and_fees):
-    """A owes money to H and A wants to reduce that amount"""
-    complex_community_with_trustlines_and_fees.update_balance(A, H, -10000)
-    triangulations = complex_community_with_trustlines_and_fees.find_possible_path_triangulations(
-            A, H, 5000)
-    triangulations.sort(key=lambda x: x.path)
-    assert triangulations == [
-        PaymentPath(fee=312, path=[A, B, D, E, F, G, H, A], value=5000),
-        PaymentPath(fee=312, path=[A, C, D, E, F, G, H, A], value=5000)
-    ]
-
-
 def test_close_trustline_zero_balance(complex_community_with_trustlines_and_fees):
     """H owes money to C and C wants to close the trustline"""
     result = complex_community_with_trustlines_and_fees.close_trustline_path_triangulation(
