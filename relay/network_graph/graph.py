@@ -19,7 +19,6 @@ from relay.network_graph.trustline_data import (
 )
 
 from .dijkstra_weighted import (
-    find_path,
     find_path_triangulation,
     find_maximum_capacity_path,
     PaymentPath
@@ -472,7 +471,7 @@ class CurrencyNetworkGraph(object):
                                       get_interest_rate(data, v, u),
                                       int(time.time()) - get_mtime(data))
 
-    def find_path(self, source, target, value=None, max_hops=None, max_fees=None):
+    def find_path(self, source, target, value=None, max_hops=None, max_fees=None, timestamp=None):
         """
         find path between source and target
         the shortest path is found based on
@@ -481,17 +480,27 @@ class CurrencyNetworkGraph(object):
         """
         if value is None:
             value = 1
+        if timestamp is None:
+            timestamp = int(time.time())
+
+        cost_accumulator = SenderPaysCostAccumulatorSnapshot(
+            timestamp=timestamp,
+            value=value,
+            capacity_imbalance_fee_divisor=self.capacity_imbalance_fee_divisor,
+            max_hops=max_hops,
+            max_fees=max_fees)
+
         try:
-            cost, path = find_path(self.graph,
-                                   target, source,
-                                   self._get_fee,
-                                   value,
-                                   max_hops=max_hops,
-                                   max_fees=max_fees)
+            # we are searching in reverse, so source and target are swapped!
+            cost, path = alg.least_cost_path(
+                graph=self.graph,
+                starting_nodes={target},
+                target_nodes={source},
+                cost_accumulator=cost_accumulator
+            )
         except (nx.NetworkXNoPath, KeyError):  # key error for if source or target is not in graph
-            cost, path = 0, []
-            # cost is the total fee, not the actual amount to be transfered
-        return cost, list(reversed(path))
+            return 0, []
+        return cost[0], list(reversed(path))
 
     def close_trustline_path_triangulation(self, timestamp, source, target, max_hops=None, max_fees=None):
         neighbors = {x[0] for x in self.graph.adj[source].items()} - {target}
