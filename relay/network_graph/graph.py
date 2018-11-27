@@ -544,12 +544,13 @@ class CurrencyNetworkGraph(object):
                 starting_nodes={target},
                 target_nodes=neighbors,
                 cost_accumulator=cost_accumulator)
+            path = [source] + path + [source]
+            cost_accumulator.ignore = None  # hackish, but otherwise the following compute_cost_for_path won't work
+            cost_accumulator.max_hops = math.inf  # don't check max_hops, we know we're below
+            cost = cost_accumulator.compute_cost_for_path(self.graph, path)
         except nx.NetworkXNoPath:
             return PaymentPath(fee=0, path=[], value=value)
 
-        path = [source] + path + [source]
-        cost_accumulator.ignore = None  # hackish, but otherwise the following compute_cost_for_path won't work
-        cost = cost_accumulator.compute_cost_for_path(self.graph, path)
         if balance < 0:
             path.reverse()
 

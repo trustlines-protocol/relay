@@ -42,12 +42,17 @@ class CostAccumulator(metaclass=abc.ABCMeta):
         pass
 
     def compute_cost_for_path(self, graph: nx.graph.Graph, path: List):
+        """
+        compute the cost for the given path. This may raise nx.NetworkXNoPath if
+        total_cost_from_start_to_dst returns None. E.g. if the CostAccumulator
+        has limits on the fees or maximum number of hops this may return None"""
         cost = self.zero()
         for source, dst in zip(path, path[1:]):
             cost = self.total_cost_from_start_to_dst(
                 cost, source, dst, graph.get_edge_data(source, dst)
             )
-            assert cost is not None, f"transfer not allowed source={source}, dst={dst}"
+            if cost is None:
+                raise nx.NetworkXNoPath("no path found")
         return cost
 
 
