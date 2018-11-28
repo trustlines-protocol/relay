@@ -423,7 +423,7 @@ class CloseTrustline(Resource):
     def post(self, args, network_address: str):
         abort_if_unknown_network(self.trustlines, network_address)
         source = args['from']
-        target_reduce = args['to']
+        target = args['to']
         max_fees = args['maxFees']
         max_hops = args['maxHops']
 
@@ -433,13 +433,22 @@ class CloseTrustline(Resource):
         payment_path = graph.close_trustline_path_triangulation(
             timestamp=now,
             source=source,
-            target=target_reduce,
+            target=target,
             max_hops=max_hops,
             max_fees=max_fees,
         )
 
-        # XXX we should estimate the gas costs for calling closeTrustline here!
-        return _estimate_gas_for_transfer(self.trustlines, payment_path, network_address)
+        proxy = self.trustlines.currency_network_proxies[network_address]
+        try:
+            payment_path.estimated_gas = proxy.estimate_gas_for_close_trustline(
+                source=source,
+                other_party=target,
+                max_fee=max_fees or 2**32-1,
+                path=payment_path.path)
+        except ValueError:  # should mean out of gas, so path was not right.
+            return PaymentPath(fee=0, path=[], value=payment_path.value, estimated_gas=0)
+
+        return payment_path
 
 
 class GraphImage(MethodView):

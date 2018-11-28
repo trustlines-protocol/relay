@@ -214,3 +214,10 @@ class CurrencyNetworkProxy(Proxy):
                                                                   payment_path.value,
                                                                   payment_path.fee,
                                                                   payment_path.path[1:])
+
+    def estimate_gas_for_close_trustline(self, source, other_party, max_fee, path):
+        """estimate gas for doing a transfer for the given payment_path"""
+        return self._proxy.estimateGas({'from': source}).closeTrustlineByTriangularTransfer(
+            other_party,
+            max_fee,
+            path[1:])
