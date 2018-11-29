@@ -443,22 +443,6 @@ class CurrencyNetworkGraph(object):
                              'Creditline BA': account.reverse_creditline})
         return output.getvalue()
 
-    def _get_fee(self, data, u, v, value):
-        """computes the cost (i.e. the fee) for transferring value from a to b
-
-        returns None if the transfer would exceed the creditline.
-        """
-        # this func should be as fast as possible, as it's called often
-        # don't use Account which allocs memory
-        # this function calculate the interests to take into account an updated balance
-        pre_balance = self._get_balance_with_interests_at_current_time(data, u, v)
-        cost = imbalance_fee(self.capacity_imbalance_fee_divisor, pre_balance, value)
-
-        assert cost >= 0
-        if value + cost > self._get_capacity_at_current_time(data, u, v):
-            return None  # no valid path
-        return cost
-
     def _get_capacity_at_current_time(self, data, u, v):  # gets the capacity from u to v
         balance_with_interests = self._get_balance_with_interests_at_current_time(data, u, v)
         return get_creditline(data, v, u) + balance_with_interests
