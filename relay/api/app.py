@@ -8,7 +8,7 @@ from werkzeug.exceptions import HTTPException
 from eth_utils import is_address, to_checksum_address, is_checksum_address
 
 from .resources import GraphDump, GraphImage, RequestEther, User, UserList, Network, NetworkList, \
-    ContactList, TrustlineList, Trustline, MaxCapacityPath, Path, ReduceDebtPath, \
+    ContactList, TrustlineList, Trustline, MaxCapacityPath, Path, \
     UserEventsNetwork, UserEvents, Relay, Balance, TransactionInfos, Block, EventsNetwork, \
     CloseTrustline
 from .streams.app import WebSocketRPCHandler, MessagingWebSocketRPCHandler
@@ -59,7 +59,6 @@ def ApiApp(trustlines):
     add_resource(MaxCapacityPath, '/networks/<address:network_address>/max-capacity-path-info')
     add_resource(UserEventsNetwork, '/networks/<address:network_address>/users/<address:user_address>/events')
     add_resource(Path, '/networks/<address:network_address>/path-info')
-    add_resource(ReduceDebtPath, '/networks/<address:network_address>/reduce-debt-path-info')
     add_resource(CloseTrustline, '/networks/<address:network_address>/close-trustline-path-info')
     add_resource(UserEvents, '/users/<address:user_address>/events')
     add_resource(TransactionInfos, '/users/<address:user_address>/txinfos')

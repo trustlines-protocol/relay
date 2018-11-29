@@ -19,7 +19,6 @@ from relay.network_graph.trustline_data import (
 )
 
 from .dijkstra_weighted import (
-    find_path_triangulation,
     find_maximum_capacity_path,
     PaymentPath
 )
@@ -556,30 +555,6 @@ class CurrencyNetworkGraph(object):
 
         return PaymentPath(fee=cost[0], path=path, value=value)
 
-    def find_path_triangulation(self, source, target_reduce, target_increase,
-                                value=None, max_hops=None, max_fees=None):
-        """
-        find a path to update the creditline between source and target with value, via target_increase
-        the shortest path is found based on
-            - the number of hops
-            - the imbalance it adds or reduces in the accounts
-        """
-        if value is None:
-            value = 1
-        try:
-            cost, path = find_path_triangulation(self.graph,
-                                                 source,
-                                                 target_reduce,
-                                                 target_increase,
-                                                 self._get_fee,
-                                                 self._get_balance_with_interests_at_current_time,
-                                                 value,
-                                                 max_hops=max_hops,
-                                                 max_fees=max_fees)
-        except (nx.NetworkXNoPath, KeyError) as e:  # KeyError is thrown if source or target is not in graph
-            cost, path = 0, []  # cost is the total fee, not the actual amount to be transferred
-        return cost, list(path)
-
     def find_maximum_capacity_path(self, source, target, max_hops=None):
         """
         find a path probably with the maximum capacity to transfer from source to target
@@ -658,11 +633,4 @@ class CurrencyNetworkGraph(object):
         cost, path = self.find_path(source, target, value)
         assert path[0] == source
         assert path[-1] == target
-        return self.transfer_path(path, value, cost)
-
-    def triangulation_transfer(self, source, target_reduce, target_increase, value):
-        """simulate triangulation transfer off chain"""
-        cost, path = self.find_path_triangulation(source, target_reduce, target_increase, value)
-        assert path[0] == source
-        assert path[-1] == source
         return self.transfer_path(path, value, cost)

@@ -364,43 +364,6 @@ class Path(Resource):
         return _estimate_gas_for_transfer(self.trustlines, PaymentPath(cost, path, value), network_address)
 
 
-class ReduceDebtPath(Resource):
-
-    def __init__(self, trustlines: TrustlinesRelay) -> None:
-        self.trustlines = trustlines
-
-    args = {
-        'value': fields.Int(required=True, validate=validate.Range(min=1)),
-        'maxHops': fields.Int(required=False, missing=None),
-        'maxFees': fields.Int(required=False, missing=None),
-        'from': custom_fields.Address(required=True),
-        'to': custom_fields.Address(required=True),
-        'via': custom_fields.Address(required=True)
-    }
-
-    @use_args(args)
-    @dump_result_with_schema(PaymentPathSchema())
-    def post(self, args, network_address: str):
-        abort_if_unknown_network(self.trustlines, network_address)
-
-        source = args['from']
-        target_reduce = args['to']
-        target_increase = args['via']
-        value = args['value']
-        max_fees = args['maxFees']
-        max_hops = args['maxHops']
-
-        cost, path = self.trustlines.currency_network_graphs[network_address].find_path_triangulation(
-            source=source,
-            target_reduce=target_reduce,
-            target_increase=target_increase,
-            value=value,
-            max_fees=max_fees,
-            max_hops=max_hops)
-
-        return _estimate_gas_for_transfer(self.trustlines, PaymentPath(cost, path, value), network_address)
-
-
 # CloseTrustline is similar to the above ReduceDebtPath, though it does not
 # take `via` and `value` as parameters. Instead it tries to reduce the debt to
 # zero and uses any contact to do so.

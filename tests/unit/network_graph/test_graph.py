@@ -164,112 +164,52 @@ def test_transfer(community_with_trustlines):
     assert community.get_account_sum(B).balance == 100
 
 
-def test_triangulation_no_cost_exact_amount(complex_community_with_trustlines_and_fees):
+def test_close_trustline_no_cost_exact_amount(complex_community_with_trustlines_and_fees):
     """A owes money to B and A wants to reduce that amount with the help of C"""
     complex_community_with_trustlines_and_fees.update_balance(A, B, -10000)  # amount B owes A
     complex_community_with_trustlines_and_fees.update_balance(A, C, 10000)
     complex_community_with_trustlines_and_fees.update_balance(B, D, -10000)
     complex_community_with_trustlines_and_fees.update_balance(C, D, 10000)
-    cost, path = complex_community_with_trustlines_and_fees.find_path_triangulation(
-            A, B, C, 10000)
-    assert path == [A, C, D, B, A]
-    assert cost == 0
-    complex_community_with_trustlines_and_fees.triangulation_transfer(A, B, C, 10000)
-    assert complex_community_with_trustlines_and_fees.get_account_sum(A, B).balance == 0
+    now = int(time.time())
+    payment_path = complex_community_with_trustlines_and_fees.close_trustline_path_triangulation(
+            now, A, B)
+    assert payment_path == PaymentPath(fee=0, path=[A, C, D, B, A], value=10000)
 
 
-def test_triangulation_with_cost_exact_amount(complex_community_with_trustlines_and_fees):
+def test_close_trustline_not_enough_capacity(complex_community_with_trustlines_and_fees):
     """A owes money to B and A wants to reduce that amount with the help of C"""
-    complex_community_with_trustlines_and_fees.update_balance(A, B, -10000)  # amount B owes A
-    complex_community_with_trustlines_and_fees.update_balance(A, C, -10000)
-    complex_community_with_trustlines_and_fees.update_balance(B, D, 10000)
-    complex_community_with_trustlines_and_fees.update_balance(C, D, -10000)
-    cost, path = complex_community_with_trustlines_and_fees.find_path_triangulation(
-            A, B, C, 10000)
-    assert path == [A, C, D, B, A]
-    assert cost == 306
-    complex_community_with_trustlines_and_fees.triangulation_transfer(A, B, C, 10000)
-    assert complex_community_with_trustlines_and_fees.get_account_sum(A, B).balance == 0
-
-
-def test_triangulation_not_exact_amount(complex_community_with_trustlines_and_fees):
-    """A owes money to B and A wants to reduce that amount with the help of C"""
-    complex_community_with_trustlines_and_fees.update_balance(A, B, -10000)  # amount B owes A
+    complex_community_with_trustlines_and_fees.update_balance(A, B, -100000)  # amount B owes A
     complex_community_with_trustlines_and_fees.update_balance(A, C, 10000)
     complex_community_with_trustlines_and_fees.update_balance(B, D, -10000)
     complex_community_with_trustlines_and_fees.update_balance(C, D, 10000)
-    cost, path = complex_community_with_trustlines_and_fees.find_path_triangulation(
-            A, B, C, 1000)
-    assert path == [A, C, D, B, A]
-    assert cost == 0
-    complex_community_with_trustlines_and_fees.triangulation_transfer(A, B, C, 1000)
-    assert complex_community_with_trustlines_and_fees.get_account_sum(A, B).balance == -9000
+    now = int(time.time())
+    payment_path = complex_community_with_trustlines_and_fees.close_trustline_path_triangulation(
+                now, A, B)
+    assert payment_path == PaymentPath(fee=0, path=[], value=100000)
 
 
-def test_triangulation_not_enough_capacity(complex_community_with_trustlines_and_fees):
-    """A owes money to B and A wants to reduce that amount with the help of C"""
-    complex_community_with_trustlines_and_fees.update_balance(A, B, -10000)  # amount B owes A
-    complex_community_with_trustlines_and_fees.update_balance(A, C, 10000)
-    complex_community_with_trustlines_and_fees.update_balance(B, D, -10000)
-    complex_community_with_trustlines_and_fees.update_balance(C, D, 10000)
-    cost, path = complex_community_with_trustlines_and_fees.find_path_triangulation(
-                A, B, C, 100000)
-    assert path == []
-
-
-def test_triangulation_first_edge_insufficient_capacity(complex_community_with_trustlines_and_fees):
+def test_close_trustline_first_edge_insufficient_capacity(complex_community_with_trustlines_and_fees):
     """A owes money to B and A wants to reduce that amount with the help of C"""
     complex_community_with_trustlines_and_fees.update_balance(A, B, -10000)  # amount B owes A
     complex_community_with_trustlines_and_fees.update_balance(A, C, -50000)
     complex_community_with_trustlines_and_fees.update_balance(B, D, -10000)
     complex_community_with_trustlines_and_fees.update_balance(C, D, 10000)
-    cost, path = complex_community_with_trustlines_and_fees.find_path_triangulation(
-                A, B, C, 10000)
-    assert path == []
+    now = int(time.time())
+    payment_path = complex_community_with_trustlines_and_fees.close_trustline_path_triangulation(
+                now, A, B)
+    assert payment_path.path == []
 
 
-def test_triangulation_last_edge_insufficient_capacity(complex_community_with_trustlines_and_fees):
+def test_close_trustline_last_edge_insufficient_capacity(complex_community_with_trustlines_and_fees):
     """A owes money to B and A wants to reduce that amount with the help of C"""
     complex_community_with_trustlines_and_fees.update_balance(A, B, 50000)  # amount B owes A
     complex_community_with_trustlines_and_fees.update_balance(A, C, 10000)
     complex_community_with_trustlines_and_fees.update_balance(B, D, -10000)
     complex_community_with_trustlines_and_fees.update_balance(C, D, 10000)
-    cost, path = complex_community_with_trustlines_and_fees.find_path_triangulation(
-                A, B, C, 10000)
-    assert path == []
-
-
-def test_triangulation_target_reduce_equals_target_increase(complex_community_with_trustlines_and_fees):
-    """A owes money to B and A wants to reduce that amount with the help of C"""
-    complex_community_with_trustlines_and_fees.update_balance(A, B, -10000)  # amount B owes A
-    complex_community_with_trustlines_and_fees.update_balance(A, C, 10000)
-    complex_community_with_trustlines_and_fees.update_balance(B, D, -10000)
-    complex_community_with_trustlines_and_fees.update_balance(C, D, 10000)
-    with pytest.raises(ValueError):
-        cost, path = complex_community_with_trustlines_and_fees.find_path_triangulation(
-                A, B, B, 10000)
-
-
-def test_triangulation_target_reduce_equals_source(complex_community_with_trustlines_and_fees):
-    """A owes money to B and A wants to reduce that amount with the help of C"""
-    complex_community_with_trustlines_and_fees.update_balance(A, B, -10000)  # amount B owes A
-    complex_community_with_trustlines_and_fees.update_balance(A, C, 10000)
-    complex_community_with_trustlines_and_fees.update_balance(B, D, -10000)
-    complex_community_with_trustlines_and_fees.update_balance(C, D, 10000)
-    cost, path = complex_community_with_trustlines_and_fees.find_path_triangulation(
-                A, A, B, 10000)
-    assert path == []
-
-
-def test_triangulation_target_increase_equals_source(complex_community_with_trustlines_and_fees):
-    """A owes money to B and A wants to reduce that amount with the help of C"""
-    complex_community_with_trustlines_and_fees.update_balance(A, B, -10000)  # amount B owes A
-    complex_community_with_trustlines_and_fees.update_balance(A, C, 10000)
-    complex_community_with_trustlines_and_fees.update_balance(B, D, -10000)
-    complex_community_with_trustlines_and_fees.update_balance(C, D, 10000)
-    cost, path = complex_community_with_trustlines_and_fees.find_path_triangulation(
-                A, B, A, 10000)
-    assert path == []
+    now = int(time.time())
+    payment_path = complex_community_with_trustlines_and_fees.close_trustline_path_triangulation(
+                now, A, B)
+    assert payment_path.path == []
 
 
 def test_capacity_path_single_hop(complex_community_with_trustlines):
