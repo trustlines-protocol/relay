@@ -279,7 +279,7 @@ class ReceiverPaysCostAccumulatorSnapshot(alg.CostAccumulator):
             return None
 
         # check that we don't exceed the creditline
-        capacity = pre_balance + get_creditline(edge_data, node, dst)
+        capacity = pre_balance + get_creditline(edge_data, dst, node)
         if self.value - sum_fees - fee > capacity:
             return None  # creditline exceeded
 
