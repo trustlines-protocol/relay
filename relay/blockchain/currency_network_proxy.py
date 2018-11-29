@@ -202,7 +202,7 @@ class CurrencyNetworkProxy(Proxy):
         return sorted_events(list(itertools.chain.from_iterable(results)))
 
     def estimate_gas_for_transfer(self, sender, receiver, value, max_fee, path):
-        return self._proxy.estimateGas({'from': sender}).transfer(receiver, value, max_fee, path)
+        return self._proxy.functions.transfer(receiver, value, max_fee, path).estimateGas({'from': sender})
 
     def estimate_gas_for_payment_path(self, payment_path):
         """estimate gas for doing a transfer for the given payment_path"""
@@ -210,14 +210,15 @@ class CurrencyNetworkProxy(Proxy):
             return 0
         source = payment_path.path[0]
         target = payment_path.path[-1]
-        return self._proxy.estimateGas({'from': source}).transfer(target,
-                                                                  payment_path.value,
-                                                                  payment_path.fee,
-                                                                  payment_path.path[1:])
+        return self._proxy.functions.transfer(
+            target,
+            payment_path.value,
+            payment_path.fee,
+            payment_path.path[1:]).estimateGas({'from': source})
 
     def estimate_gas_for_close_trustline(self, source, other_party, max_fee, path):
         """estimate gas for doing a transfer for the given payment_path"""
-        return self._proxy.estimateGas({'from': source}).closeTrustlineByTriangularTransfer(
+        return self._proxy.functions.closeTrustlineByTriangularTransfer(
             other_party,
             max_fee,
-            path[1:])
+            path[1:]).estimateGas({'from': source})
