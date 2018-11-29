@@ -1,5 +1,6 @@
 import tempfile
 import logging
+import time
 
 import wrapt
 from flask import request, send_file, make_response, abort
@@ -422,26 +423,32 @@ class CloseTrustline(Resource):
     def post(self, args, network_address: str):
         abort_if_unknown_network(self.trustlines, network_address)
         source = args['from']
-        target_reduce = args['to']
+        target = args['to']
         max_fees = args['maxFees']
         max_hops = args['maxHops']
 
+        now = int(time.time())
         graph = self.trustlines.currency_network_graphs[network_address]
-        balance = graph.get_balance(source, target_reduce)
-        value = -balance
 
-        if balance == 0:
-            return PaymentPath(fee=0, path=[], value=value, estimated_gas=0)
+        payment_path = graph.close_trustline_path_triangulation(
+            timestamp=now,
+            source=source,
+            target=target,
+            max_hops=max_hops,
+            max_fees=max_fees,
+        )
 
-        if balance > 0:
-            abort(501, 'cannot reduce positive balance')
+        proxy = self.trustlines.currency_network_proxies[network_address]
+        try:
+            payment_path.estimated_gas = proxy.estimate_gas_for_close_trustline(
+                source=source,
+                other_party=target,
+                max_fee=max_fees or 2**32-1,
+                path=payment_path.path)
+        except ValueError:  # should mean out of gas, so path was not right.
+            return PaymentPath(fee=0, path=[], value=payment_path.value, estimated_gas=0)
 
-        payment_path = graph.find_best_path_triangulation(source,
-                                                          target_reduce,
-                                                          value,
-                                                          max_hops=max_hops,
-                                                          max_fees=max_fees)
-        return _estimate_gas_for_transfer(self.trustlines, payment_path, network_address)
+        return payment_path
 
 
 class GraphImage(MethodView):

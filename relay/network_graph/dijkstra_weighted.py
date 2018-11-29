@@ -181,36 +181,3 @@ class PaymentPath:
     path: List
     value: int
     estimated_gas: int = attr.ib(default=None)
-
-
-def find_possible_path_triangulations(G,
-                                      source,
-                                      target_reduce,
-                                      get_fee,
-                                      get_balance,
-                                      value,
-                                      max_hops=None,
-                                      max_fees=None):
-    """find ways to reduce sources' debt with it's neighbor target_reduce by value.
-
-    source will have an increased debt to another neighbor
-    This function returns a list of possible payment paths.
-    """
-    triangulations = []
-    neighbors = {x[0] for x in G.adj[source].items()} - {target_reduce}
-    for target_increase in neighbors:
-        try:
-            final_fee, path = find_path_triangulation(
-                G,
-                source,
-                target_reduce,
-                target_increase,
-                get_fee,
-                get_balance,
-                value,
-                max_hops=max_hops,
-                max_fees=max_fees)
-        except (nx.NetworkXNoPath, KeyError) as e:
-            continue
-        triangulations.append(PaymentPath(final_fee, path, value))
-    return triangulations

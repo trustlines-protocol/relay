@@ -1,3 +1,4 @@
+import time
 import pytest
 
 from relay.blockchain.currency_network_proxy import Trustline
@@ -169,10 +170,6 @@ def test_triangulation_no_cost_exact_amount(complex_community_with_trustlines_an
     complex_community_with_trustlines_and_fees.update_balance(A, C, 10000)
     complex_community_with_trustlines_and_fees.update_balance(B, D, -10000)
     complex_community_with_trustlines_and_fees.update_balance(C, D, 10000)
-    assert complex_community_with_trustlines_and_fees.get_balance(A, B) == -10000
-    assert complex_community_with_trustlines_and_fees.get_balance(A, C) == 10000
-    assert complex_community_with_trustlines_and_fees.get_balance(B, D) == -10000
-    assert complex_community_with_trustlines_and_fees.get_balance(C, D) == 10000
     cost, path = complex_community_with_trustlines_and_fees.find_path_triangulation(
             A, B, C, 10000)
     assert path == [A, C, D, B, A]
@@ -656,24 +653,68 @@ def test_send_more_with_fees(community_with_trustlines_and_fees):
     assert community.get_account_sum(A, B).balance == 80 - 2 + 1
 
 
-def test_possible_triangulations_with_cost_exact_amount(complex_community_with_trustlines_and_fees):
-    """A owes money to B and A wants to reduce that amount with the help of C"""
+def test_close_trustline_zero_balance(complex_community_with_trustlines_and_fees):
+    """H owes money to C and C wants to close the trustline"""
+    result = complex_community_with_trustlines_and_fees.close_trustline_path_triangulation(
+        timestamp=int(time.time()),
+        source=C,
+        target=H)
+    assert result == PaymentPath(
+        fee=0,
+        path=[],
+        value=0,
+        estimated_gas=None)
+
+
+def test_close_trustline_positive_balance(complex_community_with_trustlines_and_fees):
+    """H owes money to C and C wants to close the trustline"""
+    complex_community_with_trustlines_and_fees.update_balance(C, H, 5000)
+    result = complex_community_with_trustlines_and_fees.close_trustline_path_triangulation(
+        timestamp=int(time.time()),
+        source=C,
+        target=H)
+    assert result == PaymentPath(
+        fee=248,
+        path=[C, H, G, F, E, D, C],
+        value=5000,
+        estimated_gas=None)
+
+
+def test_close_trustline_negative_balance(complex_community_with_trustlines_and_fees):
+    """C owes money to H and C wants to close the trustline"""
+    complex_community_with_trustlines_and_fees.update_balance(C, H, -5000)
+    result = complex_community_with_trustlines_and_fees.close_trustline_path_triangulation(
+        timestamp=int(time.time()),
+        source=C,
+        target=H)
+    assert result == PaymentPath(
+        fee=259,
+        path=[C, D, E, F, G, H, C],
+        value=5000,
+        estimated_gas=None)
+
+
+def test_close_trustline_with_cost_exact_amount(complex_community_with_trustlines_and_fees):
+    """A owes money to B and A wants to close the trustline"""
     complex_community_with_trustlines_and_fees.update_balance(A, B, -10000)  # amount B owes A
     complex_community_with_trustlines_and_fees.update_balance(A, C, -10000)
     complex_community_with_trustlines_and_fees.update_balance(B, D, 10000)
     complex_community_with_trustlines_and_fees.update_balance(C, D, -10000)
-    triangulations = complex_community_with_trustlines_and_fees.find_possible_path_triangulations(
-            A, B, 10000)
-    assert triangulations == [PaymentPath(fee=306, path=[A, C, D, B, A], value=10000)]
+    result = complex_community_with_trustlines_and_fees.close_trustline_path_triangulation(
+        timestamp=int(time.time()),
+        source=A,
+        target=B)
+    assert result == PaymentPath(fee=306, path=[A, C, D, B, A], value=10000, estimated_gas=None)
 
 
-def test_possible_triangulations_multi(complex_community_with_trustlines_and_fees):
-    """A owes money to H and A wants to reduce that amount"""
-    complex_community_with_trustlines_and_fees.update_balance(A, H, -10000)
-    triangulations = complex_community_with_trustlines_and_fees.find_possible_path_triangulations(
-            A, H, 5000)
-    triangulations.sort(key=lambda x: x.path)
-    assert triangulations == [
+def test_close_trustline_multi(complex_community_with_trustlines_and_fees):
+    """A owes money to H and A wants to close the trustline"""
+    complex_community_with_trustlines_and_fees.update_balance(A, H, -5000)
+    result = complex_community_with_trustlines_and_fees.close_trustline_path_triangulation(
+        timestamp=int(time.time()),
+        source=A,
+        target=H)
+    assert result in [
         PaymentPath(fee=312, path=[A, B, D, E, F, G, H, A], value=5000),
         PaymentPath(fee=312, path=[A, C, D, E, F, G, H, A], value=5000)
     ]
