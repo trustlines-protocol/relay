@@ -1,7 +1,17 @@
 import pytest
 
 import networkx as nx
-from relay.network_graph.dijkstra_weighted import find_path
+from relay.network_graph import alg
+
+
+class FeeCostAccumulator(alg.CostAccumulator):
+    def zero(self):
+        return 0
+
+    def total_cost_from_start_to_dst(
+        self, cost_from_start_to_node, node, dst, graph_data
+    ):
+        return cost_from_start_to_node + graph_data["fee"]
 
 
 @pytest.fixture()
@@ -34,7 +44,10 @@ def test_find_path_cost_wrong_bug_issue_219(graph):
     for some paths
 
     This is a test for https://github.com/trustlines-network/relay/issues/219"""
-    cost_path = find_path(
-        graph, source=1, target=3, get_fee=lambda e, u, v, d: e["fee"], value=0
+    cost_path = alg.least_cost_path(
+        graph=graph,
+        starting_nodes={1},
+        target_nodes={3},
+        cost_accumulator=FeeCostAccumulator(),
     )
     sanity_check_fees(graph, cost_path)

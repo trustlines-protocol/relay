@@ -5,53 +5,6 @@ import math
 
 import networkx as nx
 import attr
-from . import alg
-
-
-class FeesFirstSenderPaysCostAccumulator(alg.CostAccumulator):
-    def __init__(self, value, get_fee, max_hops=None, max_fees=None, ignore=None):
-        if max_hops is None:
-            max_hops = math.inf
-        if max_fees is None:
-            max_fees = math.inf
-
-        self.value = value
-        self.get_fee = get_fee
-        self.max_hops = max_hops
-        self.max_fees = max_fees
-        self.ignore = ignore
-
-    def zero(self):
-        return (0, 0)
-
-    def total_cost_from_start_to_dst(
-        self, cost_from_start_to_node, node, dst, graph_data
-    ):
-        if dst == self.ignore or node == self.ignore:
-            return None
-
-        sum_fees, num_hops = cost_from_start_to_node
-
-        if num_hops + 1 > self.max_hops:
-            return None
-
-        fee = self.get_fee(graph_data, dst, node, self.value + sum_fees)
-
-        if fee is None or sum_fees + fee > self.max_fees:
-            return None
-
-        return (sum_fees + fee, num_hops + 1)
-
-
-def find_path(G, source, target, get_fee, value, max_hops=None, max_fees=None, ignore=None):
-    cost_accumulator = FeesFirstSenderPaysCostAccumulator(
-        value, get_fee, max_hops=max_hops, max_fees=max_fees, ignore=ignore)
-    cost, path = alg.least_cost_path(
-        graph=G,
-        starting_nodes={source},
-        target_nodes={target},
-        cost_accumulator=cost_accumulator)
-    return cost[0], path
 
 
 def find_maximum_capacity_path(G, source, target, get_capacity, max_hops=None):
