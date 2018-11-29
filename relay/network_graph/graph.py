@@ -19,7 +19,6 @@ from relay.network_graph.trustline_data import (
 )
 
 from .dijkstra_weighted import (
-    find_maximum_capacity_path,
     PaymentPath
 )
 
@@ -285,6 +284,39 @@ class ReceiverPaysCostAccumulatorSnapshot(alg.CostAccumulator):
         return (sum_fees + fee, num_hops + 1)
 
 
+class CapacityAccumulator(alg.CostAccumulator):
+    """This is being used to find a path with the maximum capacity"""
+    def __init__(self, *, timestamp, max_hops=None):
+        if max_hops is None:
+            max_hops = math.inf
+        self.max_hops = max_hops
+        self.timestamp = timestamp
+
+    def get_capacity(self, node, dst, edge_data):
+        balance = balance_with_interests(
+            get_balance(edge_data, node, dst),
+            get_interest_rate(edge_data, node, dst),
+            get_interest_rate(edge_data, dst, node),
+            self.timestamp - get_mtime(edge_data))
+        return balance + get_creditline(edge_data, dst, node)
+
+    def zero(self):
+        return (-math.inf, 0)  # We use (- capacity, num_hops) as cost
+
+    def total_cost_from_start_to_dst(
+        self, cost_from_start_to_node, node, dst, edge_data
+    ):
+
+        capacity_from_start_to_node = - cost_from_start_to_node[0]
+        num_hops = cost_from_start_to_node[1]
+        if num_hops + 1 > self.max_hops:
+            return None
+
+        capacity_this_edge = self.get_capacity(node, dst, edge_data)
+        return (- min(capacity_this_edge, capacity_from_start_to_node),
+                num_hops + 1)
+
+
 class CurrencyNetworkGraph(object):
     """The whole graph of a Token Network"""
 
@@ -539,7 +571,7 @@ class CurrencyNetworkGraph(object):
 
         return PaymentPath(fee=cost[0], path=path, value=value)
 
-    def find_maximum_capacity_path(self, source, target, max_hops=None):
+    def find_maximum_capacity_path(self, source, target, max_hops=None, timestamp=None):
         """
         find a path probably with the maximum capacity to transfer from source to target
         The "imbalance_fee" function not being bijective, only an estimate of the fees can be found from "value + fee"
@@ -552,13 +584,18 @@ class CurrencyNetworkGraph(object):
         Returns:
             returns the value that can be send in the max capacity path and the path,
         """
+        if timestamp is None:
+            timestamp = int(time.time())
+        capacity_accumulator = CapacityAccumulator(timestamp=timestamp, max_hops=max_hops)
         try:
-            min_capacity, path, path_capacities = find_maximum_capacity_path(
-                self.graph,
-                source,
-                target,
-                get_capacity=self._get_capacity_at_current_time,
-                max_hops=max_hops)
+            cost, path = alg.least_cost_path(
+                graph=self.graph,
+                starting_nodes={source},
+                target_nodes={target},
+                cost_accumulator=capacity_accumulator)
+            min_capacity = - cost[0]
+            path_capacities = [capacity_accumulator.get_capacity(node, dst, self.graph[node][dst])
+                               for node, dst in zip(path, path[1:])]
         except (nx.NetworkXNoPath, KeyError):  # key error for if source or target is not in graph
             min_capacity, path, path_capacities = 0, [], []
 
