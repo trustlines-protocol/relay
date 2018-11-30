@@ -428,19 +428,22 @@ class CurrencyNetworkGraph(object):
         elif self.has_interests:
             raise RuntimeError('No timestamp was given. When using interests a timestamp is mandatory')
 
-    def get_account_sum(self, user, counter_party=None):
+    def get_account_sum(self, user, counter_party=None, timestamp=None):
+        if timestamp is None:
+            timestamp = int(time.time())
+
         if counter_party is None:
             account_summary = AccountSummary()
             for counter_party in self.get_friends(user):
                 account = Account(self.graph[user][counter_party], user, counter_party)
-                account_summary.balance += account.balance_with_interests(int(time.time()))
+                account_summary.balance += account.balance_with_interests(timestamp)
                 account_summary.creditline_given += account.creditline
                 account_summary.creditline_received += account.reverse_creditline
             return account_summary
         else:
             if self.graph.has_edge(user, counter_party):
                 account = Account(self.graph[user][counter_party], user, counter_party)
-                return AccountSummaryWithInterests(account.balance_with_interests(int(time.time())),
+                return AccountSummaryWithInterests(account.balance_with_interests(timestamp),
                                                    account.creditline, account.reverse_creditline,
                                                    account.interest_rate, account.reverse_interest_rate)
             else:
