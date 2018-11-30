@@ -475,17 +475,6 @@ class CurrencyNetworkGraph(object):
                              'Creditline BA': account.reverse_creditline})
         return output.getvalue()
 
-    def _get_capacity_at_current_time(self, data, u, v):  # gets the capacity from u to v
-        balance_with_interests = self._get_balance_with_interests_at_current_time(data, u, v)
-        return get_creditline(data, v, u) + balance_with_interests
-
-    def _get_balance_with_interests_at_current_time(self, data, u, v):
-        """Returns the balance of the point of u with interests at the current server time (using time.time())"""
-        return balance_with_interests(get_balance(data, u, v),
-                                      get_interest_rate(data, u, v),
-                                      get_interest_rate(data, v, u),
-                                      int(time.time()) - get_mtime(data))
-
     def find_path(self, source, target, value=None, max_hops=None, max_fees=None, timestamp=None):
         """
         find path between source and target
