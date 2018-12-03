@@ -621,6 +621,17 @@ class CurrencyNetworkGraph(object):
 
         return capacity - fees
 
+
+class CurrencyNetworkGraphForTesting(CurrencyNetworkGraph):
+    """A currency network graph with some additional methods used for testing"""
+    def __init__(self, capacity_imbalance_fee_divisor=0, default_interest_rate=0,
+                 custom_interests=False, prevent_mediator_interests=False):
+        super().__init__(
+            capacity_imbalance_fee_divisor=capacity_imbalance_fee_divisor,
+            default_interest_rate=default_interest_rate,
+            custom_interests=custom_interests,
+            prevent_mediator_interests=prevent_mediator_interests)
+
     def transfer(self, source, target, value):
         """simulate transfer off chain"""
         account = Account(self.graph[source][target], source, target)
