@@ -19,8 +19,6 @@ from relay.network_graph.trustline_data import (
 )
 
 from .dijkstra_weighted import (
-    find_path_triangulation,
-    find_maximum_capacity_path,
     PaymentPath
 )
 
@@ -286,6 +284,39 @@ class ReceiverPaysCostAccumulatorSnapshot(alg.CostAccumulator):
         return (sum_fees + fee, num_hops + 1)
 
 
+class CapacityAccumulator(alg.CostAccumulator):
+    """This is being used to find a path with the maximum capacity"""
+    def __init__(self, *, timestamp, max_hops=None):
+        if max_hops is None:
+            max_hops = math.inf
+        self.max_hops = max_hops
+        self.timestamp = timestamp
+
+    def get_capacity(self, node, dst, edge_data):
+        balance = balance_with_interests(
+            get_balance(edge_data, node, dst),
+            get_interest_rate(edge_data, node, dst),
+            get_interest_rate(edge_data, dst, node),
+            self.timestamp - get_mtime(edge_data))
+        return balance + get_creditline(edge_data, dst, node)
+
+    def zero(self):
+        return (-math.inf, 0)  # We use (- capacity, num_hops) as cost
+
+    def total_cost_from_start_to_dst(
+        self, cost_from_start_to_node, node, dst, edge_data
+    ):
+
+        capacity_from_start_to_node = - cost_from_start_to_node[0]
+        num_hops = cost_from_start_to_node[1]
+        if num_hops + 1 > self.max_hops:
+            return None
+
+        capacity_this_edge = self.get_capacity(node, dst, edge_data)
+        return (- min(capacity_this_edge, capacity_from_start_to_node),
+                num_hops + 1)
+
+
 class CurrencyNetworkGraph(object):
     """The whole graph of a Token Network"""
 
@@ -397,19 +428,22 @@ class CurrencyNetworkGraph(object):
         elif self.has_interests:
             raise RuntimeError('No timestamp was given. When using interests a timestamp is mandatory')
 
-    def get_account_sum(self, user, counter_party=None):
+    def get_account_sum(self, user, counter_party=None, timestamp=None):
+        if timestamp is None:
+            timestamp = int(time.time())
+
         if counter_party is None:
             account_summary = AccountSummary()
             for counter_party in self.get_friends(user):
                 account = Account(self.graph[user][counter_party], user, counter_party)
-                account_summary.balance += account.balance_with_interests(int(time.time()))
+                account_summary.balance += account.balance_with_interests(timestamp)
                 account_summary.creditline_given += account.creditline
                 account_summary.creditline_received += account.reverse_creditline
             return account_summary
         else:
             if self.graph.has_edge(user, counter_party):
                 account = Account(self.graph[user][counter_party], user, counter_party)
-                return AccountSummaryWithInterests(account.balance_with_interests(int(time.time())),
+                return AccountSummaryWithInterests(account.balance_with_interests(timestamp),
                                                    account.creditline, account.reverse_creditline,
                                                    account.interest_rate, account.reverse_interest_rate)
             else:
@@ -443,33 +477,6 @@ class CurrencyNetworkGraph(object):
                              'Creditline AB': account.creditline,
                              'Creditline BA': account.reverse_creditline})
         return output.getvalue()
-
-    def _get_fee(self, data, u, v, value):
-        """computes the cost (i.e. the fee) for transferring value from a to b
-
-        returns None if the transfer would exceed the creditline.
-        """
-        # this func should be as fast as possible, as it's called often
-        # don't use Account which allocs memory
-        # this function calculate the interests to take into account an updated balance
-        pre_balance = self._get_balance_with_interests_at_current_time(data, u, v)
-        cost = imbalance_fee(self.capacity_imbalance_fee_divisor, pre_balance, value)
-
-        assert cost >= 0
-        if value + cost > self._get_capacity_at_current_time(data, u, v):
-            return None  # no valid path
-        return cost
-
-    def _get_capacity_at_current_time(self, data, u, v):  # gets the capacity from u to v
-        balance_with_interests = self._get_balance_with_interests_at_current_time(data, u, v)
-        return get_creditline(data, v, u) + balance_with_interests
-
-    def _get_balance_with_interests_at_current_time(self, data, u, v):
-        """Returns the balance of the point of u with interests at the current server time (using time.time())"""
-        return balance_with_interests(get_balance(data, u, v),
-                                      get_interest_rate(data, u, v),
-                                      get_interest_rate(data, v, u),
-                                      int(time.time()) - get_mtime(data))
 
     def find_path(self, source, target, value=None, max_hops=None, max_fees=None, timestamp=None):
         """
@@ -556,31 +563,7 @@ class CurrencyNetworkGraph(object):
 
         return PaymentPath(fee=cost[0], path=path, value=value)
 
-    def find_path_triangulation(self, source, target_reduce, target_increase,
-                                value=None, max_hops=None, max_fees=None):
-        """
-        find a path to update the creditline between source and target with value, via target_increase
-        the shortest path is found based on
-            - the number of hops
-            - the imbalance it adds or reduces in the accounts
-        """
-        if value is None:
-            value = 1
-        try:
-            cost, path = find_path_triangulation(self.graph,
-                                                 source,
-                                                 target_reduce,
-                                                 target_increase,
-                                                 self._get_fee,
-                                                 self._get_balance_with_interests_at_current_time,
-                                                 value,
-                                                 max_hops=max_hops,
-                                                 max_fees=max_fees)
-        except (nx.NetworkXNoPath, KeyError) as e:  # KeyError is thrown if source or target is not in graph
-            cost, path = 0, []  # cost is the total fee, not the actual amount to be transferred
-        return cost, list(path)
-
-    def find_maximum_capacity_path(self, source, target, max_hops=None):
+    def find_maximum_capacity_path(self, source, target, max_hops=None, timestamp=None):
         """
         find a path probably with the maximum capacity to transfer from source to target
         The "imbalance_fee" function not being bijective, only an estimate of the fees can be found from "value + fee"
@@ -593,13 +576,18 @@ class CurrencyNetworkGraph(object):
         Returns:
             returns the value that can be send in the max capacity path and the path,
         """
+        if timestamp is None:
+            timestamp = int(time.time())
+        capacity_accumulator = CapacityAccumulator(timestamp=timestamp, max_hops=max_hops)
         try:
-            min_capacity, path, path_capacities = find_maximum_capacity_path(
-                self.graph,
-                source,
-                target,
-                get_capacity=self._get_capacity_at_current_time,
-                max_hops=max_hops)
+            cost, path = alg.least_cost_path(
+                graph=self.graph,
+                starting_nodes={source},
+                target_nodes={target},
+                cost_accumulator=capacity_accumulator)
+            min_capacity = - cost[0]
+            path_capacities = [capacity_accumulator.get_capacity(node, dst, self.graph[node][dst])
+                               for node, dst in zip(path, path[1:])]
         except (nx.NetworkXNoPath, KeyError):  # key error for if source or target is not in graph
             min_capacity, path, path_capacities = 0, [], []
 
@@ -658,11 +646,4 @@ class CurrencyNetworkGraph(object):
         cost, path = self.find_path(source, target, value)
         assert path[0] == source
         assert path[-1] == target
-        return self.transfer_path(path, value, cost)
-
-    def triangulation_transfer(self, source, target_reduce, target_increase, value):
-        """simulate triangulation transfer off chain"""
-        cost, path = self.find_path_triangulation(source, target_reduce, target_increase, value)
-        assert path[0] == source
-        assert path[-1] == source
         return self.transfer_path(path, value, cost)

@@ -31,7 +31,6 @@ https://relay0.testnet.trustlines.network/api/v1
 - [Trustline details of user in currency network](#trustline-details-of-user-in-currency-network)
 - [Spendable amount and path to any user in currency network](#spendable-amount-and-path-to-any-user-in-currency-network)
 - [Transfer path in currency network](#transfer-path-in-currency-network)
-- [Debt reduction path in currency network](#debt-reduction-path-in-currency-network)
 - [Closing trustline path in currency network](#closing-trustline-path-in-currency-network)
 - [All events in currency network](#all-events-in-currency-network)
 - [Events of user in currency network](#events-of-user-in-currency-network)
@@ -358,54 +357,6 @@ curl --header "Content-Type: application/json" \
 	"path": [
     "0xcbF1153F6e5AC01D363d432e24112e8aA56c55ce",
     "0x7Ec3543702FA8F2C7b2bD84C034aAc36C263cA8b"
-  ],
-  "fees": "2",
-  "estimatedGas": 76324
-}
-```
-
----
-
-### Debt reduction path in currency network
-Returns the cheapest path, the estimated gas costs and estimated fees for a debt reduction transfer.
-#### Request
-```
-POST /networks/:networkAddress/reduce-debt-path-info
-```
-#### URL Parameters
-|Name|Type|Required|Description|
-|-|-|-|-|
-|networkAddress|string|YES|Address of currency network|
-#### Data Parameters
-|Name|Type|Required|Description|
-|-|-|-|-|
-|from|string|YES|Address of user who wants to reduce debt|
-|to|string|YES|Address of user who sees debt reduce|
-|via|string|YES|Address of intermediary used to reduce debt|
-|value|string|YES|Amount for debt reduction in smallest unit|
-|maxFees|string|NO|Upper bound for transfer fees|
-|maxHops|string|NO|Upper bound for hops in transfer path|
-#### Example Request
-```bash
-curl --header "Content-Type: application/json" \
-  --request POST \
-  --data '{"from":"0xcbF1153F6e5AC01D363d432e24112e8aA56c55ce","to":"0x7Ec3543702FA8F2C7b2bD84C034aAc36C263cA8b","via":0xc257274276a4e539741ca11b590b9447b26a8051, "value": "1000"}' \
-  https://relay0.testnet.trustlines.network/api/v1/networks/0xC0B33D88C704455075a0724AA167a286da778DDE/reduce-debt-path-info
-```
-#### Response
-|Attribute|Type|Description|
-|---------|----|-----------|
-|path|string[]|Addresses of users on transfer path|
-|fees|string|Estimated transfer fees|
-|estimatedGas|int|Estimated gas costs for transfer|
-#### Example Response
-```json
-{
-    "path": [
-    "0xcbF1153F6e5AC01D363d432e24112e8aA56c55ce",
-    "0xc257274276a4e539741ca11b590b9447b26a8051",
-    "0x7Ec3543702FA8F2C7b2bD84C034aAc36C263cA8b",
-    "0xcbF1153F6e5AC01D363d432e24112e8aA56c55ce"
   ],
   "fees": "2",
   "estimatedGas": 76324
