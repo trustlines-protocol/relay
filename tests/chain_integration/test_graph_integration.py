@@ -95,12 +95,12 @@ def test_transfer_update(fresh_community, currency_network, accounts):
 
     currency_network.update_trustline(A, B, 50, 100)
     currency_network.update_trustline(B, A, 100, 50)
-    currency_network.transfer(B, A, 20, 1, [A])
+    currency_network.transfer(B, A, 20, 0, [A])
 
     gevent.sleep(1)
 
     assert fresh_community.get_account_sum(A, B).creditline_given == 50
     assert fresh_community.get_account_sum(A, B).creditline_received == 100
-    assert fresh_community.get_account_sum(A, B).balance == 21
-    assert fresh_community.get_account_sum(A, B).creditline_left_given == 29
-    assert fresh_community.get_account_sum(A, B).creditline_left_received == 121
+    assert fresh_community.get_account_sum(A, B).balance == 20
+    assert fresh_community.get_account_sum(A, B).creditline_left_given == 30
+    assert fresh_community.get_account_sum(A, B).creditline_left_received == 120
