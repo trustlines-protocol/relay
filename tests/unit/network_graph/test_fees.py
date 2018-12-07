@@ -1,4 +1,29 @@
-from relay.network_graph.fees import imbalance_fee, new_balance, estimate_fees_from_capacity
+from relay.network_graph.fees import (imbalance_fee, new_balance, estimate_fees_from_capacity,
+                                      calculate_fees, calculate_fees_reverse)
+
+
+def test_calculate_fees(CalculateFeeGenerator):
+    capacity_imbalance_fee_divisor = CalculateFeeGenerator["input_data"][
+        "capacity_imbalance_fee_divisor"
+    ]
+    imbalance_generated = CalculateFeeGenerator["input_data"]["imbalance_generated"]
+    calculateFees = CalculateFeeGenerator["calculateFees"]
+    assert (
+        calculate_fees(imbalance_generated, capacity_imbalance_fee_divisor)
+        == calculateFees
+    )
+
+
+def test_calculate_fees_reverse(CalculateFeeGenerator):
+    capacity_imbalance_fee_divisor = CalculateFeeGenerator["input_data"][
+        "capacity_imbalance_fee_divisor"
+    ]
+    imbalance_generated = CalculateFeeGenerator["input_data"]["imbalance_generated"]
+    calculateFeesReverse = CalculateFeeGenerator["calculateFeesReverse"]
+    assert (
+        calculate_fees_reverse(imbalance_generated, capacity_imbalance_fee_divisor)
+        == calculateFeesReverse
+    )
 
 
 def test_increase_imbalance_fee():

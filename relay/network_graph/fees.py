@@ -1,3 +1,15 @@
+def calculate_fees(imbalance_generated, capacity_imbalance_fee_divisor):
+    if capacity_imbalance_fee_divisor == 0 or imbalance_generated == 0:
+        return 0
+    return (imbalance_generated - 1) // capacity_imbalance_fee_divisor + 1
+
+
+def calculate_fees_reverse(imbalance_generated, capacity_imbalance_fee_divisor):
+    if capacity_imbalance_fee_divisor == 0 or imbalance_generated == 0:
+        return 0
+    return (imbalance_generated - 1) // (capacity_imbalance_fee_divisor - 1) + 1
+
+
 def imbalance_fee(divisor, pre_balance, value):
     if divisor == 0:
         return 0

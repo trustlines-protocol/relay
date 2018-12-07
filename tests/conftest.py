@@ -1,5 +1,6 @@
 import os
 import sys
+import json
 from typing import Sequence
 from collections import namedtuple
 
@@ -54,3 +55,12 @@ def test_account():
     return Account(
         private_key=b'\x04HR\xb2\xa6p\xad\xe5@~x\xfb(c\xc5\x1d\xe9\xfc\xb9eB\xa0q\x86\xfe:\xed\xa6\xbb\x8a\x11m',
         address='0x82A978B3f5962A5b0957d9ee9eEf472EE55B42F1')
+
+
+def pytest_generate_tests(metafunc):
+    """read json files from testdata directory and generate tests from the testdata
+    """
+    if "CalculateFeeGenerator" in metafunc.fixturenames:
+        filename = os.path.join(os.path.dirname(__file__), "testdata", "CalculateFeeGenerator.json")
+        data = json.load(open(filename))["data"]
+        metafunc.parametrize("CalculateFeeGenerator", data)
