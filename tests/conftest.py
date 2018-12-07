@@ -3,6 +3,7 @@ import sys
 import json
 from typing import Sequence
 from collections import namedtuple
+from pathlib import Path
 
 import pytest
 import py
@@ -57,10 +58,19 @@ def test_account():
         address='0x82A978B3f5962A5b0957d9ee9eEf472EE55B42F1')
 
 
-def pytest_generate_tests(metafunc):
-    """read json files from testdata directory and generate tests from the testdata
-    """
-    if "CalculateFeeGenerator" in metafunc.fixturenames:
-        filename = os.path.join(os.path.dirname(__file__), "testdata", "CalculateFeeGenerator.json")
-        data = json.load(open(filename))["data"]
-        metafunc.parametrize("CalculateFeeGenerator", data)
+class TestDataReader:
+    def __init__(self):
+        self.testdata = {}
+        testdata_directory = Path(__file__).absolute().parent / "testdata"
+        for path in testdata_directory.glob("*.json"):
+            self.testdata[path.name[:-5]] = json.load(open(path))["data"]
+
+    def pytest_generate_tests(self, metafunc):
+        """read json files from testdata directory and generate tests from the testdata
+        """
+        for fixturename in metafunc.fixturenames:
+            if fixturename in self.testdata:
+                metafunc.parametrize(fixturename, self.testdata[fixturename])
+
+
+pytest_generate_tests = TestDataReader().pytest_generate_tests

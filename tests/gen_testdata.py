@@ -86,6 +86,36 @@ class CalculateFeeGenerator(TestDataGenerator):
         )
 
 
+class ImbalanceGenerated(TestDataGenerator):
+    MAX_BALANCE = 2 ** 71 - 1
+    MIN_BALANCE = -MAX_BALANCE
+
+    balances = (
+        MIN_BALANCE,
+        MIN_BALANCE + 100,
+        -1000,
+        -100,
+        0,
+        100,
+        1000,
+        MAX_BALANCE - 100,
+        MAX_BALANCE,
+    )
+    values = (0, 1, 10, 100, 1000, 2 ** 64 - 1)
+
+    def generate_input_data(self):
+        for balance in self.balances:
+            for value in self.values:
+                yield dict(value=value, balance=balance)
+
+    def compute_one_result(self, value, balance):
+        return dict(
+            imbalance_generated=self.contract.functions.testImbalanceGenerated(
+                value, balance
+            ).call()
+        )
+
+
 def generate_and_write_testdata(generator_class, web3, contract):
     generator = generator_class(web3, contract)
     print(f"generating testdata with generator {generator.name}")
@@ -98,13 +128,16 @@ def generate_and_write_testdata(generator_class, web3, contract):
 
 
 @click.command()
-@click.option('--address', help='address of contract', required=True)
-@click.option('--url', help='URL of address of contract', default="http://localhost:8545")
+@click.option("--address", help="address of contract", required=True)
+@click.option(
+    "--url", help="URL of address of contract", default="http://localhost:8545"
+)
 def main(address, url):
     web3 = Web3(Web3.HTTPProvider(url))
     abi = load_test_currency_network_abi()
     contract = web3.eth.contract(abi=abi, address=address)
-    generate_and_write_testdata(CalculateFeeGenerator, web3, contract)
+    for klass in (CalculateFeeGenerator, ImbalanceGenerated):
+        generate_and_write_testdata(klass, web3, contract)
 
 
 if __name__ == "__main__":
