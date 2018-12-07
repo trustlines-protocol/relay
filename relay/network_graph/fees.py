@@ -10,6 +10,15 @@ def calculate_fees_reverse(imbalance_generated, capacity_imbalance_fee_divisor):
     return (imbalance_generated - 1) // (capacity_imbalance_fee_divisor - 1) + 1
 
 
+def imbalance_generated(*, value, balance):
+    assert value >= 0
+
+    if balance <= 0:
+        return value
+
+    return max(value - balance, 0)
+
+
 def imbalance_fee(divisor, pre_balance, value):
     if divisor == 0:
         return 0

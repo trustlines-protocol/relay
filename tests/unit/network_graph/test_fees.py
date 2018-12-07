@@ -1,5 +1,12 @@
 from relay.network_graph.fees import (imbalance_fee, new_balance, estimate_fees_from_capacity,
-                                      calculate_fees, calculate_fees_reverse)
+                                      calculate_fees, calculate_fees_reverse, imbalance_generated)
+
+
+def test_imbalance_generated(ImbalanceGenerated):
+    balance = ImbalanceGenerated["input_data"]["balance"]
+    value = ImbalanceGenerated["input_data"]["value"]
+    expected = ImbalanceGenerated["imbalance_generated"]
+    assert imbalance_generated(balance=balance, value=value) == expected
 
 
 def test_calculate_fees(CalculateFeeGenerator):
