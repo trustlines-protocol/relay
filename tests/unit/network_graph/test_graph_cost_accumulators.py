@@ -2,10 +2,11 @@
 """test the cost accumulators, SenderPaysCostAccumulatorSnapshot and ReceiverPaysCostAccumulatorSnapshot
 """
 import pytest
-
-from relay.network_graph import graph
+import attr
+from relay.network_graph import graph, alg
 import networkx as nx
 from relay.network_graph.trustline_data import set_balance, set_creditline
+from typing import List
 
 
 def zero_edge_data():
@@ -127,3 +128,142 @@ def test_capacity_exceeded(cost_accumulator_class, capgraph):
             timestamp=1500000000, value=1501, capacity_imbalance_fee_divisor=0
         )
         acc.compute_cost_for_path(capgraph, path)
+
+
+# -- the rest of this file tests with the Transfer testdata
+
+
+def build_graph_with_creditlines(addresses: List, creditlines: List):
+    """build a simple graph with zero balances and creditlines between each
+    consecutive pairs in addresses.
+    creditlines[i] is set as the creditline given from addresses[i+1] to
+    addresses[i].
+    I.e. this is setup in a way that a payment from addresses[0] to
+    addresses[-1] could work, given that sufficient creditlines are available
+    at each step.
+    """
+    assert len(creditlines) == len(addresses) - 1
+    gr = nx.graph.Graph()
+    for a, b, creditline in zip(addresses, addresses[1:], creditlines):
+        edge = zero_edge_data()
+        set_creditline(edge, b, a, creditline)  # creditline given by b to a
+        gr.add_edge(a, b, **edge)
+    return gr
+
+
+@attr.s(auto_attribs=True)
+class TransferInfo:
+    addresses: List
+    path: List
+    capacity_imbalance_fee_divisor: int
+    fees_payed_by: str
+    value: int
+    timestamp: int
+    balances_after_transfer: List
+    expected_fees: int
+    cost_accumulator: alg.CostAccumulator
+    minimal_creditlines: List
+
+    def ensure_cost(self, gr):
+        """try to compute the costs for the transfer and fail if they don't match with the expected value"""
+        result = self.cost_accumulator.compute_cost_for_path(gr, self.path)
+        assert result[0] == self.expected_fees
+
+    def ensure_find_path(self, gr):
+        """ensure that least_cost_path is able to find a path and that the cost
+        is as expected"""
+        cost, path_found = alg.least_cost_path(
+            graph=gr,
+            starting_nodes={self.path[0]},
+            target_nodes={self.path[-1]},
+            cost_accumulator=self.cost_accumulator,
+        )
+        assert cost[0] == self.expected_fees
+        assert path_found == self.path
+
+    def insufficient_creditlines(self):
+        """yield creditlines that are insufficent for a transfer of the given
+        value"""
+        num_hops = len(self.addresses) - 1
+        for i in range(num_hops):
+            creditlines = [100000000] * num_hops
+            creditlines[i] = self.minimal_creditlines[i] - 1
+            yield creditlines
+
+
+@pytest.fixture
+def transfer_info(Transfer):
+    """build a TransferInfo object for the given Transfer testdata"""
+    addresses = Transfer["input_data"]["addresses"]
+    capacity_imbalance_fee_divisor = Transfer["input_data"][
+        "capacity_imbalance_fee_divisor"
+    ]
+    fees_payed_by = Transfer["input_data"]["fees_payed_by"]
+    value = Transfer["input_data"]["value"]
+
+    balances_after_transfer = Transfer["balances"]
+
+    timestamp = 1500000000
+    if fees_payed_by == "sender":
+        cost_accumulator = graph.SenderPaysCostAccumulatorSnapshot(
+            timestamp=timestamp,
+            value=value,
+            capacity_imbalance_fee_divisor=capacity_imbalance_fee_divisor,
+        )
+        path = list(reversed(addresses))
+        expected_fees = -(balances_after_transfer[0] + value)
+    else:
+        cost_accumulator = graph.ReceiverPaysCostAccumulatorSnapshot(
+            timestamp=timestamp,
+            value=value,
+            capacity_imbalance_fee_divisor=capacity_imbalance_fee_divisor,
+        )
+        path = addresses
+        expected_fees = balances_after_transfer[-1] + value
+
+    return TransferInfo(
+        addresses=addresses,
+        balances_after_transfer=balances_after_transfer,
+        capacity_imbalance_fee_divisor=capacity_imbalance_fee_divisor,
+        fees_payed_by=fees_payed_by,
+        value=value,
+        timestamp=1500000000,
+        path=path,
+        expected_fees=expected_fees,
+        cost_accumulator=cost_accumulator,
+        minimal_creditlines=[-b for b in balances_after_transfer],
+    )
+
+
+def test_transfer_ample_creditlines(transfer_info: TransferInfo):
+    """test that the transfer succeeds with ample room for the creditlines"""
+    gr = build_graph_with_creditlines(
+        transfer_info.addresses, [100000000] * (len(transfer_info.addresses) - 1)
+    )
+    transfer_info.ensure_cost(gr)
+    transfer_info.ensure_find_path(gr)
+
+
+def test_transfer_minimal_creditlines(transfer_info: TransferInfo):
+    """test that the transfer succeeds with the minimal creditlines required"""
+    gr = build_graph_with_creditlines(
+        transfer_info.addresses, transfer_info.minimal_creditlines
+    )
+    transfer_info.ensure_cost(gr)
+    transfer_info.ensure_find_path(gr)
+
+
+def test_transfer_creditlines_insufficient(transfer_info: TransferInfo):
+    """test that the transfer fails if one of the creditlines is too small"""
+    for creditlines in transfer_info.insufficient_creditlines():
+        gr = build_graph_with_creditlines(transfer_info.addresses, creditlines)
+        with pytest.raises(nx.NetworkXNoPath):
+            transfer_info.ensure_cost(gr)
+
+
+def test_find_path_creditlines_insufficient(transfer_info: TransferInfo):
+    """test that the transfer fails if one of the creditlines is too small"""
+    for creditlines in transfer_info.insufficient_creditlines():
+        gr = build_graph_with_creditlines(transfer_info.addresses, creditlines)
+        with pytest.raises(nx.NetworkXNoPath):
+            transfer_info.ensure_find_path(gr)

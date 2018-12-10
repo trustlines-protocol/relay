@@ -22,7 +22,8 @@ from .dijkstra_weighted import (
     PaymentPath
 )
 
-from .fees import new_balance, imbalance_fee, estimate_fees_from_capacity
+from .fees import (new_balance, imbalance_fee, estimate_fees_from_capacity, calculate_fees_reverse,
+                   calculate_fees, imbalance_generated)
 from .interests import balance_with_interests
 from relay.network_graph.graph_constants import (
     creditline_ab,
@@ -206,7 +207,12 @@ class SenderPaysCostAccumulatorSnapshot(alg.CostAccumulator):
             get_interest_rate(edge_data, node, dst),
             self.timestamp - get_mtime(edge_data))
 
-        fee = imbalance_fee(self.capacity_imbalance_fee_divisor, pre_balance, self.value + sum_fees)
+        if num_hops == 0:
+            fee = 0
+        else:
+            fee = calculate_fees_reverse(
+                imbalance_generated=imbalance_generated(value=self.value + sum_fees, balance=pre_balance),
+                capacity_imbalance_fee_divisor=self.capacity_imbalance_fee_divisor)
 
         if sum_fees + fee > self.max_fees:
             return None
@@ -271,7 +277,12 @@ class ReceiverPaysCostAccumulatorSnapshot(alg.CostAccumulator):
             get_interest_rate(edge_data, dst, node),
             self.timestamp - get_mtime(edge_data))
 
-        fee = imbalance_fee(self.capacity_imbalance_fee_divisor, pre_balance, self.value - sum_fees)
+        if num_hops == 0:
+            fee = 0
+        else:
+            fee = calculate_fees(
+                imbalance_generated=imbalance_generated(value=self.value - sum_fees, balance=pre_balance),
+                capacity_imbalance_fee_divisor=self.capacity_imbalance_fee_divisor)
 
         if sum_fees + fee > self.max_fees:
             return None
