@@ -12,9 +12,10 @@ import sys
 import json
 import random
 import abc
-
 import click
 from web3 import Web3
+import eth_utils
+import tldeploy.core
 
 
 def load_contracts():
@@ -55,6 +56,9 @@ class TestDataGenerator(metaclass=abc.ABCMeta):
             result.append(
                 dict(input_data=input_data, **self.compute_one_result(**input_data))
             )
+            sys.stdout.write(".")
+            sys.stdout.flush()
+        sys.stdout.write("\n")
         return dict(name=self.name, data=result)
 
 
@@ -116,6 +120,57 @@ class ImbalanceGenerated(TestDataGenerator):
         )
 
 
+class Transfer(TestDataGenerator):
+    def generate_input_data(self):
+        addresses = [
+            eth_utils.to_checksum_address(f"0x{address:040d}")
+            for address in range(1, 7)
+        ]
+        for num_hops in range(2, 7):
+            addresses = [
+                eth_utils.to_checksum_address(f"0x{address:040d}")
+                for address in range(1, num_hops+1)
+            ]
+            for fees_payed_by in ["sender", "receiver"]:
+                for capacity_imbalance_fee_divisor in [10, 100, 1000]:
+                    for value in [1000, 10000, 1000000]:
+                        yield dict(
+                            fees_payed_by=fees_payed_by,
+                            value=value,
+                            capacity_imbalance_fee_divisor=capacity_imbalance_fee_divisor,
+                            addresses=addresses,
+                        )
+
+    def compute_one_result(
+        self, fees_payed_by, value, capacity_imbalance_fee_divisor, addresses
+    ):
+        self.contract.functions.setCapacityImbalanceFeeDivisor(
+            capacity_imbalance_fee_divisor
+        ).transact()
+
+        for a, b in zip(addresses, addresses[1:]):
+            self.contract.functions.setAccount(
+                a, b, 100000000, 100000000, 0, 0, 0, 0, 0, 0
+            ).transact()
+
+        assert fees_payed_by in ("sender", "receiver")
+        if fees_payed_by == "sender":
+            self.contract.functions.testTransferSenderPays(
+                addresses[0], addresses[-1], value, value, addresses[1:]
+            ).transact()
+        elif fees_payed_by == "receiver":
+            self.contract.functions.testTransferReceiverPays(
+                addresses[0], addresses[-1], value, value, addresses[1:]
+            ).transact()
+
+        balances = [
+            self.contract.functions.getAccount(a, b).call()[-1]
+            for a, b in zip(addresses, addresses[1:])
+        ]
+
+        return dict(balances=balances)
+
+
 def generate_and_write_testdata(generator_class, web3, contract):
     generator = generator_class(web3, contract)
     print(f"generating testdata with generator {generator.name}")
@@ -128,15 +183,26 @@ def generate_and_write_testdata(generator_class, web3, contract):
 
 
 @click.command()
-@click.option("--address", help="address of contract", required=True)
+@click.option("--address", help="address of contract", default=None)
 @click.option(
     "--url", help="URL of address of contract", default="http://localhost:8545"
 )
 def main(address, url):
     web3 = Web3(Web3.HTTPProvider(url))
-    abi = load_test_currency_network_abi()
-    contract = web3.eth.contract(abi=abi, address=address)
-    for klass in (CalculateFeeGenerator, ImbalanceGenerated):
+    if address is None:
+        contract = tldeploy.core.deploy_network(
+            web3=web3,
+            name="TestNet",
+            symbol="E",
+            decimals=4,
+            fee_divisor=100,
+            currency_network_contract_name="TestCurrencyNetwork",
+        )
+    else:
+        abi = load_test_currency_network_abi()
+        contract = web3.eth.contract(abi=abi, address=address)
+
+    for klass in (CalculateFeeGenerator, ImbalanceGenerated, Transfer):
         generate_and_write_testdata(klass, web3, contract)
 
 
