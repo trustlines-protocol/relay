@@ -526,11 +526,11 @@ def test_transfer_with_fees(community_with_trustlines_and_fees):
 def test_mediated_transfer_with_fees(community_with_trustlines_and_fees):
     community = community_with_trustlines_and_fees
     community.mediated_transfer(A, C, 50)
-    assert community.get_account_sum(A).balance == -50 + -2
+    assert community.get_account_sum(A).balance == -50 + -1
     assert community.get_account_sum(B).balance == 0 + 1
-    assert community.get_account_sum(C).balance == 50 + 1
-    assert community.get_account_sum(A, B).balance == -50 + -2
-    assert community.get_account_sum(B, C).balance == -50 + -1
+    assert community.get_account_sum(C).balance == 50
+    assert community.get_account_sum(A, B).balance == -50 + -1
+    assert community.get_account_sum(B, C).balance == -50
 
 
 def test_path_with_fees(community_with_trustlines_and_fees):

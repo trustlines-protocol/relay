@@ -22,7 +22,7 @@ from .dijkstra_weighted import (
     PaymentPath
 )
 
-from .fees import (new_balance, imbalance_fee, estimate_fees_from_capacity, calculate_fees_reverse,
+from .fees import (estimate_fees_from_capacity, calculate_fees_reverse,
                    calculate_fees, imbalance_generated)
 from .interests import balance_with_interests
 from relay.network_graph.graph_constants import (
@@ -643,25 +643,27 @@ class CurrencyNetworkGraphForTesting(CurrencyNetworkGraph):
             custom_interests=custom_interests,
             prevent_mediator_interests=prevent_mediator_interests)
 
-    def transfer(self, source, target, value):
-        """simulate transfer off chain"""
-        account = Account(self.graph[source][target], source, target)
-        fee = imbalance_fee(self.capacity_imbalance_fee_divisor, account.balance, value)
-        account.balance = new_balance(self.capacity_imbalance_fee_divisor, account.balance, value)
-        return fee
+    def transfer_path(self, path, value, expected_fees):
+        assert value > 0
+        cost_accumulator = SenderPaysCostAccumulatorSnapshot(
+            timestamp=int(time.time()),
+            value=value,
+            capacity_imbalance_fee_divisor=self.capacity_imbalance_fee_divisor)
+        cost = cost_accumulator.zero()
 
-    def transfer_path(self, path, value, cost):
         path = list(reversed(path))
-        fees = 0
-        target = path.pop(0)
-        while len(path):
-            source = path.pop(0)
-            fee = self.transfer(source, target, value)
-            value += fee
-            fees += fee
-            target = source
-        assert fees == cost
-        return cost
+        for source, target in zip(path, path[1:]):
+            edge_data = self.graph.get_edge_data(source, target)
+            cost = cost_accumulator.total_cost_from_start_to_dst(
+                cost, source, target, edge_data,
+            )
+            if cost is None:
+                raise nx.NetworkXNoPath("no path found")
+            new_balance = get_balance(edge_data, target, source) - value - cost[0]
+            set_balance(edge_data, target, source, new_balance)
+
+        assert expected_fees == cost[0]
+        return cost[0]
 
     def mediated_transfer(self, source, target, value):
         """simulate mediated transfer off chain"""
