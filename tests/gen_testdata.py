@@ -129,7 +129,7 @@ class Transfer(TestDataGenerator):
         for num_hops in range(2, 7):
             addresses = [
                 eth_utils.to_checksum_address(f"0x{address:040d}")
-                for address in range(1, num_hops+1)
+                for address in range(1, num_hops + 1)
             ]
             for fees_payed_by in ["sender", "receiver"]:
                 for capacity_imbalance_fee_divisor in [10, 100, 1000]:
@@ -171,11 +171,11 @@ class Transfer(TestDataGenerator):
         return dict(balances=balances)
 
 
-def generate_and_write_testdata(generator_class, web3, contract):
+def generate_and_write_testdata(generator_class, web3, contract, output_directory):
     generator = generator_class(web3, contract)
     print(f"generating testdata with generator {generator.name}")
     testdata = generator.make_test_data()
-    filename = f"testdata/{generator.name}.json"
+    filename = os.path.join(output_directory, f"{generator.name}.json")
     print(f"writing testdata to {filename}")
     with open(filename, "w") as outfile:
         json.dump(testdata, outfile, indent=4, sort_keys=True)
@@ -183,11 +183,22 @@ def generate_and_write_testdata(generator_class, web3, contract):
 
 
 @click.command()
+@click.option(
+    "--output-directory",
+    help="directory where json files are written",
+    default="testdata",
+)
 @click.option("--address", help="address of contract", default=None)
 @click.option(
     "--url", help="URL of address of contract", default="http://localhost:8545"
 )
-def main(address, url):
+def main(address, url, output_directory):
+    if not os.path.isdir(output_directory):
+        click.echo(
+            """Error: The output directory has not been found. Please specify it with --output-directory
+or cd into the tests directory."""
+        )
+        sys.exit(1)
     web3 = Web3(Web3.HTTPProvider(url))
     if address is None:
         contract = tldeploy.core.deploy_network(
@@ -203,7 +214,7 @@ def main(address, url):
         contract = web3.eth.contract(abi=abi, address=address)
 
     for klass in (CalculateFeeGenerator, ImbalanceGenerated, Transfer):
-        generate_and_write_testdata(klass, web3, contract)
+        generate_and_write_testdata(klass, web3, contract, output_directory=output_directory)
 
 
 if __name__ == "__main__":
