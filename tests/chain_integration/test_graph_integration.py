@@ -66,13 +66,13 @@ def test_path(community_with_trustlines, accounts):
 def test_no_capacity(community_with_trustlines, accounts):
     community = community_with_trustlines
     A, B, C, D, E = accounts
-    cost, path = community.find_path(A, E, 544)
+    cost, path = community.find_path(A, E, 550)
     assert path == [A, E]
-    cost, path = community.find_path(A, E, 545)
+    cost, path = community.find_path(A, E, 551)
     assert path == []
-    cost, path = community.find_path(E, A, 495)
+    cost, path = community.find_path(E, A, 500)
     assert path == [E, A]
-    cost, path = community.find_path(E, A, 496)
+    cost, path = community.find_path(E, A, 501)
     assert path == []
 
 
