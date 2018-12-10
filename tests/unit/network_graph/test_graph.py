@@ -157,13 +157,6 @@ def test_update_balance(community_with_trustlines):
     assert community.get_account_sum(B).balance == -10
 
 
-def test_transfer(community_with_trustlines):
-    community = community_with_trustlines
-    assert community.get_account_sum(B).balance == 0
-    community.transfer(A, B, 100)
-    assert community.get_account_sum(B).balance == 100
-
-
 def test_close_trustline_no_cost_exact_amount(complex_community_with_trustlines_and_fees):
     """A owes money to B and A wants to reduce that amount with the help of C"""
     complex_community_with_trustlines_and_fees.update_balance(A, B, -10000)  # amount B owes A
@@ -382,15 +375,6 @@ def test_mediated_transfer(community_with_trustlines):
     assert community.get_account_sum(B, C).balance == -50
 
 
-def test_spent(community_with_trustlines):
-    community = community_with_trustlines
-    assert community.get_account_sum(A).creditline_left_received == 700
-    community.transfer(A, B, 70)
-    assert community.get_account_sum(A).creditline_left_received == 630
-    community.transfer(E, A, 20)
-    assert community.get_account_sum(A).creditline_left_received == 650
-
-
 def test_path(community_with_trustlines):
     community = community_with_trustlines
     cost, path = community.find_path(A, B, 10)
@@ -514,13 +498,6 @@ def test_no_creditlines():
 def test_total_creditlines(balances_community):
     community = balances_community
     assert community.total_creditlines == 500
-
-
-def test_transfer_with_fees(community_with_trustlines_and_fees):
-    community = community_with_trustlines_and_fees
-    assert community.get_account_sum(B).balance == 0
-    community.transfer(A, B, 100)
-    assert community.get_account_sum(B).balance == 100 + 2
 
 
 def test_mediated_transfer_with_fees(community_with_trustlines_and_fees):
