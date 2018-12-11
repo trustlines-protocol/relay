@@ -65,20 +65,15 @@ class TestDataGenerator(metaclass=abc.ABCMeta):
 
 class CalculateFeeGenerator(TestDataGenerator):
     def generate_input_data(self):
-        def asdict(imbalance_generated, capacity_imbalance_fee_divisor):
-            return dict(
-                imbalance_generated=imbalance_generated,
-                capacity_imbalance_fee_divisor=capacity_imbalance_fee_divisor,
-            )
-
         prng = random.Random("666")
         for capacity_imbalance_fee_divisor in [2, 10, 50, 101, 1000]:
-            yield asdict(0, capacity_imbalance_fee_divisor)
-            yield asdict(10, capacity_imbalance_fee_divisor)
-            yield asdict(100, capacity_imbalance_fee_divisor)
-            for _ in range(40):
-                imbalance_generated = prng.randint(0, 10000)
-                yield asdict(imbalance_generated, capacity_imbalance_fee_divisor)
+            for imbalance_generated in itertools.chain(
+                [0, 10, 100], (prng.randint(0, 10000) for _ in range(40))
+            ):
+                yield dict(
+                    imbalance_generated=imbalance_generated,
+                    capacity_imbalance_fee_divisor=capacity_imbalance_fee_divisor,
+                )
 
     def compute_one_result(self, imbalance_generated, capacity_imbalance_fee_divisor):
         return dict(
