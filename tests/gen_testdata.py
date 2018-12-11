@@ -19,21 +19,6 @@ import eth_utils
 import tldeploy.core
 
 
-def load_contracts():
-    """load the contracts.json file that is being installed with
-    trustlines-contracts-bin"""
-    with open(
-        os.path.join(sys.prefix, "trustlines-contracts", "build", "contracts.json")
-    ) as data_file:
-        contracts = json.load(data_file)
-        return contracts
-
-
-def load_test_currency_network_abi():
-    """load the TestCurrencyNetwork's ABI from the contracts.json file """
-    return load_contracts()["TestCurrencyNetwork"]["abi"]
-
-
 class TestDataGenerator(metaclass=abc.ABCMeta):
     def __init__(self, web3, contract):
         self.web3 = web3
@@ -222,12 +207,11 @@ def generate_and_write_testdata(generator_class, web3, contract, output_director
     help="directory where json files are written",
     default="testdata",
 )
-@click.option("--address", help="address of contract", default=None)
 @click.option(
     "--url", help="URL of address of contract", default="http://localhost:8545"
 )
 @click.argument("generator_names", nargs=-1)
-def main(address, url, output_directory, generator_names):
+def main(url, output_directory, generator_names):
     if not os.path.isdir(output_directory):
         click.echo(
             """Error: The output directory has not been found. Please specify it with --output-directory
@@ -235,8 +219,9 @@ or cd into the tests directory."""
         )
         sys.exit(1)
     web3 = Web3(Web3.HTTPProvider(url))
-    if address is None:
-        contract = tldeploy.core.deploy_network(
+
+    def make_contract():
+        return tldeploy.core.deploy_network(
             web3=web3,
             name="TestNet",
             symbol="E",
@@ -244,9 +229,6 @@ or cd into the tests directory."""
             fee_divisor=100,
             currency_network_contract_name="TestCurrencyNetwork",
         )
-    else:
-        abi = load_test_currency_network_abi()
-        contract = web3.eth.contract(abi=abi, address=address)
 
     name2klass = {
         klass.name(): klass
@@ -257,7 +239,7 @@ or cd into the tests directory."""
     for generator_name in generator_names:
         klass = name2klass[generator_name]
         generate_and_write_testdata(
-            klass, web3, contract, output_directory=output_directory
+            klass, web3, make_contract(), output_directory=output_directory
         )
 
 
