@@ -65,8 +65,11 @@ def test_transfer_0_mediators(
     if cost_accumulator_class == graph.SenderPaysCostAccumulatorSnapshot:
         path.reverse()
 
-    assert (0, 1) == cost_accumulator.compute_cost_for_path(
-        currency_network_with_trustlines, path
+    assert (
+        0
+        == cost_accumulator.compute_cost_for_path(
+            currency_network_with_trustlines, path
+        )[0]
     )
 
 

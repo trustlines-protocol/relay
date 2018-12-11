@@ -248,7 +248,7 @@ class ReceiverPaysCostAccumulatorSnapshot(alg.CostAccumulator):
         self.ignore = ignore
 
     def zero(self):
-        return (0, 0)
+        return (0, 0, 0)
 
     def total_cost_from_start_to_dst(
         self, cost_from_start_to_node, node, dst, edge_data
@@ -256,7 +256,9 @@ class ReceiverPaysCostAccumulatorSnapshot(alg.CostAccumulator):
         if dst == self.ignore or node == self.ignore:
             return None
 
-        sum_fees, num_hops = cost_from_start_to_node
+        # we maintain the previously computed fee, since that is only 'paid
+        # out' when we jump to the next hop
+        sum_fees, next_fee, num_hops = cost_from_start_to_node
 
         if num_hops + 1 > self.max_hops:
             return None
@@ -277,22 +279,19 @@ class ReceiverPaysCostAccumulatorSnapshot(alg.CostAccumulator):
             get_interest_rate(edge_data, dst, node),
             self.timestamp - get_mtime(edge_data))
 
-        if num_hops == 0:
-            fee = 0
-        else:
-            fee = calculate_fees(
-                imbalance_generated=imbalance_generated(value=self.value - sum_fees, balance=pre_balance),
-                capacity_imbalance_fee_divisor=self.capacity_imbalance_fee_divisor)
+        fee = calculate_fees(
+            imbalance_generated=imbalance_generated(value=self.value - sum_fees - next_fee, balance=pre_balance),
+            capacity_imbalance_fee_divisor=self.capacity_imbalance_fee_divisor)
 
-        if sum_fees + fee > self.max_fees:
+        if sum_fees + next_fee > self.max_fees:
             return None
 
         # check that we don't exceed the creditline
         capacity = pre_balance + get_creditline(edge_data, dst, node)
-        if self.value - sum_fees - fee > capacity:
+        if self.value - sum_fees - next_fee > capacity:
             return None  # creditline exceeded
 
-        return (sum_fees + fee, num_hops + 1)
+        return (sum_fees + next_fee, fee, num_hops + 1)
 
 
 class CapacityAccumulator(alg.CostAccumulator):

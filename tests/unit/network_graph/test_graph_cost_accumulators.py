@@ -112,7 +112,7 @@ def test_capacity(cost_accumulator_class, value, capgraph):
     acc = cost_accumulator_class(
         timestamp=1500000000, value=value, capacity_imbalance_fee_divisor=0
     )
-    assert acc.compute_cost_for_path(capgraph, path) == (0, 1)
+    assert acc.compute_cost_for_path(capgraph, path)[0] == 0
 
 
 def test_capacity_exceeded(cost_accumulator_class, capgraph):
@@ -171,6 +171,7 @@ class TransferInfo:
     def ensure_cost(self, gr):
         """try to compute the costs for the transfer and fail if they don't match with the expected value"""
         result = self.cost_accumulator.compute_cost_for_path(gr, self.path)
+        print("COST:", result)
         assert result[0] == self.expected_fees
 
     def ensure_find_path(self, gr):
