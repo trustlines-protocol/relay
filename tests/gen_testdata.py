@@ -122,15 +122,12 @@ class ImbalanceGenerated(TestDataGenerator):
 
 class Transfer(TestDataGenerator):
     def generate_input_data(self):
-        addresses = [
-            eth_utils.to_checksum_address(f"0x{address:040d}")
-            for address in range(1, 7)
-        ]
-        for num_hops in range(2, 7):
+        for num_hops in range(1, 6):
             addresses = [
                 eth_utils.to_checksum_address(f"0x{address:040d}")
-                for address in range(1, num_hops + 1)
+                for address in range(1, num_hops + 2)
             ]
+            assert len(addresses) - 1 == num_hops
             for fees_payed_by in ["sender", "receiver"]:
                 for capacity_imbalance_fee_divisor in [10, 100, 1000]:
                     for value in [1000, 10000, 1000000]:
