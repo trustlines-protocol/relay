@@ -70,7 +70,13 @@ class TestDataReader:
         """
         for fixturename in metafunc.fixturenames:
             if fixturename in self.testdata:
-                metafunc.parametrize(fixturename, self.testdata[fixturename])
+                metafunc.parametrize(
+                    fixturename,
+                    [
+                        pytest.param(data, marks=pytest.mark.testdata)
+                        for data in self.testdata[fixturename]
+                    ],
+                )
 
 
 pytest_generate_tests = TestDataReader().pytest_generate_tests
