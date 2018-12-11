@@ -65,16 +65,27 @@ class TestDataReader:
         for path in testdata_directory.glob("*.json"):
             self.testdata[path.name[:-5]] = json.load(open(path))["data"]
 
+    def make_param(self, fixturename, count, data):
+        return pytest.param(data, marks=[pytest.mark.testdata])
+
+    def make_param_Transfer(self, fixturename, count, data):
+        divisor = data["input_data"]["capacity_imbalance_fee_divisor"]
+        fees_payed_by = data["input_data"]["fees_payed_by"]
+        return pytest.param(data,
+                            marks=pytest.mark.testdata,
+                            id=f"Transfer-{count}-divisor-{divisor}-{fees_payed_by}-pays")
+
     def pytest_generate_tests(self, metafunc):
         """read json files from testdata directory and generate tests from the testdata
         """
         for fixturename in metafunc.fixturenames:
             if fixturename in self.testdata:
+                param = getattr(self, f"make_param_{fixturename}", self.make_param)
                 metafunc.parametrize(
                     fixturename,
                     [
-                        pytest.param(data, marks=pytest.mark.testdata)
-                        for data in self.testdata[fixturename]
+                        param(fixturename, count, data)
+                        for count, data in enumerate(self.testdata[fixturename])
                     ],
                 )
 
