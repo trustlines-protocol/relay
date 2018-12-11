@@ -13,6 +13,7 @@ import json
 import random
 import abc
 import click
+import itertools
 from web3 import Web3
 import eth_utils
 import tldeploy.core
@@ -121,12 +122,47 @@ class ImbalanceGenerated(TestDataGenerator):
 
 
 class Transfer(TestDataGenerator):
+    def _gen_addresses(self, num_addresses):
+        return [
+            eth_utils.to_checksum_address(f"0x{address:040d}")
+            for address in range(1, num_addresses + 1)
+        ]
+
     def generate_input_data(self):
-        for num_hops in range(1, 6):
-            addresses = [
-                eth_utils.to_checksum_address(f"0x{address:040d}")
-                for address in range(1, num_hops + 2)
+        return itertools.chain(
+            self._generate_input_data0(),
+            self._generate_input_data1(),
+            self._generate_input_data2(),
+        )
+
+    def _generate_input_data2(self):
+        """this is a simple testcase currently failing"""
+        yield dict(
+            fees_payed_by="receiver",
+            value=1000,
+            capacity_imbalance_fee_divisor=10,
+            addresses=self._gen_addresses(3),
+            balances_before=[1000, 0],
+        )
+
+    def _generate_input_data1(self):
+        # generate input data by modifying part of the other generator
+        prng = random.Random("666")
+        for testdata in self._generate_input_data0():
+            num_balances = len(testdata["balances_before"])
+            if num_balances != 4:  # keep test set small
+                continue
+            balances_before = [
+                prng.choice([0, 1000, -1000, 10000, -10000, 100_000, -100_000])
+                for _ in range(num_balances)
             ]
+            testdata["balances_before"] = balances_before
+            yield testdata
+
+    def _generate_input_data0(self):
+        for num_hops in range(1, 6):
+            addresses = self._gen_addresses(num_hops + 1)
+            balances_before = [0] * num_hops
             assert len(addresses) - 1 == num_hops
             for fees_payed_by in ["sender", "receiver"]:
                 for capacity_imbalance_fee_divisor in [10, 100, 1000]:
@@ -136,18 +172,24 @@ class Transfer(TestDataGenerator):
                             value=value,
                             capacity_imbalance_fee_divisor=capacity_imbalance_fee_divisor,
                             addresses=addresses,
+                            balances_before=balances_before,
                         )
 
     def compute_one_result(
-        self, fees_payed_by, value, capacity_imbalance_fee_divisor, addresses
+        self,
+        fees_payed_by,
+        value,
+        capacity_imbalance_fee_divisor,
+        addresses,
+        balances_before,
     ):
         self.contract.functions.setCapacityImbalanceFeeDivisor(
             capacity_imbalance_fee_divisor
         ).transact()
 
-        for a, b in zip(addresses, addresses[1:]):
+        for a, b, balance in zip(addresses, addresses[1:], balances_before):
             self.contract.functions.setAccount(
-                a, b, 100_000_000, 100_000_000, 0, 0, 0, 0, 0, 0
+                a, b, 100_000_000, 100_000_000, 0, 0, 0, 0, 0, balance
             ).transact()
 
         assert fees_payed_by in ("sender", "receiver")
