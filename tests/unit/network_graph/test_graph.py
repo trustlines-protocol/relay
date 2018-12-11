@@ -591,7 +591,7 @@ def test_close_trustline_positive_balance(complex_community_with_trustlines_and_
         source=C,
         target=H)
     assert result == PaymentPath(
-        fee=247,
+        fee=198,
         path=[C, H, G, F, E, D, C],
         value=5000,
         estimated_gas=None)
