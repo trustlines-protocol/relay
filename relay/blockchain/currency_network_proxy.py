@@ -10,7 +10,6 @@ import gevent
 import relay.concurrency_utils as concurrency_utils
 from .proxy import Proxy, reconnect_interval, sorted_events
 from relay.logger import get_logger
-from web3.exceptions import BadFunctionCallOutput, ValidationError, MismatchedABI
 
 from .events import BlockchainEvent
 from .currency_network_events import (
@@ -51,25 +50,10 @@ class CurrencyNetworkProxy(Proxy):
         self.name: str = self._proxy.functions.name().call().strip('\0')
         self.decimals: int = self._proxy.functions.decimals().call()
         self.symbol: str = self._proxy.functions.symbol().call().strip('\0')
-        try:
-            self.capacity_imbalance_fee_divisor = self._proxy.functions.capacityImbalanceFeeDivisor().call()
-        except (BadFunctionCallOutput, ValidationError, MismatchedABI) as e:
-            self.capacity_imbalance_fee_divisor = 100
-
-        try:
-            self.default_interest_rate = self._proxy.functions.defaultInterestRate().call()
-        except (BadFunctionCallOutput, ValidationError, MismatchedABI) as e:
-            self.default_interest_rate = 0
-
-        try:
-            self.custom_interests = self._proxy.functions.customInterests().call()
-        except (BadFunctionCallOutput, ValidationError, MismatchedABI) as e:
-            self.custom_interests = False
-
-        try:
-            self.prevent_mediator_interests = self._proxy.functions.preventMediatorInterests().call()
-        except (BadFunctionCallOutput, ValidationError, MismatchedABI) as e:
-            self.prevent_mediator_interests = False
+        self.capacity_imbalance_fee_divisor = self._proxy.functions.capacityImbalanceFeeDivisor().call()
+        self.default_interest_rate = self._proxy.functions.defaultInterestRate().call()
+        self.custom_interests = self._proxy.functions.customInterests().call()
+        self.prevent_mediator_interests = self._proxy.functions.preventMediatorInterests().call()
         self.interest_rate_decimals = 2  # Fixed for now, see contracts
 
     @property
@@ -158,8 +142,8 @@ class CurrencyNetworkProxy(Proxy):
 
     def get_network_events(self,
                            event_name: str,
-                           user_address: str=None,
-                           from_block: int=0,
+                           user_address: str = None,
+                           from_block: int = 0,
                            timeout: float = None
                            ) -> List[BlockchainEvent]:
         logger.debug("get_network_events: event_name=%s user_address=%s from_block=%s",

@@ -33,9 +33,9 @@ class UnwEthProxy(Proxy):
 
     def get_unw_eth_events(self,
                            event_name: str,
-                           user_address: str=None,
-                           from_block: int=0,
-                           timeout: float=None) -> List[BlockchainEvent]:
+                           user_address: str = None,
+                           from_block: int = 0,
+                           timeout: float = None) -> List[BlockchainEvent]:
         logger.debug("get_unw_eth_events: event_name=%s user_address=%s from_block=%s",
                      event_name,
                      user_address,

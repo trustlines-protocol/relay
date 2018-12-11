@@ -297,9 +297,9 @@ class TrustlinesRelay:
 
     def get_user_events(self,
                         user_address: str,
-                        type: str=None,
-                        from_block: int=0,
-                        timeout: float=None) -> List[BlockchainEvent]:
+                        type: str = None,
+                        from_block: int = 0,
+                        timeout: float = None) -> List[BlockchainEvent]:
         assert is_checksum_address(user_address)
         network_event_queries = self._get_network_event_queries(user_address, type, from_block)
         unw_eth_event_queries = self._get_unw_eth_event_queries(user_address, type, from_block)
@@ -424,9 +424,9 @@ class TrustlinesRelay:
 
     def get_all_user_exchange_events(self,
                                      user_address: str,
-                                     type: str=None,
-                                     from_block: int=0,
-                                     timeout: float=None) -> List[BlockchainEvent]:
+                                     type: str = None,
+                                     from_block: int = 0,
+                                     timeout: float = None) -> List[BlockchainEvent]:
         assert is_checksum_address(user_address)
         exchange_event_queries = self._get_exchange_event_queries(user_address, type, from_block)
         results = concurrency_utils.joinall(exchange_event_queries, timeout=timeout)

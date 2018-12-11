@@ -22,12 +22,12 @@ Change Log
 * Add option to syncronize the sending of transactions if env TRUSTLINES_SYNC_TX_RELAY
   is set, because of a bug in parity
 * Require python version >= 3.6
-* Add interests: 
+* Add interests:
   The returned balances include an estimation of the interests
   Can work with Trustline Updates that include interests
   Breaks backwardscompatibilty, will not work anymore with old contracts without interests
 * Add first version of endpoint to find a path to close a trustline via a rebalancing of the
-  trustlines. 
+  trustlines.
 
 `0.2.0`_ (2018-08-21)
 -------------------------------
