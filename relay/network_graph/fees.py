@@ -19,22 +19,6 @@ def imbalance_generated(*, value, balance):
     return max(value - balance, 0)
 
 
-def imbalance_fee(divisor, pre_balance, value):
-    if divisor == 0:
-        return 0
-    imbalance_generated = value
-    if pre_balance > 0:
-        imbalance_generated = value - pre_balance
-        if imbalance_generated <= 0:
-            return 0
-    return (imbalance_generated // divisor) + 1  # minimum fee is 1
-
-
-def new_balance(divisor, pre_balance, value):
-    fee = imbalance_fee(divisor, pre_balance, value)
-    return pre_balance - value - fee
-
-
 def estimate_fees_from_capacity(divisor, min_capacity, path_capacities):
         """
         Gives an upper bound on the fees for a max capacity transfer
