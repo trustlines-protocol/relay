@@ -3,3 +3,10 @@ parent directory.
 
 This is being read by conftest's pytest_generate_tests hook in order to generate
 tests.
+
+You can run every test using this testdata by running
+
+    pytest -m testdata
+
+
+ACHTUNG! Please do not edit these files by hand!
