@@ -38,9 +38,9 @@ class TestDataGenerator(metaclass=abc.ABCMeta):
         self.web3 = web3
         self.contract = contract
 
-    @property
-    def name(self):
-        return self.__class__.__name__
+    @classmethod
+    def name(klass):
+        return klass.__name__
 
     @abc.abstractmethod
     def generate_input_data(self):
@@ -59,7 +59,7 @@ class TestDataGenerator(metaclass=abc.ABCMeta):
             sys.stdout.write(".")
             sys.stdout.flush()
         sys.stdout.write("\n")
-        return dict(name=self.name, data=result)
+        return dict(name=self.name(), data=result)
 
 
 class CalculateFeeGenerator(TestDataGenerator):
@@ -130,7 +130,7 @@ class Transfer(TestDataGenerator):
             assert len(addresses) - 1 == num_hops
             for fees_payed_by in ["sender", "receiver"]:
                 for capacity_imbalance_fee_divisor in [10, 100, 1000]:
-                    for value in [1000, 10000, 1000000]:
+                    for value in [1000, 10000, 1_000_000]:
                         yield dict(
                             fees_payed_by=fees_payed_by,
                             value=value,
@@ -147,7 +147,7 @@ class Transfer(TestDataGenerator):
 
         for a, b in zip(addresses, addresses[1:]):
             self.contract.functions.setAccount(
-                a, b, 100000000, 100000000, 0, 0, 0, 0, 0, 0
+                a, b, 100_000_000, 100_000_000, 0, 0, 0, 0, 0, 0
             ).transact()
 
         assert fees_payed_by in ("sender", "receiver")
@@ -170,9 +170,9 @@ class Transfer(TestDataGenerator):
 
 def generate_and_write_testdata(generator_class, web3, contract, output_directory):
     generator = generator_class(web3, contract)
-    print(f"generating testdata with generator {generator.name}")
+    print(f"generating testdata with generator {generator.name()}")
     testdata = generator.make_test_data()
-    filename = os.path.join(output_directory, f"{generator.name}.json")
+    filename = os.path.join(output_directory, f"{generator.name()}.json")
     print(f"writing testdata to {filename}")
     with open(filename, "w") as outfile:
         json.dump(testdata, outfile, indent=4, sort_keys=True)
@@ -189,7 +189,8 @@ def generate_and_write_testdata(generator_class, web3, contract, output_director
 @click.option(
     "--url", help="URL of address of contract", default="http://localhost:8545"
 )
-def main(address, url, output_directory):
+@click.argument("generator_names", nargs=-1)
+def main(address, url, output_directory, generator_names):
     if not os.path.isdir(output_directory):
         click.echo(
             """Error: The output directory has not been found. Please specify it with --output-directory
@@ -210,8 +211,17 @@ or cd into the tests directory."""
         abi = load_test_currency_network_abi()
         contract = web3.eth.contract(abi=abi, address=address)
 
-    for klass in (CalculateFeeGenerator, ImbalanceGenerated, Transfer):
-        generate_and_write_testdata(klass, web3, contract, output_directory=output_directory)
+    name2klass = {
+        klass.name(): klass
+        for klass in (CalculateFeeGenerator, ImbalanceGenerated, Transfer)
+    }
+    if not generator_names:
+        generator_names = list(name2klass.keys())
+    for generator_name in generator_names:
+        klass = name2klass[generator_name]
+        generate_and_write_testdata(
+            klass, web3, contract, output_directory=output_directory
+        )
 
 
 if __name__ == "__main__":
