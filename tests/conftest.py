@@ -70,10 +70,10 @@ class TestDataReader:
 
     def make_param_Transfer(self, fixturename, count, data):
         divisor = data["input_data"]["capacity_imbalance_fee_divisor"]
-        fees_payed_by = data["input_data"]["fees_payed_by"]
+        fees_paid_by = data["input_data"]["fees_paid_by"]
         return pytest.param(data,
                             marks=pytest.mark.testdata,
-                            id=f"Transfer-{count}-divisor-{divisor}-{fees_payed_by}-pays")
+                            id=f"Transfer-{count}-divisor-{divisor}-{fees_paid_by}-pays")
 
     def pytest_generate_tests(self, metafunc):
         """read json files from testdata directory and generate tests from the testdata

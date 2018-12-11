@@ -159,7 +159,7 @@ class TransferInfo:
     addresses: List
     path: List
     capacity_imbalance_fee_divisor: int
-    fees_payed_by: str
+    fees_paid_by: str
     value: int
     timestamp: int
     balances_before_transfer: List
@@ -203,14 +203,14 @@ def transfer_info(Transfer):
     capacity_imbalance_fee_divisor = Transfer["input_data"][
         "capacity_imbalance_fee_divisor"
     ]
-    fees_payed_by = Transfer["input_data"]["fees_payed_by"]
+    fees_paid_by = Transfer["input_data"]["fees_paid_by"]
     value = Transfer["input_data"]["value"]
     balances_before_transfer = Transfer["input_data"]["balances_before"]
 
     balances_after_transfer = Transfer["balances"]
 
     timestamp = 1500000000
-    if fees_payed_by == "sender":
+    if fees_paid_by == "sender":
         cost_accumulator = graph.SenderPaysCostAccumulatorSnapshot(
             timestamp=timestamp,
             value=value,
@@ -238,7 +238,7 @@ def transfer_info(Transfer):
         addresses=addresses,
         balances_after_transfer=balances_after_transfer,
         capacity_imbalance_fee_divisor=capacity_imbalance_fee_divisor,
-        fees_payed_by=fees_payed_by,
+        fees_paid_by=fees_paid_by,
         value=value,
         timestamp=1500000000,
         path=path,

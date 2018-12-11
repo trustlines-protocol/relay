@@ -133,7 +133,7 @@ class Transfer(TestDataGenerator):
     def _generate_input_data2(self):
         """this is a simple testcase currently failing"""
         yield dict(
-            fees_payed_by="receiver",
+            fees_paid_by="receiver",
             value=1000,
             capacity_imbalance_fee_divisor=10,
             addresses=self._gen_addresses(3),
@@ -159,11 +159,11 @@ class Transfer(TestDataGenerator):
             addresses = self._gen_addresses(num_hops + 1)
             balances_before = [0] * num_hops
             assert len(addresses) - 1 == num_hops
-            for fees_payed_by in ["sender", "receiver"]:
+            for fees_paid_by in ["sender", "receiver"]:
                 for capacity_imbalance_fee_divisor in [10, 100, 1000]:
                     for value in [1000, 10000, 1_000_000]:
                         yield dict(
-                            fees_payed_by=fees_payed_by,
+                            fees_paid_by=fees_paid_by,
                             value=value,
                             capacity_imbalance_fee_divisor=capacity_imbalance_fee_divisor,
                             addresses=addresses,
@@ -172,7 +172,7 @@ class Transfer(TestDataGenerator):
 
     def compute_one_result(
         self,
-        fees_payed_by,
+        fees_paid_by,
         value,
         capacity_imbalance_fee_divisor,
         addresses,
@@ -187,12 +187,12 @@ class Transfer(TestDataGenerator):
                 a, b, 100_000_000, 100_000_000, 0, 0, 0, 0, 0, balance
             ).transact()
 
-        assert fees_payed_by in ("sender", "receiver")
-        if fees_payed_by == "sender":
+        assert fees_paid_by in ("sender", "receiver")
+        if fees_paid_by == "sender":
             self.contract.functions.testTransferSenderPays(
                 addresses[0], addresses[-1], value, value, addresses[1:]
             ).transact()
-        elif fees_payed_by == "receiver":
+        elif fees_paid_by == "receiver":
             self.contract.functions.testTransferReceiverPays(
                 addresses[0], addresses[-1], value, value, addresses[1:]
             ).transact()
