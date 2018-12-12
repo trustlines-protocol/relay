@@ -111,9 +111,10 @@ class CurrencyNetworkProxy(CurrencyNetworkProxy):
                          interest_rate_given=None,
                          interest_rate_received=None):
         if interest_rate_given is None or interest_rate_received is None:
-            txid = self._proxy.functions.updateTrustline(to,
-                                                         creditline_given,
-                                                         creditline_received).transact({"from": from_})
+            txid = self._proxy.functions.updateCreditlimits(
+                to,
+                creditline_given,
+                creditline_received).transact({"from": from_})
         else:
             txid = self._proxy.functions.updateTrustline(to,
                                                          creditline_given,
@@ -208,8 +209,8 @@ def testnetworks(web3, maker, taker):
     unw_eth_contract.functions.deposit().transact({'from': taker, 'value': 200})
 
     currency_network = currency_network_contracts[0]
-    currency_network.functions.updateTrustline(maker, 300, 0).transact({'from': taker})
-    currency_network.functions.updateTrustline(taker, 0, 300).transact({'from': maker})
+    currency_network.functions.updateCreditlimits(maker, 300, 0).transact({'from': taker})
+    currency_network.functions.updateCreditlimits(taker, 0, 300).transact({'from': maker})
 
     return currency_network_contracts, exchange_contract, unw_eth_contract
 

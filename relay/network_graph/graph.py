@@ -22,7 +22,8 @@ from .dijkstra_weighted import (
     PaymentPath
 )
 
-from .fees import new_balance, imbalance_fee, estimate_fees_from_capacity
+from .fees import (estimate_fees_from_capacity, calculate_fees_reverse,
+                   calculate_fees, imbalance_generated)
 from .interests import balance_with_interests
 from relay.network_graph.graph_constants import (
     creditline_ab,
@@ -206,7 +207,12 @@ class SenderPaysCostAccumulatorSnapshot(alg.CostAccumulator):
             get_interest_rate(edge_data, node, dst),
             self.timestamp - get_mtime(edge_data))
 
-        fee = imbalance_fee(self.capacity_imbalance_fee_divisor, pre_balance, self.value + sum_fees)
+        if num_hops == 0:
+            fee = 0
+        else:
+            fee = calculate_fees_reverse(
+                imbalance_generated=imbalance_generated(value=self.value + sum_fees, balance=pre_balance),
+                capacity_imbalance_fee_divisor=self.capacity_imbalance_fee_divisor)
 
         if sum_fees + fee > self.max_fees:
             return None
@@ -223,7 +229,10 @@ class ReceiverPaysCostAccumulatorSnapshot(alg.CostAccumulator):
     """This is the CostAccumulator being used when using our 'receiver pays
     fees' style of payments"
 
-    This sorts by the fees first, then the number of hops.
+    This sorts by the fees first, then the fee for the previous hop, then the
+    number of hops.
+
+
 
     We need to pass a timestamp in the constructor. This is being used to
     compute a consistent view of balances in the trustlines network.
@@ -242,7 +251,7 @@ class ReceiverPaysCostAccumulatorSnapshot(alg.CostAccumulator):
         self.ignore = ignore
 
     def zero(self):
-        return (0, 0)
+        return (0, 0, 0)
 
     def total_cost_from_start_to_dst(
         self, cost_from_start_to_node, node, dst, edge_data
@@ -250,20 +259,17 @@ class ReceiverPaysCostAccumulatorSnapshot(alg.CostAccumulator):
         if dst == self.ignore or node == self.ignore:
             return None
 
-        sum_fees, num_hops = cost_from_start_to_node
+        # For this case the pathfinding is not done in reverse.
+        #
+        # we maintain the computed fee for the previous hop, since that is only
+        # 'paid out' when we jump to the next hop The first element in this
+        # tuple has to be the sum of the fees not including the fee for the
+        # previous hop, since the graph finding algorithm needs to sort by that
+        # and not by what would be paid out if there is another hop
+        sum_fees, previous_hop_fee, num_hops = cost_from_start_to_node
 
         if num_hops + 1 > self.max_hops:
             return None
-
-        # fee computation has been inlined here, since the comment in
-        # Graph._get_fee suggests it should be as fast as possible. This means
-        # we do have some code duplication, but I couldn't use some of the
-        # methods in Graph anyway, because they don't take a timestamp argument
-        # and rather use the current time.
-        #
-        # We should profile this at some point in time.
-        #
-        # For this case the pathfinding is not done in reverse.
 
         pre_balance = balance_with_interests(
             get_balance(edge_data, node, dst),
@@ -271,17 +277,21 @@ class ReceiverPaysCostAccumulatorSnapshot(alg.CostAccumulator):
             get_interest_rate(edge_data, dst, node),
             self.timestamp - get_mtime(edge_data))
 
-        fee = imbalance_fee(self.capacity_imbalance_fee_divisor, pre_balance, self.value - sum_fees)
+        fee = calculate_fees(
+            imbalance_generated=imbalance_generated(
+                value=self.value - sum_fees - previous_hop_fee,
+                balance=pre_balance),
+            capacity_imbalance_fee_divisor=self.capacity_imbalance_fee_divisor)
 
-        if sum_fees + fee > self.max_fees:
+        if sum_fees + previous_hop_fee > self.max_fees:
             return None
 
         # check that we don't exceed the creditline
         capacity = pre_balance + get_creditline(edge_data, dst, node)
-        if self.value - sum_fees - fee > capacity:
+        if self.value - sum_fees - previous_hop_fee > capacity:
             return None  # creditline exceeded
 
-        return (sum_fees + fee, num_hops + 1)
+        return (sum_fees + previous_hop_fee, fee, num_hops + 1)
 
 
 class CapacityAccumulator(alg.CostAccumulator):
@@ -621,25 +631,38 @@ class CurrencyNetworkGraph(object):
 
         return capacity - fees
 
-    def transfer(self, source, target, value):
-        """simulate transfer off chain"""
-        account = Account(self.graph[source][target], source, target)
-        fee = imbalance_fee(self.capacity_imbalance_fee_divisor, account.balance, value)
-        account.balance = new_balance(self.capacity_imbalance_fee_divisor, account.balance, value)
-        return fee
 
-    def transfer_path(self, path, value, cost):
+class CurrencyNetworkGraphForTesting(CurrencyNetworkGraph):
+    """A currency network graph with some additional methods used for testing"""
+    def __init__(self, capacity_imbalance_fee_divisor=0, default_interest_rate=0,
+                 custom_interests=False, prevent_mediator_interests=False):
+        super().__init__(
+            capacity_imbalance_fee_divisor=capacity_imbalance_fee_divisor,
+            default_interest_rate=default_interest_rate,
+            custom_interests=custom_interests,
+            prevent_mediator_interests=prevent_mediator_interests)
+
+    def transfer_path(self, path, value, expected_fees):
+        assert value > 0
+        cost_accumulator = SenderPaysCostAccumulatorSnapshot(
+            timestamp=int(time.time()),
+            value=value,
+            capacity_imbalance_fee_divisor=self.capacity_imbalance_fee_divisor)
+        cost = cost_accumulator.zero()
+
         path = list(reversed(path))
-        fees = 0
-        target = path.pop(0)
-        while len(path):
-            source = path.pop(0)
-            fee = self.transfer(source, target, value)
-            value += fee
-            fees += fee
-            target = source
-        assert fees == cost
-        return cost
+        for source, target in zip(path, path[1:]):
+            edge_data = self.graph.get_edge_data(source, target)
+            cost = cost_accumulator.total_cost_from_start_to_dst(
+                cost, source, target, edge_data,
+            )
+            if cost is None:
+                raise nx.NetworkXNoPath("no path found")
+            new_balance = get_balance(edge_data, target, source) - value - cost[0]
+            set_balance(edge_data, target, source, new_balance)
+
+        assert expected_fees == cost[0]
+        return cost[0]
 
     def mediated_transfer(self, source, target, value):
         """simulate mediated transfer off chain"""

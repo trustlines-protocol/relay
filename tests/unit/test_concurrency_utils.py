@@ -31,7 +31,7 @@ def test_timeout():
         return 5
 
     with pytest.raises(TimeoutException):
-        joinall([f, g, h], timeout=1.)
+        joinall([f, g, h], timeout=0.01)
 
 
 def test_timeout_not_enough():
@@ -47,7 +47,7 @@ def test_timeout_not_enough():
         return 5
 
     with pytest.raises(TimeoutException):
-        joinall([f, g, h], timeout=1.)
+        joinall([f, g, h], timeout=0.01)
 
 
 def test_no_timeout():
@@ -55,7 +55,7 @@ def test_no_timeout():
         return 3
 
     def g():
-        gevent.sleep(0.5)
+        gevent.sleep(0.01)
         return 4
 
     def h():

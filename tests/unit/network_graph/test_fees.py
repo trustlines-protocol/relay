@@ -1,44 +1,43 @@
-from relay.network_graph.fees import imbalance_fee, new_balance, estimate_fees_from_capacity
+from relay.network_graph.fees import (
+    estimate_fees_from_capacity,
+    calculate_fees,
+    calculate_fees_reverse,
+    imbalance_generated,
+)
 
 
-def test_increase_imbalance_fee():
-    assert imbalance_fee(100, 0, 500) == 6
+def test_imbalance_generated(ImbalanceGenerated):
+    balance = ImbalanceGenerated["input_data"]["balance"]
+    value = ImbalanceGenerated["input_data"]["value"]
+    expected_imbalance_generated = ImbalanceGenerated["imbalance_generated"]
+    assert (
+        imbalance_generated(balance=balance, value=value)
+        == expected_imbalance_generated
+    )
 
 
-def test_decrease_imbalance_fee():
-    assert imbalance_fee(100, 500, 500) == 0
+def test_calculate_fees(CalculateFee):
+    capacity_imbalance_fee_divisor = CalculateFee["input_data"][
+        "capacity_imbalance_fee_divisor"
+    ]
+    imbalance_generated = CalculateFee["input_data"]["imbalance_generated"]
+    expected_fees = CalculateFee["fees"]
+    assert (
+        calculate_fees(imbalance_generated, capacity_imbalance_fee_divisor)
+        == expected_fees
+    )
 
 
-def test_both_imbalance_fee():
-    assert imbalance_fee(50, 250, 500) == 6
-
-
-def test_from_negative_imbalance_fee():
-    assert imbalance_fee(50, -250, 250) == 6
-
-
-def test_add_more_imbalance_fee():
-    assert imbalance_fee(100, -250, 500) == 6
-
-
-def test_too_small_imbalance_fee():
-    assert imbalance_fee(100, 0, 50) == 1
-
-
-def test_new_balance_increase():
-    assert new_balance(20, 0, 500) == -526
-
-
-def test_new_balance_decrease():
-    assert new_balance(20, 500, 500) == 0
-
-
-def test_new_balance_both():
-    assert new_balance(20, 250, 500) == -263
-
-
-def test_new_balance_from_negative():
-    assert new_balance(50, -250, 250) == -506
+def test_calculate_fees_reverse(CalculateFee):
+    capacity_imbalance_fee_divisor = CalculateFee["input_data"][
+        "capacity_imbalance_fee_divisor"
+    ]
+    imbalance_generated = CalculateFee["input_data"]["imbalance_generated"]
+    expected_fees_reverse = CalculateFee["fees_reverse"]
+    assert (
+        calculate_fees_reverse(imbalance_generated, capacity_imbalance_fee_divisor)
+        == expected_fees_reverse
+    )
 
 
 def test_estimate_fees_from_capacity_single_hop():

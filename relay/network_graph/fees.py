@@ -1,17 +1,22 @@
-def imbalance_fee(divisor, pre_balance, value):
-    if divisor == 0:
+def calculate_fees(imbalance_generated, capacity_imbalance_fee_divisor):
+    if capacity_imbalance_fee_divisor == 0 or imbalance_generated == 0:
         return 0
-    imbalance_generated = value
-    if pre_balance > 0:
-        imbalance_generated = value - pre_balance
-        if imbalance_generated <= 0:
-            return 0
-    return (imbalance_generated // divisor) + 1  # minimum fee is 1
+    return (imbalance_generated - 1) // capacity_imbalance_fee_divisor + 1
 
 
-def new_balance(divisor, pre_balance, value):
-    fee = imbalance_fee(divisor, pre_balance, value)
-    return pre_balance - value - fee
+def calculate_fees_reverse(imbalance_generated, capacity_imbalance_fee_divisor):
+    if capacity_imbalance_fee_divisor == 0 or imbalance_generated == 0:
+        return 0
+    return (imbalance_generated - 1) // (capacity_imbalance_fee_divisor - 1) + 1
+
+
+def imbalance_generated(*, value, balance):
+    assert value >= 0
+
+    if balance <= 0:
+        return value
+
+    return max(value - balance, 0)
 
 
 def estimate_fees_from_capacity(divisor, min_capacity, path_capacities):

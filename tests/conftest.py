@@ -1,7 +1,9 @@
 import os
 import sys
+import json
 from typing import Sequence
 from collections import namedtuple
+from pathlib import Path
 
 import pytest
 import py
@@ -54,3 +56,38 @@ def test_account():
     return Account(
         private_key=b'\x04HR\xb2\xa6p\xad\xe5@~x\xfb(c\xc5\x1d\xe9\xfc\xb9eB\xa0q\x86\xfe:\xed\xa6\xbb\x8a\x11m',
         address='0x82A978B3f5962A5b0957d9ee9eEf472EE55B42F1')
+
+
+class TestDataReader:
+    def __init__(self):
+        self.testdata = {}
+        testdata_directory = Path(__file__).absolute().parent / "testdata"
+        for path in testdata_directory.glob("*.json"):
+            self.testdata[path.name[:-5]] = json.load(open(path))["data"]
+
+    def make_param(self, fixturename, count, data):
+        return pytest.param(data, marks=[pytest.mark.testdata])
+
+    def make_param_Transfer(self, fixturename, count, data):
+        divisor = data["input_data"]["capacity_imbalance_fee_divisor"]
+        fees_paid_by = data["input_data"]["fees_paid_by"]
+        return pytest.param(data,
+                            marks=pytest.mark.testdata,
+                            id=f"Transfer-{count}-divisor-{divisor}-{fees_paid_by}-pays")
+
+    def pytest_generate_tests(self, metafunc):
+        """read json files from testdata directory and generate tests from the testdata
+        """
+        for fixturename in metafunc.fixturenames:
+            if fixturename in self.testdata:
+                param = getattr(self, f"make_param_{fixturename}", self.make_param)
+                metafunc.parametrize(
+                    fixturename,
+                    [
+                        param(fixturename, count, data)
+                        for count, data in enumerate(self.testdata[fixturename])
+                    ],
+                )
+
+
+pytest_generate_tests = TestDataReader().pytest_generate_tests

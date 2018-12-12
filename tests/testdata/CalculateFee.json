@@ -1,0 +1,1725 @@
+{
+    "data": [
+        {
+            "fees": 0,
+            "fees_reverse": 0,
+            "input_data": {
+                "capacity_imbalance_fee_divisor": 2,
+                "imbalance_generated": 0
+            }
+        },
+        {
+            "fees": 5,
+            "fees_reverse": 10,
+            "input_data": {
+                "capacity_imbalance_fee_divisor": 2,
+                "imbalance_generated": 10
+            }
+        },
+        {
+            "fees": 50,
+            "fees_reverse": 100,
+            "input_data": {
+                "capacity_imbalance_fee_divisor": 2,
+                "imbalance_generated": 100
+            }
+        },
+        {
+            "fees": 1166,
+            "fees_reverse": 2332,
+            "input_data": {
+                "capacity_imbalance_fee_divisor": 2,
+                "imbalance_generated": 2332
+            }
+        },
+        {
+            "fees": 1853,
+            "fees_reverse": 3705,
+            "input_data": {
+                "capacity_imbalance_fee_divisor": 2,
+                "imbalance_generated": 3705
+            }
+        },
+        {
+            "fees": 2316,
+            "fees_reverse": 4631,
+            "input_data": {
+                "capacity_imbalance_fee_divisor": 2,
+                "imbalance_generated": 4631
+            }
+        },
+        {
+            "fees": 2388,
+            "fees_reverse": 4775,
+            "input_data": {
+                "capacity_imbalance_fee_divisor": 2,
+                "imbalance_generated": 4775
+            }
+        },
+        {
+            "fees": 1707,
+            "fees_reverse": 3413,
+            "input_data": {
+                "capacity_imbalance_fee_divisor": 2,
+                "imbalance_generated": 3413
+            }
+        },
+        {
+            "fees": 1223,
+            "fees_reverse": 2446,
+            "input_data": {
+                "capacity_imbalance_fee_divisor": 2,
+                "imbalance_generated": 2446
+            }
+        },
+        {
+            "fees": 874,
+            "fees_reverse": 1747,
+            "input_data": {
+                "capacity_imbalance_fee_divisor": 2,
+                "imbalance_generated": 1747
+            }
+        },
+        {
+            "fees": 3568,
+            "fees_reverse": 7136,
+            "input_data": {
+                "capacity_imbalance_fee_divisor": 2,
+                "imbalance_generated": 7136
+            }
+        },
+        {
+            "fees": 2983,
+            "fees_reverse": 5965,
+            "input_data": {
+                "capacity_imbalance_fee_divisor": 2,
+                "imbalance_generated": 5965
+            }
+        },
+        {
+            "fees": 2859,
+            "fees_reverse": 5717,
+            "input_data": {
+                "capacity_imbalance_fee_divisor": 2,
+                "imbalance_generated": 5717
+            }
+        },
+        {
+            "fees": 1353,
+            "fees_reverse": 2706,
+            "input_data": {
+                "capacity_imbalance_fee_divisor": 2,
+                "imbalance_generated": 2706
+            }
+        },
+        {
+            "fees": 2200,
+            "fees_reverse": 4399,
+            "input_data": {
+                "capacity_imbalance_fee_divisor": 2,
+                "imbalance_generated": 4399
+            }
+        },
+        {
+            "fees": 1013,
+            "fees_reverse": 2025,
+            "input_data": {
+                "capacity_imbalance_fee_divisor": 2,
+                "imbalance_generated": 2025
+            }
+        },
+        {
+            "fees": 725,
+            "fees_reverse": 1450,
+            "input_data": {
+                "capacity_imbalance_fee_divisor": 2,
+                "imbalance_generated": 1450
+            }
+        },
+        {
+            "fees": 3595,
+            "fees_reverse": 7190,
+            "input_data": {
+                "capacity_imbalance_fee_divisor": 2,
+                "imbalance_generated": 7190
+            }
+        },
+        {
+            "fees": 1398,
+            "fees_reverse": 2796,
+            "input_data": {
+                "capacity_imbalance_fee_divisor": 2,
+                "imbalance_generated": 2796
+            }
+        },
+        {
+            "fees": 572,
+            "fees_reverse": 1143,
+            "input_data": {
+                "capacity_imbalance_fee_divisor": 2,
+                "imbalance_generated": 1143
+            }
+        },
+        {
+            "fees": 685,
+            "fees_reverse": 1369,
+            "input_data": {
+                "capacity_imbalance_fee_divisor": 2,
+                "imbalance_generated": 1369
+            }
+        },
+        {
+            "fees": 3198,
+            "fees_reverse": 6395,
+            "input_data": {
+                "capacity_imbalance_fee_divisor": 2,
+                "imbalance_generated": 6395
+            }
+        },
+        {
+            "fees": 2473,
+            "fees_reverse": 4946,
+            "input_data": {
+                "capacity_imbalance_fee_divisor": 2,
+                "imbalance_generated": 4946
+            }
+        },
+        {
+            "fees": 1412,
+            "fees_reverse": 2823,
+            "input_data": {
+                "capacity_imbalance_fee_divisor": 2,
+                "imbalance_generated": 2823
+            }
+        },
+        {
+            "fees": 3623,
+            "fees_reverse": 7245,
+            "input_data": {
+                "capacity_imbalance_fee_divisor": 2,
+                "imbalance_generated": 7245
+            }
+        },
+        {
+            "fees": 1533,
+            "fees_reverse": 3065,
+            "input_data": {
+                "capacity_imbalance_fee_divisor": 2,
+                "imbalance_generated": 3065
+            }
+        },
+        {
+            "fees": 3258,
+            "fees_reverse": 6516,
+            "input_data": {
+                "capacity_imbalance_fee_divisor": 2,
+                "imbalance_generated": 6516
+            }
+        },
+        {
+            "fees": 3651,
+            "fees_reverse": 7302,
+            "input_data": {
+                "capacity_imbalance_fee_divisor": 2,
+                "imbalance_generated": 7302
+            }
+        },
+        {
+            "fees": 2967,
+            "fees_reverse": 5933,
+            "input_data": {
+                "capacity_imbalance_fee_divisor": 2,
+                "imbalance_generated": 5933
+            }
+        },
+        {
+            "fees": 4226,
+            "fees_reverse": 8451,
+            "input_data": {
+                "capacity_imbalance_fee_divisor": 2,
+                "imbalance_generated": 8451
+            }
+        },
+        {
+            "fees": 4034,
+            "fees_reverse": 8067,
+            "input_data": {
+                "capacity_imbalance_fee_divisor": 2,
+                "imbalance_generated": 8067
+            }
+        },
+        {
+            "fees": 4470,
+            "fees_reverse": 8940,
+            "input_data": {
+                "capacity_imbalance_fee_divisor": 2,
+                "imbalance_generated": 8940
+            }
+        },
+        {
+            "fees": 470,
+            "fees_reverse": 940,
+            "input_data": {
+                "capacity_imbalance_fee_divisor": 2,
+                "imbalance_generated": 940
+            }
+        },
+        {
+            "fees": 4612,
+            "fees_reverse": 9224,
+            "input_data": {
+                "capacity_imbalance_fee_divisor": 2,
+                "imbalance_generated": 9224
+            }
+        },
+        {
+            "fees": 3477,
+            "fees_reverse": 6954,
+            "input_data": {
+                "capacity_imbalance_fee_divisor": 2,
+                "imbalance_generated": 6954
+            }
+        },
+        {
+            "fees": 3835,
+            "fees_reverse": 7670,
+            "input_data": {
+                "capacity_imbalance_fee_divisor": 2,
+                "imbalance_generated": 7670
+            }
+        },
+        {
+            "fees": 3080,
+            "fees_reverse": 6160,
+            "input_data": {
+                "capacity_imbalance_fee_divisor": 2,
+                "imbalance_generated": 6160
+            }
+        },
+        {
+            "fees": 301,
+            "fees_reverse": 601,
+            "input_data": {
+                "capacity_imbalance_fee_divisor": 2,
+                "imbalance_generated": 601
+            }
+        },
+        {
+            "fees": 768,
+            "fees_reverse": 1536,
+            "input_data": {
+                "capacity_imbalance_fee_divisor": 2,
+                "imbalance_generated": 1536
+            }
+        },
+        {
+            "fees": 467,
+            "fees_reverse": 934,
+            "input_data": {
+                "capacity_imbalance_fee_divisor": 2,
+                "imbalance_generated": 934
+            }
+        },
+        {
+            "fees": 4036,
+            "fees_reverse": 8072,
+            "input_data": {
+                "capacity_imbalance_fee_divisor": 2,
+                "imbalance_generated": 8072
+            }
+        },
+        {
+            "fees": 4733,
+            "fees_reverse": 9466,
+            "input_data": {
+                "capacity_imbalance_fee_divisor": 2,
+                "imbalance_generated": 9466
+            }
+        },
+        {
+            "fees": 2552,
+            "fees_reverse": 5104,
+            "input_data": {
+                "capacity_imbalance_fee_divisor": 2,
+                "imbalance_generated": 5104
+            }
+        },
+        {
+            "fees": 0,
+            "fees_reverse": 0,
+            "input_data": {
+                "capacity_imbalance_fee_divisor": 10,
+                "imbalance_generated": 0
+            }
+        },
+        {
+            "fees": 1,
+            "fees_reverse": 2,
+            "input_data": {
+                "capacity_imbalance_fee_divisor": 10,
+                "imbalance_generated": 10
+            }
+        },
+        {
+            "fees": 10,
+            "fees_reverse": 12,
+            "input_data": {
+                "capacity_imbalance_fee_divisor": 10,
+                "imbalance_generated": 100
+            }
+        },
+        {
+            "fees": 911,
+            "fees_reverse": 1013,
+            "input_data": {
+                "capacity_imbalance_fee_divisor": 10,
+                "imbalance_generated": 9109
+            }
+        },
+        {
+            "fees": 251,
+            "fees_reverse": 279,
+            "input_data": {
+                "capacity_imbalance_fee_divisor": 10,
+                "imbalance_generated": 2506
+            }
+        },
+        {
+            "fees": 63,
+            "fees_reverse": 70,
+            "input_data": {
+                "capacity_imbalance_fee_divisor": 10,
+                "imbalance_generated": 630
+            }
+        },
+        {
+            "fees": 890,
+            "fees_reverse": 989,
+            "input_data": {
+                "capacity_imbalance_fee_divisor": 10,
+                "imbalance_generated": 8900
+            }
+        },
+        {
+            "fees": 904,
+            "fees_reverse": 1004,
+            "input_data": {
+                "capacity_imbalance_fee_divisor": 10,
+                "imbalance_generated": 9036
+            }
+        },
+        {
+            "fees": 582,
+            "fees_reverse": 646,
+            "input_data": {
+                "capacity_imbalance_fee_divisor": 10,
+                "imbalance_generated": 5811
+            }
+        },
+        {
+            "fees": 938,
+            "fees_reverse": 1042,
+            "input_data": {
+                "capacity_imbalance_fee_divisor": 10,
+                "imbalance_generated": 9371
+            }
+        },
+        {
+            "fees": 123,
+            "fees_reverse": 137,
+            "input_data": {
+                "capacity_imbalance_fee_divisor": 10,
+                "imbalance_generated": 1229
+            }
+        },
+        {
+            "fees": 35,
+            "fees_reverse": 39,
+            "input_data": {
+                "capacity_imbalance_fee_divisor": 10,
+                "imbalance_generated": 343
+            }
+        },
+        {
+            "fees": 135,
+            "fees_reverse": 150,
+            "input_data": {
+                "capacity_imbalance_fee_divisor": 10,
+                "imbalance_generated": 1343
+            }
+        },
+        {
+            "fees": 782,
+            "fees_reverse": 869,
+            "input_data": {
+                "capacity_imbalance_fee_divisor": 10,
+                "imbalance_generated": 7815
+            }
+        },
+        {
+            "fees": 235,
+            "fees_reverse": 261,
+            "input_data": {
+                "capacity_imbalance_fee_divisor": 10,
+                "imbalance_generated": 2347
+            }
+        },
+        {
+            "fees": 931,
+            "fees_reverse": 1035,
+            "input_data": {
+                "capacity_imbalance_fee_divisor": 10,
+                "imbalance_generated": 9307
+            }
+        },
+        {
+            "fees": 560,
+            "fees_reverse": 622,
+            "input_data": {
+                "capacity_imbalance_fee_divisor": 10,
+                "imbalance_generated": 5592
+            }
+        },
+        {
+            "fees": 648,
+            "fees_reverse": 719,
+            "input_data": {
+                "capacity_imbalance_fee_divisor": 10,
+                "imbalance_generated": 6471
+            }
+        },
+        {
+            "fees": 695,
+            "fees_reverse": 772,
+            "input_data": {
+                "capacity_imbalance_fee_divisor": 10,
+                "imbalance_generated": 6945
+            }
+        },
+        {
+            "fees": 296,
+            "fees_reverse": 329,
+            "input_data": {
+                "capacity_imbalance_fee_divisor": 10,
+                "imbalance_generated": 2955
+            }
+        },
+        {
+            "fees": 870,
+            "fees_reverse": 967,
+            "input_data": {
+                "capacity_imbalance_fee_divisor": 10,
+                "imbalance_generated": 8695
+            }
+        },
+        {
+            "fees": 90,
+            "fees_reverse": 100,
+            "input_data": {
+                "capacity_imbalance_fee_divisor": 10,
+                "imbalance_generated": 900
+            }
+        },
+        {
+            "fees": 475,
+            "fees_reverse": 528,
+            "input_data": {
+                "capacity_imbalance_fee_divisor": 10,
+                "imbalance_generated": 4744
+            }
+        },
+        {
+            "fees": 590,
+            "fees_reverse": 655,
+            "input_data": {
+                "capacity_imbalance_fee_divisor": 10,
+                "imbalance_generated": 5895
+            }
+        },
+        {
+            "fees": 310,
+            "fees_reverse": 345,
+            "input_data": {
+                "capacity_imbalance_fee_divisor": 10,
+                "imbalance_generated": 3100
+            }
+        },
+        {
+            "fees": 899,
+            "fees_reverse": 999,
+            "input_data": {
+                "capacity_imbalance_fee_divisor": 10,
+                "imbalance_generated": 8990
+            }
+        },
+        {
+            "fees": 298,
+            "fees_reverse": 331,
+            "input_data": {
+                "capacity_imbalance_fee_divisor": 10,
+                "imbalance_generated": 2976
+            }
+        },
+        {
+            "fees": 833,
+            "fees_reverse": 925,
+            "input_data": {
+                "capacity_imbalance_fee_divisor": 10,
+                "imbalance_generated": 8321
+            }
+        },
+        {
+            "fees": 934,
+            "fees_reverse": 1038,
+            "input_data": {
+                "capacity_imbalance_fee_divisor": 10,
+                "imbalance_generated": 9335
+            }
+        },
+        {
+            "fees": 127,
+            "fees_reverse": 141,
+            "input_data": {
+                "capacity_imbalance_fee_divisor": 10,
+                "imbalance_generated": 1269
+            }
+        },
+        {
+            "fees": 297,
+            "fees_reverse": 330,
+            "input_data": {
+                "capacity_imbalance_fee_divisor": 10,
+                "imbalance_generated": 2965
+            }
+        },
+        {
+            "fees": 384,
+            "fees_reverse": 427,
+            "input_data": {
+                "capacity_imbalance_fee_divisor": 10,
+                "imbalance_generated": 3836
+            }
+        },
+        {
+            "fees": 823,
+            "fees_reverse": 915,
+            "input_data": {
+                "capacity_imbalance_fee_divisor": 10,
+                "imbalance_generated": 8229
+            }
+        },
+        {
+            "fees": 840,
+            "fees_reverse": 933,
+            "input_data": {
+                "capacity_imbalance_fee_divisor": 10,
+                "imbalance_generated": 8396
+            }
+        },
+        {
+            "fees": 734,
+            "fees_reverse": 816,
+            "input_data": {
+                "capacity_imbalance_fee_divisor": 10,
+                "imbalance_generated": 7337
+            }
+        },
+        {
+            "fees": 763,
+            "fees_reverse": 848,
+            "input_data": {
+                "capacity_imbalance_fee_divisor": 10,
+                "imbalance_generated": 7625
+            }
+        },
+        {
+            "fees": 167,
+            "fees_reverse": 186,
+            "input_data": {
+                "capacity_imbalance_fee_divisor": 10,
+                "imbalance_generated": 1668
+            }
+        },
+        {
+            "fees": 924,
+            "fees_reverse": 1027,
+            "input_data": {
+                "capacity_imbalance_fee_divisor": 10,
+                "imbalance_generated": 9240
+            }
+        },
+        {
+            "fees": 689,
+            "fees_reverse": 765,
+            "input_data": {
+                "capacity_imbalance_fee_divisor": 10,
+                "imbalance_generated": 6884
+            }
+        },
+        {
+            "fees": 764,
+            "fees_reverse": 849,
+            "input_data": {
+                "capacity_imbalance_fee_divisor": 10,
+                "imbalance_generated": 7640
+            }
+        },
+        {
+            "fees": 664,
+            "fees_reverse": 738,
+            "input_data": {
+                "capacity_imbalance_fee_divisor": 10,
+                "imbalance_generated": 6634
+            }
+        },
+        {
+            "fees": 18,
+            "fees_reverse": 20,
+            "input_data": {
+                "capacity_imbalance_fee_divisor": 10,
+                "imbalance_generated": 179
+            }
+        },
+        {
+            "fees": 467,
+            "fees_reverse": 518,
+            "input_data": {
+                "capacity_imbalance_fee_divisor": 10,
+                "imbalance_generated": 4662
+            }
+        },
+        {
+            "fees": 0,
+            "fees_reverse": 0,
+            "input_data": {
+                "capacity_imbalance_fee_divisor": 50,
+                "imbalance_generated": 0
+            }
+        },
+        {
+            "fees": 1,
+            "fees_reverse": 1,
+            "input_data": {
+                "capacity_imbalance_fee_divisor": 50,
+                "imbalance_generated": 10
+            }
+        },
+        {
+            "fees": 2,
+            "fees_reverse": 3,
+            "input_data": {
+                "capacity_imbalance_fee_divisor": 50,
+                "imbalance_generated": 100
+            }
+        },
+        {
+            "fees": 134,
+            "fees_reverse": 137,
+            "input_data": {
+                "capacity_imbalance_fee_divisor": 50,
+                "imbalance_generated": 6697
+            }
+        },
+        {
+            "fees": 167,
+            "fees_reverse": 170,
+            "input_data": {
+                "capacity_imbalance_fee_divisor": 50,
+                "imbalance_generated": 8320
+            }
+        },
+        {
+            "fees": 152,
+            "fees_reverse": 156,
+            "input_data": {
+                "capacity_imbalance_fee_divisor": 50,
+                "imbalance_generated": 7598
+            }
+        },
+        {
+            "fees": 42,
+            "fees_reverse": 43,
+            "input_data": {
+                "capacity_imbalance_fee_divisor": 50,
+                "imbalance_generated": 2093
+            }
+        },
+        {
+            "fees": 68,
+            "fees_reverse": 69,
+            "input_data": {
+                "capacity_imbalance_fee_divisor": 50,
+                "imbalance_generated": 3365
+            }
+        },
+        {
+            "fees": 168,
+            "fees_reverse": 171,
+            "input_data": {
+                "capacity_imbalance_fee_divisor": 50,
+                "imbalance_generated": 8360
+            }
+        },
+        {
+            "fees": 51,
+            "fees_reverse": 52,
+            "input_data": {
+                "capacity_imbalance_fee_divisor": 50,
+                "imbalance_generated": 2507
+            }
+        },
+        {
+            "fees": 56,
+            "fees_reverse": 57,
+            "input_data": {
+                "capacity_imbalance_fee_divisor": 50,
+                "imbalance_generated": 2756
+            }
+        },
+        {
+            "fees": 169,
+            "fees_reverse": 173,
+            "input_data": {
+                "capacity_imbalance_fee_divisor": 50,
+                "imbalance_generated": 8443
+            }
+        },
+        {
+            "fees": 176,
+            "fees_reverse": 179,
+            "input_data": {
+                "capacity_imbalance_fee_divisor": 50,
+                "imbalance_generated": 8755
+            }
+        },
+        {
+            "fees": 95,
+            "fees_reverse": 97,
+            "input_data": {
+                "capacity_imbalance_fee_divisor": 50,
+                "imbalance_generated": 4746
+            }
+        },
+        {
+            "fees": 116,
+            "fees_reverse": 118,
+            "input_data": {
+                "capacity_imbalance_fee_divisor": 50,
+                "imbalance_generated": 5766
+            }
+        },
+        {
+            "fees": 86,
+            "fees_reverse": 88,
+            "input_data": {
+                "capacity_imbalance_fee_divisor": 50,
+                "imbalance_generated": 4269
+            }
+        },
+        {
+            "fees": 130,
+            "fees_reverse": 133,
+            "input_data": {
+                "capacity_imbalance_fee_divisor": 50,
+                "imbalance_generated": 6484
+            }
+        },
+        {
+            "fees": 166,
+            "fees_reverse": 169,
+            "input_data": {
+                "capacity_imbalance_fee_divisor": 50,
+                "imbalance_generated": 8275
+            }
+        },
+        {
+            "fees": 182,
+            "fees_reverse": 185,
+            "input_data": {
+                "capacity_imbalance_fee_divisor": 50,
+                "imbalance_generated": 9058
+            }
+        },
+        {
+            "fees": 44,
+            "fees_reverse": 44,
+            "input_data": {
+                "capacity_imbalance_fee_divisor": 50,
+                "imbalance_generated": 2153
+            }
+        },
+        {
+            "fees": 178,
+            "fees_reverse": 182,
+            "input_data": {
+                "capacity_imbalance_fee_divisor": 50,
+                "imbalance_generated": 8875
+            }
+        },
+        {
+            "fees": 160,
+            "fees_reverse": 164,
+            "input_data": {
+                "capacity_imbalance_fee_divisor": 50,
+                "imbalance_generated": 7996
+            }
+        },
+        {
+            "fees": 162,
+            "fees_reverse": 165,
+            "input_data": {
+                "capacity_imbalance_fee_divisor": 50,
+                "imbalance_generated": 8060
+            }
+        },
+        {
+            "fees": 19,
+            "fees_reverse": 19,
+            "input_data": {
+                "capacity_imbalance_fee_divisor": 50,
+                "imbalance_generated": 921
+            }
+        },
+        {
+            "fees": 19,
+            "fees_reverse": 19,
+            "input_data": {
+                "capacity_imbalance_fee_divisor": 50,
+                "imbalance_generated": 927
+            }
+        },
+        {
+            "fees": 197,
+            "fees_reverse": 201,
+            "input_data": {
+                "capacity_imbalance_fee_divisor": 50,
+                "imbalance_generated": 9843
+            }
+        },
+        {
+            "fees": 106,
+            "fees_reverse": 108,
+            "input_data": {
+                "capacity_imbalance_fee_divisor": 50,
+                "imbalance_generated": 5256
+            }
+        },
+        {
+            "fees": 34,
+            "fees_reverse": 34,
+            "input_data": {
+                "capacity_imbalance_fee_divisor": 50,
+                "imbalance_generated": 1663
+            }
+        },
+        {
+            "fees": 160,
+            "fees_reverse": 163,
+            "input_data": {
+                "capacity_imbalance_fee_divisor": 50,
+                "imbalance_generated": 7964
+            }
+        },
+        {
+            "fees": 59,
+            "fees_reverse": 60,
+            "input_data": {
+                "capacity_imbalance_fee_divisor": 50,
+                "imbalance_generated": 2918
+            }
+        },
+        {
+            "fees": 143,
+            "fees_reverse": 146,
+            "input_data": {
+                "capacity_imbalance_fee_divisor": 50,
+                "imbalance_generated": 7120
+            }
+        },
+        {
+            "fees": 159,
+            "fees_reverse": 162,
+            "input_data": {
+                "capacity_imbalance_fee_divisor": 50,
+                "imbalance_generated": 7907
+            }
+        },
+        {
+            "fees": 16,
+            "fees_reverse": 16,
+            "input_data": {
+                "capacity_imbalance_fee_divisor": 50,
+                "imbalance_generated": 763
+            }
+        },
+        {
+            "fees": 162,
+            "fees_reverse": 166,
+            "input_data": {
+                "capacity_imbalance_fee_divisor": 50,
+                "imbalance_generated": 8098
+            }
+        },
+        {
+            "fees": 136,
+            "fees_reverse": 139,
+            "input_data": {
+                "capacity_imbalance_fee_divisor": 50,
+                "imbalance_generated": 6782
+            }
+        },
+        {
+            "fees": 70,
+            "fees_reverse": 71,
+            "input_data": {
+                "capacity_imbalance_fee_divisor": 50,
+                "imbalance_generated": 3479
+            }
+        },
+        {
+            "fees": 148,
+            "fees_reverse": 151,
+            "input_data": {
+                "capacity_imbalance_fee_divisor": 50,
+                "imbalance_generated": 7390
+            }
+        },
+        {
+            "fees": 52,
+            "fees_reverse": 53,
+            "input_data": {
+                "capacity_imbalance_fee_divisor": 50,
+                "imbalance_generated": 2555
+            }
+        },
+        {
+            "fees": 80,
+            "fees_reverse": 82,
+            "input_data": {
+                "capacity_imbalance_fee_divisor": 50,
+                "imbalance_generated": 3990
+            }
+        },
+        {
+            "fees": 147,
+            "fees_reverse": 150,
+            "input_data": {
+                "capacity_imbalance_fee_divisor": 50,
+                "imbalance_generated": 7302
+            }
+        },
+        {
+            "fees": 194,
+            "fees_reverse": 198,
+            "input_data": {
+                "capacity_imbalance_fee_divisor": 50,
+                "imbalance_generated": 9695
+            }
+        },
+        {
+            "fees": 23,
+            "fees_reverse": 24,
+            "input_data": {
+                "capacity_imbalance_fee_divisor": 50,
+                "imbalance_generated": 1150
+            }
+        },
+        {
+            "fees": 165,
+            "fees_reverse": 168,
+            "input_data": {
+                "capacity_imbalance_fee_divisor": 50,
+                "imbalance_generated": 8216
+            }
+        },
+        {
+            "fees": 0,
+            "fees_reverse": 0,
+            "input_data": {
+                "capacity_imbalance_fee_divisor": 101,
+                "imbalance_generated": 0
+            }
+        },
+        {
+            "fees": 1,
+            "fees_reverse": 1,
+            "input_data": {
+                "capacity_imbalance_fee_divisor": 101,
+                "imbalance_generated": 10
+            }
+        },
+        {
+            "fees": 1,
+            "fees_reverse": 1,
+            "input_data": {
+                "capacity_imbalance_fee_divisor": 101,
+                "imbalance_generated": 100
+            }
+        },
+        {
+            "fees": 61,
+            "fees_reverse": 61,
+            "input_data": {
+                "capacity_imbalance_fee_divisor": 101,
+                "imbalance_generated": 6070
+            }
+        },
+        {
+            "fees": 15,
+            "fees_reverse": 16,
+            "input_data": {
+                "capacity_imbalance_fee_divisor": 101,
+                "imbalance_generated": 1512
+            }
+        },
+        {
+            "fees": 83,
+            "fees_reverse": 83,
+            "input_data": {
+                "capacity_imbalance_fee_divisor": 101,
+                "imbalance_generated": 8300
+            }
+        },
+        {
+            "fees": 51,
+            "fees_reverse": 51,
+            "input_data": {
+                "capacity_imbalance_fee_divisor": 101,
+                "imbalance_generated": 5096
+            }
+        },
+        {
+            "fees": 85,
+            "fees_reverse": 86,
+            "input_data": {
+                "capacity_imbalance_fee_divisor": 101,
+                "imbalance_generated": 8574
+            }
+        },
+        {
+            "fees": 98,
+            "fees_reverse": 99,
+            "input_data": {
+                "capacity_imbalance_fee_divisor": 101,
+                "imbalance_generated": 9831
+            }
+        },
+        {
+            "fees": 7,
+            "fees_reverse": 7,
+            "input_data": {
+                "capacity_imbalance_fee_divisor": 101,
+                "imbalance_generated": 638
+            }
+        },
+        {
+            "fees": 87,
+            "fees_reverse": 87,
+            "input_data": {
+                "capacity_imbalance_fee_divisor": 101,
+                "imbalance_generated": 8696
+            }
+        },
+        {
+            "fees": 80,
+            "fees_reverse": 81,
+            "input_data": {
+                "capacity_imbalance_fee_divisor": 101,
+                "imbalance_generated": 8055
+            }
+        },
+        {
+            "fees": 58,
+            "fees_reverse": 58,
+            "input_data": {
+                "capacity_imbalance_fee_divisor": 101,
+                "imbalance_generated": 5780
+            }
+        },
+        {
+            "fees": 88,
+            "fees_reverse": 89,
+            "input_data": {
+                "capacity_imbalance_fee_divisor": 101,
+                "imbalance_generated": 8817
+            }
+        },
+        {
+            "fees": 14,
+            "fees_reverse": 14,
+            "input_data": {
+                "capacity_imbalance_fee_divisor": 101,
+                "imbalance_generated": 1342
+            }
+        },
+        {
+            "fees": 99,
+            "fees_reverse": 100,
+            "input_data": {
+                "capacity_imbalance_fee_divisor": 101,
+                "imbalance_generated": 9909
+            }
+        },
+        {
+            "fees": 95,
+            "fees_reverse": 96,
+            "input_data": {
+                "capacity_imbalance_fee_divisor": 101,
+                "imbalance_generated": 9571
+            }
+        },
+        {
+            "fees": 36,
+            "fees_reverse": 36,
+            "input_data": {
+                "capacity_imbalance_fee_divisor": 101,
+                "imbalance_generated": 3593
+            }
+        },
+        {
+            "fees": 67,
+            "fees_reverse": 67,
+            "input_data": {
+                "capacity_imbalance_fee_divisor": 101,
+                "imbalance_generated": 6691
+            }
+        },
+        {
+            "fees": 54,
+            "fees_reverse": 54,
+            "input_data": {
+                "capacity_imbalance_fee_divisor": 101,
+                "imbalance_generated": 5356
+            }
+        },
+        {
+            "fees": 13,
+            "fees_reverse": 13,
+            "input_data": {
+                "capacity_imbalance_fee_divisor": 101,
+                "imbalance_generated": 1227
+            }
+        },
+        {
+            "fees": 5,
+            "fees_reverse": 5,
+            "input_data": {
+                "capacity_imbalance_fee_divisor": 101,
+                "imbalance_generated": 464
+            }
+        },
+        {
+            "fees": 56,
+            "fees_reverse": 56,
+            "input_data": {
+                "capacity_imbalance_fee_divisor": 101,
+                "imbalance_generated": 5561
+            }
+        },
+        {
+            "fees": 26,
+            "fees_reverse": 26,
+            "input_data": {
+                "capacity_imbalance_fee_divisor": 101,
+                "imbalance_generated": 2547
+            }
+        },
+        {
+            "fees": 56,
+            "fees_reverse": 57,
+            "input_data": {
+                "capacity_imbalance_fee_divisor": 101,
+                "imbalance_generated": 5634
+            }
+        },
+        {
+            "fees": 95,
+            "fees_reverse": 96,
+            "input_data": {
+                "capacity_imbalance_fee_divisor": 101,
+                "imbalance_generated": 9526
+            }
+        },
+        {
+            "fees": 7,
+            "fees_reverse": 7,
+            "input_data": {
+                "capacity_imbalance_fee_divisor": 101,
+                "imbalance_generated": 611
+            }
+        },
+        {
+            "fees": 28,
+            "fees_reverse": 28,
+            "input_data": {
+                "capacity_imbalance_fee_divisor": 101,
+                "imbalance_generated": 2779
+            }
+        },
+        {
+            "fees": 34,
+            "fees_reverse": 35,
+            "input_data": {
+                "capacity_imbalance_fee_divisor": 101,
+                "imbalance_generated": 3413
+            }
+        },
+        {
+            "fees": 8,
+            "fees_reverse": 8,
+            "input_data": {
+                "capacity_imbalance_fee_divisor": 101,
+                "imbalance_generated": 749
+            }
+        },
+        {
+            "fees": 98,
+            "fees_reverse": 99,
+            "input_data": {
+                "capacity_imbalance_fee_divisor": 101,
+                "imbalance_generated": 9816
+            }
+        },
+        {
+            "fees": 28,
+            "fees_reverse": 28,
+            "input_data": {
+                "capacity_imbalance_fee_divisor": 101,
+                "imbalance_generated": 2728
+            }
+        },
+        {
+            "fees": 43,
+            "fees_reverse": 44,
+            "input_data": {
+                "capacity_imbalance_fee_divisor": 101,
+                "imbalance_generated": 4320
+            }
+        },
+        {
+            "fees": 42,
+            "fees_reverse": 42,
+            "input_data": {
+                "capacity_imbalance_fee_divisor": 101,
+                "imbalance_generated": 4197
+            }
+        },
+        {
+            "fees": 60,
+            "fees_reverse": 60,
+            "input_data": {
+                "capacity_imbalance_fee_divisor": 101,
+                "imbalance_generated": 5965
+            }
+        },
+        {
+            "fees": 62,
+            "fees_reverse": 63,
+            "input_data": {
+                "capacity_imbalance_fee_divisor": 101,
+                "imbalance_generated": 6237
+            }
+        },
+        {
+            "fees": 39,
+            "fees_reverse": 40,
+            "input_data": {
+                "capacity_imbalance_fee_divisor": 101,
+                "imbalance_generated": 3906
+            }
+        },
+        {
+            "fees": 11,
+            "fees_reverse": 11,
+            "input_data": {
+                "capacity_imbalance_fee_divisor": 101,
+                "imbalance_generated": 1012
+            }
+        },
+        {
+            "fees": 36,
+            "fees_reverse": 37,
+            "input_data": {
+                "capacity_imbalance_fee_divisor": 101,
+                "imbalance_generated": 3631
+            }
+        },
+        {
+            "fees": 39,
+            "fees_reverse": 39,
+            "input_data": {
+                "capacity_imbalance_fee_divisor": 101,
+                "imbalance_generated": 3895
+            }
+        },
+        {
+            "fees": 95,
+            "fees_reverse": 96,
+            "input_data": {
+                "capacity_imbalance_fee_divisor": 101,
+                "imbalance_generated": 9512
+            }
+        },
+        {
+            "fees": 92,
+            "fees_reverse": 93,
+            "input_data": {
+                "capacity_imbalance_fee_divisor": 101,
+                "imbalance_generated": 9242
+            }
+        },
+        {
+            "fees": 96,
+            "fees_reverse": 97,
+            "input_data": {
+                "capacity_imbalance_fee_divisor": 101,
+                "imbalance_generated": 9688
+            }
+        },
+        {
+            "fees": 0,
+            "fees_reverse": 0,
+            "input_data": {
+                "capacity_imbalance_fee_divisor": 1000,
+                "imbalance_generated": 0
+            }
+        },
+        {
+            "fees": 1,
+            "fees_reverse": 1,
+            "input_data": {
+                "capacity_imbalance_fee_divisor": 1000,
+                "imbalance_generated": 10
+            }
+        },
+        {
+            "fees": 1,
+            "fees_reverse": 1,
+            "input_data": {
+                "capacity_imbalance_fee_divisor": 1000,
+                "imbalance_generated": 100
+            }
+        },
+        {
+            "fees": 9,
+            "fees_reverse": 9,
+            "input_data": {
+                "capacity_imbalance_fee_divisor": 1000,
+                "imbalance_generated": 8821
+            }
+        },
+        {
+            "fees": 2,
+            "fees_reverse": 2,
+            "input_data": {
+                "capacity_imbalance_fee_divisor": 1000,
+                "imbalance_generated": 1214
+            }
+        },
+        {
+            "fees": 10,
+            "fees_reverse": 10,
+            "input_data": {
+                "capacity_imbalance_fee_divisor": 1000,
+                "imbalance_generated": 9504
+            }
+        },
+        {
+            "fees": 2,
+            "fees_reverse": 2,
+            "input_data": {
+                "capacity_imbalance_fee_divisor": 1000,
+                "imbalance_generated": 1174
+            }
+        },
+        {
+            "fees": 8,
+            "fees_reverse": 8,
+            "input_data": {
+                "capacity_imbalance_fee_divisor": 1000,
+                "imbalance_generated": 7191
+            }
+        },
+        {
+            "fees": 5,
+            "fees_reverse": 5,
+            "input_data": {
+                "capacity_imbalance_fee_divisor": 1000,
+                "imbalance_generated": 4362
+            }
+        },
+        {
+            "fees": 8,
+            "fees_reverse": 8,
+            "input_data": {
+                "capacity_imbalance_fee_divisor": 1000,
+                "imbalance_generated": 7476
+            }
+        },
+        {
+            "fees": 1,
+            "fees_reverse": 1,
+            "input_data": {
+                "capacity_imbalance_fee_divisor": 1000,
+                "imbalance_generated": 143
+            }
+        },
+        {
+            "fees": 3,
+            "fees_reverse": 3,
+            "input_data": {
+                "capacity_imbalance_fee_divisor": 1000,
+                "imbalance_generated": 2494
+            }
+        },
+        {
+            "fees": 10,
+            "fees_reverse": 10,
+            "input_data": {
+                "capacity_imbalance_fee_divisor": 1000,
+                "imbalance_generated": 9536
+            }
+        },
+        {
+            "fees": 6,
+            "fees_reverse": 6,
+            "input_data": {
+                "capacity_imbalance_fee_divisor": 1000,
+                "imbalance_generated": 5849
+            }
+        },
+        {
+            "fees": 4,
+            "fees_reverse": 4,
+            "input_data": {
+                "capacity_imbalance_fee_divisor": 1000,
+                "imbalance_generated": 3249
+            }
+        },
+        {
+            "fees": 7,
+            "fees_reverse": 7,
+            "input_data": {
+                "capacity_imbalance_fee_divisor": 1000,
+                "imbalance_generated": 6150
+            }
+        },
+        {
+            "fees": 9,
+            "fees_reverse": 9,
+            "input_data": {
+                "capacity_imbalance_fee_divisor": 1000,
+                "imbalance_generated": 8400
+            }
+        },
+        {
+            "fees": 4,
+            "fees_reverse": 4,
+            "input_data": {
+                "capacity_imbalance_fee_divisor": 1000,
+                "imbalance_generated": 3775
+            }
+        },
+        {
+            "fees": 4,
+            "fees_reverse": 4,
+            "input_data": {
+                "capacity_imbalance_fee_divisor": 1000,
+                "imbalance_generated": 3207
+            }
+        },
+        {
+            "fees": 2,
+            "fees_reverse": 2,
+            "input_data": {
+                "capacity_imbalance_fee_divisor": 1000,
+                "imbalance_generated": 1499
+            }
+        },
+        {
+            "fees": 10,
+            "fees_reverse": 10,
+            "input_data": {
+                "capacity_imbalance_fee_divisor": 1000,
+                "imbalance_generated": 9061
+            }
+        },
+        {
+            "fees": 8,
+            "fees_reverse": 8,
+            "input_data": {
+                "capacity_imbalance_fee_divisor": 1000,
+                "imbalance_generated": 7128
+            }
+        },
+        {
+            "fees": 3,
+            "fees_reverse": 3,
+            "input_data": {
+                "capacity_imbalance_fee_divisor": 1000,
+                "imbalance_generated": 2603
+            }
+        },
+        {
+            "fees": 7,
+            "fees_reverse": 7,
+            "input_data": {
+                "capacity_imbalance_fee_divisor": 1000,
+                "imbalance_generated": 6016
+            }
+        },
+        {
+            "fees": 10,
+            "fees_reverse": 10,
+            "input_data": {
+                "capacity_imbalance_fee_divisor": 1000,
+                "imbalance_generated": 9676
+            }
+        },
+        {
+            "fees": 5,
+            "fees_reverse": 5,
+            "input_data": {
+                "capacity_imbalance_fee_divisor": 1000,
+                "imbalance_generated": 4640
+            }
+        },
+        {
+            "fees": 3,
+            "fees_reverse": 3,
+            "input_data": {
+                "capacity_imbalance_fee_divisor": 1000,
+                "imbalance_generated": 2264
+            }
+        },
+        {
+            "fees": 10,
+            "fees_reverse": 10,
+            "input_data": {
+                "capacity_imbalance_fee_divisor": 1000,
+                "imbalance_generated": 9821
+            }
+        },
+        {
+            "fees": 10,
+            "fees_reverse": 10,
+            "input_data": {
+                "capacity_imbalance_fee_divisor": 1000,
+                "imbalance_generated": 9839
+            }
+        },
+        {
+            "fees": 7,
+            "fees_reverse": 7,
+            "input_data": {
+                "capacity_imbalance_fee_divisor": 1000,
+                "imbalance_generated": 6731
+            }
+        },
+        {
+            "fees": 4,
+            "fees_reverse": 4,
+            "input_data": {
+                "capacity_imbalance_fee_divisor": 1000,
+                "imbalance_generated": 3123
+            }
+        },
+        {
+            "fees": 8,
+            "fees_reverse": 8,
+            "input_data": {
+                "capacity_imbalance_fee_divisor": 1000,
+                "imbalance_generated": 7410
+            }
+        },
+        {
+            "fees": 5,
+            "fees_reverse": 5,
+            "input_data": {
+                "capacity_imbalance_fee_divisor": 1000,
+                "imbalance_generated": 4848
+            }
+        },
+        {
+            "fees": 8,
+            "fees_reverse": 8,
+            "input_data": {
+                "capacity_imbalance_fee_divisor": 1000,
+                "imbalance_generated": 7206
+            }
+        },
+        {
+            "fees": 10,
+            "fees_reverse": 10,
+            "input_data": {
+                "capacity_imbalance_fee_divisor": 1000,
+                "imbalance_generated": 9319
+            }
+        },
+        {
+            "fees": 9,
+            "fees_reverse": 9,
+            "input_data": {
+                "capacity_imbalance_fee_divisor": 1000,
+                "imbalance_generated": 8520
+            }
+        },
+        {
+            "fees": 8,
+            "fees_reverse": 8,
+            "input_data": {
+                "capacity_imbalance_fee_divisor": 1000,
+                "imbalance_generated": 7982
+            }
+        },
+        {
+            "fees": 7,
+            "fees_reverse": 7,
+            "input_data": {
+                "capacity_imbalance_fee_divisor": 1000,
+                "imbalance_generated": 6164
+            }
+        },
+        {
+            "fees": 3,
+            "fees_reverse": 3,
+            "input_data": {
+                "capacity_imbalance_fee_divisor": 1000,
+                "imbalance_generated": 2801
+            }
+        },
+        {
+            "fees": 6,
+            "fees_reverse": 6,
+            "input_data": {
+                "capacity_imbalance_fee_divisor": 1000,
+                "imbalance_generated": 5613
+            }
+        },
+        {
+            "fees": 8,
+            "fees_reverse": 8,
+            "input_data": {
+                "capacity_imbalance_fee_divisor": 1000,
+                "imbalance_generated": 7021
+            }
+        },
+        {
+            "fees": 6,
+            "fees_reverse": 6,
+            "input_data": {
+                "capacity_imbalance_fee_divisor": 1000,
+                "imbalance_generated": 5228
+            }
+        },
+        {
+            "fees": 6,
+            "fees_reverse": 6,
+            "input_data": {
+                "capacity_imbalance_fee_divisor": 1000,
+                "imbalance_generated": 5624
+            }
+        }
+    ],
+    "name": "CalculateFee"
+}

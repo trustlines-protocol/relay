@@ -66,13 +66,13 @@ def test_path(community_with_trustlines, accounts):
 def test_no_capacity(community_with_trustlines, accounts):
     community = community_with_trustlines
     A, B, C, D, E = accounts
-    cost, path = community.find_path(A, E, 544)
+    cost, path = community.find_path(A, E, 550)
     assert path == [A, E]
-    cost, path = community.find_path(A, E, 545)
+    cost, path = community.find_path(A, E, 551)
     assert path == []
-    cost, path = community.find_path(E, A, 495)
+    cost, path = community.find_path(E, A, 500)
     assert path == [E, A]
-    cost, path = community.find_path(E, A, 496)
+    cost, path = community.find_path(E, A, 501)
     assert path == []
 
 
@@ -95,12 +95,12 @@ def test_transfer_update(fresh_community, currency_network, accounts):
 
     currency_network.update_trustline(A, B, 50, 100)
     currency_network.update_trustline(B, A, 100, 50)
-    currency_network.transfer(B, A, 20, 1, [A])
+    currency_network.transfer(B, A, 20, 0, [A])
 
     gevent.sleep(1)
 
     assert fresh_community.get_account_sum(A, B).creditline_given == 50
     assert fresh_community.get_account_sum(A, B).creditline_received == 100
-    assert fresh_community.get_account_sum(A, B).balance == 21
-    assert fresh_community.get_account_sum(A, B).creditline_left_given == 29
-    assert fresh_community.get_account_sum(A, B).creditline_left_received == 121
+    assert fresh_community.get_account_sum(A, B).balance == 20
+    assert fresh_community.get_account_sum(A, B).creditline_left_given == 30
+    assert fresh_community.get_account_sum(A, B).creditline_left_received == 120

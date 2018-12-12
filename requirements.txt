@@ -29,4 +29,5 @@ pytest
 pytest-cov
 mypy
 eth-tester[py-evm]
-trustlines-contracts-deploy
+trustlines-contracts-deploy>=0.4.0a
+tox
