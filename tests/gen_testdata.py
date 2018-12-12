@@ -25,8 +25,8 @@ class TestDataGenerator(metaclass=abc.ABCMeta):
         self.contract = contract
 
     @classmethod
-    def name(klass):
-        return klass.__name__
+    def name(cls):
+        return cls.__name__
 
     @abc.abstractmethod
     def generate_input_data(self):
@@ -230,16 +230,16 @@ or cd into the tests directory."""
             currency_network_contract_name="TestCurrencyNetwork",
         )
 
-    name2klass = {
-        klass.name(): klass
-        for klass in (CalculateFeeGenerator, ImbalanceGenerated, Transfer)
+    name2cls = {
+        cls.name(): cls
+        for cls in (CalculateFeeGenerator, ImbalanceGenerated, Transfer)
     }
     if not generator_names:
-        generator_names = list(name2klass.keys())
+        generator_names = list(name2cls.keys())
     for generator_name in generator_names:
-        klass = name2klass[generator_name]
+        cls = name2cls[generator_name]
         generate_and_write_testdata(
-            klass, web3, make_contract(), output_directory=output_directory
+            cls, web3, make_contract(), output_directory=output_directory
         )
 
 
