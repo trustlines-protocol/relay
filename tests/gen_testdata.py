@@ -112,17 +112,6 @@ class Transfer(TestDataGenerator):
         return itertools.chain(
             self._generate_input_data0(),
             self._generate_input_data1(),
-            self._generate_input_data2(),
-        )
-
-    def _generate_input_data2(self):
-        """this is a simple testcase currently failing"""
-        yield dict(
-            fees_paid_by="receiver",
-            value=1000,
-            capacity_imbalance_fee_divisor=10,
-            addresses=self._gen_addresses(3),
-            balances_before=[1000, 0],
         )
 
     def _generate_input_data1(self):

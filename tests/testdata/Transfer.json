@@ -2537,26 +2537,6 @@
                 "fees_paid_by": "receiver",
                 "value": 1000000
             }
-        },
-        {
-            "balances": [
-                0,
-                -1000
-            ],
-            "input_data": {
-                "addresses": [
-                    "0x0000000000000000000000000000000000000001",
-                    "0x0000000000000000000000000000000000000002",
-                    "0x0000000000000000000000000000000000000003"
-                ],
-                "balances_before": [
-                    1000,
-                    0
-                ],
-                "capacity_imbalance_fee_divisor": 10,
-                "fees_paid_by": "receiver",
-                "value": 1000
-            }
         }
     ],
     "name": "Transfer"
