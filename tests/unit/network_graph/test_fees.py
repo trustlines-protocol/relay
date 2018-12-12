@@ -1,35 +1,42 @@
-from relay.network_graph.fees import (estimate_fees_from_capacity,
-                                      calculate_fees, calculate_fees_reverse, imbalance_generated)
+from relay.network_graph.fees import (
+    estimate_fees_from_capacity,
+    calculate_fees,
+    calculate_fees_reverse,
+    imbalance_generated,
+)
 
 
 def test_imbalance_generated(ImbalanceGenerated):
     balance = ImbalanceGenerated["input_data"]["balance"]
     value = ImbalanceGenerated["input_data"]["value"]
-    expected = ImbalanceGenerated["imbalance_generated"]
-    assert imbalance_generated(balance=balance, value=value) == expected
-
-
-def test_calculate_fees(CalculateFeeGenerator):
-    capacity_imbalance_fee_divisor = CalculateFeeGenerator["input_data"][
-        "capacity_imbalance_fee_divisor"
-    ]
-    imbalance_generated = CalculateFeeGenerator["input_data"]["imbalance_generated"]
-    calculateFees = CalculateFeeGenerator["calculateFees"]
+    expected_imbalance_generated = ImbalanceGenerated["imbalance_generated"]
     assert (
-        calculate_fees(imbalance_generated, capacity_imbalance_fee_divisor)
-        == calculateFees
+        imbalance_generated(balance=balance, value=value)
+        == expected_imbalance_generated
     )
 
 
-def test_calculate_fees_reverse(CalculateFeeGenerator):
-    capacity_imbalance_fee_divisor = CalculateFeeGenerator["input_data"][
+def test_calculate_fees(CalculateFee):
+    capacity_imbalance_fee_divisor = CalculateFee["input_data"][
         "capacity_imbalance_fee_divisor"
     ]
-    imbalance_generated = CalculateFeeGenerator["input_data"]["imbalance_generated"]
-    calculateFeesReverse = CalculateFeeGenerator["calculateFeesReverse"]
+    imbalance_generated = CalculateFee["input_data"]["imbalance_generated"]
+    expected_fees = CalculateFee["fees"]
+    assert (
+        calculate_fees(imbalance_generated, capacity_imbalance_fee_divisor)
+        == expected_fees
+    )
+
+
+def test_calculate_fees_reverse(CalculateFee):
+    capacity_imbalance_fee_divisor = CalculateFee["input_data"][
+        "capacity_imbalance_fee_divisor"
+    ]
+    imbalance_generated = CalculateFee["input_data"]["imbalance_generated"]
+    expected_fees_reverse = CalculateFee["fees_reverse"]
     assert (
         calculate_fees_reverse(imbalance_generated, capacity_imbalance_fee_divisor)
-        == calculateFeesReverse
+        == expected_fees_reverse
     )
 
 

@@ -1,7 +1,7 @@
 {
     "data": [
         {
-            "balances": [
+            "balances_after": [
                 -1000
             ],
             "input_data": {
@@ -18,7 +18,7 @@
             }
         },
         {
-            "balances": [
+            "balances_after": [
                 -10000
             ],
             "input_data": {
@@ -35,7 +35,7 @@
             }
         },
         {
-            "balances": [
+            "balances_after": [
                 -1000000
             ],
             "input_data": {
@@ -52,7 +52,7 @@
             }
         },
         {
-            "balances": [
+            "balances_after": [
                 -1000
             ],
             "input_data": {
@@ -69,7 +69,7 @@
             }
         },
         {
-            "balances": [
+            "balances_after": [
                 -10000
             ],
             "input_data": {
@@ -86,7 +86,7 @@
             }
         },
         {
-            "balances": [
+            "balances_after": [
                 -1000000
             ],
             "input_data": {
@@ -103,7 +103,7 @@
             }
         },
         {
-            "balances": [
+            "balances_after": [
                 -1000
             ],
             "input_data": {
@@ -120,7 +120,7 @@
             }
         },
         {
-            "balances": [
+            "balances_after": [
                 -10000
             ],
             "input_data": {
@@ -137,7 +137,7 @@
             }
         },
         {
-            "balances": [
+            "balances_after": [
                 -1000000
             ],
             "input_data": {
@@ -154,7 +154,7 @@
             }
         },
         {
-            "balances": [
+            "balances_after": [
                 -1000
             ],
             "input_data": {
@@ -171,7 +171,7 @@
             }
         },
         {
-            "balances": [
+            "balances_after": [
                 -10000
             ],
             "input_data": {
@@ -188,7 +188,7 @@
             }
         },
         {
-            "balances": [
+            "balances_after": [
                 -1000000
             ],
             "input_data": {
@@ -205,7 +205,7 @@
             }
         },
         {
-            "balances": [
+            "balances_after": [
                 -1000
             ],
             "input_data": {
@@ -222,7 +222,7 @@
             }
         },
         {
-            "balances": [
+            "balances_after": [
                 -10000
             ],
             "input_data": {
@@ -239,7 +239,7 @@
             }
         },
         {
-            "balances": [
+            "balances_after": [
                 -1000000
             ],
             "input_data": {
@@ -256,7 +256,7 @@
             }
         },
         {
-            "balances": [
+            "balances_after": [
                 -1000
             ],
             "input_data": {
@@ -273,7 +273,7 @@
             }
         },
         {
-            "balances": [
+            "balances_after": [
                 -10000
             ],
             "input_data": {
@@ -290,7 +290,7 @@
             }
         },
         {
-            "balances": [
+            "balances_after": [
                 -1000000
             ],
             "input_data": {
@@ -307,7 +307,7 @@
             }
         },
         {
-            "balances": [
+            "balances_after": [
                 -1112,
                 -1000
             ],
@@ -327,7 +327,7 @@
             }
         },
         {
-            "balances": [
+            "balances_after": [
                 -11112,
                 -10000
             ],
@@ -347,7 +347,7 @@
             }
         },
         {
-            "balances": [
+            "balances_after": [
                 -1111112,
                 -1000000
             ],
@@ -367,7 +367,7 @@
             }
         },
         {
-            "balances": [
+            "balances_after": [
                 -1011,
                 -1000
             ],
@@ -387,7 +387,7 @@
             }
         },
         {
-            "balances": [
+            "balances_after": [
                 -10102,
                 -10000
             ],
@@ -407,7 +407,7 @@
             }
         },
         {
-            "balances": [
+            "balances_after": [
                 -1010102,
                 -1000000
             ],
@@ -427,7 +427,7 @@
             }
         },
         {
-            "balances": [
+            "balances_after": [
                 -1002,
                 -1000
             ],
@@ -447,7 +447,7 @@
             }
         },
         {
-            "balances": [
+            "balances_after": [
                 -10011,
                 -10000
             ],
@@ -467,7 +467,7 @@
             }
         },
         {
-            "balances": [
+            "balances_after": [
                 -1001002,
                 -1000000
             ],
@@ -487,7 +487,7 @@
             }
         },
         {
-            "balances": [
+            "balances_after": [
                 -1000,
                 -900
             ],
@@ -507,7 +507,7 @@
             }
         },
         {
-            "balances": [
+            "balances_after": [
                 -10000,
                 -9000
             ],
@@ -527,7 +527,7 @@
             }
         },
         {
-            "balances": [
+            "balances_after": [
                 -1000000,
                 -900000
             ],
@@ -547,7 +547,7 @@
             }
         },
         {
-            "balances": [
+            "balances_after": [
                 -1000,
                 -990
             ],
@@ -567,7 +567,7 @@
             }
         },
         {
-            "balances": [
+            "balances_after": [
                 -10000,
                 -9900
             ],
@@ -587,7 +587,7 @@
             }
         },
         {
-            "balances": [
+            "balances_after": [
                 -1000000,
                 -990000
             ],
@@ -607,7 +607,7 @@
             }
         },
         {
-            "balances": [
+            "balances_after": [
                 -1000,
                 -999
             ],
@@ -627,7 +627,7 @@
             }
         },
         {
-            "balances": [
+            "balances_after": [
                 -10000,
                 -9990
             ],
@@ -647,7 +647,7 @@
             }
         },
         {
-            "balances": [
+            "balances_after": [
                 -1000000,
                 -999000
             ],
@@ -667,7 +667,7 @@
             }
         },
         {
-            "balances": [
+            "balances_after": [
                 -1236,
                 -1112,
                 -1000
@@ -690,7 +690,7 @@
             }
         },
         {
-            "balances": [
+            "balances_after": [
                 -12347,
                 -11112,
                 -10000
@@ -713,7 +713,7 @@
             }
         },
         {
-            "balances": [
+            "balances_after": [
                 -1234569,
                 -1111112,
                 -1000000
@@ -736,7 +736,7 @@
             }
         },
         {
-            "balances": [
+            "balances_after": [
                 -1022,
                 -1011,
                 -1000
@@ -759,7 +759,7 @@
             }
         },
         {
-            "balances": [
+            "balances_after": [
                 -10205,
                 -10102,
                 -10000
@@ -782,7 +782,7 @@
             }
         },
         {
-            "balances": [
+            "balances_after": [
                 -1020306,
                 -1010102,
                 -1000000
@@ -805,7 +805,7 @@
             }
         },
         {
-            "balances": [
+            "balances_after": [
                 -1004,
                 -1002,
                 -1000
@@ -828,7 +828,7 @@
             }
         },
         {
-            "balances": [
+            "balances_after": [
                 -10022,
                 -10011,
                 -10000
@@ -851,7 +851,7 @@
             }
         },
         {
-            "balances": [
+            "balances_after": [
                 -1002005,
                 -1001002,
                 -1000000
@@ -874,7 +874,7 @@
             }
         },
         {
-            "balances": [
+            "balances_after": [
                 -1000,
                 -900,
                 -810
@@ -897,7 +897,7 @@
             }
         },
         {
-            "balances": [
+            "balances_after": [
                 -10000,
                 -9000,
                 -8100
@@ -920,7 +920,7 @@
             }
         },
         {
-            "balances": [
+            "balances_after": [
                 -1000000,
                 -900000,
                 -810000
@@ -943,7 +943,7 @@
             }
         },
         {
-            "balances": [
+            "balances_after": [
                 -1000,
                 -990,
                 -980
@@ -966,7 +966,7 @@
             }
         },
         {
-            "balances": [
+            "balances_after": [
                 -10000,
                 -9900,
                 -9801
@@ -989,7 +989,7 @@
             }
         },
         {
-            "balances": [
+            "balances_after": [
                 -1000000,
                 -990000,
                 -980100
@@ -1012,7 +1012,7 @@
             }
         },
         {
-            "balances": [
+            "balances_after": [
                 -1000,
                 -999,
                 -998
@@ -1035,7 +1035,7 @@
             }
         },
         {
-            "balances": [
+            "balances_after": [
                 -10000,
                 -9990,
                 -9980
@@ -1058,7 +1058,7 @@
             }
         },
         {
-            "balances": [
+            "balances_after": [
                 -1000000,
                 -999000,
                 -998001
@@ -1081,7 +1081,7 @@
             }
         },
         {
-            "balances": [
+            "balances_after": [
                 -1374,
                 -1236,
                 -1112,
@@ -1107,7 +1107,7 @@
             }
         },
         {
-            "balances": [
+            "balances_after": [
                 -13719,
                 -12347,
                 -11112,
@@ -1133,7 +1133,7 @@
             }
         },
         {
-            "balances": [
+            "balances_after": [
                 -1371744,
                 -1234569,
                 -1111112,
@@ -1159,7 +1159,7 @@
             }
         },
         {
-            "balances": [
+            "balances_after": [
                 -1033,
                 -1022,
                 -1011,
@@ -1185,7 +1185,7 @@
             }
         },
         {
-            "balances": [
+            "balances_after": [
                 -10309,
                 -10205,
                 -10102,
@@ -1211,7 +1211,7 @@
             }
         },
         {
-            "balances": [
+            "balances_after": [
                 -1030613,
                 -1020306,
                 -1010102,
@@ -1237,7 +1237,7 @@
             }
         },
         {
-            "balances": [
+            "balances_after": [
                 -1006,
                 -1004,
                 -1002,
@@ -1263,7 +1263,7 @@
             }
         },
         {
-            "balances": [
+            "balances_after": [
                 -10033,
                 -10022,
                 -10011,
@@ -1289,7 +1289,7 @@
             }
         },
         {
-            "balances": [
+            "balances_after": [
                 -1003009,
                 -1002005,
                 -1001002,
@@ -1315,7 +1315,7 @@
             }
         },
         {
-            "balances": [
+            "balances_after": [
                 -1000,
                 -900,
                 -810,
@@ -1341,7 +1341,7 @@
             }
         },
         {
-            "balances": [
+            "balances_after": [
                 -10000,
                 -9000,
                 -8100,
@@ -1367,7 +1367,7 @@
             }
         },
         {
-            "balances": [
+            "balances_after": [
                 -1000000,
                 -900000,
                 -810000,
@@ -1393,7 +1393,7 @@
             }
         },
         {
-            "balances": [
+            "balances_after": [
                 -1000,
                 -990,
                 -980,
@@ -1419,7 +1419,7 @@
             }
         },
         {
-            "balances": [
+            "balances_after": [
                 -10000,
                 -9900,
                 -9801,
@@ -1445,7 +1445,7 @@
             }
         },
         {
-            "balances": [
+            "balances_after": [
                 -1000000,
                 -990000,
                 -980100,
@@ -1471,7 +1471,7 @@
             }
         },
         {
-            "balances": [
+            "balances_after": [
                 -1000,
                 -999,
                 -998,
@@ -1497,7 +1497,7 @@
             }
         },
         {
-            "balances": [
+            "balances_after": [
                 -10000,
                 -9990,
                 -9980,
@@ -1523,7 +1523,7 @@
             }
         },
         {
-            "balances": [
+            "balances_after": [
                 -1000000,
                 -999000,
                 -998001,
@@ -1549,7 +1549,7 @@
             }
         },
         {
-            "balances": [
+            "balances_after": [
                 -1527,
                 -1374,
                 -1236,
@@ -1578,7 +1578,7 @@
             }
         },
         {
-            "balances": [
+            "balances_after": [
                 -15244,
                 -13719,
                 -12347,
@@ -1607,7 +1607,7 @@
             }
         },
         {
-            "balances": [
+            "balances_after": [
                 -1524160,
                 -1371744,
                 -1234569,
@@ -1636,7 +1636,7 @@
             }
         },
         {
-            "balances": [
+            "balances_after": [
                 -1044,
                 -1033,
                 -1022,
@@ -1665,7 +1665,7 @@
             }
         },
         {
-            "balances": [
+            "balances_after": [
                 -10414,
                 -10309,
                 -10205,
@@ -1694,7 +1694,7 @@
             }
         },
         {
-            "balances": [
+            "balances_after": [
                 -1041024,
                 -1030613,
                 -1020306,
@@ -1723,7 +1723,7 @@
             }
         },
         {
-            "balances": [
+            "balances_after": [
                 -1008,
                 -1006,
                 -1004,
@@ -1752,7 +1752,7 @@
             }
         },
         {
-            "balances": [
+            "balances_after": [
                 -10044,
                 -10033,
                 -10022,
@@ -1781,7 +1781,7 @@
             }
         },
         {
-            "balances": [
+            "balances_after": [
                 -1004014,
                 -1003009,
                 -1002005,
@@ -1810,7 +1810,7 @@
             }
         },
         {
-            "balances": [
+            "balances_after": [
                 -1000,
                 -900,
                 -810,
@@ -1839,7 +1839,7 @@
             }
         },
         {
-            "balances": [
+            "balances_after": [
                 -10000,
                 -9000,
                 -8100,
@@ -1868,7 +1868,7 @@
             }
         },
         {
-            "balances": [
+            "balances_after": [
                 -1000000,
                 -900000,
                 -810000,
@@ -1897,7 +1897,7 @@
             }
         },
         {
-            "balances": [
+            "balances_after": [
                 -1000,
                 -990,
                 -980,
@@ -1926,7 +1926,7 @@
             }
         },
         {
-            "balances": [
+            "balances_after": [
                 -10000,
                 -9900,
                 -9801,
@@ -1955,7 +1955,7 @@
             }
         },
         {
-            "balances": [
+            "balances_after": [
                 -1000000,
                 -990000,
                 -980100,
@@ -1984,7 +1984,7 @@
             }
         },
         {
-            "balances": [
+            "balances_after": [
                 -1000,
                 -999,
                 -998,
@@ -2013,7 +2013,7 @@
             }
         },
         {
-            "balances": [
+            "balances_after": [
                 -10000,
                 -9990,
                 -9980,
@@ -2042,7 +2042,7 @@
             }
         },
         {
-            "balances": [
+            "balances_after": [
                 -1000000,
                 -999000,
                 -998001,
@@ -2071,7 +2071,7 @@
             }
         },
         {
-            "balances": [
+            "balances_after": [
                 -139,
                 -125,
                 -2112,
@@ -2097,7 +2097,7 @@
             }
         },
         {
-            "balances": [
+            "balances_after": [
                 -113458,
                 -11112,
                 -10000,
@@ -2123,7 +2123,7 @@
             }
         },
         {
-            "balances": [
+            "balances_after": [
                 -1346915,
                 -1223223,
                 -1000000,
@@ -2149,7 +2149,7 @@
             }
         },
         {
-            "balances": [
+            "balances_after": [
                 98988,
                 -12,
                 -2011,
@@ -2175,7 +2175,7 @@
             }
         },
         {
-            "balances": [
+            "balances_after": [
                 -10194,
                 -92,
                 -9091,
@@ -2201,7 +2201,7 @@
             }
         },
         {
-            "balances": [
+            "balances_after": [
                 -1030509,
                 -1020203,
                 -1000000,
@@ -2227,7 +2227,7 @@
             }
         },
         {
-            "balances": [
+            "balances_after": [
                 0,
                 99000,
                 99000,
@@ -2253,7 +2253,7 @@
             }
         },
         {
-            "balances": [
+            "balances_after": [
                 89990,
                 89990,
                 -9010,
@@ -2279,7 +2279,7 @@
             }
         },
         {
-            "balances": [
+            "balances_after": [
                 -902886,
                 -991983,
                 -990991,
@@ -2305,7 +2305,7 @@
             }
         },
         {
-            "balances": [
+            "balances_after": [
                 -2000,
                 -10900,
                 9190,
@@ -2331,7 +2331,7 @@
             }
         },
         {
-            "balances": [
+            "balances_after": [
                 -10000,
                 -19000,
                 1900,
@@ -2357,7 +2357,7 @@
             }
         },
         {
-            "balances": [
+            "balances_after": [
                 -990000,
                 -1001000,
                 -810900,
@@ -2383,7 +2383,7 @@
             }
         },
         {
-            "balances": [
+            "balances_after": [
                 -1000,
                 99010,
                 9010,
@@ -2409,7 +2409,7 @@
             }
         },
         {
-            "balances": [
+            "balances_after": [
                 90000,
                 -20000,
                 -10900,
@@ -2435,7 +2435,7 @@
             }
         },
         {
-            "balances": [
+            "balances_after": [
                 -1010000,
                 -1000000,
                 -979100,
@@ -2461,7 +2461,7 @@
             }
         },
         {
-            "balances": [
+            "balances_after": [
                 -101000,
                 -10999,
                 -10998,
@@ -2487,7 +2487,7 @@
             }
         },
         {
-            "balances": [
+            "balances_after": [
                 -110000,
                 -19990,
                 -9980,
@@ -2513,7 +2513,7 @@
             }
         },
         {
-            "balances": [
+            "balances_after": [
                 -1000000,
                 -899000,
                 -988101,

@@ -48,7 +48,7 @@ class TestDataGenerator(metaclass=abc.ABCMeta):
         return dict(name=self.name(), data=result)
 
 
-class CalculateFeeGenerator(TestDataGenerator):
+class CalculateFee(TestDataGenerator):
     def generate_input_data(self):
         prng = random.Random("666")
         for capacity_imbalance_fee_divisor in [2, 10, 50, 101, 1000]:
@@ -62,10 +62,10 @@ class CalculateFeeGenerator(TestDataGenerator):
 
     def compute_one_result(self, imbalance_generated, capacity_imbalance_fee_divisor):
         return dict(
-            calculateFees=self.contract.functions.testCalculateFees(
+            fees=self.contract.functions.testCalculateFees(
                 imbalance_generated, capacity_imbalance_fee_divisor
             ).call(),
-            calculateFeesReverse=self.contract.functions.testCalculateFeesReverse(
+            fees_reverse=self.contract.functions.testCalculateFeesReverse(
                 imbalance_generated, capacity_imbalance_fee_divisor
             ).call(),
         )
@@ -110,8 +110,7 @@ class Transfer(TestDataGenerator):
 
     def generate_input_data(self):
         return itertools.chain(
-            self._generate_input_data0(),
-            self._generate_input_data1(),
+            self._generate_input_data0(), self._generate_input_data1()
         )
 
     def _generate_input_data1(self):
@@ -176,7 +175,7 @@ class Transfer(TestDataGenerator):
             for a, b in zip(addresses, addresses[1:])
         ]
 
-        return dict(balances=balances)
+        return dict(balances_after=balances)
 
 
 def generate_and_write_testdata(generator_class, web3, contract, output_directory):
@@ -219,10 +218,7 @@ or cd into the tests directory."""
             currency_network_contract_name="TestCurrencyNetwork",
         )
 
-    name2cls = {
-        cls.name(): cls
-        for cls in (CalculateFeeGenerator, ImbalanceGenerated, Transfer)
-    }
+    name2cls = {cls.name(): cls for cls in (CalculateFee, ImbalanceGenerated, Transfer)}
     if not generator_names:
         generator_names = list(name2cls.keys())
     for generator_name in generator_names:

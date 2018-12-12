@@ -207,7 +207,7 @@ def transfer_info(Transfer):
     value = Transfer["input_data"]["value"]
     balances_before_transfer = Transfer["input_data"]["balances_before"]
 
-    balances_after_transfer = Transfer["balances"]
+    balances_after_transfer = Transfer["balances_after"]
 
     timestamp = 1500000000
     if fees_paid_by == "sender":
