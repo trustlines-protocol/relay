@@ -229,7 +229,10 @@ class ReceiverPaysCostAccumulatorSnapshot(alg.CostAccumulator):
     """This is the CostAccumulator being used when using our 'receiver pays
     fees' style of payments"
 
-    This sorts by the fees first, then the number of hops.
+    This sorts by the fees first, then the fee for the previous hop, then the
+    number of hops.
+
+
 
     We need to pass a timestamp in the constructor. This is being used to
     compute a consistent view of balances in the trustlines network.
@@ -256,22 +259,17 @@ class ReceiverPaysCostAccumulatorSnapshot(alg.CostAccumulator):
         if dst == self.ignore or node == self.ignore:
             return None
 
-        # we maintain the previously computed fee, since that is only 'paid
-        # out' when we jump to the next hop
-        sum_fees, next_fee, num_hops = cost_from_start_to_node
+        # For this case the pathfinding is not done in reverse.
+        #
+        # we maintain the computed fee for the previous hop, since that is only
+        # 'paid out' when we jump to the next hop The first element in this
+        # tuple has to be the sum of the fees not including the fee for the
+        # previous hop, since the graph finding algorithm needs to sort by that
+        # and not by what would be paid out if there is another hop
+        sum_fees, previous_hop_fee, num_hops = cost_from_start_to_node
 
         if num_hops + 1 > self.max_hops:
             return None
-
-        # fee computation has been inlined here, since the comment in
-        # Graph._get_fee suggests it should be as fast as possible. This means
-        # we do have some code duplication, but I couldn't use some of the
-        # methods in Graph anyway, because they don't take a timestamp argument
-        # and rather use the current time.
-        #
-        # We should profile this at some point in time.
-        #
-        # For this case the pathfinding is not done in reverse.
 
         pre_balance = balance_with_interests(
             get_balance(edge_data, node, dst),
@@ -280,18 +278,20 @@ class ReceiverPaysCostAccumulatorSnapshot(alg.CostAccumulator):
             self.timestamp - get_mtime(edge_data))
 
         fee = calculate_fees(
-            imbalance_generated=imbalance_generated(value=self.value - sum_fees - next_fee, balance=pre_balance),
+            imbalance_generated=imbalance_generated(
+                value=self.value - sum_fees - previous_hop_fee,
+                balance=pre_balance),
             capacity_imbalance_fee_divisor=self.capacity_imbalance_fee_divisor)
 
-        if sum_fees + next_fee > self.max_fees:
+        if sum_fees + previous_hop_fee > self.max_fees:
             return None
 
         # check that we don't exceed the creditline
         capacity = pre_balance + get_creditline(edge_data, dst, node)
-        if self.value - sum_fees - next_fee > capacity:
+        if self.value - sum_fees - previous_hop_fee > capacity:
             return None  # creditline exceeded
 
-        return (sum_fees + next_fee, fee, num_hops + 1)
+        return (sum_fees + previous_hop_fee, fee, num_hops + 1)
 
 
 class CapacityAccumulator(alg.CostAccumulator):
