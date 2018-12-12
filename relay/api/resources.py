@@ -87,7 +87,10 @@ class User(Resource):
     @dump_result_with_schema(AccountSummarySchema())
     def get(self, network_address: str, user_address: str):
         abort_if_unknown_network(self.trustlines, network_address)
-        return self.trustlines.currency_network_graphs[network_address].get_account_sum(user_address)
+        timestamp = int(time.time())
+        return self.trustlines.currency_network_graphs[network_address].get_account_sum(
+            user_address, timestamp=timestamp
+        )
 
 
 class ContactList(Resource):
@@ -107,8 +110,10 @@ def _id(network_address, a_address, b_address):
             return sha3(network_address + b_address + a_address)
 
 
-def _get_extended_account_summary(graph, network_address, a_address, b_address):
-    account_summary = graph.get_account_sum(a_address, b_address)
+def _get_extended_account_summary(
+    graph, network_address, a_address, b_address, timestamp: int
+):
+    account_summary = graph.get_account_sum(a_address, b_address, timestamp=timestamp)
     account_summary.user = a_address
     account_summary.counterParty = b_address
     account_summary.address = b_address
@@ -124,8 +129,11 @@ class Trustline(Resource):
     @dump_result_with_schema(TrustlineSchema())
     def get(self, network_address, a_address, b_address):
         abort_if_unknown_network(self.trustlines, network_address)
+        timestamp = int(time.time())
         graph = self.trustlines.currency_network_graphs[network_address]
-        return _get_extended_account_summary(graph, network_address, a_address, b_address)
+        return _get_extended_account_summary(
+            graph, network_address, a_address, b_address, timestamp=timestamp
+        )
 
 
 class TrustlineList(Resource):
@@ -136,10 +144,19 @@ class TrustlineList(Resource):
     @dump_result_with_schema(TrustlineSchema(many=True))
     def get(self, network_address: str, user_address: str):
         abort_if_unknown_network(self.trustlines, network_address)
+        timestamp = int(time.time())
         graph = self.trustlines.currency_network_graphs[network_address]
         friends = graph.get_friends(user_address)
-        return [_get_extended_account_summary(graph, network_address, user_address, friend_address)
-                for friend_address in friends]
+        return [
+            _get_extended_account_summary(
+                graph,
+                network_address,
+                user_address,
+                friend_address,
+                timestamp=timestamp,
+            )
+            for friend_address in friends
+        ]
 
 
 class MaxCapacityPath(Resource):
@@ -161,10 +178,13 @@ class MaxCapacityPath(Resource):
         target = args['to']
         max_hops = args['maxHops']
 
+        timestamp = int(time.time())
+
         capacity, path = self.trustlines.currency_network_graphs[network_address].find_maximum_capacity_path(
             source=source,
             target=target,
-            max_hops=max_hops)
+            max_hops=max_hops,
+            timestamp=timestamp)
 
         return {'capacity': str(capacity),
                 'path': path}
@@ -347,6 +367,7 @@ class Path(Resource):
     @dump_result_with_schema(PaymentPathSchema())
     def post(self, args, network_address: str):
         abort_if_unknown_network(self.trustlines, network_address)
+        timestamp = int(time.time())
 
         source = args['from']
         target = args['to']
@@ -359,7 +380,8 @@ class Path(Resource):
             target=target,
             value=value,
             max_fees=max_fees,
-            max_hops=max_hops)
+            max_hops=max_hops,
+            timestamp=timestamp)
 
         return _estimate_gas_for_transfer(self.trustlines, PaymentPath(cost, path, value), network_address)
 
