@@ -168,13 +168,13 @@ class TransferInfo:
     cost_accumulator: alg.CostAccumulator
     minimal_creditlines: List
 
-    def ensure_cost(self, gr):
+    def assert_expected_cost(self, gr):
         """try to compute the costs for the transfer and fail if they don't match with the expected value"""
         result = self.cost_accumulator.compute_cost_for_path(gr, self.path)
         print("COST:", result)
         assert result[0] == self.expected_fees
 
-    def ensure_find_path(self, gr):
+    def assert_find_path(self, gr):
         """ensure that least_cost_path is able to find a path and that the cost
         is as expected"""
         cost, path_found = alg.least_cost_path(
@@ -257,8 +257,8 @@ def test_transfer_ample_creditlines(transfer_info: TransferInfo):
         creditlines=[100000000] * (len(transfer_info.addresses) - 1),
         balances=transfer_info.balances_before_transfer,
     )
-    transfer_info.ensure_cost(gr)
-    transfer_info.ensure_find_path(gr)
+    transfer_info.assert_expected_cost(gr)
+    transfer_info.assert_find_path(gr)
 
 
 def test_transfer_minimal_creditlines(transfer_info: TransferInfo):
@@ -269,8 +269,8 @@ def test_transfer_minimal_creditlines(transfer_info: TransferInfo):
         creditlines=transfer_info.minimal_creditlines,
         balances=transfer_info.balances_before_transfer,
     )
-    transfer_info.ensure_cost(gr)
-    transfer_info.ensure_find_path(gr)
+    transfer_info.assert_expected_cost(gr)
+    transfer_info.assert_find_path(gr)
 
 
 def test_transfer_creditlines_insufficient(transfer_info: TransferInfo):
@@ -283,7 +283,7 @@ def test_transfer_creditlines_insufficient(transfer_info: TransferInfo):
             balances=transfer_info.balances_before_transfer,
         )
         with pytest.raises(nx.NetworkXNoPath):
-            transfer_info.ensure_cost(gr)
+            transfer_info.assert_expected_cost(gr)
 
 
 def test_find_path_creditlines_insufficient(transfer_info: TransferInfo):
@@ -296,4 +296,4 @@ def test_find_path_creditlines_insufficient(transfer_info: TransferInfo):
             balances=transfer_info.balances_before_transfer,
         )
         with pytest.raises(nx.NetworkXNoPath):
-            transfer_info.ensure_find_path(gr)
+            transfer_info.assert_find_path(gr)
