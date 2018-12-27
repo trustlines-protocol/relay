@@ -3,7 +3,6 @@ from relay.network_graph.fees import (
     calculate_fees_reverse,
     imbalance_generated,
     estimate_max_fee_from_max_imbalance,
-    estimate_sendable_from_one_limiting_capacity
 )
 
 
@@ -90,4 +89,3 @@ def test_estimate_max_fees_from_capacity_single_hop_high_value():
     fee_estimation = estimate_max_fee_from_max_imbalance(100, imbalance)
     fee_actual = calculate_fees(imbalance - fee_estimation, 100)
     assert fee_estimation >= fee_actual
-
