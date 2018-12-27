@@ -319,6 +319,20 @@ def test_max_capacity_estimation_multi_hop(complex_community_with_trustlines_and
     assert path == [A, C, D, E]
 
 
+def test_capacity_path_single_hop_reducing_imbalance(complex_community_with_trustlines_and_fees):
+    """Test whether a path with potential reduction of imbalance will show to provide more capacity and less fees
+    this exposes the bug detailed in https://github.com/trustlines-network/mobileapp/issues/296"""
+    complex_community_with_trustlines_and_fees.update_balance(A, B, 50000)
+
+    value, path = complex_community_with_trustlines_and_fees.find_maximum_capacity_path(A, B)
+    assert path == [A, B]
+    assert value == 50000+49504
+    # we reduce the balance from 50000 to 0 with no fees and then increase to 49504 + 496 with fees.
+
+    cost, path = complex_community_with_trustlines_and_fees.find_path(A, B, value)
+    assert path == [A, B]
+
+
 def test_max_capacity_estimation_multi_hop_fees_33(complex_community_with_trustlines_and_fees_33):
     """Tests whether the path and capacity found actually work with different fee divisor"""
     complex_community_with_trustlines_and_fees_33.update_balance(A, B, -50000+12345)
@@ -339,12 +353,6 @@ def test_max_capacity_estimation_multi_hop_fees_202(complex_community_with_trust
 
     value, path = complex_community_with_trustlines_and_fees_202.find_path(A, B, capacity)
     assert path == [A, B]
-
-
-def test_max_capacity_estimation_better_than_trivial_estimation(complex_community_with_trustlines_and_fees):
-    """Tests whether the estimation of the capacity is better than with a trivial case of (capa-fee = 0 mod divisor)"""
-    capacity = complex_community_with_trustlines_and_fees.estimate_sendable_from_capacity(102, [102])
-    assert capacity == 100
 
 
 def test_max_capacity_estimation_long_path(complex_community_with_trustlines_and_fees_10):

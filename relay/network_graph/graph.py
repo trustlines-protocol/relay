@@ -22,8 +22,7 @@ from .dijkstra_weighted import (
     PaymentPath
 )
 
-from .fees import (estimate_fees_from_capacity, calculate_fees_reverse,
-                   calculate_fees, imbalance_generated)
+from .fees import (estimate_sendable, calculate_fees_reverse, calculate_fees, imbalance_generated)
 from .interests import balance_with_interests
 from relay.network_graph.graph_constants import (
     creditline_ab,
@@ -601,35 +600,23 @@ class CurrencyNetworkGraph(object):
         except (nx.NetworkXNoPath, KeyError):  # key error for if source or target is not in graph
             min_capacity, path, path_capacities = 0, [], []
 
-        sendable = self.estimate_sendable_from_capacity(min_capacity, path_capacities)
+        path_balances = self.get_balances_along_path(path)
+
+        sendable = estimate_sendable(self.capacity_imbalance_fee_divisor, path_capacities, path_balances)
 
         if sendable <= 0:
             return 0, []
 
         return sendable, list(path)
 
-    def estimate_sendable_from_capacity(self, capacity, path_capacities):
-        """
-        estimates the actual sendable amount along a path with path_capacities;
-        capacity is the smallest value of path_capacities
-        """
-        divisor = self.capacity_imbalance_fee_divisor
+    def get_balances_along_path(self, path):
+        balances = []
 
-        if divisor == 0:
-            return capacity
+        for i in range(0, len(path) - 1):
+            data = self.graph.get_edge_data(path[i], path[i+1])
+            balances.append(get_balance(data, path[i], path[i+1]))
 
-        fees = estimate_fees_from_capacity(self.capacity_imbalance_fee_divisor, capacity, path_capacities)
-
-        """
-        we want to withdraw 1 from the capacity if we are on the discontinuity of 'floor(capacity - fees // divisor)':
-        (capacity - fees) % divisor == 0
-        and this is discontinuity happens around the minimal capacity of the path and due to high fees elswhere:
-        capacity = n * divisor + n  <=> capacity//divisor == (capacity % divisor)
-        """
-        if capacity//divisor == (capacity % divisor) and (capacity - fees) % divisor == 0:
-            capacity -= 1
-
-        return capacity - fees
+        return balances
 
 
 class CurrencyNetworkGraphForTesting(CurrencyNetworkGraph):
