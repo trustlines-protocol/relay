@@ -207,28 +207,45 @@ def test_close_trustline_last_edge_insufficient_capacity(complex_community_with_
 
 def test_capacity_path_single_hop(complex_community_with_trustlines):
     """test for getting the capacity of the path A-B"""
-    value, path = complex_community_with_trustlines.find_maximum_capacity_path(
-                A, B)
-    assert path == [A, B]
-    assert value == 50000
+    source = A
+    destination = B
+
+    sendable, max_path = complex_community_with_trustlines.find_maximum_capacity_path(source, destination)
+    assert max_path == [A, B]
+    assert sendable == 50000
+
+    fee, path = complex_community_with_trustlines.find_path(source, destination, sendable)
+    assert path == max_path
+    fee, path = complex_community_with_trustlines.find_path(source, destination, sendable + 1)
+    assert path == []
 
 
-@pytest.mark.skip(reason="Did not improve max capacity path calculation yet")  # TODO: improve max capacity path calculation
 def test_capacity_path_single_hop_with_fees(complex_community_with_trustlines_and_fees):
     """test for getting the capacity of the path A-B"""
-    value, path = complex_community_with_trustlines_and_fees.find_maximum_capacity_path(
-                A, B)
-    assert path == [A, B]
-    assert value == 49504
+    source = A
+    destination = B
+
+    sendable, max_path = complex_community_with_trustlines_and_fees.find_maximum_capacity_path(source, destination)
+    assert max_path == [A, B]
+
+    fee, path = complex_community_with_trustlines_and_fees.find_path(source, destination, sendable)
+    assert path == max_path
+    fee, path = complex_community_with_trustlines_and_fees.find_path(source, destination, sendable + 1)
+    assert path == []
 
 
-@pytest.mark.skip(reason="Did not improve max capacity path calculation yet")  # TODO: improve max capacity path calculation
 def test_capacity_path_multi_hop_with_fees(complex_community_with_trustlines_and_fees):
     """test for getting the capacity of the path B-E"""
-    value, path = complex_community_with_trustlines_and_fees.find_maximum_capacity_path(
-                B, E)
-    assert path == [B, D, E]
-    assert 49008 <= value <= 49013
+    source = B
+    destination = E
+
+    sendable, max_path = complex_community_with_trustlines_and_fees.find_maximum_capacity_path(source, destination)
+    assert max_path == [B, D, E]
+
+    fee, path = complex_community_with_trustlines_and_fees.find_path(source, destination, sendable)
+    assert path == max_path
+    fee, path = complex_community_with_trustlines_and_fees.find_path(source, destination, sendable + 1)
+    assert path == []
 
 
 def test_capacity_path_single_hop_more_capacity(complex_community_with_trustlines):
@@ -291,22 +308,33 @@ def test_max_capacity_estimation_single_hop(complex_community_with_trustlines_an
     complex_community_with_trustlines_and_fees.update_balance(A, B, -49899)
     complex_community_with_trustlines_and_fees.update_balance(A, C, -50000)
 
-    capacity, path = complex_community_with_trustlines_and_fees.find_maximum_capacity_path(
-                A, B)
+    source = A
+    destination = B
 
-    value, path = complex_community_with_trustlines_and_fees.find_path(A, B, capacity)
-    assert path == [A, B]
+    sendable, max_path = complex_community_with_trustlines_and_fees.find_maximum_capacity_path(source, destination)
+    assert max_path == [A, B]
+
+    fee, path = complex_community_with_trustlines_and_fees.find_path(source, destination, sendable)
+    assert path == max_path
+    fee, path = complex_community_with_trustlines_and_fees.find_path(source, destination, sendable + 1)
+    assert path == []
 
 
 def test_max_capacity_estimation_single_hop_big_value(complex_community_with_trustlines_and_fees):
     """Tests whether the path and capacity found actually work"""
     complex_community_with_trustlines_and_fees.update_balance(A, B, -50000+12345)
     complex_community_with_trustlines_and_fees.update_balance(A, C, -50000)
-    capacity, path = complex_community_with_trustlines_and_fees.find_maximum_capacity_path(
-                A, B)
 
-    value, path = complex_community_with_trustlines_and_fees.find_path(A, B, capacity)
-    assert path == [A, B]
+    source = A
+    destination = B
+
+    sendable, max_path = complex_community_with_trustlines_and_fees.find_maximum_capacity_path(source, destination)
+    assert max_path == [A, B]
+
+    fee, path = complex_community_with_trustlines_and_fees.find_path(source, destination, sendable)
+    assert path == max_path
+    fee, path = complex_community_with_trustlines_and_fees.find_path(source, destination, sendable + 1)
+    assert path == []
 
 
 def test_max_capacity_estimation_multi_hop(complex_community_with_trustlines_and_fees):
@@ -314,26 +342,33 @@ def test_max_capacity_estimation_multi_hop(complex_community_with_trustlines_and
     complex_community_with_trustlines_and_fees.update_balance(A, C, 10000)
     complex_community_with_trustlines_and_fees.update_balance(C, D, 10000)
 
-    capacity, path = complex_community_with_trustlines_and_fees.find_maximum_capacity_path(
-                A, E)
+    source = A
+    destination = E
 
-    value, path = complex_community_with_trustlines_and_fees.find_path(A, E, capacity)
-    assert path == [A, C, D, E]
+    sendable, max_path = complex_community_with_trustlines_and_fees.find_maximum_capacity_path(source, destination)
+    assert max_path == [A, C, D, E]
+
+    fee, path = complex_community_with_trustlines_and_fees.find_path(source, destination, sendable)
+    assert path == max_path
+    fee, path = complex_community_with_trustlines_and_fees.find_path(source, destination, sendable + 1)
+    assert path == []
 
 
-@pytest.mark.skip(reason="Did not improve max capacity path calculation yet")  # TODO: improve max capacity path calculation
 def test_capacity_path_single_hop_reducing_imbalance(complex_community_with_trustlines_and_fees):
     """Test whether a path with potential reduction of imbalance will show to provide more capacity and less fees
     this exposes the bug detailed in https://github.com/trustlines-network/mobileapp/issues/296"""
     complex_community_with_trustlines_and_fees.update_balance(A, B, 50000)
 
-    value, path = complex_community_with_trustlines_and_fees.find_maximum_capacity_path(A, B)
-    assert path == [A, B]
-    assert value == 50000+49504
-    # we reduce the balance from 50000 to 0 with no fees and then increase to 49504 + 496 with fees.
+    source = A
+    destination = B
 
-    cost, path = complex_community_with_trustlines_and_fees.find_path(A, B, value)
-    assert path == [A, B]
+    sendable, max_path = complex_community_with_trustlines_and_fees.find_maximum_capacity_path(source, destination)
+    assert max_path == [A, B]
+
+    fee, path = complex_community_with_trustlines_and_fees.find_path(source, destination, sendable)
+    assert path == max_path
+    fee, path = complex_community_with_trustlines_and_fees.find_path(source, destination, sendable + 1)
+    assert path == []
 
 
 def test_max_capacity_estimation_multi_hop_fees_33(complex_community_with_trustlines_and_fees_33):
@@ -343,19 +378,33 @@ def test_max_capacity_estimation_multi_hop_fees_33(complex_community_with_trustl
     capacity, path = complex_community_with_trustlines_and_fees_33.find_maximum_capacity_path(
                 A, B)
 
-    value, path = complex_community_with_trustlines_and_fees_33.find_path(A, B, capacity)
-    assert path == [A, B]
+    source = A
+    destination = B
+
+    sendable, max_path = complex_community_with_trustlines_and_fees_33.find_maximum_capacity_path(source, destination)
+    assert max_path == [A, B]
+
+    fee, path = complex_community_with_trustlines_and_fees_33.find_path(source, destination, sendable)
+    assert path == max_path
+    fee, path = complex_community_with_trustlines_and_fees_33.find_path(source, destination, sendable + 1)
+    assert path == []
 
 
 def test_max_capacity_estimation_multi_hop_fees_202(complex_community_with_trustlines_and_fees_202):
     """Tests whether the path and capacity found actually work with higher fee divisor"""
     complex_community_with_trustlines_and_fees_202.update_balance(A, B, -50000+12345)
     complex_community_with_trustlines_and_fees_202.update_balance(A, C, -50000)
-    capacity, path = complex_community_with_trustlines_and_fees_202.find_maximum_capacity_path(
-                A, B)
 
-    value, path = complex_community_with_trustlines_and_fees_202.find_path(A, B, capacity)
-    assert path == [A, B]
+    source = A
+    destination = B
+
+    sendable, max_path = complex_community_with_trustlines_and_fees_202.find_maximum_capacity_path(source, destination)
+    assert max_path == [A, B]
+
+    fee, path = complex_community_with_trustlines_and_fees_202.find_path(source, destination, sendable)
+    assert path == max_path
+    fee, path = complex_community_with_trustlines_and_fees_202.find_path(source, destination, sendable + 1)
+    assert path == []
 
 
 def test_max_capacity_estimation_long_path(complex_community_with_trustlines_and_fees_10):
@@ -369,11 +418,39 @@ def test_max_capacity_estimation_long_path(complex_community_with_trustlines_and
     complex_community_with_trustlines_and_fees_10.update_balance(F, G, -49000)
     complex_community_with_trustlines_and_fees_10.update_balance(G, H, -49000)
 
-    capacity, path = complex_community_with_trustlines_and_fees_10.find_maximum_capacity_path(
-                A, H)
-    value, path = complex_community_with_trustlines_and_fees_10.find_path(A, H, capacity)
+    source = A
+    destination = H
 
-    assert path == [A, B, D, E, F, G, H]
+    sendable, max_path = complex_community_with_trustlines_and_fees_10.find_maximum_capacity_path(source, destination)
+    assert max_path == [A, B, D, E, F, G, H]
+
+    fee, path = complex_community_with_trustlines_and_fees_10.find_path(source, destination, sendable)
+    assert path == max_path
+    fee, path = complex_community_with_trustlines_and_fees_10.find_path(source, destination, sendable + 1)
+    assert path == []
+
+
+def test_max_capacity_estimation_long_path_offset_by_two(complex_community_with_trustlines_and_fees_10):
+    """Tests whether the estimation of the capacity still work for a long path with minimal capacity in middle"""
+    complex_community_with_trustlines_and_fees_10.update_balance(A, C, -50000)
+
+    complex_community_with_trustlines_and_fees_10.update_balance(A, B, -49000)
+    complex_community_with_trustlines_and_fees_10.update_balance(B, D, -49000)
+    complex_community_with_trustlines_and_fees_10.update_balance(D, E, -49899 + 2)
+    complex_community_with_trustlines_and_fees_10.update_balance(E, F, -49000)
+    complex_community_with_trustlines_and_fees_10.update_balance(F, G, -49000)
+    complex_community_with_trustlines_and_fees_10.update_balance(G, H, -49000)
+
+    source = A
+    destination = H
+
+    sendable, max_path = complex_community_with_trustlines_and_fees_10.find_maximum_capacity_path(source, destination)
+    assert max_path == [A, B, D, E, F, G, H]
+
+    fee, path = complex_community_with_trustlines_and_fees_10.find_path(source, destination, sendable)
+    assert path == max_path
+    fee, path = complex_community_with_trustlines_and_fees_10.find_path(source, destination, sendable + 1)
+    assert path == []
 
 
 def test_mediated_transfer(community_with_trustlines):

@@ -20,19 +20,24 @@ def imbalance_generated(*, value, balance):
 
 
 def estimate_max_fee_from_max_imbalance(divisor, imbalance):
-    """Estimates the max possible fee from the maximum possible imbalance on a trustline so that
+    """Gives a higher limit on the possible fee on a transfer bringing imbalance so that
     fee_actual(imbalance - fee_estimation) <= fee_estimation
-    this function does not estimate the fee on the imbalance
-    but rather what needs to be substracted to imbalance to make sendable"""
+    this function should estimate what needs to be substracted to imbalance to make it sendable"""
+
+    # TODO: either improve this function or remove it and use calculate_fees_reverse
 
     if (imbalance <= 0):
         fee_estimation = 0
     else:
         fee_estimation = (imbalance - 1) // (divisor - 1) + 1  # fees you would pay if you sent imbalance
+        # fee_estimation = (imbalance - 1) // divisor + 1
         # the error is that you should not pay fees on transferring the fees.
 
     # fee_estimation -= fee_estimation // divisor  # this is wrong
+    # what needs to be removed is not the fee on fee_estimation but the fees on fee_actual
 
+    # fee_estimation = int((1+capacity/divisor)/(1+1/divisor))
+    # max_sendable = capacity - fee_estimation
 
     return fee_estimation
 
@@ -56,19 +61,33 @@ def estimate_sendable_from_one_limiting_capacity(divisor, capacity, balance, num
 
     max_sendable = capacity - fee_estimation
 
-    #fee_estimation = int((1+capacity/divisor)/(1+1/divisor))
-    #max_sendable = capacity - fee_estimation
-    return estimate_sendable_from_one_limiting_capacity(divisor, max_sendable, balance, number_of_hops_to_destination - 1)
+    return estimate_sendable_from_one_limiting_capacity(divisor,
+                                                        max_sendable,
+                                                        balance,
+                                                        number_of_hops_to_destination - 1)
 
 
 def estimate_sendable(divisor, path_capacities, path_balances):
-    """Estimates the max sendable amount in a path with given capacities and balances"""
-    for i in range(len(path_capacities)-1):
+    """Estimates the max sendable amount in a path with given capacities and balances
+    the estimated value returned is lower than the actual maximum sendable amount"""
 
-        current_sendable = estimate_sendable_from_one_limiting_capacity(divisor, path_capacities[i], path_balances[i], i+1)
+    number_of_hops_to_destination = len(path_capacities)-1
+    for i in range(number_of_hops_to_destination):
+
+        current_sendable = estimate_sendable_from_one_limiting_capacity(divisor,
+                                                                        path_capacities[i],
+                                                                        path_balances[i],
+                                                                        number_of_hops_to_destination)
         next_capacity = path_capacities[i+1]
 
         if current_sendable < next_capacity:
+            # the amount received down the path is limited by what can be sent currently
             path_capacities[i+1] = current_sendable
 
-    return estimate_sendable_from_one_limiting_capacity(divisor, path_capacities[len(path_capacities)-1], path_balances[len(path_capacities)-1], 1)
+        number_of_hops_to_destination -= 1
+
+    # we reached the destination, this last call is here to make it easier to modify the fee specification
+    return estimate_sendable_from_one_limiting_capacity(divisor,
+                                                        path_capacities[len(path_capacities)-1],
+                                                        path_balances[len(path_capacities)-1],
+                                                        0)
