@@ -2,7 +2,8 @@ from relay.network_graph.fees import (
     calculate_fees,
     calculate_fees_reverse,
     imbalance_generated,
-    estimate_fee_from_imbalance
+    estimate_max_fee_from_max_imbalance,
+    estimate_sendable_from_one_limiting_capacity
 )
 
 
@@ -45,24 +46,48 @@ def test_estimate_fees_from_capacity_single_hop():
     Tests the estimation for a single hop
     The estimation has to be an upper bound so the actual fees have to be lower
     """
-    fees = estimate_fee_from_imbalance(100, 12345)
-    assert fees == 123
+    imbalance = 12345
+    fee_estimation = estimate_max_fee_from_max_imbalance(100, imbalance)
+    fee_actual = calculate_fees(imbalance - fee_estimation, 100)
+    assert fee_estimation >= fee_actual
 
 
-def test_estimate_fees_from_capacity_single_hop_upper_edge_case():
+def test_estimate_max_fees_from_capacity_single_hop_upper_edge_case():
     """Tests the upper value of the edge case for the estimation"""
-    fees = estimate_fee_from_imbalance(100, 101)
-    assert fees == 1
+    imbalance = 101
+    fee_estimation = estimate_max_fee_from_max_imbalance(100, imbalance)
+    fee_actual = calculate_fees(imbalance - fee_estimation, 100)
+    assert fee_estimation >= fee_actual
 
 
-def test_estimate_fees_from_capacity_single_hop_lower_edge_case():
+def test_estimate_max_fees_from_capacity_single_hop_lower_edge_case():
     """Tests the lower value of the edge case for the estimation"""
-    fees = estimate_fee_from_imbalance(100, 100)
-    assert fees == 1
+    imbalance = 100
+    fee_estimation = estimate_max_fee_from_max_imbalance(100, imbalance)
+    fee_actual = calculate_fees(imbalance - fee_estimation, 100)
+    assert fee_estimation >= fee_actual
 
 
-def test_estimate_fees_from_capacity_single_hop_sanity():
+def test_estimate_max_fees_from_capacity_single_hop_smaller_than_divisor():
+    """Tests the fee estimation with a value smaller than the divisor"""
+    imbalance = 42
+    fee_estimation = estimate_max_fee_from_max_imbalance(100, imbalance)
+    fee_actual = calculate_fees(imbalance - fee_estimation, 100)
+    assert fee_estimation >= fee_actual
+
+
+def test_estimate_max_fees_from_capacity_single_hop_sanity():
     """Tests whether for small values outside of indeterminate case, the estimation is exact"""
-    fees = estimate_fee_from_imbalance(100, 150)
-    assert fees == 2
+    imbalance = 150
+    fee_estimation = estimate_max_fee_from_max_imbalance(100, imbalance)
+    fee_actual = calculate_fees(imbalance - fee_estimation, 100)
+    assert fee_estimation >= fee_actual
+
+
+def test_estimate_max_fees_from_capacity_single_hop_high_value():
+    """Tests whether for small values outside of indeterminate case, the estimation is exact"""
+    imbalance = 123456789
+    fee_estimation = estimate_max_fee_from_max_imbalance(100, imbalance)
+    fee_actual = calculate_fees(imbalance - fee_estimation, 100)
+    assert fee_estimation >= fee_actual
 

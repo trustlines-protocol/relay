@@ -19,21 +19,27 @@ def imbalance_generated(*, value, balance):
     return max(value - balance, 0)
 
 
-def estimate_fee_from_imbalance(divisor, imbalance):
+def estimate_max_fee_from_max_imbalance(divisor, imbalance):
+    """Estimates the max possible fee from the maximum possible imbalance on a trustline so that
+    fee_actual(imbalance - fee_estimation) <= fee_estimation
+    this function does not estimate the fee on the imbalance
+    but rather what needs to be substracted to imbalance to make sendable"""
 
     if (imbalance <= 0):
         fee_estimation = 0
     else:
-        fee_estimation = (imbalance // divisor) + 1
+        fee_estimation = (imbalance - 1) // (divisor - 1) + 1  # fees you would pay if you sent imbalance
+        # the error is that you should not pay fees on transferring the fees.
 
-    fee_estimation -= fee_estimation // divisor
+    # fee_estimation -= fee_estimation // divisor  # this is wrong
+
 
     return fee_estimation
 
 
 def estimate_sendable_from_one_limiting_capacity(divisor, capacity, balance, number_of_hops_to_destination):
     """Estimates the max sendable amount in a path where the limiting capacity is assumed to be in a single trustline
-    with given capacity, balance, and that is number_of_hops_to_destination from the destination"""
+    with given capacity, balance, and that is number_of_hops_to_destination away from the destination"""
 
     if divisor == 0:
         return capacity
@@ -46,7 +52,7 @@ def estimate_sendable_from_one_limiting_capacity(divisor, capacity, balance, num
     if balance > 0:
         imbalance -= balance
 
-    fee_estimation = estimate_fee_from_imbalance(divisor, imbalance)
+    fee_estimation = estimate_max_fee_from_max_imbalance(divisor, imbalance)
 
     max_sendable = capacity - fee_estimation
 
