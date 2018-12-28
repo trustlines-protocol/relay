@@ -594,21 +594,18 @@ class CurrencyNetworkGraph(object):
                 starting_nodes={source},
                 target_nodes={target},
                 cost_accumulator=capacity_accumulator)
-            min_capacity = - cost[0]
             path_capacities = [capacity_accumulator.get_capacity(node, dst, self.graph[node][dst])
                                for node, dst in zip(path, path[1:])]
         except (nx.NetworkXNoPath, KeyError):  # key error for if source or target is not in graph
-            min_capacity, path, path_capacities = 0, [], []
+            path, path_capacities = [], []
 
         path_balances = self.get_balances_along_path(path)
-        low_sendable_estimate = estimate_sendable(self.capacity_imbalance_fee_divisor, path_capacities, path_balances)
-
-        sendable = self.accurate_sendable_binary_search(source, target, low_sendable_estimate, min_capacity)
+        sendable = estimate_sendable(self.capacity_imbalance_fee_divisor, path_capacities, path_balances)
 
         if sendable <= 0:
             return 0, []
 
-        return low_sendable_estimate, list(path)
+        return sendable, list(path)
 
     def get_balances_along_path(self, path):
         balances = []
@@ -618,31 +615,6 @@ class CurrencyNetworkGraph(object):
             balances.append(get_balance(data, path[i], path[i+1]))
 
         return balances
-
-    def accurate_sendable_binary_search(self, source, target, min, max, iteration_max=100):
-        low_limit = min
-        high_limit = max
-        interval = max - min
-        current_guess = (max + min) // 2
-        i = 0
-        while (interval >= 2):
-
-            if (i == iteration_max):
-                return current_guess
-            i += 1
-
-            cost, path = self.find_path(source, target, current_guess)
-
-            if (path == []):
-                high_limit = current_guess
-                current_guess = (high_limit + low_limit) // 2
-            else:
-                low_limit = current_guess
-                current_guess = (high_limit + low_limit) // 2
-
-            interval = high_limit - low_limit
-
-        return current_guess
 
 
 class CurrencyNetworkGraphForTesting(CurrencyNetworkGraph):
