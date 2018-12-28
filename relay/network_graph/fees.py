@@ -29,8 +29,8 @@ def estimate_max_fee_from_max_imbalance(divisor, imbalance):
     if (imbalance <= 0):
         fee_estimation = 0
     else:
-        fee_estimation = (imbalance - 1) // (divisor - 1) + 1  # fees you would pay if you sent imbalance
-        # fee_estimation = (imbalance - 1) // divisor + 1
+        # fee_estimation = (imbalance - 1) // (divisor - 1) + 1  # fees you would pay if you sent imbalance
+        fee_estimation = (imbalance - 1) // divisor + 1
         # the error is that you should not pay fees on transferring the fees.
 
     # fee_estimation -= fee_estimation // divisor  # this is wrong
@@ -49,14 +49,10 @@ def estimate_sendable_from_one_limiting_capacity(divisor, capacity, balance, num
     if divisor == 0:
         return capacity
 
-    if number_of_hops_to_destination == 0:
+    if number_of_hops_to_destination <= 0:
         return capacity
 
-    imbalance = capacity
-
-    if balance > 0:
-        imbalance -= balance
-
+    imbalance = imbalance_generated(value=capacity, balance=balance)
     fee_estimation = estimate_max_fee_from_max_imbalance(divisor, imbalance)
 
     max_sendable = capacity - fee_estimation
@@ -72,22 +68,29 @@ def estimate_sendable(divisor, path_capacities, path_balances):
     the estimated value returned is lower than the actual maximum sendable amount"""
 
     number_of_hops_to_destination = len(path_capacities)-1
+
+    min_sendable = estimate_sendable_from_one_limiting_capacity(divisor,
+                                                                path_capacities[len(path_capacities)-1],
+                                                                path_balances[len(path_capacities)-1],
+                                                                0)
+
     for i in range(number_of_hops_to_destination):
+
+        print("i = ", i)
+        print("capacity", path_capacities[i])
 
         current_sendable = estimate_sendable_from_one_limiting_capacity(divisor,
                                                                         path_capacities[i],
                                                                         path_balances[i],
                                                                         number_of_hops_to_destination)
-        next_capacity = path_capacities[i+1]
+        print("current_sendable", current_sendable)
+        print("number_of_hops_to_dest", number_of_hops_to_destination)
 
-        if current_sendable < next_capacity:
-            # the amount received down the path is limited by what can be sent currently
-            path_capacities[i+1] = current_sendable
+        if current_sendable < min_sendable:
+            min_sendable = current_sendable
+
+
 
         number_of_hops_to_destination -= 1
 
-    # we reached the destination, this last call is here to make it easier to modify the fee specification
-    return estimate_sendable_from_one_limiting_capacity(divisor,
-                                                        path_capacities[len(path_capacities)-1],
-                                                        path_balances[len(path_capacities)-1],
-                                                        0)
+    return min_sendable
