@@ -608,7 +608,7 @@ class CurrencyNetworkGraph(object):
         if sendable <= 0:
             return 0, []
 
-        return sendable, list(path)
+        return low_sendable_estimate, list(path)
 
     def get_balances_along_path(self, path):
         balances = []
