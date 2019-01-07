@@ -28,7 +28,7 @@ from relay.logger import get_logger
 
 from relay.network_graph.dijkstra_weighted import PaymentPath
 
-logger = get_logger('apiresources', logging.DEBUG)
+logger = get_logger('api.resources', logging.DEBUG)
 
 
 TIMEOUT_MESSAGE = 'The server could not handle the request in time'
