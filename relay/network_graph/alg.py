@@ -79,6 +79,7 @@ def _least_cost_path_helper(
 ):
     graph_adj = graph.adj
 
+    visited_nodes = set()  # set of nodes, where we already found the minimal path
     while queue:
         cost_from_start_to_node, node = heapq.heappop(queue)
         if node in target_nodes:
@@ -87,7 +88,10 @@ def _least_cost_path_helper(
         if cost_from_start_to_node > least_costs[node]:
             continue  # we already found a cheaper path to node
 
+        visited_nodes.add(node)
         for dst, edge_data in graph_adj[node].items():
+            if dst in visited_nodes:
+                continue
             cost_from_start_to_dst = cost_fn(
                 cost_from_start_to_node, node, dst, edge_data
             )
