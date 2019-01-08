@@ -517,12 +517,11 @@ class TrustlinesRelay:
                              balance_update_event.to,
                              balance_update_event.value,
                              balance_update_event.timestamp)
-        self._publish_balance_event(balance_update_event.from_, balance_update_event.to,
-                                    balance_update_event.network_address)
-        self._publish_balance_event(balance_update_event.to, balance_update_event.from_,
-                                    balance_update_event.network_address)
-        self._publish_network_balance_event(balance_update_event.from_, balance_update_event.network_address)
-        self._publish_network_balance_event(balance_update_event.to, balance_update_event.network_address)
+        self._publish_trustline_events(
+            user1=balance_update_event.from_,
+            user2=balance_update_event.to,
+            network_address=balance_update_event.network_address,
+            timestamp=balance_update_event.timestamp)
 
     def _process_transfer(self, transfer_event):
         self._publish_blockchain_event(transfer_event)
@@ -530,6 +529,39 @@ class TrustlinesRelay:
     def _process_trustline_request(self, trustline_request_event):
         logger.debug('Process trustline request event')
         self._publish_blockchain_event(trustline_request_event)
+
+    def _generate_trustline_events(self, *, user1, user2, network_address, timestamp):
+        events = []
+        graph = self.currency_network_graphs[network_address]
+        for (from_, to) in [(user1, user2), (user2, user1)]:
+            events.append(
+                BalanceEvent(
+                    network_address,
+                    from_,
+                    to,
+                    graph.get_account_sum(from_, to, timestamp=timestamp),
+                    timestamp,
+                )
+            )
+        for user in [user1, user2]:
+            events.append(
+                NetworkBalanceEvent(
+                    network_address,
+                    user,
+                    graph.get_account_sum(user, timestamp=timestamp),
+                    timestamp,
+                )
+            )
+        return events
+
+    def _publish_trustline_events(self, *, user1, user2, network_address, timestamp):
+        events = self._generate_trustline_events(
+            user1=user1,
+            user2=user2,
+            network_address=network_address,
+            timestamp=timestamp)
+        for ev in events:
+            self._publish_user_event(ev)
 
     def _process_trustline_update(self, trustline_update_event):
         logger.debug('Process trustline update event')
@@ -543,33 +575,22 @@ class TrustlinesRelay:
                                timestamp=trustline_update_event.timestamp
                                )
         self._publish_blockchain_event(trustline_update_event)
-        self._publish_balance_event(trustline_update_event.from_, trustline_update_event.to,
-                                    trustline_update_event.network_address)
-        self._publish_balance_event(trustline_update_event.to, trustline_update_event.from_,
-                                    trustline_update_event.network_address)
-        self._publish_network_balance_event(trustline_update_event.from_, trustline_update_event.network_address)
-        self._publish_network_balance_event(trustline_update_event.to, trustline_update_event.network_address)
+        self._publish_trustline_events(
+            user1=trustline_update_event.from_,
+            user2=trustline_update_event.to,
+            network_address=trustline_update_event.network_address,
+            timestamp=trustline_update_event.timestamp,
+        )
 
     def _publish_blockchain_event(self, event):
-        event2 = deepcopy(event)
-        event.user = event.from_
-        event2.user = event2.to
-        self._publish_user_event(event)
-        self._publish_user_event(event2)
+        for user in [event.from_, event.to]:
+            event_with_user = deepcopy(event)
+            event_with_user.user = user
+            self._publish_user_event(event_with_user)
 
     def _publish_user_event(self, event):
         assert event.user is not None
         self.subjects[event.user].publish(event)
-
-    def _publish_network_balance_event(self, user, network_address):
-        graph = self.currency_network_graphs[network_address]
-        summary = graph.get_account_sum(user)
-        self._publish_user_event(NetworkBalanceEvent(network_address, user, summary))
-
-    def _publish_balance_event(self, from_, to, network_address):
-        graph = self.currency_network_graphs[network_address]
-        summary = graph.get_account_sum(from_, to)
-        self._publish_user_event(BalanceEvent(network_address, from_, to, summary))
 
 
 def _create_on_full_sync(graph):
