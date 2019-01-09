@@ -1,6 +1,6 @@
 import logging
 import socket
-from collections import namedtuple
+from typing import NamedTuple
 from typing import List, Dict
 import functools
 import itertools
@@ -24,15 +24,17 @@ from .currency_network_events import (
 )
 
 
-class Trustline(namedtuple('Trustline',
-                           ['address', 'creditline_ab', 'creditline_ba', 'interest_ab', 'interest_ba',
-                            'fees_outstanding_a', 'fees_outstanding_b', 'm_time', 'balance_ab'])):
-    __slots__ = ()
-
-    def __new__(cls, address, creditline_ab=0, creditline_ba=0, interest_ab=0, interest_ba=0, fees_outstanding_a=0,
-                fees_outstanding_b=0, m_time=0, balance_ab=0):
-        return super(Trustline, cls).__new__(cls, address, creditline_ab, creditline_ba, interest_ab, interest_ba,
-                                             fees_outstanding_a, fees_outstanding_b, m_time, balance_ab)
+class Trustline(NamedTuple):
+    user: str
+    counter_party: str
+    creditline_given: int = 0
+    creditline_received: int = 0
+    interest_rate_given: int = 0
+    interest_rate_received: int = 0
+    fees_outstanding_user: int = 0
+    fees_outstanding_counter_party: int = 0
+    m_time: int = 0
+    balance: int = 0
 
 
 logger = get_logger('currency network', logging.DEBUG)
@@ -91,15 +93,16 @@ class CurrencyNetworkProxy(Proxy):
                      fees_outstanding_b,
                      mtime,
                      balance_ab) = self.account(user, friend)
-                    list.append(Trustline(friend,
-                                          creditline_ab,
-                                          creditline_ba,
-                                          interest_ab,
-                                          interest_ba,
-                                          fees_outstanding_a,
-                                          fees_outstanding_b,
-                                          mtime,
-                                          balance_ab))
+                    list.append(Trustline(user=user,
+                                          counter_party=friend,
+                                          creditline_given=creditline_ab,
+                                          creditline_received=creditline_ba,
+                                          interest_rate_given=interest_ab,
+                                          interest_rate_received=interest_ba,
+                                          fees_outstanding_user=fees_outstanding_a,
+                                          fees_outstanding_counter_party=fees_outstanding_b,
+                                          m_time=mtime,
+                                          balance=balance_ab))
             result[user] = list
         return result
 
