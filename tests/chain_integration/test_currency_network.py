@@ -59,7 +59,8 @@ def test_gen_graph_representation(currency_network_with_trustlines, accounts):
     graph_representation = currency_network_with_trustlines.gen_graph_representation()
 
     for account in accounts:
-        assert (account in graph_representation)
+        assert (account in (trustline.user for trustline in graph_representation) or
+                (account in (trustline.counter_party for trustline in graph_representation)))
 
 
 def test_number_of_get_events(currency_network_with_events, accounts):
