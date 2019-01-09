@@ -2,6 +2,7 @@ import csv
 import io
 import time
 import math
+from typing import Iterable, Any, NamedTuple
 
 import networkx as nx
 
@@ -31,6 +32,11 @@ from relay.network_graph.graph_constants import (
 )
 
 from . import alg
+
+
+class NetworkGraphConfig(NamedTuple):
+    capacity_imbalance_fee_divisor: int = 0
+    trustlines: Iterable = []
 
 
 class Account(object):
@@ -349,22 +355,29 @@ class CurrencyNetworkGraph(object):
         self.prevent_mediator_interests = prevent_mediator_interests
         self.graph = nx.Graph()
 
-    def gen_network(self, friendsdict):
+    def gen_network(self, trustlines: Iterable[Any]):
         self.graph.clear()
-        for address, friendships in friendsdict.items():
-            for friendship in friendships:
-                assert address < friendship.address
-                self.graph.add_edge(address,
-                                    friendship.address,
-                                    creditline_ab=friendship.creditline_ab,
-                                    creditline_ba=friendship.creditline_ba,
-                                    interest_ab=friendship.interest_ab,
-                                    interest_ba=friendship.interest_ba,
-                                    fees_outstanding_a=friendship.fees_outstanding_a,
-                                    fees_outstanding_b=friendship.fees_outstanding_b,
-                                    m_time=friendship.m_time,
-                                    balance_ab=friendship.balance_ab,
-                                    )
+        for trustline in trustlines:
+            assert trustline.user < trustline.counter_party
+            self.graph.add_edge(trustline.user,
+                                trustline.counter_party,
+                                creditline_ab=trustline.creditline_given,
+                                creditline_ba=trustline.creditline_received,
+                                interest_ab=trustline.interest_rate_given,
+                                interest_ba=trustline.interest_rate_received,
+                                fees_outstanding_a=trustline.fees_outstanding_user,
+                                fees_outstanding_b=trustline.fees_outstanding_counter_party,
+                                m_time=trustline.m_time,
+                                balance_ab=trustline.balance,
+                                )
+
+    @classmethod
+    def from_config(cls, config: NetworkGraphConfig):
+        currency_network_graph = CurrencyNetworkGraph(
+            capacity_imbalance_fee_divisor=config.capacity_imbalance_fee_divisor
+        )
+        currency_network_graph.gen_network(config.trustlines)
+        return currency_network_graph
 
     @property
     def users(self):
