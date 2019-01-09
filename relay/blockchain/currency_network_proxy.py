@@ -1,7 +1,7 @@
 import logging
 import socket
 from typing import NamedTuple
-from typing import List, Dict
+from typing import List
 import functools
 import itertools
 
@@ -78,11 +78,10 @@ class CurrencyNetworkProxy(Proxy):
     def spendableTo(self, a_address: str, b_address: str):
         return self._proxy.functions.spendableTo(a_address, b_address).call()
 
-    def gen_graph_representation(self) -> Dict[str, List[Trustline]]:
+    def gen_graph_representation(self) -> List[Trustline]:
         """Returns the trustlines network as a dict address -> list of Friendships"""
-        result = {}
+        result = []
         for user in self.users:
-            list = []
             for friend in self.friends(user):
                 if user < friend:
                     (creditline_ab,
@@ -93,17 +92,16 @@ class CurrencyNetworkProxy(Proxy):
                      fees_outstanding_b,
                      mtime,
                      balance_ab) = self.account(user, friend)
-                    list.append(Trustline(user=user,
-                                          counter_party=friend,
-                                          creditline_given=creditline_ab,
-                                          creditline_received=creditline_ba,
-                                          interest_rate_given=interest_ab,
-                                          interest_rate_received=interest_ba,
-                                          fees_outstanding_user=fees_outstanding_a,
-                                          fees_outstanding_counter_party=fees_outstanding_b,
-                                          m_time=mtime,
-                                          balance=balance_ab))
-            result[user] = list
+                    result.append(Trustline(user=user,
+                                            counter_party=friend,
+                                            creditline_given=creditline_ab,
+                                            creditline_received=creditline_ba,
+                                            interest_rate_given=interest_ab,
+                                            interest_rate_received=interest_ba,
+                                            fees_outstanding_user=fees_outstanding_a,
+                                            fees_outstanding_counter_party=fees_outstanding_b,
+                                            m_time=mtime,
+                                            balance=balance_ab))
         return result
 
     def start_listen_on_full_sync(self, function, sync_interval: float):
