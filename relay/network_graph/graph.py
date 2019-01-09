@@ -166,7 +166,15 @@ class SenderPaysCostAccumulatorSnapshot(alg.CostAccumulator):
 
     We need to pass a timestamp in the constructor. This is being used to
     compute a consistent view of balances in the trustlines network.
+
+    To find the correct fee, the pathfinding has to be done in reverse from receiver to sender
+    as we only know the value to be received at the beginning
     """
+
+    class Cost(NamedTuple):
+        fees: int
+        num_hops: int
+
     def __init__(self, *, timestamp, value, capacity_imbalance_fee_divisor, max_hops=None, max_fees=None, ignore=None):
         if max_hops is None:
             max_hops = math.inf
@@ -181,7 +189,7 @@ class SenderPaysCostAccumulatorSnapshot(alg.CostAccumulator):
         self.ignore = ignore
 
     def zero(self):
-        return (0, 0)
+        return self.Cost(0, 0)
 
     def total_cost_from_start_to_dst(
         self, cost_from_start_to_node, node, dst, edge_data
@@ -227,21 +235,29 @@ class SenderPaysCostAccumulatorSnapshot(alg.CostAccumulator):
         if self.value + sum_fees + fee > capacity:
             return None  # creditline exceeded
 
-        return (sum_fees + fee, num_hops + 1)
+        return self.Cost(fees=sum_fees + fee, num_hops=num_hops + 1)
 
 
 class ReceiverPaysCostAccumulatorSnapshot(alg.CostAccumulator):
     """This is the CostAccumulator being used when using our 'receiver pays
     fees' style of payments"
 
-    This sorts by the fees first, then the fee for the previous hop, then the
-    number of hops.
-
+    This sorts by the fees first, then the
+    number of hops, then the fee for the previous hop.
 
 
     We need to pass a timestamp in the constructor. This is being used to
     compute a consistent view of balances in the trustlines network.
+
+    To find the right fee, the pathfinding has to be done from sender to receiver
+    as we only know the value to be sent at the beginning
     """
+
+    class Cost(NamedTuple):
+        fees: int
+        num_hops: int
+        previous_hop_fee: int
+
     def __init__(self, *, timestamp, value, capacity_imbalance_fee_divisor, max_hops=None, max_fees=None, ignore=None):
         if max_hops is None:
             max_hops = math.inf
@@ -256,10 +272,10 @@ class ReceiverPaysCostAccumulatorSnapshot(alg.CostAccumulator):
         self.ignore = ignore
 
     def zero(self):
-        return (0, 0, 0)
+        return self.Cost(0, 0, 0)
 
     def total_cost_from_start_to_dst(
-        self, cost_from_start_to_node, node, dst, edge_data
+        self, cost_from_start_to_node: Cost, node, dst, edge_data
     ):
         if dst == self.ignore or node == self.ignore:
             return None
@@ -271,7 +287,7 @@ class ReceiverPaysCostAccumulatorSnapshot(alg.CostAccumulator):
         # tuple has to be the sum of the fees not including the fee for the
         # previous hop, since the graph finding algorithm needs to sort by that
         # and not by what would be paid out if there is another hop
-        sum_fees, previous_hop_fee, num_hops = cost_from_start_to_node
+        sum_fees, num_hops, previous_hop_fee = cost_from_start_to_node
 
         if num_hops + 1 > self.max_hops:
             return None
@@ -296,11 +312,28 @@ class ReceiverPaysCostAccumulatorSnapshot(alg.CostAccumulator):
         if self.value - sum_fees - previous_hop_fee > capacity:
             return None  # creditline exceeded
 
-        return (sum_fees + previous_hop_fee, fee, num_hops + 1)
+        return self.Cost(fees=sum_fees + previous_hop_fee, num_hops=num_hops + 1, previous_hop_fee=fee)
 
 
-class CapacityAccumulator(alg.CostAccumulator):
-    """This is being used to find a path with the maximum capacity"""
+class SenderPaysCapacityAccumulator(alg.CostAccumulator):
+    """This is being used to find a path with the maximum capacity
+
+    This sorts by the capacity first, then the
+    number of hops, then the fee for the previous hop.
+
+
+    We need to pass a timestamp in the constructor. This is being used to
+    compute a consistent view of balances in the trustlines network.
+
+    To find the right maximum capacity, the pathfinding has to be done from sender to receiver
+    as we want to find out the maximum amount the receiver can receive
+    """
+
+    class Cost(NamedTuple):
+        minus_capacity: int
+        num_hops: int
+        previous_hop_fee: int
+
     def __init__(self, *, timestamp, capacity_imbalance_fee_divisor, max_hops=None):
         if max_hops is None:
             max_hops = math.inf
@@ -319,20 +352,24 @@ class CapacityAccumulator(alg.CostAccumulator):
         return self.get_balance(node, dst, edge_data) + get_creditline(edge_data, dst, node)
 
     def zero(self):
-        return (-math.inf, 0, 0)  # We use (- capacity, num_hops, last_hop_fee) as cost
+        # We use (- capacity, num_hops, last_hop_fee) as cost
+        # last hop fee is only passed to have it available, not to optimize for it
+        return self.Cost(-math.inf, 0, 0)
 
     def total_cost_from_start_to_dst(
-        self, cost_from_start_to_node, node, dst, edge_data
+        self, cost_from_start_to_node: Cost, node, dst, edge_data
     ):
 
-        capacity_from_start_to_node = - cost_from_start_to_node[0]
-        num_hops = cost_from_start_to_node[1]
-        last_hop_fee = cost_from_start_to_node[2]
+        capacity_from_start_to_node = - cost_from_start_to_node.minus_capacity
+        num_hops = cost_from_start_to_node.num_hops
+        previous_hop_fee = cost_from_start_to_node.previous_hop_fee
 
         if num_hops + 1 > self.max_hops:
             return None
 
-        capacity_this_edge = min(self.get_capacity(node, dst, edge_data), capacity_from_start_to_node - last_hop_fee)
+        capacity_this_edge = min(
+            self.get_capacity(node, dst, edge_data),
+            capacity_from_start_to_node - previous_hop_fee)
 
         fee = calculate_fees(
             imbalance_generated=imbalance_generated(
@@ -340,7 +377,7 @@ class CapacityAccumulator(alg.CostAccumulator):
                 balance=self.get_balance(node, dst, edge_data)),
             capacity_imbalance_fee_divisor=self.capacity_imbalance_fee_divisor)
 
-        return (- capacity_this_edge, num_hops + 1, fee)
+        return self.Cost(minus_capacity=-capacity_this_edge, num_hops=num_hops + 1, previous_hop_fee=fee)
 
 
 class CurrencyNetworkGraph(object):
@@ -611,9 +648,12 @@ class CurrencyNetworkGraph(object):
         """
         if timestamp is None:
             timestamp = int(time.time())
-        capacity_accumulator = CapacityAccumulator(timestamp=timestamp,
-                                                   capacity_imbalance_fee_divisor=self.capacity_imbalance_fee_divisor,
-                                                   max_hops=max_hops)
+        capacity_accumulator = SenderPaysCapacityAccumulator(
+            timestamp=timestamp,
+            capacity_imbalance_fee_divisor=self.capacity_imbalance_fee_divisor,
+            max_hops=max_hops
+        )
+
         try:
             cost, path = alg.least_cost_path(
                 graph=self.graph,
