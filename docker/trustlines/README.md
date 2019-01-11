@@ -10,8 +10,8 @@ The docker-compose file contains service definitions for the following services:
 A service running a postgres server. The postgres files will be stored in the
 `postgres-data` docker volume.
 
-- parity
-A service running parity for the kovan blockchain. The blockchain data will be
+- tlbc
+A service running a modified parity node for the trustlines blockchain. The blockchain data will be
 stored in the `blockchain-data` docker volume.
 
 - index
@@ -26,7 +26,7 @@ need to provide the `addresses.json` file, which should be put in the directory
 alongside the `docker-compose.yml` file.
 
 This directory contains working example files for contracts already deployed on
-the kovan chain. If you deploy your own contracts, please adapt `addresses.json`
+the trustlines blockchain. If you deploy your own contracts, please adapt `addresses.json`
 accordingly.
 
 Let's first build and fetch all of the images that we will need without starting
@@ -54,5 +54,5 @@ exit
 ```
 
 After that the system can be started `docker-compose up -d`, though you have to
-wait for parity to sync with the kovan chain in order to have a fully
+wait for the blockchain node to sync with the trustlines blockchain in order to have a fully
 functioning system.

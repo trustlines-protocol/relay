@@ -13,11 +13,14 @@ services:
     volumes:
       - postgres-data:/var/lib/postgresql/data
 
-  parity:
-    image: parity/parity:v1.10.6
-    command: "--no-warp --auto-update none --no-download --chain kovan --jsonrpc-interface 0.0.0.0 --jsonrpc-hosts all -d /chaindata"
+
+  tlbc:
+    image: trustlines/tlbc-testnet
+    command: "--role observer"
     volumes:
-      - blockchain-data:/chaindata
+      - blockchain-data:/data
+      - tlbc-config:/config/custom
+      - enode-dir:/config/network
     deploy:
       replicas: 1
       restart_policy:
@@ -25,17 +28,18 @@ services:
     expose:
       - "8545"
     ports:
-      - "30303:30303"
-      - "30303:30303/udp"
+      - "30300:30300"
+      - "30300:30300/udp"
     networks:
       - backend
     restart: unless-stopped
+
 
   relay:
     image: trustlines/relay
     depends_on:
       - "db"
-      - "parity"
+      - "tlbc"
     volumes:
       - ./config.json:/opt/relay/config.json
       - ./addresses.json:/opt/relay/addresses.json
@@ -56,7 +60,7 @@ services:
     image: trustlines/py-eth-index
     depends_on:
       - "db"
-      - "parity"
+      - "tlbc"
     environment:
       - PGHOST
       - PGUSER
@@ -65,7 +69,7 @@ services:
     networks:
       - backend
     restart: unless-stopped
-    command: ["/opt/ethindex/bin/ethindex", "runsync", "--jsonrpc", "http://parity:8545"]
+    command: ["/opt/ethindex/bin/ethindex", "runsync", "--jsonrpc", "http://tlbc:8545"]
     volumes:
       - ./addresses.json:/tmp/addresses.json
       - ./contracts.json:/tmp/contracts.json
@@ -73,6 +77,8 @@ services:
 
 volumes:
   blockchain-data:
+  tlbc-config:
+  enode-dir:
   postgres-data:
 networks:
   backend:
