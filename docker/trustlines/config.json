@@ -1,7 +1,7 @@
 {
   "rpc":
   {
-    "host": "parity",
+    "host": "tlbc",
     "port": 8545,
     "ssl": false
   },

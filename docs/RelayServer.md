@@ -16,42 +16,11 @@ sudo apt install build-essential python3-dev python3-venv pkg-config \
 The installation instructions assume you create a dedicated user account and put
 files directly into the user's home directory. Else, adapt the paths to your needs!
 
-### Parity
+### Trustlines Blockchain
 
-You need to run a parity node, which provides the JSONRPC API to the relay
-server and the indexer. At the moment we recommend using parity together with
-the kovan chain.
-
-Please follow the [official documentation](https://wiki.parity.io/Setup) in
-order to install parity. Paritytech provides [binary
-releases](https://github.com/paritytech/parity-ethereum/releases).
-
-```
-curl -O https://releases.parity.io/v1.11.7/x86_64-unknown-linux-gnu/parity_1.11.7_ubuntu_amd64.deb
-sudo dpkg -i parity_1.11.7_ubuntu_amd64.deb
-```
-
-
-The following command line starts parity with the kovan chain.
-
-```
-parity --no-warp --auto-update none --no-download --chain kovan --jsonrpc-hosts all
-```
-
-One command line option we like to highlight is the `--no-warp` option. If you
-don't specify this option, parity will enable 'Warp Synchronization'. Warp
-synchronization allows for a faster synchronization, but the relay server will
-not work reliably with this feature turned on. The [official documentation](https://wiki.parity.io/Getting-Synced#warp-synchronization)
-contains a description of the behaviour that is problematic:
-
-> Note, at present, snapshotting does not place all of the block or receipt data
-> into the database. This means you will not get information relating to
-> transactions more than a few days old.
-
-So, please double check that warp synchronization is turned off when using
-parity. The whole trustlines system may appear to work, but will give wrong
-results if you run with warp mode enabled.
-
+You need to run our modified parity node, which provides the JSONRPC API to the relay
+server and the indexer. The documentation on how to run it can be found on the
+[github page](https://github.com/trustlines-network/blockchain)
 ### Contracts
 The [trustlines-contracts
 repository](https://github.com/trustlines-network/contracts) contains the
@@ -60,21 +29,24 @@ contracts guide](https://github.com/trustlines-network/contracts) contains more 
 The tool will return the addresses of the deployed contracts. You need to provide that information to the relay server with as json file `addresses.json` with the following format:
 
 ```
-{"networks":
-+  [<list of currency network addresses>],
-+ "unwEth": <address of unw_eth_contract>,
-+ "exchange": <address of exchange>
-+}
+{
+  "networks":
+  [<list of currency network addresses>],
+  "unwEth": <address of unw_eth_contract>,
+  "exchange": <address of exchange>
+}
 ```
 
-For the already deployed contracts on kovan use this file:
+For the already deployed contracts on the trustlines blockchain use this file:
 ```
-{"networks":
-+  ["0x55bdaaf9f941a5bb3eacc8d876eeff90b90ddac9",
-+   "0xc0b33d88c704455075a0724aa167a286da778dde"],
-+ "unwEth": "0x14971f39fa4024bf1a4824c39c6d274f3bcb123e",
-+ "exchange": "0x51e5cf3f7e763c4e9b1154576838815e489cb2f7"
-+}
+{
+  "networks":
+  [
+    "0x9750bdB86B32DCaeFEAea4f29857D52C8d848860",
+    "0xe4D3cEB3d59B6Fa4a39C8D9525c84C79057C1e29",
+    "0xd75C9C8a79D6a85d4923b7C16BAb144cC9BB48e4"
+  ]
+}
 ```
 
 We assume from now on that the contracts have already been deployed
@@ -171,28 +143,21 @@ This program will run forever.
 
 ### Relay server
 #### Prerequisites for the installation
-##### secp256k1
-One of the dependencies used in the relay server is the secp256k1 library. If
-you're using python 3.5 on linux you can skip the following step, since pypi
-contains binary packages for secp256k1. If not, you will have to run the following commands
-to install the secp256k1 C library:
 
-```
-git clone https://github.com/bitcoin-core/secp256k1.git
-cd secp256k1
-./autogen.sh
-./configure --enable-module-recovery
-make
-sudo make install
-sudo ldconfig
-```
+-  Python 3.6 or up
+-  pip
+
+Installation on Ubuntu
+
+    sudo apt install build-essential python3-dev libsecp256k1-dev python3-virtualenv virtualenv pkg-config libssl-dev automake autoconf libtool libgraphviz-dev git
+
+
 
 
 #### Installation of the relay server
 
 Clone the git repository, create a virtualenv and install into
-that. Please note that we cannot reuse the py-eth-index virtualenv, since both
-projects have conflicting dependencies.
+that. 
 ```
 cd ~
 git clone https://github.com/trustlines-network/relay
@@ -213,11 +178,19 @@ We will also need a config file. You can use the one from the git checkout:
 cp ~/relay/config.json ~
 ```
 
-The relay server reads both files from the current directory, so we need to start it where those files have been copied to:
+The relay server reads both files from the current directory per default,
+so we need to start it where those files have been copied to:
 
 ```
 cd ~
 ~/opt/relay/bin/tl-relay
+```
+
+However, this behaviour can be changed, you can check the options with:
+
+```
+cd ~
+~/opt/relay/bin/tl-relay --help
 ```
 
 The relay server needs access to the parity node and the PostgreSQL database.
