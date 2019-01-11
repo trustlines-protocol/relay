@@ -1,0 +1,242 @@
+version: 2.1
+
+templates:
+  tagged-filter: &tagged-filter
+    tags:
+      only: /[0-9]+(\.[0-9]+)*/
+
+executors:
+  ubuntu-builder:
+    docker:
+      - image: trustlines/builder:master9
+    working_directory: ~/repo
+
+# define some common commands
+# see https://circleci.com/docs/2.0/configuration-reference/#commands-requires-version-21
+commands:
+  create-venv:
+    description: "Create venv"
+    steps:
+      - run:
+          name: Create python venv
+          command: |
+            python3 -m venv venv
+            pip install -U pip wheel setuptools
+
+  config-path:
+    description: "set environment variables and change PATH"
+    steps:
+    - run:
+        name: Configuring PATH
+        command: |
+          echo >> ${BASH_ENV} 'export PATH=~/bin:~/repo/venv/bin:${PATH}'
+
+jobs:
+  install:
+    executor: ubuntu-builder
+    steps:
+      - checkout
+      - config-path
+      - create-venv
+
+      - restore_cache:
+          key: venv-{{ checksum "constraints.txt" }}-{{ checksum "requirements.txt" }}
+      - run:
+          name: Install codecov
+          command: |
+            pip install -c constraints.txt codecov
+      - run:
+          name: Install requirements
+          command: |
+            pip install -c constraints.txt -r requirements.txt
+      - save_cache:
+          key: venv-{{ checksum "constraints.txt" }}-{{ checksum "requirements.txt" }}
+          paths:
+            - venv
+      - run:
+          name: Install package
+          command: |
+            pip install -c constraints.txt -e .
+      - persist_to_workspace:
+          root: "~"
+          paths:
+            - repo
+
+  build-sdist:
+    executor: ubuntu-builder
+    steps:
+      - checkout
+      - config-path
+      - create-venv
+      - run:
+          name: Build distribution
+          command: |
+            python setup.py sdist
+      - persist_to_workspace:
+          root: "~"
+          paths:
+            - repo
+
+  run-flake8:
+    executor: ubuntu-builder
+    steps:
+      - attach_workspace:
+          at: '~'
+      - config-path
+      - run:
+          name: Run flake8
+          command: |
+            flake8 setup.py relay tests
+
+  run-pytest:
+    executor: ubuntu-builder
+    steps:
+      - attach_workspace:
+          at: '~'
+      - config-path
+      - run:
+          name: Run pytest
+          command: |
+            ./pytest --cov=relay tests
+            codecov
+
+  run-mypy:
+    executor: ubuntu-builder
+    steps:
+      - attach_workspace:
+          at: '~'
+      - config-path
+      - run:
+          name: Run mypy
+          command: |
+            mypy --ignore-missing-imports relay tests
+
+  upload-pypi:
+    executor: ubuntu-builder
+    steps:
+      - attach_workspace:
+          at: '~'
+      - config-path
+      - run:
+          name: Init .pypirc
+          command: |
+            echo -e "[pypi]" >> ~/.pypirc
+            echo -e "username = $PYPI_USER" >> ~/.pypirc
+            echo -e "password = $PYPI_PASSWORD" >> ~/.pypirc
+      - run:
+          name: Upload to pypi
+          command: |
+            twine upload dist/*
+
+  build-docker-image:
+    executor: ubuntu-builder
+    environment:
+      DOCKER_REPO: trustlines/relay
+      LOCAL_IMAGE: relay
+
+    steps:
+      - setup_remote_docker
+      - checkout
+      - run:
+          name: Build docker image
+          command: |
+            docker build . -t $LOCAL_IMAGE
+      - run:
+          name: Save docker image
+          command: |
+            mkdir -p ~/images
+            docker save --output ~/images/$LOCAL_IMAGE.tar $LOCAL_IMAGE
+      - persist_to_workspace:
+          root: "~"
+          paths:
+            - images
+
+  deploy-docker-image:
+    executor: ubuntu-builder
+    environment:
+      DOCKER_REPO: trustlines/relay
+      LOCAL_IMAGE: relay
+    working_directory: ~/repo
+    steps:
+      - setup_remote_docker
+      - attach_workspace:
+          at: '~'
+      - run:
+          name: Load docker image
+          command: |
+            docker load --input ~/images/$LOCAL_IMAGE.tar
+      - run:
+          name: Login to dockerhub
+          command: |
+            echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USER" --password-stdin
+      - run:
+          name: Upload tagged release
+          command: |
+            version=$(docker run --rm $LOCAL_IMAGE cat VERSION | tr '+' '_')
+            echo "Tagging with $version"
+            docker tag $LOCAL_IMAGE $DOCKER_REPO:$version
+            docker push $DOCKER_REPO:$version
+      - run:
+          name: Upload latest
+          command: |
+            docker tag $LOCAL_IMAGE $DOCKER_REPO:latest
+            docker push $DOCKER_REPO:latest
+
+workflows:
+  version: 2
+  default:
+    jobs:
+      - install:
+          filters:
+            <<: *tagged-filter
+
+      - build-sdist:
+          filters:
+            <<: *tagged-filter
+
+      - run-flake8:
+          requires:
+            - install
+          filters:
+            <<: *tagged-filter
+
+      - run-pytest:
+          requires:
+            - install
+          filters:
+            <<: *tagged-filter
+
+      - run-mypy:
+          requires:
+            - install
+          filters:
+            <<: *tagged-filter
+
+      - upload-pypi:
+          requires:
+            - run-flake8
+            - run-pytest
+            - run-mypy
+            - build-sdist
+          filters:
+            <<: *tagged-filter
+            branches:
+              ignore: /.*/
+          context: pypi-credentials
+
+      - build-docker-image:
+          filters:
+            <<: *tagged-filter
+
+      - deploy-docker-image:
+          filters:
+            <<: *tagged-filter
+            branches:
+              only: develop
+          requires:
+            - run-flake8
+            - run-pytest
+            - run-mypy
+            - install
+            - build-docker-image
+          context: docker-credentials
