@@ -50,6 +50,17 @@ def get_version():
         return "<UNKNOWN>"
 
 
+def _show_version(ctx, param, value):
+    """handle --version argumemt
+
+    we need this function, because otherwise click may check that the default
+    --config or --addresses arguments are really files and they may not
+    exist"""
+    if value:
+        click.echo(get_version())
+        ctx.exit()
+
+
 @click.command()
 @click.option("--port", default=5000)
 @click.option(
@@ -64,13 +75,15 @@ def get_version():
     help="path to addresses json file",
     type=click.Path(exists=True, dir_okay=False),
 )
-@click.option("--version", help="Prints the version of the software", is_flag=True)
+@click.option(
+    "--version",
+    help="Prints the version of the software",
+    is_flag=True,
+    callback=_show_version,
+)
 @click.pass_context
 def main(ctx, port, config, addresses, version):
     """run the relay server"""
-    if version:
-        click.echo(get_version())
-        ctx.exit()
     logger.info('Starting relay server version %s', get_version())
     trustlines = TrustlinesRelay(config_json_path=config, addresses_json_path=addresses)
     trustlines.start()
