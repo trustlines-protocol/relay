@@ -52,8 +52,18 @@ def get_version():
 
 @click.command()
 @click.option("--port", default=5000)
-@click.option("--config", default="config.json", help="path to json configuration file")
-@click.option("--addresses", default="addresses.json", help="path to addresses json file")
+@click.option(
+    "--config",
+    default="config.json",
+    help="path to json configuration file",
+    type=click.Path(exists=True, dir_okay=False),
+)
+@click.option(
+    "--addresses",
+    default="addresses.json",
+    help="path to addresses json file",
+    type=click.Path(exists=True, dir_okay=False),
+)
 @click.option("--version", help="Prints the version of the software", is_flag=True)
 @click.pass_context
 def main(ctx, port, config, addresses, version):
