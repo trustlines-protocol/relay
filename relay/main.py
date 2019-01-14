@@ -52,15 +52,17 @@ def get_version():
 
 @click.command()
 @click.option("--port", default=5000)
+@click.option("--config", default="config.json", help="path to json configuration file")
+@click.option("--addresses", default="addresses.json", help="path to addresses json file")
 @click.option("--version", help="Prints the version of the software", is_flag=True)
 @click.pass_context
-def main(ctx, port, version):
+def main(ctx, port, config, addresses, version):
     """run the relay server"""
     if version:
         click.echo(get_version())
         ctx.exit()
     logger.info('Starting relay server version %s', get_version())
-    trustlines = TrustlinesRelay()
+    trustlines = TrustlinesRelay(config_json_path=config, addresses_json_path=addresses)
     trustlines.start()
     ipport = ('', port)
     app = ApiApp(trustlines)

@@ -46,7 +46,9 @@ class TokenNotFoundException(Exception):
 
 class TrustlinesRelay:
 
-    def __init__(self):
+    def __init__(self, config_json_path="config.json", addresses_json_path="addresses.json"):
+        self.config_json_path = config_json_path
+        self.addresses_json_path = addresses_json_path
         self.currency_network_proxies: Dict[str, CurrencyNetworkProxy] = {}
         self.currency_network_graphs: Dict[str, CurrencyNetworkGraph] = {}
         self.subjects = defaultdict(Subject)
@@ -433,7 +435,7 @@ class TrustlinesRelay:
         return sorted_events(list(itertools.chain.from_iterable(results)))
 
     def _load_config(self):
-        with open('config.json') as data_file:
+        with open(self.config_json_path) as data_file:
             self.config = json.load(data_file)
 
     def _load_contracts(self):
@@ -447,7 +449,7 @@ class TrustlinesRelay:
 
     def _load_addresses(self):
         addresses = {}
-        with open('addresses.json') as data_file:
+        with open(self.addresses_json_path) as data_file:
             content = data_file.read()
             if content:
                 try:
