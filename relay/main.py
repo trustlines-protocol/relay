@@ -62,17 +62,19 @@ def _show_version(ctx, param, value):
 
 
 @click.command()
-@click.option("--port", default=5000)
+@click.option("--port", default=5000, show_default=True, help="port to listen on")
 @click.option(
     "--config",
     default="config.json",
     help="path to json configuration file",
+    show_default=True,
     type=click.Path(exists=True, dir_okay=False),
 )
 @click.option(
     "--addresses",
     default="addresses.json",
     help="path to addresses json file",
+    show_default=True,
     type=click.Path(exists=True, dir_okay=False),
 )
 @click.option(
