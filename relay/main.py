@@ -5,6 +5,7 @@ import psycogreen.gevent; psycogreen.gevent.patch_psycopg()  # noqa: E702
 import logging
 
 import pkg_resources
+import click
 from gevent.pywsgi import WSGIServer
 from geventwebsocket.handler import WebSocketHandler
 
@@ -49,11 +50,19 @@ def get_version():
         return "<UNKNOWN>"
 
 
-def main():
+@click.command()
+@click.option("--port", default=5000)
+@click.option("--version", help="Prints the version of the software", is_flag=True)
+@click.pass_context
+def main(ctx, port, version):
+    """run the relay server"""
+    if version:
+        click.echo(get_version())
+        ctx.exit()
     logger.info('Starting relay server version %s', get_version())
     trustlines = TrustlinesRelay()
     trustlines.start()
-    ipport = ('', 5000)
+    ipport = ('', port)
     app = ApiApp(trustlines)
     http_server = WSGIServer(ipport, app, log=None, handler_class=WebSocketHandler)
     logger.info('Server is running on {}'.format(ipport))

@@ -19,6 +19,7 @@ psycopg2 --no-binary psycopg2
 psycogreen
 wrapt
 attrs
+click
 
 # --- development dependencies, i.e. dependencies not needed for running tl-relay
 flake8
