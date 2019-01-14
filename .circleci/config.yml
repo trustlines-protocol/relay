@@ -21,7 +21,7 @@ commands:
           name: Create python venv
           command: |
             python3 -m venv venv
-            pip install -U pip wheel setuptools
+            venv/bin/pip install -c constraints.txt pip wheel setuptools
 
   config-path:
     description: "set environment variables and change PATH"
@@ -37,10 +37,9 @@ jobs:
     steps:
       - checkout
       - config-path
-      - create-venv
-
       - restore_cache:
           key: venv-{{ checksum "constraints.txt" }}-{{ checksum "requirements.txt" }}
+      - create-venv
       - run:
           name: Install codecov
           command: |
@@ -172,7 +171,7 @@ jobs:
       - run:
           name: Upload tagged release
           command: |
-            version=$(docker run --rm $LOCAL_IMAGE cat VERSION | tr '+' '_')
+            version=$(docker run --rm $LOCAL_IMAGE --version | tr '+' '_')
             echo "Tagging with $version"
             docker tag $LOCAL_IMAGE $DOCKER_REPO:$version
             docker push $DOCKER_REPO:$version

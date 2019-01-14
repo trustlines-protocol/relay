@@ -17,22 +17,20 @@ RUN apt-get update \
     && rm -rf /var/lib/apt/lists/*
 
 RUN python3 -m venv /opt/relay
-RUN /opt/relay/bin/pip install pip==18.0.0 setuptools==40.0.0
-
-COPY ./constraints.txt /relay/constraints.txt
-COPY ./requirements.txt /relay/requirements.txt
 
 WORKDIR /relay
+COPY ./constraints.txt /relay/constraints.txt
+RUN /opt/relay/bin/pip install --disable-pip-version-check -c constraints.txt pip wheel setuptools
+COPY ./requirements.txt /relay/requirements.txt
 
 # remove development dependencies from the end of the file
 RUN sed -i -e '/development dependencies/q' requirements.txt
 
-RUN /opt/relay/bin/pip install -c constraints.txt -r requirements.txt
+RUN /opt/relay/bin/pip install --disable-pip-version-check -c constraints.txt -r requirements.txt
 
 COPY . /relay
 
-RUN /opt/relay/bin/pip install -c constraints.txt .
-RUN /opt/relay/bin/python -c 'import pkg_resources; print(pkg_resources.get_distribution("trustlines-relay").version)' >/opt/relay/VERSION
+RUN /opt/relay/bin/pip install --disable-pip-version-check -c constraints.txt .
 
 FROM ubuntu:18.04 as runner
 ENV LANG C.UTF-8

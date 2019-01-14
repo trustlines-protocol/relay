@@ -70,6 +70,7 @@ pathmatch==0.2.1
 pexpect==4.6.0
 pg8000==1.12.3
 pickleshare==0.7.4
+pip==18.1
 pkg-resources==0.0.0
 pluggy==0.7.1
 prompt-toolkit==1.0.15
@@ -97,6 +98,7 @@ rlp==1.0.2
 rsa==3.4.2
 semantic-version==2.6.0
 simplegeneric==0.8.1
+setuptools==40.6.3
 six==1.11.0
 SQLAlchemy==1.2.11
 testing.common.database==2.0.3
@@ -118,5 +120,6 @@ web3==4.7.1
 webargs==4.0.0
 websockets==6.0
 Werkzeug==0.14.1
+wheel==0.32.3
 wrapt==1.10.11
 filelock==3.0.10
