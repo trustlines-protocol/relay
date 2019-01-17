@@ -181,6 +181,31 @@ jobs:
             docker tag $LOCAL_IMAGE $DOCKER_REPO:latest
             docker push $DOCKER_REPO:latest
 
+  run-end2end-tests:
+    executor: ubuntu-builder
+    environment:
+      DOCKER_REPO: trustlines/relay
+      LOCAL_IMAGE: relay
+    working_directory: ~
+    steps:
+      - setup_remote_docker
+      - attach_workspace:
+          at: '~'
+      - run:
+          name: Checkout end2end repo
+          command: |
+            git clone https://github.com/trustlines-network/end2end.git
+      - run:
+          name: Load docker image
+          command: |
+            docker load --input ~/images/$LOCAL_IMAGE.tar
+      - run:
+          name: run end2end tests
+          command: |
+            docker tag $LOCAL_IMAGE $DOCKER_REPO
+            cd end2end
+            ./run-e2e.sh
+
 workflows:
   version: 2
   default:
@@ -226,6 +251,12 @@ workflows:
       - build-docker-image:
           filters:
             <<: *tagged-filter
+
+      - run-end2end-tests:
+          filters:
+            <<: *tagged-filter
+          requires:
+            - build-docker-image
 
       - deploy-docker-image:
           filters:
