@@ -74,7 +74,7 @@ jobs:
       - persist_to_workspace:
           root: "~"
           paths:
-            - repo
+            - repo/dist
 
   run-flake8:
     executor: ubuntu-builder
