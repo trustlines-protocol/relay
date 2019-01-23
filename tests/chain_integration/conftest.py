@@ -3,9 +3,6 @@ import os
 import sys
 
 import pytest
-from web3 import Web3
-from web3.providers.eth_tester import EthereumTesterProvider
-from eth_utils import to_checksum_address, encode_hex
 from tldeploy.core import deploy_networks, deploy_network
 
 from relay.blockchain.currency_network_proxy import CurrencyNetworkProxy
@@ -38,62 +35,28 @@ NETWORK_SETTINGS = [
         }]
 
 
-@pytest.fixture(scope="session", autouse=True)
-def increase_gas_limit():
-    """increate eth_tester's GAS_LIMIT
-    Otherwise we can't deploy our contract"""
-    assert eth_tester.backends.pyevm.main.GENESIS_GAS_LIMIT < 6 * 10 ** 6
-    eth_tester.backends.pyevm.main.GENESIS_GAS_LIMIT = 6 * 10 ** 6
-
-
-@pytest.fixture(scope="session")
-def ethereum_tester_session(test_account):
-    """Returns an instance of an Ethereum tester"""
-    tester = eth_tester.EthereumTester(eth_tester.PyEVMBackend())
-    a0 = tester.add_account(encode_hex(test_account.private_key))
-    faucet = tester.get_accounts()[0]
-    tester.send_transaction(
-        {"from": faucet,
-         "to": to_checksum_address(a0),
-         "gas": 21000,
-         "value": 10000000})
-    return tester
+"""increate eth_tester's GAS_LIMIT
+Otherwise we can't deploy our contract"""
+assert eth_tester.backends.pyevm.main.GENESIS_GAS_LIMIT < 6 * 10 ** 6
+eth_tester.backends.pyevm.main.GENESIS_GAS_LIMIT = 6 * 10 ** 6
 
 
 @pytest.fixture
-def ethereum_tester(ethereum_tester_session):
-    tester = ethereum_tester_session
-    snapshot = tester.take_snapshot()
-    yield tester
-    tester.revert_to_snapshot(snapshot)
-
-
-@pytest.fixture()
-def web3(ethereum_tester):
-    web3 = Web3(EthereumTesterProvider(ethereum_tester))
-    web3.eth.defaultAccount = web3.eth.accounts[0]
-    return web3
-
-    # return Web3(HTTPProvider('http://127.0.0.1:8545'))
-
-
-@pytest.fixture()
-def accounts(web3):
-    accounts = web3.personal.listAccounts[0:5]
-    assert len(accounts) == 5
-    return [to_checksum_address(account) for account in accounts]
-
-
-@pytest.fixture
-def maker(test_account):
+def maker(accounts):
     """checksum maker address"""
-    return test_account.address
+    return accounts[0]
 
 
 @pytest.fixture
-def taker(web3):
+def maker_key(account_keys):
+    """checksum maker address"""
+    return account_keys[0].to_bytes()
+
+
+@pytest.fixture
+def taker(accounts):
     """checksum taker address"""
-    return to_checksum_address(web3.personal.listAccounts[0])
+    return accounts[1]
 
 
 class CurrencyNetworkProxy(CurrencyNetworkProxy):

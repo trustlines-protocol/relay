@@ -7,10 +7,10 @@ from relay.exchange.order import SignableOrder
 
 
 @pytest.fixture()
-def order_token(exchange_address, network_addresses_with_exchange, unw_eth_address, test_account):
+def order_token(exchange_address, network_addresses_with_exchange, unw_eth_address, maker, maker_key):
     order = SignableOrder(
         exchange_address=exchange_address,
-        maker_address=test_account.address,
+        maker_address=maker,
         taker_address=NULL_ADDRESS,
         maker_token=unw_eth_address,
         taker_token=network_addresses_with_exchange[0],
@@ -22,15 +22,15 @@ def order_token(exchange_address, network_addresses_with_exchange, unw_eth_addre
         expiration_timestamp_in_sec=1230000000000,
         salt=123
         )
-    order.sign(test_account.private_key)
+    order.sign(maker_key)
     return order
 
 
 @pytest.fixture()
-def order_trustlines(exchange_address, network_addresses_with_exchange, unw_eth_address, test_account):
+def order_trustlines(exchange_address, network_addresses_with_exchange, unw_eth_address, maker, maker_key):
     order = SignableOrder(
         exchange_address=exchange_address,
-        maker_address=test_account.address,
+        maker_address=maker,
         taker_address=NULL_ADDRESS,
         maker_token=network_addresses_with_exchange[0],
         taker_token=unw_eth_address,
@@ -42,7 +42,7 @@ def order_trustlines(exchange_address, network_addresses_with_exchange, unw_eth_
         expiration_timestamp_in_sec=1230000000000,
         salt=123
         )
-    order.sign(test_account.private_key)
+    order.sign(maker_key)
     return order
 
 

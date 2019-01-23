@@ -56,7 +56,7 @@ def fresh_community(currency_network):
 
 def test_path(community_with_trustlines, accounts):
     community = community_with_trustlines
-    A, B, C, D, E = accounts
+    A, B, C, D, E, *rest = accounts
     cost, path = community.find_path(A, B, 10)
     assert path == [A, B]
     cost, path = community.find_path(A, D, 10)
@@ -65,7 +65,7 @@ def test_path(community_with_trustlines, accounts):
 
 def test_no_capacity(community_with_trustlines, accounts):
     community = community_with_trustlines
-    A, B, C, D, E = accounts
+    A, B, C, D, E, *rest = accounts
     cost, path = community.find_path(A, E, 550)
     assert path == [A, E]
     cost, path = community.find_path(A, E, 551)
