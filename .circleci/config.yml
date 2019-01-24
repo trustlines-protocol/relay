@@ -91,6 +91,17 @@ jobs:
           command: |
             flake8 setup.py relay tests
 
+  run-black:
+    executor: ubuntu-builder
+    steps:
+      - attach_workspace:
+          at: '~'
+      - config-path
+      - run:
+          name: Run black
+          command: |
+            black --check setup.py relay tests
+
   run-pytest:
     executor: ubuntu-builder
     steps:
@@ -228,6 +239,12 @@ workflows:
           filters:
             <<: *tagged-filter
 
+      - run-black:
+          requires:
+            - install
+          filters:
+            <<: *tagged-filter
+
       - run-pytest:
           requires:
             - install
@@ -243,6 +260,7 @@ workflows:
       - upload-pypi:
           requires:
             - run-flake8
+            - run-black
             - run-pytest
             - run-mypy
             - build-sdist
@@ -269,6 +287,7 @@ workflows:
               only: develop
           requires:
             - run-flake8
+            - run-black
             - run-pytest
             - run-mypy
             - install
