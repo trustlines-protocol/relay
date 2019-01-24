@@ -1,6 +1,17 @@
 ==========
 Change Log
 ==========
+`0.4.0`_ (2019-01-24)
+-------------------------------
+* new endpoint for trustline closing has been added, the reduce debt endpoint
+  has been removed
+* the used contracts package has been upgraded
+* the internal path finding and fee computation has been enhanced to support
+  payments without fees for the last hop
+* a payment method, where the receiver pays fees, has been added
+* max capacity path calculation has been fixed
+* tl-relay now parses command line arguments
+
 `0.3.0`_ (2018-11-16)
 -------------------------------
 * web3 has been upgraded from 3.16.5 to 4.7.1. As a result you should be able to
@@ -39,3 +50,4 @@ Change Log
 
 .. _0.2.0: https://github.com/trustlines-network/relay/compare/0.1.0...0.2.0
 .. _0.3.0: https://github.com/trustlines-network/relay/compare/0.2.0...0.3.0
+.. _0.4.0: https://github.com/trustlines-network/relay/compare/0.3.0...0.4.0
