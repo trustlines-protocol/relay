@@ -1,6 +1,10 @@
 ==========
 Change Log
 ==========
+`0.4.1`_ (2019-01-25)
+-------------------------------
+* fix broken dependency on old version of trustlines-contracts-bin
+
 `0.4.0`_ (2019-01-24)
 -------------------------------
 * new endpoint for trustline closing has been added, the reduce debt endpoint
@@ -51,3 +55,4 @@ Change Log
 .. _0.2.0: https://github.com/trustlines-network/relay/compare/0.1.0...0.2.0
 .. _0.3.0: https://github.com/trustlines-network/relay/compare/0.2.0...0.3.0
 .. _0.4.0: https://github.com/trustlines-network/relay/compare/0.3.0...0.4.0
+.. _0.4.1: https://github.com/trustlines-network/relay/compare/0.4.0...0.4.1
