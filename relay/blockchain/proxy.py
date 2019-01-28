@@ -32,7 +32,7 @@ def get_new_entries(filter, callback):
 def watch_filter(filter, callback):
     while 1:
         get_new_entries(filter, callback)
-        gevent.sleep(0.1)
+        gevent.sleep(1.0)
 
 
 class Proxy(object):
