@@ -1,3 +1,5 @@
+import time
+
 import pytest
 import gevent
 
@@ -84,10 +86,11 @@ def test_trustline_update(fresh_community, currency_network, accounts):
 
     gevent.sleep(1)
 
-    assert fresh_community.get_account_sum(A, B).creditline_given == 50
-    assert fresh_community.get_account_sum(A, B).creditline_received == 100
-    assert fresh_community.get_account_sum(A, B).interest_rate_given == 2
-    assert fresh_community.get_account_sum(A, B).interest_rate_received == 3
+    account_sum = fresh_community.get_account_sum(A, B, timestamp=int(time.time()))
+    assert account_sum.creditline_given == 50
+    assert account_sum.creditline_received == 100
+    assert account_sum.interest_rate_given == 2
+    assert account_sum.interest_rate_received == 3
 
 
 def test_transfer_update(fresh_community, currency_network, accounts):
@@ -99,8 +102,9 @@ def test_transfer_update(fresh_community, currency_network, accounts):
 
     gevent.sleep(1)
 
-    assert fresh_community.get_account_sum(A, B).creditline_given == 50
-    assert fresh_community.get_account_sum(A, B).creditline_received == 100
-    assert fresh_community.get_account_sum(A, B).balance == 20
-    assert fresh_community.get_account_sum(A, B).creditline_left_given == 30
-    assert fresh_community.get_account_sum(A, B).creditline_left_received == 120
+    account_sum = fresh_community.get_account_sum(A, B, timestamp=int(time.time()))
+    assert account_sum.creditline_given == 50
+    assert account_sum.creditline_received == 100
+    assert account_sum.balance == 20
+    assert account_sum.creditline_left_given == 30
+    assert account_sum.creditline_left_received == 120

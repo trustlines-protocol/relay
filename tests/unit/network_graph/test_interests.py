@@ -113,103 +113,103 @@ def test_interests_calculation_delta_time(basic_account):
 @pytest.mark.parametrize('configurable_community',
                          [NetworkGraphConfig(
                              trustlines=[Trustline(
-                                 A, B, 200, 200, balance=100, m_time=1505260800, interest_rate_given=100
+                                 A, B, 200, 200, balance=100, m_time=0, interest_rate_given=100
                              )])],
                          indirect=['configurable_community'])
 def test_interests_path_from_A_balance_positive_relevant_interests(configurable_community):
     # B owes to A
     # 1% interest given by A to B
-    cost, path = configurable_community.find_path(A, B, 100)
+    cost, path = configurable_community.find_path(A, B, 100, timestamp=SECONDS_PER_YEAR)
     assert path == [A, B]
 
 
 @pytest.mark.parametrize('configurable_community',
                          [NetworkGraphConfig(
                              trustlines=[Trustline(
-                                 A, B, 200, 200, balance=-100, m_time=1505260800, interest_rate_received=100
+                                 A, B, 200, 200, balance=-100, m_time=0, interest_rate_received=100
                              )])],
                          indirect=['configurable_community'])
 def test_interests_path_from_A_balance_negative_relevant_interests(configurable_community):
     # A owes to B
     # 1% interest given by B to A
-    cost, path = configurable_community.find_path(A, B, 100)
+    cost, path = configurable_community.find_path(A, B, 100, timestamp=SECONDS_PER_YEAR)
     assert path == []
 
 
 @pytest.mark.parametrize('configurable_community',
                          [NetworkGraphConfig(
                              trustlines=[Trustline(
-                                 A, B, 200, 200, balance=100, m_time=1505260800, interest_rate_received=100
+                                 A, B, 200, 200, balance=100, m_time=0, interest_rate_received=100
                              )])],
                          indirect=['configurable_community'])
 def test_interests_path_from_A_balance_positive_irrelevant_interests(configurable_community):
     # B owes to A
     # 1% interest given by B to A
 
-    cost, path = configurable_community.find_path(A, B, 100)
+    cost, path = configurable_community.find_path(A, B, 100, timestamp=SECONDS_PER_YEAR)
     assert path == [A, B]
 
 
 @pytest.mark.parametrize('configurable_community',
                          [NetworkGraphConfig(
                              trustlines=[Trustline(
-                                 A, B, 200, 200, balance=-100, m_time=1505260800, interest_rate_given=100
+                                 A, B, 200, 200, balance=-100, m_time=0, interest_rate_given=100
                              )])],
                          indirect=['configurable_community'])
 def test_interests_path_from_A_balance_negative_irrelevant_interests(configurable_community):
     # A owes to B
     # 1% interest given by A to B
-    cost, path = configurable_community.find_path(A, B, 100)
+    cost, path = configurable_community.find_path(A, B, 100, timestamp=SECONDS_PER_YEAR)
     assert path == [A, B]
 
 
 @pytest.mark.parametrize('configurable_community',
                          [NetworkGraphConfig(
                              trustlines=[Trustline(
-                                 A, B, 200, 200, balance=100, m_time=1505260800, interest_rate_given=100
+                                 A, B, 200, 200, balance=100, m_time=0, interest_rate_given=100
                              )])],
                          indirect=['configurable_community'])
 def test_interests_path_from_B_balance_positive_relevant_interests(configurable_community):
     # B owes to A
     # 1% interest given by A to B
-    cost, path = configurable_community.find_path(B, A, 100)
+    cost, path = configurable_community.find_path(B, A, 100, timestamp=SECONDS_PER_YEAR)
     assert path == []
 
 
 @pytest.mark.parametrize('configurable_community',
                          [NetworkGraphConfig(
                              trustlines=[Trustline(
-                                 A, B, 200, 200, balance=-100, m_time=1505260800, interest_rate_received=100
+                                 A, B, 200, 200, balance=-100, m_time=0, interest_rate_received=100
                              )])],
                          indirect=['configurable_community'])
 def test_interests_path_from_B_balance_negative_relevant_interests(configurable_community):
     # A owes to B
     # 1% interest given by B to A
-    cost, path = configurable_community.find_path(B, A, 100)
+    cost, path = configurable_community.find_path(B, A, 100, timestamp=SECONDS_PER_YEAR)
     assert path == [B, A]
 
 
 @pytest.mark.parametrize('configurable_community',
                          [NetworkGraphConfig(
                              trustlines=[Trustline(
-                                 A, B, 200, 200, balance=100, m_time=1505260800, interest_rate_received=100
+                                 A, B, 200, 200, balance=100, m_time=0, interest_rate_received=100
                              )])],
                          indirect=['configurable_community'])
 def test_interests_path_from_B_balance_positive_irrelevant_interests(configurable_community):
     # B owes to A
     # 1% interest given by B to A
-    cost, path = configurable_community.find_path(B, A, 100)
+    cost, path = configurable_community.find_path(B, A, 100, timestamp=SECONDS_PER_YEAR)
     assert path == [B, A]
 
 
 @pytest.mark.parametrize('configurable_community',
                          [NetworkGraphConfig(
                              trustlines=[Trustline(
-                                 A, B, 200, 200, balance=-100, m_time=1505260800, interest_rate_given=100
+                                 A, B, 200, 200, balance=-100, m_time=0, interest_rate_given=100
                              )])],
                          indirect=['configurable_community'])
 def test_interests_path_from_B_balance_negative_irrelevant_interests(configurable_community):
     # A owes to B
     # 1% interest given by A to B
-    cost, path = configurable_community.find_path(B, A, 100)
+    cost, path = configurable_community.find_path(B, A, 100, timestamp=SECONDS_PER_YEAR)
     assert path == [B, A]

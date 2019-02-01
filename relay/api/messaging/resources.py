@@ -1,3 +1,5 @@
+import time
+
 from flask_restful import Resource
 from webargs import fields
 from webargs.flaskparser import use_args
@@ -20,6 +22,7 @@ class PostMessage(Resource):
     def post(self, args, user_address: str):
         self.trustlines.messaging[user_address].publish(MessageEvent(
             args['message'],
-            type=args['type']
+            type=args['type'],
+            timestamp=int(time.time()),
         ))
         return 'Ok'
