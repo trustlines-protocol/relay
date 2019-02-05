@@ -1,11 +1,29 @@
-from marshmallow import Schema, fields
+from marshmallow import Schema, fields, post_load
 from marshmallow_oneofschema import OneOfSchema
 
-from .fields import Address, BigInteger, HexBytes
+from .fields import Address, BigInteger, HexBytes, HexEncodedBytes
 
 from relay.blockchain.unw_eth_events import UnwEthEvent
 from relay.blockchain.exchange_events import ExchangeEvent
 from relay.blockchain.currency_network_events import CurrencyNetworkEvent
+from tldeploy import identity
+
+
+class MetaTransactionSchema(Schema):
+    class Meta:
+        strict = True
+
+    @post_load
+    def make_meta_transaction(self, data):
+        return identity.MetaTransaction(**data)
+
+    from_ = Address(required=True, dump_to="from", load_from="from")
+    to = Address(required=True)
+    value = BigInteger(required=True)
+    data = HexEncodedBytes(required=True)
+    nonce = BigInteger(required=True)
+    extraData = HexEncodedBytes(required=True, attribute="extra_data")
+    signature = HexEncodedBytes(required=True)
 
 
 class EventSchema(Schema):
