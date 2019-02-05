@@ -48,3 +48,24 @@ class HexBytes(fields.String):
             raise ValidationError('Could not parse Hex number')
 
         return hex_bytes
+
+
+class HexEncodedBytes(fields.Field):
+    """hex encoded bytes field, correctly round-trips. was needed because
+    HexBytes doesn't round trip correctly """
+
+    def _serialize(self, value, attr, obj):
+        assert isinstance(value, bytes)
+        return "0x" + value.hex()
+
+    def _deserialize(self, value, attr, data):
+        if not value.startswith("0x"):
+            raise ValidationError(
+                f"Could not parse hex-encoded bytes objects of attribute {attr}: {value}"
+            )
+        try:
+            return bytes.fromhex(value[2:])
+        except ValueError:
+            raise ValidationError(
+                f"Could not parse hex-encoded bytes objects of attribute {attr}: {value}"
+            )
