@@ -21,6 +21,7 @@ psycogreen
 wrapt
 attrs
 click
+trustlines-contracts-deploy>=0.6.0
 
 # --- development dependencies, i.e. dependencies not needed for running tl-relay
 flake8
