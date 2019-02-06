@@ -27,6 +27,7 @@ from .blockchain import token_events
 from .blockchain import unw_eth_events
 from .blockchain import exchange_events
 from .blockchain.node import Node
+from .blockchain.delegate import Delegate
 from .blockchain.token_proxy import TokenProxy
 from .blockchain.unw_eth_proxy import UnwEthProxy
 from .blockchain.events import BlockchainEvent
@@ -177,6 +178,11 @@ class TrustlinesRelay:
             Web3.HTTPProvider(url)
         )
         self.node = Node(self._web3)
+        self.delegate = Delegate(
+            self._web3,
+            self.node.address,
+            self.contracts['Identity']['abi'],
+        )
         self._start_listen_on_new_addresses()
 
     def new_network(self, address: str) -> None:
