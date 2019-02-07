@@ -84,6 +84,10 @@ class TrustlinesRelay:
         return self.config.get('enableEtherFaucet', False)
 
     @property
+    def enable_relay_meta_transaction(self) -> bool:
+        return self.config.get('enableRelayMetaTransaction', False)
+
+    @property
     def event_query_timeout(self) -> int:
         return self.config.get('eventQueryTimeout', 20)
 

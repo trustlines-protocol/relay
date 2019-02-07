@@ -8,8 +8,8 @@ from flask.views import MethodView
 from flask_restful import Resource
 from webargs import fields
 from webargs.flaskparser import use_args
-from marshmallow import validate
-
+from marshmallow import validate, fields as marshmallow_fields
+from tldeploy import identity
 from relay.utils import sha3
 from relay.blockchain.currency_network_proxy import CurrencyNetworkProxy
 from relay.blockchain.unw_eth_proxy import UnwEthProxy
@@ -21,7 +21,8 @@ from .schemas import (CurrencyNetworkEventSchema,
                       PaymentPathSchema,
                       AnyEventSchema,
                       TrustlineSchema,
-                      CurrencyNetworkSchema)
+                      CurrencyNetworkSchema,
+                      MetaTransactionSchema)
 from relay.relay import TrustlinesRelay
 from relay.concurrency_utils import TimeoutException
 from relay.logger import get_logger
@@ -308,6 +309,20 @@ class Relay(Resource):
             return self.trustlines.node.relay_tx(args['rawTransaction']).hex()
         except ValueError:  # should mean error in relaying the transaction
             abort(409, 'There was an error while relaying this transaction')
+
+
+class RelayMetaTransaction(Resource):
+    def __init__(self, trustlines: TrustlinesRelay) -> None:
+        self.trustlines = trustlines
+
+    args = {"metaTransaction": marshmallow_fields.Nested(MetaTransactionSchema, required=True)}
+
+    @use_args(args)
+    def post(self, args):
+        meta_transaction: identity.MetaTransaction = args["metaTransaction"]
+        # XXX: implementation still missing
+        print("RelayMetaTransaction called with", meta_transaction)
+        abort(501, "RelayMetaTransaction not implemented")
 
 
 class Balance(Resource):
