@@ -1,8 +1,7 @@
 #! pytest
 import pytest
-from eth_tester.exceptions import TransactionFailed
 from tldeploy.identity import MetaTransaction, Identity
-from tldeploy.core import deploy_network, deploy_identity
+from tldeploy.core import deploy_identity
 
 from relay.blockchain.delegate import Delegate
 from relay.relay import TrustlinesRelay
