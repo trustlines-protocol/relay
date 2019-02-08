@@ -766,3 +766,38 @@ curl --header "Content-Type: application/json" \
 ```json
 "<tx hash>"
 ```
+
+---
+
+### RelayMetaTransaction
+Relays a meta transaction to the blockchain.
+#### Request
+```
+POST /relay-meta-transaction
+```
+#### Data Parameters
+| Name            | Type                   | Required | Description            |
+|-----------------|------------------------|----------|------------------------|
+| metaTransaction | object                 | YES      | MetaTransaction object |
+
+
+The MetaTransaction object must have the following fields:
+
+| Name       | Type    | Description                                                        |
+|------------|---------|--------------------------------------------------------------------|
+| from       | address | address of identity contract                                       |
+| to         | address | the address on which the call of the meta transaction is happening |
+| value      | uint256 | the amount of wei to be sent along from 'from' to 'to'             |
+| data       | bytes   | the data object encoding the function call                         |
+| nonce      | uint256 | nonce used for replay protection                                   |
+| extra_data | bytes   | bytes extra data for backwards compatibility                       |
+| signature  | bytes   | 65 bytes containing concatenated. v,r,s of the signature           |
+
+#### Example Request
+```bash
+url --header "Content-Type: application/json" \
+  --request POST \
+  --data '{"metaTransaction": {"value": "0", "to": "0x51a240271AB8AB9f9a21C82d9a85396b704E164d", "nonce": "1", "data": "0x46432830000000000000000000000000000000000000000000000000000000000000000a", "from": "0xF2E246BB76DF876Cef8b38ae84130F4F55De395b", "signature": "0x6d2fe56ef6648cb3f0398966ad3b05d891cde786d8074bdac15bcb92ebfa7222489b8eb6ed87165feeede19b031bb69e12036a5fa13b3a46ad0c2c19d051ea9101", "extraData": "0x"}}' https://relay0.testnet.trustlines.network/api/v1/relay-meta-transaction
+```
+#### Response
+The endpoint currently is not fully implemented. It returns a HTTP 501 response.
