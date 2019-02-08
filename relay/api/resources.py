@@ -105,10 +105,10 @@ class ContactList(Resource):
 
 
 def _id(network_address, a_address, b_address):
-        if a_address < b_address:
-            return sha3(network_address + a_address + b_address)
-        else:
-            return sha3(network_address + b_address + a_address)
+    if a_address < b_address:
+        return sha3(network_address + a_address + b_address)
+    else:
+        return sha3(network_address + b_address + a_address)
 
 
 def _get_extended_account_summary(
@@ -351,6 +351,21 @@ class RequestEther(Resource):
     def post(self):
         address = request.json['address']
         return self.trustlines.node.send_ether(address)
+
+
+class DeployIdentity(Resource):
+    def __init__(self, trustlines: TrustlinesRelay) -> None:
+        self.trustlines = trustlines
+
+    args = {'ownerAddress': custom_fields.Address(required=True)}
+
+    @use_args(args)
+    def post(self, args):
+        owner_address = args["ownerAddress"]
+        identity_contract = self.trustlines.deploy_identity(owner_address)
+        # we may like to return additonal fields here in the future, therefore
+        # the return value is a map
+        return {"identity": identity_contract.address}
 
 
 def _estimate_gas_for_transfer(trustlines: TrustlinesRelay,
