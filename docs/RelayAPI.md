@@ -788,7 +788,7 @@ The MetaTransaction object must have the following fields:
 | from       | address | address of identity contract                                       |
 | to         | address | the address on which the call of the meta transaction is happening |
 | value      | uint256 | the amount of wei to be sent along from 'from' to 'to'             |
-| data       | bytes   | the data object encoding the function call                         |
+| data       | bytes   | the data object encoding the function call including arguments     |
 | nonce      | uint256 | nonce used for replay protection                                   |
 | extra_data | bytes   | bytes extra data for backwards compatibility                       |
 | signature  | bytes   | 65 bytes containing concatenated. v,r,s of the signature           |
