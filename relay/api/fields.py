@@ -55,17 +55,22 @@ class HexEncodedBytes(fields.Field):
     HexBytes doesn't round trip correctly """
 
     def _serialize(self, value, attr, obj):
-        assert isinstance(value, bytes)
-        return "0x" + value.hex()
+        if isinstance(value, hexbytes.HexBytes):
+            return value.hex()
+        elif isinstance(value, bytes):
+            return '0x' + value.hex()
+        else:
+            raise ValueError('Value must be of type bytes or HexBytes')
 
     def _deserialize(self, value, attr, data):
-        if not value.startswith("0x"):
+        if not value.startswith('0x'):
             raise ValidationError(
-                f"Could not parse hex-encoded bytes objects of attribute {attr}: {value}"
+                f'Could not parse hex-encoded bytes objects of attribute {attr}: {value}'
             )
         try:
-            return bytes.fromhex(value[2:])
+            # Create bytes first, to not use weird conversion done by hexbytes constructor
+            return hexbytes.HexBytes(bytes.fromhex(value[2:]))
         except ValueError:
             raise ValidationError(
-                f"Could not parse hex-encoded bytes objects of attribute {attr}: {value}"
+                f'Could not parse hex-encoded bytes objects of attribute {attr}: {value}'
             )
