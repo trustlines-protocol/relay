@@ -14,6 +14,7 @@ from gevent import sleep
 import sqlalchemy
 from sqlalchemy.engine.url import URL
 from web3 import Web3
+from tldeploy.identity import MetaTransaction
 
 from .blockchain.proxy import sorted_events
 from relay.pushservice.client import PushNotificationClient
@@ -162,6 +163,9 @@ class TrustlinesRelay:
 
     def get_users_of_network(self, network_address: str):
         return self.currency_network_graphs[network_address].users
+
+    def delegate_metatransaction(self, meta_transaction: MetaTransaction):
+        return self.delegate.send_signed_meta_transaction(meta_transaction)
 
     def start(self):
         self._load_config()

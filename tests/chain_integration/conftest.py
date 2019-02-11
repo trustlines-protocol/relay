@@ -4,6 +4,7 @@ import sys
 
 import pytest
 from tldeploy.core import deploy_networks, deploy_network
+from tldeploy.identity import MetaTransaction
 
 from relay.blockchain.currency_network_proxy import CurrencyNetworkProxy
 import eth_tester
@@ -109,6 +110,16 @@ class CurrencyNetworkProxy(CurrencyNetworkProxy):
     def transfer(self, from_, to, value, max_fee, path):
         txid = self._proxy.functions.transfer(to, value, max_fee, path).transact({"from": from_})
         self._web3.eth.waitForTransactionReceipt(txid)
+
+    def transfer_meta_transaction(self, to, value, max_fee, path):
+
+        function_call = self._proxy.functions.transfer(to, value, max_fee, path)
+        meta_transaction = MetaTransaction.from_function_call(function_call, to=self.address)
+
+        return meta_transaction
+
+    def get_balance(self, from_, to,):
+        return self._proxy.functions.balance(from_, to).call()
 
 
 @pytest.fixture()
