@@ -802,8 +802,9 @@ curl --header "Content-Type: application/json" \
   https://relay0.testnet.trustlines.network/api/v1/relay-meta-transaction
 ```
 #### Response
-The endpoint currently is not fully implemented. It returns a HTTP 501 response.
-
+```json
+"<tx hash>"
+```
 ---
 
 ### Deploy identity contract
