@@ -4,7 +4,6 @@ from tldeploy.identity import MetaTransaction, Identity
 from tldeploy.core import deploy_identity
 
 from relay.blockchain.delegate import Delegate
-from relay.relay import TrustlinesRelay
 
 
 @pytest.fixture(scope='session')
@@ -13,11 +12,9 @@ def delegate_address(web3):
 
 
 @pytest.fixture(scope='session')
-def delegate(web3, delegate_address):
+def delegate(web3, delegate_address, contracts):
 
-    trustlines_relay = TrustlinesRelay()
-    trustlines_relay._load_contracts()
-    identity_contract_abi = trustlines_relay.contracts['Identity']['abi']
+    identity_contract_abi = contracts['Identity']['abi']
 
     return Delegate(web3, delegate_address, identity_contract_abi)
 
