@@ -320,9 +320,10 @@ class RelayMetaTransaction(Resource):
     @use_args(args)
     def post(self, args):
         meta_transaction: identity.MetaTransaction = args["metaTransaction"]
-        # XXX: implementation still missing
-        print("RelayMetaTransaction called with", meta_transaction)
-        abort(501, "RelayMetaTransaction not implemented")
+        try:
+            return self.trustlines.delegate_metatransaction(meta_transaction).hex()
+        except ValueError:
+            abort(409, 'There was an error while relaying this meta-transaction')
 
 
 class Balance(Resource):
