@@ -16,6 +16,8 @@ from sqlalchemy.engine.url import URL
 from web3 import Web3
 from tldeploy.identity import MetaTransaction
 
+import tldeploy.core
+
 from .blockchain.proxy import sorted_events
 from relay.pushservice.client import PushNotificationClient
 from relay.pushservice.pushservice import FirebaseRawPushService, InvalidClientTokenException
@@ -88,6 +90,10 @@ class TrustlinesRelay:
     @property
     def enable_relay_meta_transaction(self) -> bool:
         return self.config.get('enableRelayMetaTransaction', False)
+
+    @property
+    def enable_deploy_identity(self) -> bool:
+        return self.config.get('enableDeployIdentity', False)
 
     @property
     def event_query_timeout(self) -> int:
@@ -447,6 +453,9 @@ class TrustlinesRelay:
         exchange_event_queries = self._get_exchange_event_queries(user_address, type, from_block)
         results = concurrency_utils.joinall(exchange_event_queries, timeout=timeout)
         return sorted_events(list(itertools.chain.from_iterable(results)))
+
+    def deploy_identity(self, owner_address):
+        return tldeploy.core.deploy_identity(self._web3, owner_address)
 
     def _load_config(self):
         with open(self.config_json_path) as data_file:

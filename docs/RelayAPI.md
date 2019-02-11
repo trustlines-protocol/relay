@@ -41,6 +41,7 @@ https://relay0.testnet.trustlines.network/api/v1
 - [Latest block number](#latest-block-number)
 - [Relay transaction](#relay-transaction)
 - [Relay meta transaction](#relay-meta-transaction)
+- [Deploy identity contract](#deploy-identity-contract)
 ---
 
 ### Currency networks list
@@ -802,3 +803,38 @@ curl --header "Content-Type: application/json" \
 ```
 #### Response
 The endpoint currently is not fully implemented. It returns a HTTP 501 response.
+
+---
+
+### Deploy identity contract
+This endpoint can be used to deploy an identity contract to the blockchain.
+
+#### Request
+```
+POST /identities
+```
+#### Data Parameters
+| Name         | Type    | Required | Description            |
+|--------------|---------|----------|------------------------|
+| ownerAddress | Address | YES      | MetaTransaction object |
+
+
+
+#### Example Request
+```bash
+curl --header "Content-Type: application/json" \
+  --request POST \
+  --data '{"ownerAddress": "0xF2E246BB76DF876Cef8b38ae84130F4F55De395b"}' \
+  https://relay0.testnet.trustlines.network/api/v1/identities
+```
+#### Response
+The endpoint returns an object with the following fields:
+
+| Name     | Type    | Description                                    |
+|----------|---------|------------------------------------------------|
+| identity | Address | The address of the deployed identity contract  |
+
+#### Example Response
+```json
+{"identity": "0x43950642C8685ED8e3Fb89a5C5aeCb12862A87fd"}
+```
