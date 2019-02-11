@@ -170,6 +170,9 @@ class TrustlinesRelay:
     def get_users_of_network(self, network_address: str):
         return self.currency_network_graphs[network_address].users
 
+    def deploy_identity_contract(self, owner_address):
+        return self.delegate.deploy_identity(self._web3, owner_address)
+
     def delegate_metatransaction(self, meta_transaction: MetaTransaction):
         return self.delegate.send_signed_meta_transaction(meta_transaction)
 

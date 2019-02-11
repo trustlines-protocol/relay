@@ -43,6 +43,16 @@ def identity(identity_contract, owner_key):
     return Identity(contract=identity_contract, owner_private_key=owner_key)
 
 
+def meta_transaction_for_currency_network_transfer(currency_network, identity, source, destination):
+
+    trustlines = [(source, destination, 100, 100)]
+    currency_network.setup_trustlines(trustlines)
+    meta_transaction = currency_network.transfer_meta_transaction(destination, 100, 0, [destination])
+    meta_transaction = identity.filled_and_signed_meta_transaction(meta_transaction)
+
+    return meta_transaction
+
+
 def test_delegate_meta_transaction(delegate, web3, accounts, account_keys):
     """"
     Tests that a transaction is sent by the delegate upon receiving a meta-transaction.
@@ -72,17 +82,44 @@ def test_delegate_meta_transaction(delegate, web3, accounts, account_keys):
 
 def test_delegated_transaction_trustlines_flow(currency_network, identity, delegate, accounts):
     """"
-    Tests that the relaying of the metatransaction by the relay server actually works on a currency network contract
+    Tests that the relaying of the metatransaction by the relay server works on a currency network contract
     """
 
-    A = identity.address
-    B = accounts[3]
+    source = identity.address
+    destination = accounts[3]
 
-    trustlines = [(A, B, 100, 100)]
-    currency_network.setup_trustlines(trustlines)
-    meta_transaction = currency_network.transfer_meta_transaction(B, 100, 0, [B])
-    meta_transaction = identity.filled_and_signed_meta_transaction(meta_transaction)
+    meta_transaction = meta_transaction_for_currency_network_transfer(
+        currency_network,
+        identity,
+        source,
+        destination,
+    )
 
     delegate.send_signed_meta_transaction(meta_transaction)
 
-    assert currency_network.get_balance(A, B) == -100
+    assert currency_network.get_balance(source, destination) == -100
+
+
+def test_deploy_identity(currency_network, web3, delegate, accounts, owner, owner_key,):
+    """
+    Tests that the deployment of an identity contract by the relay server delegate works
+    by using it to execute a meta-transaction
+    """
+
+    identity_contract = delegate.deploy_identity(web3, owner)
+    identity = Identity(contract=identity_contract, owner_private_key=owner_key)
+
+    source = identity_contract.address
+    destination = accounts[3]
+
+    meta_transaction = meta_transaction_for_currency_network_transfer(
+        currency_network,
+        identity,
+        source,
+        destination,
+    )
+
+    assert identity_contract.functions.lastNonce().call() == 0
+    delegate.send_signed_meta_transaction(meta_transaction)
+    assert identity_contract.functions.lastNonce().call() == 1
+    assert currency_network.get_balance(source, destination) == -100
