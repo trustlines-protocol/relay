@@ -34,9 +34,6 @@ class Node:
         else:
             self._send_tx = self._web3.eth.sendRawTransaction
 
-    def get_abi(self, contract):
-        return 0
-
     def relay_tx(self, rawtxn):
         return self._send_tx(rawtxn)
 
@@ -51,6 +48,10 @@ class Node:
         return TxInfos(balance=self._web3.eth.getBalance(user_address, block_identifier=block_identifier),
                        nonce=nonce,
                        gas_price=self._web3.eth.gasPrice)
+
+    @property
+    def address(self):
+        return self._web3.eth.coinbase
 
     @property
     def blocknumber(self):
@@ -69,10 +70,6 @@ class Node:
             }).hex()
         else:
             return None
-
-    @property
-    def address(self):
-        return self._web3.eth.coinbase
 
     def get_block_timestamp(self, block_number):
         return self._web3.eth.getBlock(block_number).timestamp
