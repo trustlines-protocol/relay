@@ -6,6 +6,7 @@ import wrapt
 from flask import request, send_file, make_response, abort
 from flask.views import MethodView
 from flask_restful import Resource
+import web3.exceptions
 from webargs import fields
 from webargs.flaskparser import use_args
 from marshmallow import validate, fields as marshmallow_fields
@@ -22,7 +23,8 @@ from .schemas import (CurrencyNetworkEventSchema,
                       AnyEventSchema,
                       TrustlineSchema,
                       CurrencyNetworkSchema,
-                      MetaTransactionSchema)
+                      MetaTransactionSchema,
+                      IdentityInfosSchema)
 from relay.relay import TrustlinesRelay
 from relay.concurrency_utils import TimeoutException
 from relay.logger import get_logger
@@ -354,19 +356,41 @@ class RequestEther(Resource):
         return self.trustlines.node.send_ether(address)
 
 
+def _get_identity_info(identity):
+    try:
+        return {
+            "balance": identity.web3.eth.getBalance(identity.address),
+            "identity": identity.address,
+            "lastNonce": identity.functions.lastNonce().call(),
+        }
+    except web3.exceptions.BadFunctionCallOutput:
+        abort(404, "not found")
+
+
 class DeployIdentity(Resource):
     def __init__(self, trustlines: TrustlinesRelay) -> None:
         self.trustlines = trustlines
 
-    args = {'ownerAddress': custom_fields.Address(required=True)}
+    args = {"ownerAddress": custom_fields.Address(required=True)}
 
     @use_args(args)
+    @dump_result_with_schema(IdentityInfosSchema())
     def post(self, args):
         owner_address = args["ownerAddress"]
         identity_contract = self.trustlines.deploy_identity(owner_address)
-        # we may like to return additonal fields here in the future, therefore
-        # the return value is a map
-        return {"identity": identity_contract.address}
+        return _get_identity_info(identity_contract)
+
+
+class IdentityInfos(Resource):
+    def __init__(self, trustlines: TrustlinesRelay) -> None:
+        self.trustlines = trustlines
+
+    @dump_result_with_schema(IdentityInfosSchema())
+    def get(self, identity_address: str):
+        identity = self.trustlines.getContract(
+            contract_name="Identity", address=identity_address
+        )
+        return _get_identity_info(identity)
 
 
 def _estimate_gas_for_transfer(trustlines: TrustlinesRelay,

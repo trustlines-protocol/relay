@@ -10,7 +10,7 @@ from eth_utils import is_address, to_checksum_address, is_checksum_address
 from .resources import GraphDump, GraphImage, RequestEther, User, UserList, Network, NetworkList, \
     ContactList, TrustlineList, Trustline, MaxCapacityPath, Path, \
     UserEventsNetwork, UserEvents, Relay, Balance, TransactionInfos, Block, EventsNetwork, \
-    CloseTrustline, RelayMetaTransaction, DeployIdentity
+    CloseTrustline, RelayMetaTransaction, DeployIdentity, IdentityInfos
 from .streams.app import WebSocketRPCHandler, MessagingWebSocketRPCHandler
 
 from .exchange.resources import OrderBook, OrderSubmission, ExchangeAddresses, UnwEthAddresses, OrderDetail, \
@@ -76,6 +76,7 @@ def ApiApp(trustlines):
     if trustlines.enable_deploy_identity:
         add_resource(DeployIdentity, '/identities')
 
+    add_resource(IdentityInfos, '/identities/<address:identity_address>')
     add_resource(OrderBook, '/exchange/orderbook')
     add_resource(Orders, '/exchange/orders')
     add_resource(OrderSubmission, '/exchange/order')

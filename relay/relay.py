@@ -196,6 +196,14 @@ class TrustlinesRelay:
         )
         self._start_listen_on_new_addresses()
 
+    def getContract(self, *, contract_name: str, address: str):
+        """instantiates a web3 contract for the given contract_name with the
+        given address"""
+        return self._web3.eth.contract(
+            abi=self.contracts[contract_name]['abi'],
+            address=address
+        )
+
     def new_network(self, address: str) -> None:
         assert is_checksum_address(address)
         if address in self.network_addresses:

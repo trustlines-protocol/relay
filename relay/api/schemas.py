@@ -163,6 +163,15 @@ class TxInfosSchema(Schema):
     gasPrice = BigInteger(attribute='gas_price')
 
 
+class IdentityInfosSchema(Schema):
+    class Meta:
+        strict = True
+
+    balance = BigInteger()
+    lastNonce = fields.Integer()
+    identity = Address()
+
+
 class CurrencyNetworkSchema(Schema):
     class Meta:
         strict = True
