@@ -13,7 +13,14 @@ class Delegate:
         )
 
     def send_signed_meta_transaction(self, signed_meta_transaction: MetaTransaction,):
-        return self.delegator.send_signed_meta_transaction(signed_meta_transaction)
+        if (self.delegator.validate_meta_transaction(signed_meta_transaction)):
+            return self.delegator.send_signed_meta_transaction(signed_meta_transaction)
+        else:
+            raise InvalidMetaTransactionException
 
     def deploy_identity(self, web3, owner_address):
         return deploy_identity(web3, owner_address)
+
+
+class InvalidMetaTransactionException(Exception):
+    pass

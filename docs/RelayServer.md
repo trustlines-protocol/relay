@@ -157,7 +157,7 @@ Installation on Ubuntu
 #### Installation of the relay server
 
 Clone the git repository, create a virtualenv and install into
-that. 
+that.
 ```
 cd ~
 git clone https://github.com/trustlines-network/relay

@@ -3,7 +3,7 @@ import pytest
 from tldeploy.identity import MetaTransaction, Identity
 from tldeploy.core import deploy_identity
 
-from relay.blockchain.delegate import Delegate
+from relay.blockchain.delegate import Delegate, InvalidMetaTransactionException
 
 
 @pytest.fixture(scope='session')
@@ -53,17 +53,13 @@ def meta_transaction_for_currency_network_transfer(currency_network, identity, s
     return meta_transaction
 
 
-def test_delegate_meta_transaction(delegate, web3, accounts, account_keys):
+def test_delegate_meta_transaction(delegate, identity, web3, accounts, owner_key):
     """"
     Tests that a transaction is sent by the delegate upon receiving a meta-transaction.
-    This tests might need to be modified for a correct meta-transaction
-    once verification of meta-transaction is implemented
     """
 
-    meta_transaction_destinary = accounts[1]
-
     meta_transaction = MetaTransaction(
-        from_=meta_transaction_destinary,
+        from_=identity.address,
         to=accounts[2],
         value=123,
         data=(1234).to_bytes(10, byteorder='big'),
@@ -71,13 +67,13 @@ def test_delegate_meta_transaction(delegate, web3, accounts, account_keys):
         extra_data=(123456789).to_bytes(10, byteorder='big'),
     )
 
-    signed_meta_transaction = meta_transaction.signed(account_keys[1])
+    signed_meta_transaction = meta_transaction.signed(owner_key)
 
     tx_hash = delegate.send_signed_meta_transaction(signed_meta_transaction)
     tx = web3.eth.getTransaction(tx_hash)
 
     assert tx['from'] == web3.eth.coinbase
-    assert tx['to'] == meta_transaction_destinary
+    assert tx['to'] == identity.address
 
 
 def test_delegated_transaction_trustlines_flow(currency_network, identity, delegate, accounts):
@@ -123,3 +119,32 @@ def test_deploy_identity(currency_network, web3, delegate, accounts, owner, owne
     delegate.send_signed_meta_transaction(meta_transaction)
     assert identity_contract.functions.lastNonce().call() == 1
     assert currency_network.get_balance(source, destination) == -100
+
+
+def test_delegated_transaction_invalid_signature(identity, delegate, accounts, account_keys):
+    to = accounts[2]
+    value = 1000
+
+    meta_transaction = MetaTransaction(
+        from_=identity.address, to=to, value=value, nonce=0
+    ).signed(account_keys[3])
+
+    with pytest.raises(InvalidMetaTransactionException):
+        delegate.send_signed_meta_transaction(meta_transaction)
+
+
+def test_delegated_transaction_invalid_nonce(identity, delegate, accounts):
+    to = accounts[2]
+    value = 1000
+
+    meta_transaction1 = identity.filled_and_signed_meta_transaction(
+        MetaTransaction(to=to, value=value, nonce=1)
+    )
+    meta_transaction2 = identity.filled_and_signed_meta_transaction(
+        MetaTransaction(to=to, value=value, nonce=1)
+    )
+
+    delegate.send_signed_meta_transaction(meta_transaction1)
+
+    with pytest.raises(InvalidMetaTransactionException):
+        delegate.send_signed_meta_transaction(meta_transaction2)
