@@ -21,13 +21,19 @@ Installation on Ubuntu
 
 Setup
 ~~~~~
-
-::
+To install all needed development dependencies run the following commands in a
+fresh virtualenv::
 
     git clone https://github.com/trustlines-network/relay.git
     cd relay
     pip install -c constraints.txt -r requirements.txt
     pip install -c constraints.txt -e .
+    pre-commit install
+    pre-commit run -a
+
+The last two commands will install a git pre-commit hook and intitialize the pre-commit installation.
+The installed git pre-commit hooks run flake8 and black among other things when
+committing changes to the git repository.
 
 We also need to deploy trustlines smart contracts on a local node or
 testrpc as described
