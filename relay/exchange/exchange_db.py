@@ -58,15 +58,10 @@ class OrderORM(Base):  # type: ignore
             expiration_timestamp_in_sec=order.expiration_timestamp_in_sec,
             salt=order.salt,
             v=order.v,
-            r=remove_0x_prefix(
-                order.r.hex()
-            ),  # remove 0x to keep backwards compatibility
-            s=remove_0x_prefix(
-                order.s.hex()
-            ),  # remove 0x to keep backwards compatibility
-            msg_hash=remove_0x_prefix(
-                order.hash().hex()
-            ),  # remove 0x to keep backwards compatibility
+            # remove 0x from r, s and msg_hash to keep backwards compatibility:
+            r=remove_0x_prefix(order.r.hex()),
+            s=remove_0x_prefix(order.s.hex()),
+            msg_hash=remove_0x_prefix(order.hash().hex()),
         )
 
     def to_order(self) -> Order:

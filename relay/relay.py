@@ -305,9 +305,9 @@ class TrustlinesRelay:
     def _stop_pushnotifications(self, user_address: str, client_token: str) -> None:
         success = False
         subscriptions = self.subjects[user_address].subscriptions
-        for subscription in subscriptions[
-            :
-        ]:  # Copy the list because we will delete items
+
+        # Copy the list because we will delete items while iterating over it
+        for subscription in subscriptions[:]:
             if (
                 isinstance(subscription.client, PushNotificationClient)
                 and subscription.client.client_token == client_token
