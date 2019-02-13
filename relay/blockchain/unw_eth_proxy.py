@@ -15,7 +15,7 @@ from .unw_eth_events import (
     standard_event_types,
 )
 
-logger = get_logger('unwrap eth', logging.DEBUG)
+logger = get_logger("unwrap eth", logging.DEBUG)
 
 
 class UnwEthProxy(Proxy):
@@ -31,25 +31,35 @@ class UnwEthProxy(Proxy):
     def balance_of(self, user_address: str):
         return self._proxy.call().balanceOf(user_address)
 
-    def get_unw_eth_events(self,
-                           event_name: str,
-                           user_address: str = None,
-                           from_block: int = 0,
-                           timeout: float = None) -> List[BlockchainEvent]:
-        logger.debug("get_unw_eth_events: event_name=%s user_address=%s from_block=%s",
-                     event_name,
-                     user_address,
-                     from_block)
+    def get_unw_eth_events(
+        self,
+        event_name: str,
+        user_address: str = None,
+        from_block: int = 0,
+        timeout: float = None,
+    ) -> List[BlockchainEvent]:
+        logger.debug(
+            "get_unw_eth_events: event_name=%s user_address=%s from_block=%s",
+            event_name,
+            user_address,
+            from_block,
+        )
         if user_address is None:
-            queries = [functools.partial(self.get_events, event_name, from_block=from_block)]
+            queries = [
+                functools.partial(self.get_events, event_name, from_block=from_block)
+            ]
             events = concurrency_utils.joinall(queries, timeout=timeout)
         else:
             filter1 = {from_to_types[event_name][0]: user_address}
             filter2 = {from_to_types[event_name][1]: user_address}
 
-            queries = [functools.partial(self.get_events, event_name, filter1, from_block)]
-            if (event_name == TransferEventType):
-                queries.append(functools.partial(self.get_events, event_name, filter2, from_block))
+            queries = [
+                functools.partial(self.get_events, event_name, filter1, from_block)
+            ]
+            if event_name == TransferEventType:
+                queries.append(
+                    functools.partial(self.get_events, event_name, filter2, from_block)
+                )
             results = concurrency_utils.joinall(queries, timeout=timeout)
 
             events = list(itertools.chain.from_iterable(results))
@@ -58,16 +68,20 @@ class UnwEthProxy(Proxy):
                 if isinstance(event, UnwEthEvent):
                     event.user = user_address
                 else:
-                    raise ValueError('Expected a UnwEthEvent')
+                    raise ValueError("Expected a UnwEthEvent")
         return sorted_events(events)
 
-    def get_all_unw_eth_events(self,
-                               user_address: str = None,
-                               from_block: int = 0,
-                               timeout: float = None) -> List[BlockchainEvent]:
-        queries = [functools.partial(self.get_unw_eth_events,
-                                     type,
-                                     user_address=user_address,
-                                     from_block=from_block) for type in self.standard_event_types]
+    def get_all_unw_eth_events(
+        self, user_address: str = None, from_block: int = 0, timeout: float = None
+    ) -> List[BlockchainEvent]:
+        queries = [
+            functools.partial(
+                self.get_unw_eth_events,
+                type,
+                user_address=user_address,
+                from_block=from_block,
+            )
+            for type in self.standard_event_types
+        ]
         results = concurrency_utils.joinall(queries, timeout=timeout)
         return sorted_events(list(itertools.chain.from_iterable(results)))

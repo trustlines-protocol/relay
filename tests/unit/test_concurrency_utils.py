@@ -14,7 +14,7 @@ def test_success():
     def h():
         return 5
 
-    result = joinall([f, g, h], timeout=1.)
+    result = joinall([f, g, h], timeout=1.0)
 
     assert result == [3, 4, 5]
 
@@ -24,7 +24,7 @@ def test_timeout():
         return 3
 
     def g():
-        gevent.sleep(5.)
+        gevent.sleep(5.0)
         return 4
 
     def h():
@@ -39,11 +39,11 @@ def test_timeout_not_enough():
         return 3
 
     def g():
-        gevent.sleep(5.)
+        gevent.sleep(5.0)
         return 4
 
     def h():
-        gevent.sleep(5.)
+        gevent.sleep(5.0)
         return 5
 
     with pytest.raises(TimeoutException):

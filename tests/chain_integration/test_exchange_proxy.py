@@ -7,7 +7,9 @@ from relay.exchange.order import SignableOrder
 
 
 @pytest.fixture()
-def order_token(exchange_address, network_addresses_with_exchange, unw_eth_address, maker, maker_key):
+def order_token(
+    exchange_address, network_addresses_with_exchange, unw_eth_address, maker, maker_key
+):
     order = SignableOrder(
         exchange_address=exchange_address,
         maker_address=maker,
@@ -20,14 +22,16 @@ def order_token(exchange_address, network_addresses_with_exchange, unw_eth_addre
         maker_fee=0,
         taker_fee=0,
         expiration_timestamp_in_sec=1230000000000,
-        salt=123
-        )
+        salt=123,
+    )
     order.sign(maker_key)
     return order
 
 
 @pytest.fixture()
-def order_trustlines(exchange_address, network_addresses_with_exchange, unw_eth_address, maker, maker_key):
+def order_trustlines(
+    exchange_address, network_addresses_with_exchange, unw_eth_address, maker, maker_key
+):
     order = SignableOrder(
         exchange_address=exchange_address,
         maker_address=maker,
@@ -40,8 +44,8 @@ def order_trustlines(exchange_address, network_addresses_with_exchange, unw_eth_
         maker_fee=0,
         taker_fee=0,
         expiration_timestamp_in_sec=1230000000000,
-        salt=123
-        )
+        salt=123,
+    )
     order.sign(maker_key)
     return order
 
@@ -49,11 +53,8 @@ def order_trustlines(exchange_address, network_addresses_with_exchange, unw_eth_
 @pytest.fixture()
 def exchange_proxy(web3, exchange_abi, token_abi, exchange_address, address_oracle):
     return ExchangeProxy(
-        web3,
-        exchange_abi,
-        token_abi,
-        exchange_address,
-        address_oracle)
+        web3, exchange_abi, token_abi, exchange_address, address_oracle
+    )
 
 
 def test_validate(order_trustlines, exchange_proxy):
@@ -67,7 +68,9 @@ def test_not_enough_funds(order_token, exchange_proxy):
 
 def test_enough_funds(order_token, exchange_proxy, testnetworks):
     unw_eth_contract = testnetworks[2]
-    unw_eth_contract.functions.deposit().transact({'from': order_token.maker_address, 'value': 100})
+    unw_eth_contract.functions.deposit().transact(
+        {"from": order_token.maker_address, "value": 100}
+    )
 
     assert exchange_proxy.validate_funds(order_token)
     assert exchange_proxy.validate(order_token)
@@ -83,29 +86,55 @@ def test_filled_amount(order_trustlines, exchange_proxy, testnetworks, maker, ta
     assert maker == order.maker_address
     exchange_contract = testnetworks[1]
     exchange_contract.functions.fillOrderTrustlines(
-        [order.maker_address, order.taker_address, order.maker_token, order.taker_token, order.fee_recipient],
-        [order.maker_token_amount, order.taker_token_amount, order.maker_fee,
-         order.taker_fee, order.expiration_timestamp_in_sec, order.salt],
+        [
+            order.maker_address,
+            order.taker_address,
+            order.maker_token,
+            order.taker_token,
+            order.fee_recipient,
+        ],
+        [
+            order.maker_token_amount,
+            order.taker_token_amount,
+            order.maker_fee,
+            order.taker_fee,
+            order.expiration_timestamp_in_sec,
+            order.salt,
+        ],
         100,
         [taker],
         [],
         order.v,
         order.r,
-        order.s).transact({'from': taker})
+        order.s,
+    ).transact({"from": taker})
 
     assert exchange_proxy.get_filled_amount(order) == 100
     assert exchange_proxy.validate_filled_amount(order)
 
     exchange_contract.functions.fillOrderTrustlines(
-        [order.maker_address, order.taker_address, order.maker_token, order.taker_token, order.fee_recipient],
-        [order.maker_token_amount, order.taker_token_amount, order.maker_fee,
-         order.taker_fee, order.expiration_timestamp_in_sec, order.salt],
+        [
+            order.maker_address,
+            order.taker_address,
+            order.maker_token,
+            order.taker_token,
+            order.fee_recipient,
+        ],
+        [
+            order.maker_token_amount,
+            order.taker_token_amount,
+            order.maker_fee,
+            order.taker_fee,
+            order.expiration_timestamp_in_sec,
+            order.salt,
+        ],
         100,
         [taker],
         [],
         order.v,
         order.r,
-        order.s).transact({'from': taker})
+        order.s,
+    ).transact({"from": taker})
 
     assert exchange_proxy.get_filled_amount(order) == 200
     assert not exchange_proxy.validate_filled_amount(order)
@@ -116,35 +145,76 @@ def test_cancelled_amount(order_trustlines, exchange_proxy, testnetworks, maker,
 
     exchange_contract = testnetworks[1]
     exchange_contract.functions.cancelOrder(
-        [order.maker_address, order.taker_address, order.maker_token, order.taker_token, order.fee_recipient],
-        [order.maker_token_amount, order.taker_token_amount, order.maker_fee,
-         order.taker_fee, order.expiration_timestamp_in_sec, order.salt],
-        100).transact({'from': maker})
+        [
+            order.maker_address,
+            order.taker_address,
+            order.maker_token,
+            order.taker_token,
+            order.fee_recipient,
+        ],
+        [
+            order.maker_token_amount,
+            order.taker_token_amount,
+            order.maker_fee,
+            order.taker_fee,
+            order.expiration_timestamp_in_sec,
+            order.salt,
+        ],
+        100,
+    ).transact({"from": maker})
 
     assert exchange_proxy.get_cancelled_amount(order) == 100
 
 
-def test_unavailable_amount(order_trustlines, exchange_proxy, testnetworks, maker, taker):
+def test_unavailable_amount(
+    order_trustlines, exchange_proxy, testnetworks, maker, taker
+):
     order = order_trustlines
 
     exchange_contract = testnetworks[1]
 
     exchange_contract.functions.fillOrderTrustlines(
-        [order.maker_address, order.taker_address, order.maker_token, order.taker_token, order.fee_recipient],
-        [order.maker_token_amount, order.taker_token_amount, order.maker_fee,
-         order.taker_fee, order.expiration_timestamp_in_sec, order.salt],
+        [
+            order.maker_address,
+            order.taker_address,
+            order.maker_token,
+            order.taker_token,
+            order.fee_recipient,
+        ],
+        [
+            order.maker_token_amount,
+            order.taker_token_amount,
+            order.maker_fee,
+            order.taker_fee,
+            order.expiration_timestamp_in_sec,
+            order.salt,
+        ],
         10,
         [taker],
         [],
         order.v,
         order.r,
-        order.s).transact({'from': taker})
+        order.s,
+    ).transact({"from": taker})
 
     exchange_contract.functions.cancelOrder(
-        [order.maker_address, order.taker_address, order.maker_token, order.taker_token, order.fee_recipient],
-        [order.maker_token_amount, order.taker_token_amount, order.maker_fee,
-         order.taker_fee, order.expiration_timestamp_in_sec, order.salt],
-        10).transact({'from': maker})
+        [
+            order.maker_address,
+            order.taker_address,
+            order.maker_token,
+            order.taker_token,
+            order.fee_recipient,
+        ],
+        [
+            order.maker_token_amount,
+            order.taker_token_amount,
+            order.maker_fee,
+            order.taker_fee,
+            order.expiration_timestamp_in_sec,
+            order.salt,
+        ],
+        10,
+    ).transact({"from": maker})
 
     assert exchange_proxy.get_unavailable_amount(order) == 20
 
@@ -162,15 +232,28 @@ def test_listen_on_fill(order_trustlines, exchange_proxy, testnetworks, maker, t
 
     exchange_contract = testnetworks[1]
     exchange_contract.functions.fillOrderTrustlines(
-        [order.maker_address, order.taker_address, order.maker_token, order.taker_token, order.fee_recipient],
-        [order.maker_token_amount, order.taker_token_amount, order.maker_fee,
-         order.taker_fee, order.expiration_timestamp_in_sec, order.salt],
+        [
+            order.maker_address,
+            order.taker_address,
+            order.maker_token,
+            order.taker_token,
+            order.fee_recipient,
+        ],
+        [
+            order.maker_token_amount,
+            order.taker_token_amount,
+            order.maker_fee,
+            order.taker_fee,
+            order.expiration_timestamp_in_sec,
+            order.salt,
+        ],
         100,
         [taker],
         [],
         order.v,
         order.r,
-        order.s).transact({'from': taker})
+        order.s,
+    ).transact({"from": taker})
 
     gevent.sleep(1)
 
@@ -193,10 +276,23 @@ def test_listen_on_cancel(order_token, exchange_proxy, testnetworks, maker, take
 
     exchange_contract = testnetworks[1]
     exchange_contract.functions.cancelOrder(
-        [order.maker_address, order.taker_address, order.maker_token, order.taker_token, order.fee_recipient],
-        [order.maker_token_amount, order.taker_token_amount, order.maker_fee,
-         order.taker_fee, order.expiration_timestamp_in_sec, order.salt],
-        100).transact({'from': maker})
+        [
+            order.maker_address,
+            order.taker_address,
+            order.maker_token,
+            order.taker_token,
+            order.fee_recipient,
+        ],
+        [
+            order.maker_token_amount,
+            order.taker_token_amount,
+            order.maker_fee,
+            order.taker_fee,
+            order.expiration_timestamp_in_sec,
+            order.salt,
+        ],
+        100,
+    ).transact({"from": maker})
 
     gevent.sleep(1)
 

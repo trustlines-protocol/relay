@@ -11,25 +11,27 @@ from relay.relay import TrustlinesRelay
 def WebSocketRPCHandler(trustlines: TrustlinesRelay):
 
     dispatcher = RPCDispatcher()
-    dispatcher.add_method(partial(subscribe, trustlines), 'subscribe')
+    dispatcher.add_method(partial(subscribe, trustlines), "subscribe")
 
     protocol = JSONRPCProtocol()
 
     def handle(ws):
         app = RPCWebSocketApplication(protocol, dispatcher, ws)
         app.handle()
+
     return handle
 
 
 def MessagingWebSocketRPCHandler(trustlines: TrustlinesRelay):
 
     dispatcher = RPCDispatcher()
-    dispatcher.add_method(partial(messaging_subscribe, trustlines), 'listen')
-    dispatcher.add_method(partial(get_missed_messages, trustlines), 'getMissedMessages')
+    dispatcher.add_method(partial(messaging_subscribe, trustlines), "listen")
+    dispatcher.add_method(partial(get_missed_messages, trustlines), "getMissedMessages")
 
     protocol = JSONRPCProtocol()
 
     def handle(ws):
         app = RPCWebSocketApplication(protocol, dispatcher, ws)
         app.handle()
+
     return handle

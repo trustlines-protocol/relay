@@ -12,7 +12,7 @@ def test_eth_validate(test_account):
 
 def test_eth_validate_fail(test_account):
     msg_hash1 = bytes(32)
-    msg_hash2 = (123).to_bytes(32, byteorder='big')
+    msg_hash2 = (123).to_bytes(32, byteorder="big")
     vrs = eth_sign(msg_hash1, test_account.private_key)
     assert not eth_validate(msg_hash2, vrs, test_account.address)
 

@@ -22,8 +22,9 @@ def invalid_signature_order(addresses):
         expiration_timestamp_in_sec=123,
         salt=123,
         v=27,
-        r=(18).to_bytes(32, byteorder='big'),
-        s=(2748).to_bytes(32, byteorder='big'))
+        r=(18).to_bytes(32, byteorder="big"),
+        s=(2748).to_bytes(32, byteorder="big"),
+    )
 
 
 @pytest.fixture()
@@ -31,7 +32,7 @@ def invalid_exchange_order(addresses, test_account):
     A, B, C, D = addresses
     maker = test_account.address
     order = SignableOrder(
-        exchange_address='0x379162d7682cb8bb6435c47E0b8b562eafe66971',
+        exchange_address="0x379162d7682cb8bb6435c47E0b8b562eafe66971",
         maker_address=to_checksum_address(maker),
         taker_address=NULL_ADDRESS,
         maker_token=C,
@@ -42,7 +43,8 @@ def invalid_exchange_order(addresses, test_account):
         maker_fee=0,
         taker_fee=0,
         expiration_timestamp_in_sec=123,
-        salt=123)
+        salt=123,
+    )
     order.sign(test_account.private_key)
     return order
 
@@ -63,7 +65,8 @@ def invalid_taker_order(addresses, test_account):
         maker_fee=0,
         taker_fee=0,
         expiration_timestamp_in_sec=123,
-        salt=123)
+        salt=123,
+    )
     order.sign(test_account.private_key)
     return order
 
@@ -84,7 +87,8 @@ def expired_order(addresses, test_account):
         maker_fee=0,
         taker_fee=0,
         expiration_timestamp_in_sec=123,
-        salt=123)
+        salt=123,
+    )
     order.sign(test_account.private_key)
     return order
 
@@ -105,7 +109,8 @@ def valid_order(addresses, test_account):
         maker_fee=0,
         taker_fee=0,
         expiration_timestamp_in_sec=1517161470000,
-        salt=123)
+        salt=123,
+    )
     order.sign(test_account.private_key)
 
     return order

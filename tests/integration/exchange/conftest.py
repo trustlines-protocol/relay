@@ -7,7 +7,7 @@ from relay.constants import NULL_ADDRESS
 
 @pytest.fixture()
 def engine():
-    return create_engine('sqlite:///:memory:')
+    return create_engine("sqlite:///:memory:")
 
 
 @pytest.fixture()
@@ -27,8 +27,9 @@ def orders(addresses, test_account):
             maker_fee=0,
             taker_fee=0,
             expiration_timestamp_in_sec=1230000000000,
-            salt=123
-        ), SignableOrder(
+            salt=123,
+        ),
+        SignableOrder(
             exchange_address=A,
             maker_address=maker,
             taker_address=NULL_ADDRESS,
@@ -40,8 +41,9 @@ def orders(addresses, test_account):
             maker_fee=0,
             taker_fee=0,
             expiration_timestamp_in_sec=1234000000000,
-            salt=123
-        ), SignableOrder(
+            salt=123,
+        ),
+        SignableOrder(
             exchange_address=A,
             maker_address=maker,
             taker_address=NULL_ADDRESS,
@@ -53,8 +55,9 @@ def orders(addresses, test_account):
             maker_fee=0,
             taker_fee=0,
             expiration_timestamp_in_sec=1230000000000,
-            salt=123
-        ), SignableOrder(
+            salt=123,
+        ),
+        SignableOrder(
             exchange_address=A,
             maker_address=maker,
             taker_address=NULL_ADDRESS,
@@ -66,8 +69,9 @@ def orders(addresses, test_account):
             maker_fee=0,
             taker_fee=0,
             expiration_timestamp_in_sec=1230000000000,
-            salt=123
-        ), SignableOrder(
+            salt=123,
+        ),
+        SignableOrder(
             exchange_address=A,
             maker_address=maker,
             taker_address=NULL_ADDRESS,
@@ -79,8 +83,9 @@ def orders(addresses, test_account):
             maker_fee=0,
             taker_fee=0,
             expiration_timestamp_in_sec=1234000000000,
-            salt=123
-        )]
+            salt=123,
+        ),
+    ]
     for order in orders:
         order.sign(test_account.private_key)
     return orders

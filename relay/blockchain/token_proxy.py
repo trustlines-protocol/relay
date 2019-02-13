@@ -15,7 +15,7 @@ from .token_events import (
     standard_event_types,
 )
 
-logger = get_logger('token', logging.DEBUG)
+logger = get_logger("token", logging.DEBUG)
 
 
 class TokenProxy(Proxy):
@@ -31,25 +31,35 @@ class TokenProxy(Proxy):
     def balance_of(self, user_address: str):
         return self._proxy.functions.balanceOf(user_address).call()
 
-    def get_token_events(self,
-                         event_name: str,
-                         user_address: str = None,
-                         from_block: int = 0,
-                         timeout: float = None) -> List[BlockchainEvent]:
-        logger.debug("get_token_events: event_name=%s user_address=%s from_block=%s",
-                     event_name,
-                     user_address,
-                     from_block)
+    def get_token_events(
+        self,
+        event_name: str,
+        user_address: str = None,
+        from_block: int = 0,
+        timeout: float = None,
+    ) -> List[BlockchainEvent]:
+        logger.debug(
+            "get_token_events: event_name=%s user_address=%s from_block=%s",
+            event_name,
+            user_address,
+            from_block,
+        )
         if user_address is None:
-            queries = [functools.partial(self.get_events, event_name, from_block=from_block)]
+            queries = [
+                functools.partial(self.get_events, event_name, from_block=from_block)
+            ]
             events = concurrency_utils.joinall(queries, timeout=timeout)
         else:
             filter1 = {from_to_types[event_name][0]: user_address}
             filter2 = {from_to_types[event_name][1]: user_address}
 
-            queries = [functools.partial(self.get_events, event_name, filter1, from_block)]
-            if (event_name == TransferEventType):
-                queries.append(functools.partial(self.get_events, event_name, filter2, from_block))
+            queries = [
+                functools.partial(self.get_events, event_name, filter1, from_block)
+            ]
+            if event_name == TransferEventType:
+                queries.append(
+                    functools.partial(self.get_events, event_name, filter2, from_block)
+                )
             results = concurrency_utils.joinall(queries, timeout=timeout)
 
             events = list(itertools.chain.from_iterable(results))
@@ -58,16 +68,20 @@ class TokenProxy(Proxy):
                 if isinstance(event, TokenEvent):
                     event.user = user_address
                 else:
-                    raise ValueError('Expected a TokenEvent')
+                    raise ValueError("Expected a TokenEvent")
         return sorted_events(events)
 
-    def get_all_token_events(self,
-                             user_address: str = None,
-                             from_block: int = 0,
-                             timeout: float = None) -> List[BlockchainEvent]:
-        queries = [functools.partial(self.get_token_events,
-                                     type,
-                                     user_address=user_address,
-                                     from_block=from_block) for type in self.standard_event_types]
+    def get_all_token_events(
+        self, user_address: str = None, from_block: int = 0, timeout: float = None
+    ) -> List[BlockchainEvent]:
+        queries = [
+            functools.partial(
+                self.get_token_events,
+                type,
+                user_address=user_address,
+                from_block=from_block,
+            )
+            for type in self.standard_event_types
+        ]
         results = concurrency_utils.joinall(queries, timeout=timeout)
         return sorted_events(list(itertools.chain.from_iterable(results)))

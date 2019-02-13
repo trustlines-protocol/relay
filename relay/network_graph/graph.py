@@ -16,20 +16,14 @@ from relay.network_graph.trustline_data import (
     get_interest_rate,
     set_interest_rate,
     get_fees_outstanding,
-    set_fees_outstanding
+    set_fees_outstanding,
 )
 
-from .dijkstra_weighted import (
-    PaymentPath
-)
+from .dijkstra_weighted import PaymentPath
 
-from .fees import (calculate_fees_reverse, calculate_fees, imbalance_generated)
+from .fees import calculate_fees_reverse, calculate_fees, imbalance_generated
 from .interests import balance_with_interests
-from relay.network_graph.graph_constants import (
-    creditline_ab,
-    creditline_ba,
-    balance_ab,
-)
+from relay.network_graph.graph_constants import creditline_ab, creditline_ba, balance_ab
 
 from . import alg
 
@@ -58,10 +52,12 @@ class Account(object):
 
     def balance_with_interests(self, timestamp_in_seconds: int) -> int:
         """Returns the balance at a given time with an estimation of the interests"""
-        return balance_with_interests(self.balance,
-                                      self.interest_rate,
-                                      self.reverse_interest_rate,
-                                      timestamp_in_seconds - self.m_time)
+        return balance_with_interests(
+            self.balance,
+            self.interest_rate,
+            self.reverse_interest_rate,
+            timestamp_in_seconds - self.m_time,
+        )
 
     @property
     def m_time(self) -> int:
@@ -120,7 +116,7 @@ class Account(object):
         set_fees_outstanding(self.data, self.b, self.a, fees)
 
     def __repr__(self):
-        return 'Account({}, {}, {})'.format(self.a, self.b, self.data)
+        return "Account({}, {}, {})".format(self.a, self.b, self.data)
 
 
 class AccountSummary(object):
@@ -147,12 +143,14 @@ class AccountSummary(object):
 class AccountSummaryWithInterests(AccountSummary):
     """Representing an account summary with interests """
 
-    def __init__(self,
-                 balance=0,
-                 creditline_given=0,
-                 creditline_received=0,
-                 interest_rate_given=0,
-                 interests_received=0):
+    def __init__(
+        self,
+        balance=0,
+        creditline_given=0,
+        creditline_received=0,
+        interest_rate_given=0,
+        interests_received=0,
+    ):
         super().__init__(balance, creditline_given, creditline_received)
         self.interest_rate_given = interest_rate_given
         self.interest_rate_received = interests_received
@@ -175,7 +173,16 @@ class SenderPaysCostAccumulatorSnapshot(alg.CostAccumulator):
         fees: int
         num_hops: int
 
-    def __init__(self, *, timestamp, value, capacity_imbalance_fee_divisor, max_hops=None, max_fees=None, ignore=None):
+    def __init__(
+        self,
+        *,
+        timestamp,
+        value,
+        capacity_imbalance_fee_divisor,
+        max_hops=None,
+        max_fees=None,
+        ignore=None
+    ):
         if max_hops is None:
             max_hops = math.inf
         if max_fees is None:
@@ -218,14 +225,18 @@ class SenderPaysCostAccumulatorSnapshot(alg.CostAccumulator):
             get_balance(edge_data, dst, node),
             get_interest_rate(edge_data, dst, node),
             get_interest_rate(edge_data, node, dst),
-            self.timestamp - get_mtime(edge_data))
+            self.timestamp - get_mtime(edge_data),
+        )
 
         if num_hops == 0:
             fee = 0
         else:
             fee = calculate_fees_reverse(
-                imbalance_generated=imbalance_generated(value=self.value + sum_fees, balance=pre_balance),
-                capacity_imbalance_fee_divisor=self.capacity_imbalance_fee_divisor)
+                imbalance_generated=imbalance_generated(
+                    value=self.value + sum_fees, balance=pre_balance
+                ),
+                capacity_imbalance_fee_divisor=self.capacity_imbalance_fee_divisor,
+            )
 
         if sum_fees + fee > self.max_fees:
             return None
@@ -258,7 +269,16 @@ class ReceiverPaysCostAccumulatorSnapshot(alg.CostAccumulator):
         num_hops: int
         previous_hop_fee: int
 
-    def __init__(self, *, timestamp, value, capacity_imbalance_fee_divisor, max_hops=None, max_fees=None, ignore=None):
+    def __init__(
+        self,
+        *,
+        timestamp,
+        value,
+        capacity_imbalance_fee_divisor,
+        max_hops=None,
+        max_fees=None,
+        ignore=None
+    ):
         if max_hops is None:
             max_hops = math.inf
         if max_fees is None:
@@ -296,13 +316,15 @@ class ReceiverPaysCostAccumulatorSnapshot(alg.CostAccumulator):
             get_balance(edge_data, node, dst),
             get_interest_rate(edge_data, node, dst),
             get_interest_rate(edge_data, dst, node),
-            self.timestamp - get_mtime(edge_data))
+            self.timestamp - get_mtime(edge_data),
+        )
 
         fee = calculate_fees(
             imbalance_generated=imbalance_generated(
-                value=self.value - sum_fees - previous_hop_fee,
-                balance=pre_balance),
-            capacity_imbalance_fee_divisor=self.capacity_imbalance_fee_divisor)
+                value=self.value - sum_fees - previous_hop_fee, balance=pre_balance
+            ),
+            capacity_imbalance_fee_divisor=self.capacity_imbalance_fee_divisor,
+        )
 
         if sum_fees + previous_hop_fee > self.max_fees:
             return None
@@ -312,7 +334,11 @@ class ReceiverPaysCostAccumulatorSnapshot(alg.CostAccumulator):
         if self.value - sum_fees - previous_hop_fee > capacity:
             return None  # creditline exceeded
 
-        return self.Cost(fees=sum_fees + previous_hop_fee, num_hops=num_hops + 1, previous_hop_fee=fee)
+        return self.Cost(
+            fees=sum_fees + previous_hop_fee,
+            num_hops=num_hops + 1,
+            previous_hop_fee=fee,
+        )
 
 
 class SenderPaysCapacityAccumulator(alg.CostAccumulator):
@@ -346,10 +372,13 @@ class SenderPaysCapacityAccumulator(alg.CostAccumulator):
             get_balance(edge_data, node, dst),
             get_interest_rate(edge_data, node, dst),
             get_interest_rate(edge_data, dst, node),
-            self.timestamp - get_mtime(edge_data))
+            self.timestamp - get_mtime(edge_data),
+        )
 
     def get_capacity(self, node, dst, edge_data):
-        return self.get_balance(node, dst, edge_data) + get_creditline(edge_data, dst, node)
+        return self.get_balance(node, dst, edge_data) + get_creditline(
+            edge_data, dst, node
+        )
 
     def zero(self):
         # We use (- capacity, num_hops, last_hop_fee) as cost
@@ -360,7 +389,7 @@ class SenderPaysCapacityAccumulator(alg.CostAccumulator):
         self, cost_from_start_to_node: Cost, node, dst, edge_data
     ):
 
-        capacity_from_start_to_node = - cost_from_start_to_node.minus_capacity
+        capacity_from_start_to_node = -cost_from_start_to_node.minus_capacity
         num_hops = cost_from_start_to_node.num_hops
         previous_hop_fee = cost_from_start_to_node.previous_hop_fee
 
@@ -369,22 +398,33 @@ class SenderPaysCapacityAccumulator(alg.CostAccumulator):
 
         capacity_this_edge = min(
             self.get_capacity(node, dst, edge_data),
-            capacity_from_start_to_node - previous_hop_fee)
+            capacity_from_start_to_node - previous_hop_fee,
+        )
 
         fee = calculate_fees(
             imbalance_generated=imbalance_generated(
-                value=capacity_this_edge,
-                balance=self.get_balance(node, dst, edge_data)),
-            capacity_imbalance_fee_divisor=self.capacity_imbalance_fee_divisor)
+                value=capacity_this_edge, balance=self.get_balance(node, dst, edge_data)
+            ),
+            capacity_imbalance_fee_divisor=self.capacity_imbalance_fee_divisor,
+        )
 
-        return self.Cost(minus_capacity=-capacity_this_edge, num_hops=num_hops + 1, previous_hop_fee=fee)
+        return self.Cost(
+            minus_capacity=-capacity_this_edge,
+            num_hops=num_hops + 1,
+            previous_hop_fee=fee,
+        )
 
 
 class CurrencyNetworkGraph(object):
     """The whole graph of a Token Network"""
 
-    def __init__(self, capacity_imbalance_fee_divisor=0, default_interest_rate=0,
-                 custom_interests=False, prevent_mediator_interests=False):
+    def __init__(
+        self,
+        capacity_imbalance_fee_divisor=0,
+        default_interest_rate=0,
+        custom_interests=False,
+        prevent_mediator_interests=False,
+    ):
 
         self.capacity_imbalance_fee_divisor = capacity_imbalance_fee_divisor
         self.default_interest_rate = default_interest_rate
@@ -396,17 +436,18 @@ class CurrencyNetworkGraph(object):
         self.graph.clear()
         for trustline in trustlines:
             assert trustline.user < trustline.counter_party
-            self.graph.add_edge(trustline.user,
-                                trustline.counter_party,
-                                creditline_ab=trustline.creditline_given,
-                                creditline_ba=trustline.creditline_received,
-                                interest_ab=trustline.interest_rate_given,
-                                interest_ba=trustline.interest_rate_received,
-                                fees_outstanding_a=trustline.fees_outstanding_user,
-                                fees_outstanding_b=trustline.fees_outstanding_counter_party,
-                                m_time=trustline.m_time,
-                                balance_ab=trustline.balance,
-                                )
+            self.graph.add_edge(
+                trustline.user,
+                trustline.counter_party,
+                creditline_ab=trustline.creditline_given,
+                creditline_ba=trustline.creditline_received,
+                interest_ab=trustline.interest_rate_given,
+                interest_ba=trustline.interest_rate_received,
+                fees_outstanding_a=trustline.fees_outstanding_user,
+                fees_outstanding_b=trustline.fees_outstanding_counter_party,
+                m_time=trustline.m_time,
+                balance_ab=trustline.balance,
+            )
 
     @classmethod
     def from_config(cls, config: NetworkGraphConfig):
@@ -422,7 +463,9 @@ class CurrencyNetworkGraph(object):
 
     @property
     def money_created(self):
-        return sum([abs(edge[2]) for edge in self.graph.edges(data=balance_ab)])  # does not include interests
+        return sum(
+            [abs(edge[2]) for edge in self.graph.edges(data=balance_ab)]
+        )  # does not include interests
 
     @property
     def has_interests(self) -> bool:
@@ -430,8 +473,9 @@ class CurrencyNetworkGraph(object):
 
     @property
     def total_creditlines(self):
-        return sum([edge[2] for edge in self.graph.edges(data=creditline_ab)])\
-               + sum([edge[2] for edge in self.graph.edges(data=creditline_ba)])
+        return sum([edge[2] for edge in self.graph.edges(data=creditline_ab)]) + sum(
+            [edge[2] for edge in self.graph.edges(data=creditline_ba)]
+        )
 
     def get_friends(self, address):
         if address in self.graph:
@@ -439,20 +483,30 @@ class CurrencyNetworkGraph(object):
         else:
             return []
 
-    def update_trustline(self, creditor, debtor, creditline_given: int, creditline_received: int,
-                         interest_rate_given: int = None, interest_rate_received: int = None, timestamp: int = None):
+    def update_trustline(
+        self,
+        creditor,
+        debtor,
+        creditline_given: int,
+        creditline_received: int,
+        interest_rate_given: int = None,
+        interest_rate_received: int = None,
+        timestamp: int = None,
+    ):
         """to update the creditlines, used to react on changes on the blockchain"""
         if not self.graph.has_edge(creditor, debtor):
-            self.graph.add_edge(creditor,
-                                debtor,
-                                creditline_ab=0,
-                                creditline_ba=0,
-                                interest_ab=self.default_interest_rate,
-                                interest_ba=self.default_interest_rate,
-                                fees_outstanding_a=0,
-                                fees_outstanding_b=0,
-                                m_time=0,
-                                balance_ab=0)
+            self.graph.add_edge(
+                creditor,
+                debtor,
+                creditline_ab=0,
+                creditline_ba=0,
+                interest_ab=self.default_interest_rate,
+                interest_ba=self.default_interest_rate,
+                fees_outstanding_a=0,
+                fees_outstanding_b=0,
+                m_time=0,
+                balance_ab=0,
+            )
         account = Account(self.graph[creditor][debtor], creditor, debtor)
         account.creditline = creditline_given
         account.reverse_creditline = creditline_received
@@ -460,17 +514,23 @@ class CurrencyNetworkGraph(object):
         if interest_rate_given is not None:
             account.interest_rate = interest_rate_given
         elif self.custom_interests:
-            raise RuntimeError('Not interests specified even though custom interests are enabled')
+            raise RuntimeError(
+                "Not interests specified even though custom interests are enabled"
+            )
 
         if interest_rate_received is not None:
             account.reverse_interest_rate = interest_rate_received
         elif self.custom_interests:
-            raise RuntimeError('Not interests specified even though custom interests are enabled')
+            raise RuntimeError(
+                "Not interests specified even though custom interests are enabled"
+            )
 
         if timestamp is not None:
             account.m_time = timestamp
         elif self.has_interests:
-            raise RuntimeError('No timestamp was given. When using interests a timestamp is mandatory')
+            raise RuntimeError(
+                "No timestamp was given. When using interests a timestamp is mandatory"
+            )
 
     def get_balance_with_interests(self, a, b, timestamp):
         if not self.graph.has_edge(a, b):
@@ -481,22 +541,26 @@ class CurrencyNetworkGraph(object):
         """to update the balance, used to react on changes on the blockchain
         the last modification time of the balance is also updated to keep track of the interests"""
         if not self.graph.has_edge(a, b):
-            self.graph.add_edge(a,
-                                b,
-                                creditline_ab=0,
-                                creditline_ba=0,
-                                interest_ab=0,
-                                interest_ba=0,
-                                fees_outstanding_a=0,
-                                fees_outstanding_b=0,
-                                m_time=0,
-                                balance_ab=0)
+            self.graph.add_edge(
+                a,
+                b,
+                creditline_ab=0,
+                creditline_ba=0,
+                interest_ab=0,
+                interest_ba=0,
+                fees_outstanding_a=0,
+                fees_outstanding_b=0,
+                m_time=0,
+                balance_ab=0,
+            )
         account = Account(self.graph[a][b], a, b)
         account.balance = balance
         if timestamp is not None:
             account.m_time = timestamp
         elif self.has_interests:
-            raise RuntimeError('No timestamp was given. When using interests a timestamp is mandatory')
+            raise RuntimeError(
+                "No timestamp was given. When using interests a timestamp is mandatory"
+            )
 
     def get_account_sum(self, user, counter_party=None, timestamp=None):
         if timestamp is None:
@@ -513,42 +577,60 @@ class CurrencyNetworkGraph(object):
         else:
             if self.graph.has_edge(user, counter_party):
                 account = Account(self.graph[user][counter_party], user, counter_party)
-                return AccountSummaryWithInterests(account.balance_with_interests(timestamp),
-                                                   account.creditline, account.reverse_creditline,
-                                                   account.interest_rate, account.reverse_interest_rate)
+                return AccountSummaryWithInterests(
+                    account.balance_with_interests(timestamp),
+                    account.creditline,
+                    account.reverse_creditline,
+                    account.interest_rate,
+                    account.reverse_interest_rate,
+                )
             else:
                 return AccountSummaryWithInterests()
 
     def draw(self, filename):
         """draw graph to a file called filename"""
+
         def mapping(address):
             return address[2:6] if len(address) > 6 else address[2:]
+
         for u, v, d in self.graph.edges(data=True):
-            self.graph.node[u]['width'] = 0.6
-            self.graph.node[u]['height'] = 0.4
-            d['color'] = 'blue'
-            d['len'] = 1.4
+            self.graph.node[u]["width"] = 0.6
+            self.graph.node[u]["height"] = 0.4
+            d["color"] = "blue"
+            d["len"] = 1.4
         g = nx.relabel_nodes(self.graph, mapping)
         a = nx.drawing.nx_agraph.to_agraph(g)
-        a.graph_attr['label'] = 'Trustlines Network'
+        a.graph_attr["label"] = "Trustlines Network"
         a.layout()
         a.draw(filename)
 
     def dump(self):
         output = io.StringIO()
-        fieldnames = ['Address A', 'Address B', 'Balance AB', 'Creditline AB', 'Creditline BA']
+        fieldnames = [
+            "Address A",
+            "Address B",
+            "Balance AB",
+            "Creditline AB",
+            "Creditline BA",
+        ]
         writer = csv.DictWriter(output, fieldnames=fieldnames)
         writer.writeheader()
         for u, v, d in self.graph.edges(data=True):
             account = Account(d, u, v)
-            writer.writerow({'Address A': account.a,
-                             'Address B': account.b,
-                             'Balance AB': account.balance,
-                             'Creditline AB': account.creditline,
-                             'Creditline BA': account.reverse_creditline})
+            writer.writerow(
+                {
+                    "Address A": account.a,
+                    "Address B": account.b,
+                    "Balance AB": account.balance,
+                    "Creditline AB": account.creditline,
+                    "Creditline BA": account.reverse_creditline,
+                }
+            )
         return output.getvalue()
 
-    def find_path(self, source, target, value=None, max_hops=None, max_fees=None, timestamp=None):
+    def find_path(
+        self, source, target, value=None, max_hops=None, max_fees=None, timestamp=None
+    ):
         """
         find path between source and target
         the shortest path is found based on
@@ -565,7 +647,8 @@ class CurrencyNetworkGraph(object):
             value=value,
             capacity_imbalance_fee_divisor=self.capacity_imbalance_fee_divisor,
             max_hops=max_hops,
-            max_fees=max_fees)
+            max_fees=max_fees,
+        )
 
         try:
             # we are searching in reverse, so source and target are swapped!
@@ -573,13 +656,18 @@ class CurrencyNetworkGraph(object):
                 graph=self.graph,
                 starting_nodes={target},
                 target_nodes={source},
-                cost_accumulator=cost_accumulator
+                cost_accumulator=cost_accumulator,
             )
-        except (nx.NetworkXNoPath, KeyError):  # key error for if source or target is not in graph
+        except (
+            nx.NetworkXNoPath,
+            KeyError,
+        ):  # key error for if source or target is not in graph
             return 0, []
         return cost[0], list(reversed(path))
 
-    def close_trustline_path_triangulation(self, timestamp, source, target, max_hops=None, max_fees=None):
+    def close_trustline_path_triangulation(
+        self, timestamp, source, target, max_hops=None, max_fees=None
+    ):
         neighbors = {x[0] for x in self.graph.adj[source].items()} - {target}
         balance = self.get_balance_with_interests(source, target, timestamp)
         value = abs(balance)
@@ -611,7 +699,8 @@ class CurrencyNetworkGraph(object):
             capacity_imbalance_fee_divisor=self.capacity_imbalance_fee_divisor,
             max_hops=max_hops,
             max_fees=max_fees,
-            ignore=source)
+            ignore=source,
+        )
 
         try:
             # can't use the cost as returned by alg.least_cost_path since it
@@ -620,10 +709,15 @@ class CurrencyNetworkGraph(object):
                 graph=self.graph,
                 starting_nodes={target},
                 target_nodes=neighbors,
-                cost_accumulator=cost_accumulator)
+                cost_accumulator=cost_accumulator,
+            )
             path = [source] + path + [source]
-            cost_accumulator.ignore = None  # hackish, but otherwise the following compute_cost_for_path won't work
-            cost_accumulator.max_hops = math.inf  # don't check max_hops, we know we're below
+            cost_accumulator.ignore = (
+                None
+            )  # hackish, but otherwise the following compute_cost_for_path won't work
+            cost_accumulator.max_hops = (
+                math.inf
+            )  # don't check max_hops, we know we're below
             cost = cost_accumulator.compute_cost_for_path(self.graph, path)
         except nx.NetworkXNoPath:
             return PaymentPath(fee=0, path=[], value=value)
@@ -651,7 +745,7 @@ class CurrencyNetworkGraph(object):
         capacity_accumulator = SenderPaysCapacityAccumulator(
             timestamp=timestamp,
             capacity_imbalance_fee_divisor=self.capacity_imbalance_fee_divisor,
-            max_hops=max_hops
+            max_hops=max_hops,
         )
 
         try:
@@ -659,8 +753,12 @@ class CurrencyNetworkGraph(object):
                 graph=self.graph,
                 starting_nodes={source},
                 target_nodes={target},
-                cost_accumulator=capacity_accumulator)
-        except (nx.NetworkXNoPath, KeyError):  # key error for if source or target is not in graph
+                cost_accumulator=capacity_accumulator,
+            )
+        except (
+            nx.NetworkXNoPath,
+            KeyError,
+        ):  # key error for if source or target is not in graph
             return 0, []
 
         return -cost[0], list(path)
@@ -669,35 +767,43 @@ class CurrencyNetworkGraph(object):
         balances = []
 
         for i in range(0, len(path) - 1):
-            data = self.graph.get_edge_data(path[i], path[i+1])
-            balances.append(get_balance(data, path[i], path[i+1]))
+            data = self.graph.get_edge_data(path[i], path[i + 1])
+            balances.append(get_balance(data, path[i], path[i + 1]))
 
         return balances
 
 
 class CurrencyNetworkGraphForTesting(CurrencyNetworkGraph):
     """A currency network graph with some additional methods used for testing"""
-    def __init__(self, capacity_imbalance_fee_divisor=0, default_interest_rate=0,
-                 custom_interests=False, prevent_mediator_interests=False):
+
+    def __init__(
+        self,
+        capacity_imbalance_fee_divisor=0,
+        default_interest_rate=0,
+        custom_interests=False,
+        prevent_mediator_interests=False,
+    ):
         super().__init__(
             capacity_imbalance_fee_divisor=capacity_imbalance_fee_divisor,
             default_interest_rate=default_interest_rate,
             custom_interests=custom_interests,
-            prevent_mediator_interests=prevent_mediator_interests)
+            prevent_mediator_interests=prevent_mediator_interests,
+        )
 
     def transfer_path(self, path, value, expected_fees):
         assert value > 0
         cost_accumulator = SenderPaysCostAccumulatorSnapshot(
             timestamp=int(time.time()),
             value=value,
-            capacity_imbalance_fee_divisor=self.capacity_imbalance_fee_divisor)
+            capacity_imbalance_fee_divisor=self.capacity_imbalance_fee_divisor,
+        )
         cost = cost_accumulator.zero()
 
         path = list(reversed(path))
         for source, target in zip(path, path[1:]):
             edge_data = self.graph.get_edge_data(source, target)
             cost = cost_accumulator.total_cost_from_start_to_dst(
-                cost, source, target, edge_data,
+                cost, source, target, edge_data
             )
             if cost is None:
                 raise nx.NetworkXNoPath("no path found")

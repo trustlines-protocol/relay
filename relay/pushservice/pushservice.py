@@ -7,20 +7,24 @@ from firebase_admin import credentials, messaging
 
 from relay.events import Event, MessageEvent, AccountEvent
 from relay.blockchain.events import TLNetworkEvent
-from relay.blockchain.currency_network_events import TransferEvent, TrustlineRequestEvent, TrustlineUpdateEvent
+from relay.blockchain.currency_network_events import (
+    TransferEvent,
+    TrustlineRequestEvent,
+    TrustlineUpdateEvent,
+)
 from relay.api.schemas import UserCurrencyNetworkEventSchema, MessageEventSchema
 from .client_token_db import ClientTokenDB
 from relay.logger import get_logger
 
 
-logger = get_logger('pushservice', logging.DEBUG)
+logger = get_logger("pushservice", logging.DEBUG)
 
 
 # see https://firebase.google.com/docs/cloud-messaging/admin/errors
 INVALID_CLIENT_TOKEN_ERRORS = [
-    'invalid-registration-token',
-    'registration-token-not-registered',
-    'invalid-argument',
+    "invalid-registration-token",
+    "registration-token-not-registered",
+    "invalid-argument",
 ]
 
 
@@ -61,7 +65,7 @@ class FirebaseRawPushService:
                 else:
                     raise MessageNotSentException from e
         else:
-            logger.warning('Could not sent event of type: %s', type(event))
+            logger.warning("Could not sent event of type: %s", type(event))
 
     def check_client_token(self, client_token: str) -> bool:
         """
@@ -72,11 +76,11 @@ class FirebaseRawPushService:
         Returns: True if the client token is valid, false otherwise
 
         """
-        test_message = messaging.Message(
-            token=client_token
-        )
+        test_message = messaging.Message(token=client_token)
         try:
-            messaging.send(test_message, app=self._app, dry_run=True)  # dry run to test token
+            messaging.send(
+                test_message, app=self._app, dry_run=True
+            )  # dry run to test token
         except ValueError:
             return False
         except messaging.ApiCallError as e:
@@ -89,7 +93,9 @@ class FirebaseRawPushService:
         return True
 
 
-def _build_event_message(client_token: str, event: Event) -> Optional[messaging.Message]:
+def _build_event_message(
+    client_token: str, event: Event
+) -> Optional[messaging.Message]:
     if isinstance(event, TLNetworkEvent) or isinstance(event, AccountEvent):
         data = UserCurrencyNetworkEventSchema().dump(event).data
     elif isinstance(event, MessageEvent):
@@ -99,9 +105,7 @@ def _build_event_message(client_token: str, event: Event) -> Optional[messaging.
 
     message = messaging.Message(
         notification=_build_notification(event),
-        data={
-            'event': json.dumps(data),
-        },
+        data={"event": json.dumps(data)},
         token=client_token,
     )
 
@@ -111,27 +115,24 @@ def _build_event_message(client_token: str, event: Event) -> Optional[messaging.
 def _build_notification(event: Event) -> messaging.Notification:
     notification = None
     if isinstance(event, TransferEvent):
-        if event.direction == 'received':
+        if event.direction == "received":
             notification = messaging.Notification(
-                title='Payment received',
-                body='Click for more details',
+                title="Payment received", body="Click for more details"
             )
     elif isinstance(event, TrustlineRequestEvent):
-        if event.direction == 'received':
+        if event.direction == "received":
             notification = messaging.Notification(
-                title='Trustline Update Request',
-                body='Someone wants to update a trustline',
+                title="Trustline Update Request",
+                body="Someone wants to update a trustline",
             )
     elif isinstance(event, TrustlineUpdateEvent):
         notification = messaging.Notification(
-            title='Trustline Update',
-            body='A trustline was updated',
+            title="Trustline Update", body="A trustline was updated"
         )
     elif isinstance(event, MessageEvent):
-        if event.type == 'PaymentRequest':
+        if event.type == "PaymentRequest":
             notification = messaging.Notification(
-                title='Payment Request',
-                body='Click for more details',
+                title="Payment Request", body="Click for more details"
             )
 
     return notification
@@ -140,7 +141,11 @@ def _build_notification(event: Event) -> messaging.Notification:
 class FirebasePushService:
     """Sends push notifications to firebase. Sending is done based on ethereum addresses"""
 
-    def __init__(self, client_token_db: ClientTokenDB, firebaseRawPushService: FirebaseRawPushService) -> None:
+    def __init__(
+        self,
+        client_token_db: ClientTokenDB,
+        firebaseRawPushService: FirebaseRawPushService,
+    ) -> None:
         """
         Args:
             client_token_db: Database to map ethereum address to client token

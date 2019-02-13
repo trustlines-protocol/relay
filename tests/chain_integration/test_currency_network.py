@@ -3,7 +3,7 @@ import gevent
 from relay.blockchain.currency_network_events import (
     TrustlineRequestEventType,
     TrustlineUpdateEventType,
-    TransferEventType
+    TransferEventType,
 )
 
 
@@ -16,11 +16,11 @@ def test_decimals(currency_network):
 
 
 def test_name(currency_network):
-    assert currency_network.name == 'Trustlines'
+    assert currency_network.name == "Trustlines"
 
 
 def test_symbol(currency_network):
-    assert currency_network.symbol == 'T'
+    assert currency_network.symbol == "T"
 
 
 def test_address(currency_network, testnetwork1_address):
@@ -28,19 +28,43 @@ def test_address(currency_network, testnetwork1_address):
 
 
 def test_friends1(currency_network_with_trustlines, accounts):
-    assert set(currency_network_with_trustlines.friends(accounts[0])) == {accounts[1], accounts[4]}
+    assert set(currency_network_with_trustlines.friends(accounts[0])) == {
+        accounts[1],
+        accounts[4],
+    }
 
 
 def test_friends2(currency_network_with_trustlines, accounts):
-    assert set(currency_network_with_trustlines.friends(accounts[1])) == {accounts[0], accounts[2]}
+    assert set(currency_network_with_trustlines.friends(accounts[1])) == {
+        accounts[0],
+        accounts[2],
+    }
 
 
 def test_account1(currency_network_with_trustlines, accounts):
-    assert currency_network_with_trustlines.account(accounts[0], accounts[1]) == [100, 150, 0, 0, 0, 0, 0, 0]
+    assert currency_network_with_trustlines.account(accounts[0], accounts[1]) == [
+        100,
+        150,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+    ]
 
 
 def test_account2(currency_network_with_trustlines, accounts):
-    assert currency_network_with_trustlines.account(accounts[2], accounts[3]) == [300, 350, 0, 0, 0, 0, 0, 0]
+    assert currency_network_with_trustlines.account(accounts[2], accounts[3]) == [
+        300,
+        350,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+    ]
 
 
 def test_users(currency_network_with_trustlines, accounts):
@@ -59,33 +83,63 @@ def test_gen_graph_representation(currency_network_with_trustlines, accounts):
     graph_representation = currency_network_with_trustlines.gen_graph_representation()
 
     for account in accounts[0:5]:
-        assert (account in (trustline.user for trustline in graph_representation) or
-                (account in (trustline.counter_party for trustline in graph_representation)))
+        assert account in (trustline.user for trustline in graph_representation) or (
+            account in (trustline.counter_party for trustline in graph_representation)
+        )
 
 
 def test_number_of_get_events(currency_network_with_events, accounts):
     currency_network = currency_network_with_events
-    assert len(currency_network.get_network_events(TrustlineRequestEventType, user_address=accounts[0])) == 3
-    assert len(currency_network.get_network_events(TrustlineUpdateEventType, user_address=accounts[0])) == 3
-    assert len(currency_network.get_network_events(TransferEventType, user_address=accounts[0])) == 1
+    assert (
+        len(
+            currency_network.get_network_events(
+                TrustlineRequestEventType, user_address=accounts[0]
+            )
+        )
+        == 3
+    )
+    assert (
+        len(
+            currency_network.get_network_events(
+                TrustlineUpdateEventType, user_address=accounts[0]
+            )
+        )
+        == 3
+    )
+    assert (
+        len(
+            currency_network.get_network_events(
+                TransferEventType, user_address=accounts[0]
+            )
+        )
+        == 1
+    )
 
 
 def test_get_events(currency_network_with_events, accounts):
     currency_network = currency_network_with_events
-    creditline_update_events = currency_network.get_network_events(TrustlineUpdateEventType, user_address=accounts[0])
+    creditline_update_events = currency_network.get_network_events(
+        TrustlineUpdateEventType, user_address=accounts[0]
+    )
     e1, e2, e3 = creditline_update_events
-    assert (e1.counter_party, e2.counter_party, e3.counter_party) == (accounts[1], accounts[2], accounts[4])
+    assert (e1.counter_party, e2.counter_party, e3.counter_party) == (
+        accounts[1],
+        accounts[2],
+        accounts[4],
+    )
 
 
 def test_get_transfer_event(currency_network_with_events, accounts):
     currency_network = currency_network_with_events
-    transfer_event = currency_network.get_network_events(TransferEventType, user_address=accounts[0])[0]
+    transfer_event = currency_network.get_network_events(
+        TransferEventType, user_address=accounts[0]
+    )[0]
     assert transfer_event.value == 10
     assert transfer_event.to == accounts[0]
     assert transfer_event.from_ == accounts[1]
     assert transfer_event.user == accounts[0]
     assert transfer_event.counter_party == accounts[1]
-    assert transfer_event.direction == 'received'
+    assert transfer_event.direction == "received"
 
 
 def test_number_of_get_all_events(currency_network_with_events, accounts):
@@ -106,9 +160,9 @@ def test_listen_on_balance_update(currency_network, accounts):
     gevent.sleep(1)
 
     assert len(events) == 1
-    assert (events[0].from_ == accounts[0] or events[0].from_ == accounts[1])
-    assert (events[0].to == accounts[0] or events[0].to == accounts[1])
-    assert (-12 < events[0].value < 12)  # because there might be fees
+    assert events[0].from_ == accounts[0] or events[0].from_ == accounts[1]
+    assert events[0].to == accounts[0] or events[0].to == accounts[1]
+    assert -12 < events[0].value < 12  # because there might be fees
 
 
 def test_listen_on_transfer(currency_network, accounts):

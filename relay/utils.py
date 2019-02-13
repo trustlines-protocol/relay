@@ -11,7 +11,7 @@ def merge_two_dicts(x, y):
 def trim_args(args):
     trimmed_args = {}
     for key in args:
-        trimmed_args[key[1:len(key)]] = args[key]
+        trimmed_args[key[1 : len(key)]] = args[key]
     return trimmed_args
 
 

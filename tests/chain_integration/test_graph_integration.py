@@ -20,13 +20,15 @@ def _create_on_balance(graph):
 
 def _create_on_trustline(graph):
     def update_trustline(event):
-        graph.update_trustline(event.from_,
-                               event.to,
-                               event.creditline_given,
-                               event.creditline_received,
-                               event.interest_rate_given,
-                               event.interest_rate_received,
-                               event.timestamp)
+        graph.update_trustline(
+            event.from_,
+            event.to,
+            event.creditline_given,
+            event.creditline_received,
+            event.interest_rate_given,
+            event.interest_rate_received,
+            event.timestamp,
+        )
 
     return update_trustline
 

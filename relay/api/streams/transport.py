@@ -10,11 +10,10 @@ from relay.blockchain.events import Event, TLNetworkEvent
 from relay.events import MessageEvent, AccountEvent
 from relay.logger import get_logger
 
-logger = get_logger('websockets', logging.DEBUG)
+logger = get_logger("websockets", logging.DEBUG)
 
 
 class RPCWebSocketApplication(WebSocketApplication):
-
     def __init__(self, rpc_protocol, dispatcher, ws):
         super().__init__(ws)
         self.rpc = rpc_protocol
@@ -22,10 +21,9 @@ class RPCWebSocketApplication(WebSocketApplication):
         self.client = RPCWebSocketClient(self.ws, self.rpc)
 
     def on_open(self):
-        logger.debug('Websocket connected')
+        logger.debug("Websocket connected")
 
     def on_message(self, message):
-
         def caller(method, args, kwargs):
             return validating_rpc_caller(method, args, kwargs, client=self.client)
 
@@ -45,12 +43,11 @@ class RPCWebSocketApplication(WebSocketApplication):
                 pass
 
     def on_close(self, reason):
-        logger.debug('Websocket disconnected')
+        logger.debug("Websocket disconnected")
         self.client.close()
 
 
 class RPCWebSocketClient(Client):
-
     def __init__(self, ws, rpc_protocol):
         super().__init__()
         self.ws = ws
@@ -62,10 +59,12 @@ class RPCWebSocketClient(Client):
         elif isinstance(event, MessageEvent):
             data = MessageEventSchema().dump(event).data
         else:
-            logger.warning('Could not sent event of type: %s', type(event))
+            logger.warning("Could not sent event of type: %s", type(event))
             return
         assert isinstance(data, dict)
-        request = self.rpc.create_request('subscription_' + str(subscription.id), args={'event': data}, one_way=True)
+        request = self.rpc.create_request(
+            "subscription_" + str(subscription.id), args={"event": data}, one_way=True
+        )
         try:
             self.ws.send(request.serialize())
         except WebSocketError as e:

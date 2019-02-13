@@ -6,7 +6,7 @@ from relay.logger import get_logger
 from .pushservice import FirebaseRawPushService, InvalidClientTokenException
 
 
-logger = get_logger('pushserviceclient', logging.DEBUG)
+logger = get_logger("pushserviceclient", logging.DEBUG)
 
 
 class PushNotificationClient(Client):
@@ -14,7 +14,9 @@ class PushNotificationClient(Client):
     Stream Client that sends events as push notification
     """
 
-    def __init__(self, rawPushService: FirebaseRawPushService, client_token: str) -> None:
+    def __init__(
+        self, rawPushService: FirebaseRawPushService, client_token: str
+    ) -> None:
         super().__init__()
         self._rawPushService = rawPushService
         self.client_token = client_token
@@ -27,4 +29,8 @@ class PushNotificationClient(Client):
             # Token not longer valid means listener is not listing anymore
             raise DisconnectedError from e
         except Exception as e:
-            logger.warning('Could not sent push notification to %s\nerror: %s', self.client_token, e)
+            logger.warning(
+                "Could not sent push notification to %s\nerror: %s",
+                self.client_token,
+                e,
+            )

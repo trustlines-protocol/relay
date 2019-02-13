@@ -5,19 +5,20 @@ from relay.network_graph.graph import AccountSummary
 
 class Event(object):
 
-    type = 'Event'
+    type = "Event"
 
     def __init__(self, timestamp: int) -> None:
         self.timestamp = timestamp
 
 
 class AccountEvent(Event):
-
-    def __init__(self,
-                 network_address: str,
-                 user: str,
-                 account_summary: AccountSummary,
-                 timestamp: int = None) -> None:
+    def __init__(
+        self,
+        network_address: str,
+        user: str,
+        account_summary: AccountSummary,
+        timestamp: int = None,
+    ) -> None:
         if timestamp is None:
             timestamp = int(time.time())
         super().__init__(timestamp)
@@ -32,18 +33,17 @@ class AccountEvent(Event):
 
 class BalanceEvent(AccountEvent):
 
-    type = 'BalanceUpdate'
+    type = "BalanceUpdate"
 
-    def __init__(self,
-                 network_address: str,
-                 from_: str,
-                 to: str,
-                 account_summary: AccountSummary,
-                 timestamp: int = None) -> None:
-        super().__init__(network_address,
-                         from_,
-                         account_summary,
-                         timestamp)
+    def __init__(
+        self,
+        network_address: str,
+        from_: str,
+        to: str,
+        account_summary: AccountSummary,
+        timestamp: int = None,
+    ) -> None:
+        super().__init__(network_address, from_, account_summary, timestamp)
         self.from_ = from_
         self.to = to
         self.counter_party = to
@@ -51,17 +51,14 @@ class BalanceEvent(AccountEvent):
 
 class NetworkBalanceEvent(AccountEvent):
 
-    type = 'NetworkBalance'
+    type = "NetworkBalance"
 
 
 class MessageEvent(Event):
 
-    type = 'Message'
+    type = "Message"
 
-    def __init__(self,
-                 message: str,
-                 type: str = None,
-                 timestamp: int = None) -> None:
+    def __init__(self, message: str, type: str = None, timestamp: int = None) -> None:
         if timestamp is None:
             timestamp = int(time.time())
         super().__init__(timestamp)

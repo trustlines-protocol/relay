@@ -2,11 +2,7 @@ from typing import Tuple
 
 from eth_keys import keys
 from eth_keys.exceptions import BadSignature
-from eth_utils import (
-    decode_hex,
-    keccak,
-    is_0x_prefixed,
-)
+from eth_utils import decode_hex, keccak, is_0x_prefixed
 
 
 def pack(*args) -> bytes:
@@ -18,15 +14,16 @@ def pack(*args) -> bytes:
     keccak256(uint32(5))
     Default size is 256.
     """
+
     def format_int(value, size):
         assert isinstance(value, int)
         assert isinstance(size, int)
         if value >= 0:
-            return decode_hex('{:x}'.format(value).zfill(size // 4))
+            return decode_hex("{:x}".format(value).zfill(size // 4))
         else:
-            return decode_hex('{:x}'.format((1 << size) + value))
+            return decode_hex("{:x}".format((1 << size) + value))
 
-    msg = b''
+    msg = b""
     for arg in args:
         assert arg is not None
         if isinstance(arg, bytes):
@@ -43,7 +40,7 @@ def pack(*args) -> bytes:
         elif isinstance(arg, tuple):
             msg += format_int(arg[0], arg[1])
         else:
-            raise ValueError('Unsupported type: {}.'.format(type(arg)))
+            raise ValueError("Unsupported type: {}.".format(type(arg)))
 
     return msg
 
@@ -53,27 +50,33 @@ def keccak256(*args) -> bytes:
 
 
 def eth_sign(hash: bytes, key: bytes) -> Tuple[int, bytes, bytes]:
-    v, r, s = keys.PrivateKey(key).sign_msg_hash(keccak256(b'\x19Ethereum Signed Message:\n32', hash)).vrs
+    v, r, s = (
+        keys.PrivateKey(key)
+        .sign_msg_hash(keccak256(b"\x19Ethereum Signed Message:\n32", hash))
+        .vrs
+    )
     if v < 27:
         v += 27
-    r = r.to_bytes(32, byteorder='big')
-    s = s.to_bytes(32, byteorder='big')
+    r = r.to_bytes(32, byteorder="big")
+    s = s.to_bytes(32, byteorder="big")
     return v, r, s
 
 
 def eth_validate(msg_hash, vrs, address):
     v, r, s = vrs
     if isinstance(v, bytes):
-        v = int.from_bytes(r, byteorder='big')
+        v = int.from_bytes(r, byteorder="big")
     if isinstance(r, bytes):
-        r = int.from_bytes(r, byteorder='big')
+        r = int.from_bytes(r, byteorder="big")
     if isinstance(s, bytes):
-        s = int.from_bytes(s, byteorder='big')
+        s = int.from_bytes(s, byteorder="big")
     if v >= 27:
         v -= 27
     sig = keys.Signature(vrs=(v, r, s))
     try:
-        pubkey = sig.recover_public_key_from_msg_hash(keccak256(b'\x19Ethereum Signed Message:\n32', msg_hash))
+        pubkey = sig.recover_public_key_from_msg_hash(
+            keccak256(b"\x19Ethereum Signed Message:\n32", msg_hash)
+        )
         return pubkey.to_checksum_address() == address
     except BadSignature:
         return False

@@ -8,7 +8,12 @@ from relay.network_graph.trustline_data import (
     set_creditline,
     get_creditline,
     set_interest_rate,
-    get_interest_rate, set_fees_outstanding, get_fees_outstanding, set_mtime, get_mtime)
+    get_interest_rate,
+    set_fees_outstanding,
+    get_fees_outstanding,
+    set_mtime,
+    get_mtime,
+)
 
 a = "0xA"
 b = "0xB"

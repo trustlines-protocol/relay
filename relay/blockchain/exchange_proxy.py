@@ -15,10 +15,10 @@ from .exchange_events import (
     LogCancelEventType,
     from_to_types,
     event_builders,
-    standard_event_types
+    standard_event_types,
 )
 
-logger = get_logger('token', logging.DEBUG)
+logger = get_logger("token", logging.DEBUG)
 
 
 class ExchangeProxy(Proxy):
@@ -27,28 +27,40 @@ class ExchangeProxy(Proxy):
     event_types = list(event_builders.keys())
     standard_event_types = standard_event_types
 
-    def __init__(self, web3, exchange_abi, token_abi, address: str, address_oracle) -> None:
+    def __init__(
+        self, web3, exchange_abi, token_abi, address: str, address_oracle
+    ) -> None:
         super().__init__(web3, exchange_abi, address)
         self._token_abi = token_abi
         self._address_oracle = address_oracle
 
     def validate(self, order: Order) -> bool:
-        return (order.exchange_address == self.address and
-                self.validate_funds(order) and
-                self.validate_filled_amount(order))
+        return (
+            order.exchange_address == self.address
+            and self.validate_funds(order)
+            and self.validate_filled_amount(order)
+        )
 
     def validate_funds(self, order: Order) -> bool:
         if self._is_currency_network(order.maker_token):
             return True
         else:
             maker_token = self._token_contract(address=order.maker_token)
-            return (maker_token.functions.balanceOf(order.maker_address).call() >= order.maker_token_amount and
-                    (self._is_trusted_token(order.maker_token) or
-                     maker_token.functions.allowance(order.maker_address,
-                                                     self.address).call() >= order.maker_token_amount))
+            return maker_token.functions.balanceOf(
+                order.maker_address
+            ).call() >= order.maker_token_amount and (
+                self._is_trusted_token(order.maker_token)
+                or maker_token.functions.allowance(
+                    order.maker_address, self.address
+                ).call()
+                >= order.maker_token_amount
+            )
 
     def validate_filled_amount(self, order: Order) -> bool:
-        return self._proxy.functions.getUnavailableTakerTokenAmount(order.hash()).call() < order.taker_token_amount
+        return (
+            self._proxy.functions.getUnavailableTakerTokenAmount(order.hash()).call()
+            < order.taker_token_amount
+        )
 
     def get_filled_amount(self, order: Order) -> int:
         return self._proxy.functions.filled(order.hash()).call()
@@ -61,35 +73,49 @@ class ExchangeProxy(Proxy):
 
     def start_listen_on_fill(self, f) -> None:
         def log(log_entry):
-            f(log_entry['args']['orderHash'],
-              log_entry['args']['filledMakerTokenAmount'],
-              log_entry['args']['filledTakerTokenAmount'])
+            f(
+                log_entry["args"]["orderHash"],
+                log_entry["args"]["filledMakerTokenAmount"],
+                log_entry["args"]["filledTakerTokenAmount"],
+            )
+
         self.start_listen_on(LogFillEventType, log)
 
     def start_listen_on_cancel(self, f) -> None:
         def log(log_entry):
-            f(log_entry['args']['orderHash'],
-              log_entry['args']['cancelledMakerTokenAmount'],
-              log_entry['args']['cancelledTakerTokenAmount'])
+            f(
+                log_entry["args"]["orderHash"],
+                log_entry["args"]["cancelledMakerTokenAmount"],
+                log_entry["args"]["cancelledTakerTokenAmount"],
+            )
+
         self.start_listen_on(LogCancelEventType, log)
 
-    def get_exchange_events(self,
-                            event_name: str,
-                            user_address: str = None,
-                            from_block: int = 0,
-                            timeout: float = None) -> List[BlockchainEvent]:
-        logger.debug("get_exchange_events: event_name=%s user_address=%s from_block=%s",
-                     event_name,
-                     user_address,
-                     from_block)
+    def get_exchange_events(
+        self,
+        event_name: str,
+        user_address: str = None,
+        from_block: int = 0,
+        timeout: float = None,
+    ) -> List[BlockchainEvent]:
+        logger.debug(
+            "get_exchange_events: event_name=%s user_address=%s from_block=%s",
+            event_name,
+            user_address,
+            from_block,
+        )
         if user_address is None:
-            queries = [functools.partial(self.get_events, event_name, from_block=from_block)]
+            queries = [
+                functools.partial(self.get_events, event_name, from_block=from_block)
+            ]
             events = concurrency_utils.joinall(queries, timeout=timeout)
         else:
             filter1 = {from_to_types[event_name][0]: user_address}
             # filter2 = {from_to_types[event_name][1]: user_address}
 
-            queries = [functools.partial(self.get_events, event_name, filter1, from_block)]
+            queries = [
+                functools.partial(self.get_events, event_name, filter1, from_block)
+            ]
             # TODO taker attribute of LogFill is not indexed in contract yet
             # if event_name == LogFillEventType:
             #   queries.append(functools.partial(self.get_events, event_name, filter2, from_block))
@@ -101,17 +127,21 @@ class ExchangeProxy(Proxy):
                 if isinstance(event, ExchangeEvent):
                     event.user = user_address
                 else:
-                    raise ValueError('Expected a ExchangeEvent')
+                    raise ValueError("Expected a ExchangeEvent")
         return sorted_events(events)
 
-    def get_all_exchange_events(self,
-                                user_address: str = None,
-                                from_block: int = 0,
-                                timeout: float = None) -> List[BlockchainEvent]:
-        queries = [functools.partial(self.get_exchange_events,
-                                     type,
-                                     user_address=user_address,
-                                     from_block=from_block) for type in self.standard_event_types]
+    def get_all_exchange_events(
+        self, user_address: str = None, from_block: int = 0, timeout: float = None
+    ) -> List[BlockchainEvent]:
+        queries = [
+            functools.partial(
+                self.get_exchange_events,
+                type,
+                user_address=user_address,
+                from_block=from_block,
+            )
+            for type in self.standard_event_types
+        ]
         results = concurrency_utils.joinall(queries, timeout=timeout)
         return sorted_events(list(itertools.chain.from_iterable(results)))
 
@@ -125,8 +155,7 @@ class ExchangeProxy(Proxy):
         return self._web3.eth.contract(abi=self._token_abi, address=address)
 
 
-class DummyExchangeProxy():
-
+class DummyExchangeProxy:
     def __init__(self, exchange_address: str) -> None:
         self.address = exchange_address
 

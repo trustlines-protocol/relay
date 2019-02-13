@@ -18,7 +18,7 @@ from relay.blockchain.proxy import sorted_events
 # here.
 
 
-logger = relay.logger.get_logger('ethindex_db', level=logging.DEBUG)
+logger = relay.logger.get_logger("ethindex_db", level=logging.DEBUG)
 
 
 def connect(dsn):
@@ -42,16 +42,16 @@ class EventBuilder:
     def __init__(self, _event_builders: Dict[str, Any]) -> None:
         self.event_builders = _event_builders
 
-    def build_events(self, events: List[Any], current_blocknumber: int) -> List[BlockchainEvent]:
+    def build_events(
+        self, events: List[Any], current_blocknumber: int
+    ) -> List[BlockchainEvent]:
         return [self._build_event(event, current_blocknumber) for event in events]
 
     @property
-    def event_types(self)-> List[str]:
+    def event_types(self) -> List[str]:
         return list(self.event_builders.keys())
 
-    def _build_event(
-        self, event: Any, current_blocknumber: int
-    ) -> BlockchainEvent:
+    def _build_event(self, event: Any, current_blocknumber: int) -> BlockchainEvent:
         event_type: str = event.get("event")
         timestamp: int = event.get("timestamp")
         return self.event_builders[event_type](event, current_blocknumber, timestamp)
@@ -60,8 +60,7 @@ class EventBuilder:
 # we need to 'select * from events' all the time, but we're using lower-case
 # identifiers in postgres. The following select statement will give us a
 # dictionary with keys in the right case.
-select_star_from_events = \
-    """SELECT transactionHash "transactionHash",
+select_star_from_events = """SELECT transactionHash "transactionHash",
               blockNumber "blockNumber",
               address,
               eventName "event",
@@ -73,8 +72,7 @@ select_star_from_events = \
        FROM events
     """
 
-order_by_default_sort_order = \
-    """ ORDER BY blocknumber, transactionIndex, logIndex
+order_by_default_sort_order = """ ORDER BY blocknumber, transactionIndex, logIndex
     """
 
 
@@ -91,7 +89,9 @@ class EthindexDB:
     we allow to pass a default address in.
     """
 
-    def __init__(self, conn, standard_event_types, event_builders, from_to_types, address=None):
+    def __init__(
+        self, conn, standard_event_types, event_builders, from_to_types, address=None
+    ):
         self.conn = conn
         self.default_address = address
         self.standard_event_types = standard_event_types
@@ -134,7 +134,8 @@ class EthindexDB:
         query_string = "{select_star_from_events} WHERE {where_block} {order_by_default_sort_order}".format(
             select_star_from_events=select_star_from_events,
             where_block=events_query.where_block,
-            order_by_default_sort_order=order_by_default_sort_order)
+            order_by_default_sort_order=order_by_default_sort_order,
+        )
 
         with self.conn as conn:
             with conn.cursor() as cur:
@@ -143,66 +144,46 @@ class EthindexDB:
                 return self._build_events(rows)
 
     def get_network_events(
-            self,
-            event_name: str,
-            user_address: str = None,
-            from_block: int = 0,
-            timeout: float = None
+        self,
+        event_name: str,
+        user_address: str = None,
+        from_block: int = 0,
+        timeout: float = None,
     ) -> List[BlockchainEvent]:
         """Function for compatibility with relay.blockchain.CurrencyNetworkProxy.
         Will be removed after a refactoring
         """
-        return self.get_user_events(
-            event_name,
-            user_address,
-            from_block,
-            timeout,
-        )
+        return self.get_user_events(event_name, user_address, from_block, timeout)
 
     def get_unw_eth_events(
-            self,
-            event_name: str,
-            user_address: str = None,
-            from_block: int = 0,
-            timeout: float = None,
+        self,
+        event_name: str,
+        user_address: str = None,
+        from_block: int = 0,
+        timeout: float = None,
     ) -> List[BlockchainEvent]:
         """Function for compatibility with relay.blockchain.UnwEthProxy. Will be removed after a refactoring"""
-        return self.get_user_events(
-            event_name,
-            user_address,
-            from_block,
-            timeout,
-        )
+        return self.get_user_events(event_name, user_address, from_block, timeout)
 
     def get_token_events(
-            self,
-            event_name: str,
-            user_address: str = None,
-            from_block: int = 0,
-            timeout: float = None,
+        self,
+        event_name: str,
+        user_address: str = None,
+        from_block: int = 0,
+        timeout: float = None,
     ) -> List[BlockchainEvent]:
         """Function for compatibility with relay.blockchain.TokenProxy. Will be removed after a refactoring"""
-        return self.get_user_events(
-            event_name,
-            user_address,
-            from_block,
-            timeout,
-        )
+        return self.get_user_events(event_name, user_address, from_block, timeout)
 
     def get_exchange_events(
-            self,
-            event_name: str,
-            user_address: str = None,
-            from_block: int = 0,
-            timeout: float = None,
+        self,
+        event_name: str,
+        user_address: str = None,
+        from_block: int = 0,
+        timeout: float = None,
     ) -> List[BlockchainEvent]:
         """Function for compatibility with relay.blockchain.ExchangeProxy. Will be removed after a refactoring"""
-        return self.get_user_events(
-            event_name,
-            user_address,
-            from_block,
-            timeout,
-        )
+        return self.get_user_events(event_name, user_address, from_block, timeout)
 
     def get_user_events(
         self,
@@ -214,66 +195,73 @@ class EthindexDB:
     ) -> List[BlockchainEvent]:
         contract_address = self._get_addr(contract_address)
         if user_address is None:
-            return self.get_events(event_name, from_block=from_block, timeout=timeout,
-                                   contract_address=contract_address)
+            return self.get_events(
+                event_name,
+                from_block=from_block,
+                timeout=timeout,
+                contract_address=contract_address,
+            )
         query = EventsQuery(
             """blockNumber>=%s
                AND eventName=%s
                AND address=%s
                AND (args->>'{_from}'=%s or args->>'{_to}'=%s)
-            """.format(_from=self.from_to_types[event_name][0],
-                       _to=self.from_to_types[event_name][1]),
-            (from_block, event_name, contract_address, user_address, user_address))
+            """.format(
+                _from=self.from_to_types[event_name][0],
+                _to=self.from_to_types[event_name][1],
+            ),
+            (from_block, event_name, contract_address, user_address, user_address),
+        )
 
         events = self._run_events_query(query)
 
-        logger.debug("get_user_events(%s, %s, %s, %s, %s) -> %s rows",
-                     event_name, user_address, from_block, timeout, contract_address, len(events))
+        logger.debug(
+            "get_user_events(%s, %s, %s, %s, %s) -> %s rows",
+            event_name,
+            user_address,
+            from_block,
+            timeout,
+            contract_address,
+            len(events),
+        )
 
         for event in events:
             if isinstance(event, TLNetworkEvent):
                 event.user = user_address
             else:
-                raise ValueError('Expected a TLNetworkEvent')
+                raise ValueError("Expected a TLNetworkEvent")
         return events
 
-    def get_all_unw_eth_events(self,
-                               user_address: str = None,
-                               from_block: int = 0,
-                               timeout: float = None) -> List[BlockchainEvent]:
-        return self.get_all_contract_events(unw_eth_events.standard_event_types,
-                                            user_address,
-                                            from_block,
-                                            timeout)
+    def get_all_unw_eth_events(
+        self, user_address: str = None, from_block: int = 0, timeout: float = None
+    ) -> List[BlockchainEvent]:
+        return self.get_all_contract_events(
+            unw_eth_events.standard_event_types, user_address, from_block, timeout
+        )
 
-    def get_all_token_events(self,
-                             user_address: str = None,
-                             from_block: int = 0,
-                             timeout: float = None) -> List[BlockchainEvent]:
-        return self.get_all_contract_events(token_events.standard_event_types,
-                                            user_address,
-                                            from_block,
-                                            timeout)
+    def get_all_token_events(
+        self, user_address: str = None, from_block: int = 0, timeout: float = None
+    ) -> List[BlockchainEvent]:
+        return self.get_all_contract_events(
+            token_events.standard_event_types, user_address, from_block, timeout
+        )
 
-    def get_all_network_events(self,
-                               user_address: str = None,
-                               from_block: int = 0,
-                               timeout: float = None
-                               ) -> List[BlockchainEvent]:
-        return self.get_all_contract_events(currency_network_events.standard_event_types,
-                                            user_address,
-                                            from_block,
-                                            timeout)
+    def get_all_network_events(
+        self, user_address: str = None, from_block: int = 0, timeout: float = None
+    ) -> List[BlockchainEvent]:
+        return self.get_all_contract_events(
+            currency_network_events.standard_event_types,
+            user_address,
+            from_block,
+            timeout,
+        )
 
-    def get_all_exchange_events(self,
-                                user_address: str = None,
-                                from_block: int = 0,
-                                timeout: float = None
-                                ) -> List[BlockchainEvent]:
-        return self.get_all_contract_events(exchange_events.standard_event_types,
-                                            user_address,
-                                            from_block,
-                                            timeout)
+    def get_all_exchange_events(
+        self, user_address: str = None, from_block: int = 0, timeout: float = None
+    ) -> List[BlockchainEvent]:
+        return self.get_all_contract_events(
+            exchange_events.standard_event_types, user_address, from_block, timeout
+        )
 
     def get_all_contract_events(
         self,
@@ -287,12 +275,16 @@ class EthindexDB:
         # The reason it isn't already a SQL query, is that we need to
         # dynamically create that query.
         contract_address = self._get_addr(contract_address)
-        results = [self.get_user_events(event_type,
-                                        user_address=user_address,
-                                        from_block=from_block,
-                                        timeout=timeout,
-                                        contract_address=contract_address)
-                   for event_type in event_types]
+        results = [
+            self.get_user_events(
+                event_type,
+                user_address=user_address,
+                from_block=from_block,
+                timeout=timeout,
+                contract_address=contract_address,
+            )
+            for event_type in event_types
+        ]
         return sorted_events(list(itertools.chain.from_iterable(results)))
 
     def get_events(
@@ -307,20 +299,27 @@ class EthindexDB:
             """blockNumber>=%s
                AND eventName=%s
                AND address=%s""",
-            (from_block, event_name, contract_address))
+            (from_block, event_name, contract_address),
+        )
         events = self._run_events_query(query)
 
-        logger.debug("get_events(%s, %s, %s, %s) -> %s rows",
-                     event_name, from_block, timeout, contract_address, len(events))
+        logger.debug(
+            "get_events(%s, %s, %s, %s) -> %s rows",
+            event_name,
+            from_block,
+            timeout,
+            contract_address,
+            len(events),
+        )
 
         return events
 
     def get_all_events(
-            self,
-            from_block: int = 0,
-            timeout: float = None,
-            contract_address: str = None,
-            standard_event_types=None,
+        self,
+        from_block: int = 0,
+        timeout: float = None,
+        contract_address: str = None,
+        standard_event_types=None,
     ) -> List[BlockchainEvent]:
         contract_address = self._get_addr(contract_address)
         standard_event_types = self._get_standard_event_types(standard_event_types)
@@ -328,10 +327,16 @@ class EthindexDB:
             """blockNumber>=%s
                AND address=%s
                AND eventName in %s""",
-            (from_block, contract_address, tuple(standard_event_types)))
+            (from_block, contract_address, tuple(standard_event_types)),
+        )
 
         events = self._run_events_query(query)
-        logger.debug("get_all_events(%s, %s, %s) -> %s rows",
-                     from_block, timeout, contract_address, len(events))
+        logger.debug(
+            "get_all_events(%s, %s, %s) -> %s rows",
+            from_block,
+            timeout,
+            contract_address,
+            len(events),
+        )
 
         return events
