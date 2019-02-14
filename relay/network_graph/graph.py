@@ -18,7 +18,7 @@ from relay.network_graph.trustline_data import (
     set_fees_outstanding,
 )
 
-from .dijkstra_weighted import PaymentPath
+from .payment_path import PaymentPath
 
 from .fees import calculate_fees_reverse, calculate_fees, imbalance_generated
 from .interests import balance_with_interests
@@ -180,7 +180,7 @@ class SenderPaysCostAccumulatorSnapshot(alg.CostAccumulator):
         capacity_imbalance_fee_divisor,
         max_hops=None,
         max_fees=None,
-        ignore=None
+        ignore=None,
     ):
         if max_hops is None:
             max_hops = math.inf
@@ -277,7 +277,7 @@ class ReceiverPaysCostAccumulatorSnapshot(alg.CostAccumulator):
         capacity_imbalance_fee_divisor,
         max_hops=None,
         max_fees=None,
-        ignore=None
+        ignore=None,
     ):
         if max_hops is None:
             max_hops = math.inf
@@ -628,13 +628,7 @@ class CurrencyNetworkGraph(object):
         return output.getvalue()
 
     def find_transfer_path_sender_pays_fees(
-            self,
-            source,
-            target,
-            value=None,
-            max_hops=None,
-            max_fees=None,
-            timestamp=None,
+        self, source, target, value=None, max_hops=None, max_fees=None, timestamp=0
     ):
 
         cost, path = self._find_transfer_path(
@@ -650,13 +644,7 @@ class CurrencyNetworkGraph(object):
         return cost, list(reversed(path))
 
     def find_transfer_path_receiver_pays_fees(
-            self,
-            source,
-            target,
-            value=None,
-            max_hops=None,
-            max_fees=None,
-            timestamp=None,
+        self, source, target, value=None, max_hops=None, max_fees=None, timestamp=0
     ):
 
         return self._find_transfer_path(
@@ -670,15 +658,15 @@ class CurrencyNetworkGraph(object):
         )
 
     def _find_transfer_path(
-            self,
-            *,
-            source,
-            target,
-            value=None,
-            max_hops=None,
-            max_fees=None,
-            timestamp=None,
-            cost_accumulator_function,
+        self,
+        *,
+        source,
+        target,
+        value=None,
+        max_hops=None,
+        max_fees=None,
+        timestamp=0,
+        cost_accumulator_function,
     ):
 
         if value is None:
@@ -855,7 +843,9 @@ class CurrencyNetworkGraphForTesting(CurrencyNetworkGraph):
 
     def mediated_transfer(self, source, target, value, timestamp=0):
         """simulate mediated transfer off chain"""
-        cost, path = self.find_transfer_path_sender_pays_fees(source, target, value, timestamp=timestamp)
+        cost, path = self.find_transfer_path_sender_pays_fees(
+            source, target, value, timestamp=timestamp
+        )
         assert path[0] == source
         assert path[-1] == target
         return self.transfer_path(path, value, cost, timestamp=timestamp)

@@ -172,7 +172,9 @@ def test_interests_path_from_A_balance_positive_relevant_interests(
 ):
     # B owes to A
     # 1% interest given by A to B
-    cost, path = configurable_community.find_transfer_path_sender_pays_fees(A, B, 100, timestamp=SECONDS_PER_YEAR)
+    cost, path = configurable_community.find_transfer_path_sender_pays_fees(
+        A, B, 100, timestamp=SECONDS_PER_YEAR
+    )
     assert path == [A, B]
 
 
@@ -194,7 +196,9 @@ def test_interests_path_from_A_balance_negative_relevant_interests(
 ):
     # A owes to B
     # 1% interest given by B to A
-    cost, path = configurable_community.find_transfer_path_sender_pays_fees(A, B, 100, timestamp=SECONDS_PER_YEAR)
+    cost, path = configurable_community.find_transfer_path_sender_pays_fees(
+        A, B, 100, timestamp=SECONDS_PER_YEAR
+    )
     assert path == []
 
 
@@ -216,7 +220,9 @@ def test_interests_path_from_A_balance_positive_irrelevant_interests(
 ):
     # B owes to A
     # 1% interest given by B to A
-    cost, path = configurable_community.find_transfer_path_sender_pays_fees(A, B, 100, timestamp=SECONDS_PER_YEAR)
+    cost, path = configurable_community.find_transfer_path_sender_pays_fees(
+        A, B, 100, timestamp=SECONDS_PER_YEAR
+    )
     assert path == [A, B]
 
 
@@ -238,7 +244,9 @@ def test_interests_path_from_A_balance_negative_irrelevant_interests(
 ):
     # A owes to B
     # 1% interest given by A to B
-    cost, path = configurable_community.find_transfer_path_sender_pays_fees(A, B, 100, timestamp=SECONDS_PER_YEAR)
+    cost, path = configurable_community.find_transfer_path_sender_pays_fees(
+        A, B, 100, timestamp=SECONDS_PER_YEAR
+    )
     assert path == [A, B]
 
 
@@ -260,7 +268,9 @@ def test_interests_path_from_B_balance_positive_relevant_interests(
 ):
     # B owes to A
     # 1% interest given by A to B
-    cost, path = configurable_community.find_transfer_path_sender_pays_fees(B, A, 100, timestamp=SECONDS_PER_YEAR)
+    cost, path = configurable_community.find_transfer_path_sender_pays_fees(
+        B, A, 100, timestamp=SECONDS_PER_YEAR
+    )
     assert path == []
 
 
@@ -282,7 +292,9 @@ def test_interests_path_from_B_balance_negative_relevant_interests(
 ):
     # A owes to B
     # 1% interest given by B to A
-    cost, path = configurable_community.find_transfer_path_sender_pays_fees(B, A, 100, timestamp=SECONDS_PER_YEAR)
+    cost, path = configurable_community.find_transfer_path_sender_pays_fees(
+        B, A, 100, timestamp=SECONDS_PER_YEAR
+    )
     assert path == [B, A]
 
 
@@ -304,7 +316,9 @@ def test_interests_path_from_B_balance_positive_irrelevant_interests(
 ):
     # B owes to A
     # 1% interest given by B to A
-    cost, path = configurable_community.find_transfer_path_sender_pays_fees(B, A, 100, timestamp=SECONDS_PER_YEAR)
+    cost, path = configurable_community.find_transfer_path_sender_pays_fees(
+        B, A, 100, timestamp=SECONDS_PER_YEAR
+    )
     assert path == [B, A]
 
 
@@ -326,5 +340,7 @@ def test_interests_path_from_B_balance_negative_irrelevant_interests(
 ):
     # A owes to B
     # 1% interest given by A to B
-    cost, path = configurable_community.find_transfer_path_sender_pays_fees(B, A, 100, timestamp=SECONDS_PER_YEAR)
+    cost, path = configurable_community.find_transfer_path_sender_pays_fees(
+        B, A, 100, timestamp=SECONDS_PER_YEAR
+    )
     assert path == [B, A]
