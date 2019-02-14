@@ -627,19 +627,48 @@ class CurrencyNetworkGraph(object):
             )
         return output.getvalue()
 
-    def find_path(
-        self, source, target, value=None, max_hops=None, max_fees=None, timestamp=0
+    def find_path_sender_pays_fees(self, source, target, value=None, max_hops=None, max_fees=None, timestamp=None):
+
+        cost, path = self._find_path(
+            source=target,  # we are searching path from target to source, to accumulate fees correctly.
+            target=source,
+            value=value,
+            max_hops=max_hops,
+            max_fees=max_fees,
+            timestamp=timestamp,
+            cost_accumulator_function=SenderPaysCostAccumulatorSnapshot,
+        )
+
+        return cost, list(reversed(path))
+
+    def find_path_receiver_pays_fees(self, source, target, value=None, max_hops=None, max_fees=None, timestamp=None):
+
+        return self._find_path(
+            source=source,
+            target=target,
+            value=value,
+            max_hops=max_hops,
+            max_fees=max_fees,
+            timestamp=timestamp,
+            cost_accumulator_function=ReceiverPaysCostAccumulatorSnapshot,
+        )
+
+    def _find_path(
+            self,
+            *,
+            source,
+            target,
+            value=None,
+            max_hops=None,
+            max_fees=None,
+            timestamp=None,
+            cost_accumulator_function,
     ):
-        """
-        find path between source and target
-        the shortest path is found based on
-            - the number of hops
-            - the imbalance it adds or reduces in the accounts
-        """
+
         if value is None:
             value = 1
 
-        cost_accumulator = SenderPaysCostAccumulatorSnapshot(
+        cost_accumulator = cost_accumulator_function(
             timestamp=timestamp,
             value=value,
             capacity_imbalance_fee_divisor=self.capacity_imbalance_fee_divisor,
@@ -648,11 +677,10 @@ class CurrencyNetworkGraph(object):
         )
 
         try:
-            # we are searching in reverse, so source and target are swapped!
             cost, path = alg.least_cost_path(
                 graph=self.graph,
-                starting_nodes={target},
-                target_nodes={source},
+                starting_nodes={source},
+                target_nodes={target},
                 cost_accumulator=cost_accumulator,
             )
         except (
@@ -661,7 +689,7 @@ class CurrencyNetworkGraph(object):
             KeyError,
         ):
             return 0, []
-        return cost[0], list(reversed(path))
+        return cost[0], list(path)
 
     def close_trustline_path_triangulation(
         self, timestamp, source, target, max_hops=None, max_fees=None
@@ -811,7 +839,7 @@ class CurrencyNetworkGraphForTesting(CurrencyNetworkGraph):
 
     def mediated_transfer(self, source, target, value, timestamp=0):
         """simulate mediated transfer off chain"""
-        cost, path = self.find_path(source, target, value, timestamp=timestamp)
+        cost, path = self.find_path_sender_pays_fees(source, target, value, timestamp=timestamp)
         assert path[0] == source
         assert path[-1] == target
         return self.transfer_path(path, value, cost, timestamp=timestamp)

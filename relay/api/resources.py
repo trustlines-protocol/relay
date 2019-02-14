@@ -432,7 +432,7 @@ class Path(Resource):
         max_fees = args["maxFees"]
         max_hops = args["maxHops"]
 
-        cost, path = self.trustlines.currency_network_graphs[network_address].find_path(
+        cost, path = self.trustlines.currency_network_graphs[network_address].find_path_sender_pays_fees(
             source=source,
             target=target,
             value=value,
