@@ -6,11 +6,12 @@ import wrapt
 from flask import request, send_file, make_response, abort
 from flask.views import MethodView
 from flask_restful import Resource
-import web3.exceptions
 from webargs import fields
 from webargs.flaskparser import use_args
 from marshmallow import validate, fields as marshmallow_fields
 from tldeploy import identity
+
+from relay.blockchain.delegate import InvalidIdentityContractException
 from relay.utils import sha3
 from relay.blockchain.currency_network_proxy import CurrencyNetworkProxy
 from relay.blockchain.unw_eth_proxy import UnwEthProxy
@@ -356,17 +357,6 @@ class RequestEther(Resource):
         return self.trustlines.node.send_ether(address)
 
 
-def _get_identity_info(identity):
-    try:
-        return {
-            "balance": identity.web3.eth.getBalance(identity.address),
-            "identity": identity.address,
-            "lastNonce": identity.functions.lastNonce().call(),
-        }
-    except web3.exceptions.BadFunctionCallOutput:
-        abort(404, "not found")
-
-
 class DeployIdentity(Resource):
     def __init__(self, trustlines: TrustlinesRelay) -> None:
         self.trustlines = trustlines
@@ -377,8 +367,8 @@ class DeployIdentity(Resource):
     @dump_result_with_schema(IdentityInfosSchema())
     def post(self, args):
         owner_address = args["ownerAddress"]
-        identity_contract = self.trustlines.deploy_identity(owner_address)
-        return _get_identity_info(identity_contract)
+        identity_contract_address = self.trustlines.deploy_identity(owner_address)
+        return self.trustlines.get_identity_info(identity_contract_address)
 
 
 class IdentityInfos(Resource):
@@ -387,10 +377,10 @@ class IdentityInfos(Resource):
 
     @dump_result_with_schema(IdentityInfosSchema())
     def get(self, identity_address: str):
-        identity = self.trustlines.getContract(
-            contract_name="Identity", address=identity_address
-        )
-        return _get_identity_info(identity)
+        try:
+            return self.trustlines.get_identity_info(identity_address)
+        except InvalidIdentityContractException:
+            abort(404, 'Identity Contract not found or invalid')
 
 
 def _estimate_gas_for_transfer(trustlines: TrustlinesRelay,

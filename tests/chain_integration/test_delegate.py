@@ -1,5 +1,6 @@
 #! pytest
 import pytest
+import attr
 from tldeploy.identity import MetaTransaction, Identity
 from tldeploy.core import deploy_identity
 
@@ -100,26 +101,53 @@ def test_delegated_transaction_trustlines_flow(currency_network, identity, deleg
     assert currency_network.get_balance(source, destination) == -100
 
 
-def test_deploy_identity(currency_network, web3, delegate, accounts, owner, owner_key,):
+def test_deploy_identity(currency_network, delegate, accounts, owner, owner_key,):
     """
     Tests that the deployment of an identity contract by the relay server delegate works
     by using it to execute a meta-transaction
     """
 
-    identity_contract = delegate.deploy_identity(web3, owner)
-    identity = Identity(contract=identity_contract, owner_private_key=owner_key)
+    identity_contract_address = delegate.deploy_identity(owner)
+
+    destination = accounts[3]
+
+    meta_transaction = currency_network.transfer_meta_transaction(destination, 100, 0, [destination])
+    signed_meta_transaction = attr.evolve(
+        meta_transaction,
+        from_=identity_contract_address,
+        nonce=0,
+    ).signed(owner_key)
+
+    currency_network.setup_trustlines([(identity_contract_address, destination, 100, 100)])
+    delegate.send_signed_meta_transaction(signed_meta_transaction)
+    assert currency_network.get_balance(identity_contract_address, destination) == -100
+
+
+def test_next_nonce(currency_network, delegate, identity_contract, accounts, owner_key):
 
     source = identity_contract.address
     destination = accounts[3]
 
-    meta_transaction = meta_transaction_for_currency_network_transfer(
-        currency_network,
-        identity,
-        source,
-        destination,
+    meta_transaction = MetaTransaction(
+        from_=source,
+        to=destination,
+        value=123,
+        nonce=delegate.calc_next_nonce(source),
     )
+    signed_meta_transaction = meta_transaction.signed(owner_key)
 
-    assert identity_contract.functions.lastNonce().call() == 0
-    delegate.send_signed_meta_transaction(meta_transaction)
-    assert identity_contract.functions.lastNonce().call() == 1
-    assert currency_network.get_balance(source, destination) == -100
+    assert delegate.calc_next_nonce(source) == 1
+    delegate.send_signed_meta_transaction(signed_meta_transaction)
+    assert delegate.calc_next_nonce(source) == 2
+
+    meta_transaction = MetaTransaction(
+        from_=source,
+        to=destination,
+        value=123,
+        nonce=delegate.calc_next_nonce(source),
+    )
+    signed_meta_transaction = meta_transaction.signed(owner_key)
+
+    assert delegate.calc_next_nonce(source) == 2
+    delegate.send_signed_meta_transaction(signed_meta_transaction)
+    assert delegate.calc_next_nonce(source) == 3

@@ -168,7 +168,7 @@ class IdentityInfosSchema(Schema):
         strict = True
 
     balance = BigInteger()
-    lastNonce = fields.Integer()
+    nextNonce = fields.Integer()
     identity = Address()
 
 
