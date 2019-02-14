@@ -176,7 +176,7 @@ class TrustlinesRelay:
 
     def get_identity_info(self, identity_address: str):
         return {
-            "balance": self.node.balance(identity_address),
+            "balance": self.node.balance_wei(identity_address),
             "identity": identity_address,
             "nextNonce": self.delegate.calc_next_nonce(identity_address),
         }

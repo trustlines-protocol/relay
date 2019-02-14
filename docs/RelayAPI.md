@@ -836,12 +836,12 @@ The endpoint returns an object with the following fields:
 | Name      | Type    | Description                                   |
 |-----------|---------|-----------------------------------------------|
 | identity  | Address | the address of the deployed identity contract |
-| lastNonce | int     | the last nonce used                           |
+| nextNonce | int     | the next available nonce
 | balance   | string  | contracts balance in wei                      |
 
 #### Example Response
 ```json
-{"identity": "0x43950642C8685ED8e3Fb89a5C5aeCb12862A87fd", "lastNonce": 0, "balance", "0"}
+{"identity": "0x43950642C8685ED8e3Fb89a5C5aeCb12862A87fd", "nextNonce": 0, "balance", "0"}
 ```
 
 ### Get identity information
@@ -866,9 +866,9 @@ The endpoint returns an object with the following fields:
 | Name      | Type    | Description                                   |
 |-----------|---------|-----------------------------------------------|
 | identity  | Address | the address of the deployed identity contract |
-| lastNonce | int     | the last nonce used                           |
+| nextNonce | int     | the next available nonce
 | balance   | string  | contracts balance in wei                      |
 #### Example Response
 ```json
-{"identity": "0x2AbCc1389258Dc187DB787E33FD2B99d53695DE3", "lastNonce": 0, "balance": "0"}
+{"identity": "0x2AbCc1389258Dc187DB787E33FD2B99d53695DE3", "nextNonce": 0, "balance": "0"}
 ```
