@@ -15,6 +15,7 @@ from relay.blockchain.delegate import InvalidIdentityContractException
 from relay.utils import sha3
 from relay.blockchain.currency_network_proxy import CurrencyNetworkProxy
 from relay.blockchain.unw_eth_proxy import UnwEthProxy
+from relay.blockchain.delegate import InvalidMetaTransactionException
 from relay.api import fields as custom_fields
 from .schemas import (CurrencyNetworkEventSchema,
                       UserCurrencyNetworkEventSchema,
@@ -325,6 +326,10 @@ class RelayMetaTransaction(Resource):
         meta_transaction: identity.MetaTransaction = args["metaTransaction"]
         try:
             return self.trustlines.delegate_metatransaction(meta_transaction).hex()
+        except InvalidMetaTransactionException:
+            abort(400, 'The meta-transaction is invalid')
+        except InvalidIdentityContractException:
+            abort(400, 'This meta transaction belongs to an invalid or unknown identity contract')
         except ValueError:
             abort(409, 'There was an error while relaying this meta-transaction')
 

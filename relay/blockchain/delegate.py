@@ -15,7 +15,15 @@ class Delegate:
         )
 
     def send_signed_meta_transaction(self, signed_meta_transaction: MetaTransaction):
-        return self.delegator.send_signed_meta_transaction(signed_meta_transaction)
+        try:
+            valid = self.delegator.validate_meta_transaction(signed_meta_transaction)
+        except UnexpectedIdentityContractException as e:
+            raise InvalidIdentityContractException(e)
+
+        if valid:
+            return self.delegator.send_signed_meta_transaction(signed_meta_transaction)
+        else:
+            raise InvalidMetaTransactionException
 
     def deploy_identity(self, owner_address: str) -> str:
         return deploy_identity(self._web3, owner_address).address
@@ -28,4 +36,8 @@ class Delegate:
 
 
 class InvalidIdentityContractException(Exception):
+    pass
+
+
+class InvalidMetaTransactionException(Exception):
     pass
