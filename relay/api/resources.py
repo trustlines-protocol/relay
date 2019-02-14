@@ -33,7 +33,7 @@ from relay.relay import TrustlinesRelay
 from relay.concurrency_utils import TimeoutException
 from relay.logger import get_logger
 
-from relay.network_graph.dijkstra_weighted import PaymentPath
+from relay.network_graph.payment_path import PaymentPath
 
 logger = get_logger("api.resources", logging.DEBUG)
 
@@ -418,6 +418,11 @@ class Path(Resource):
         "maxFees": fields.Int(required=False, missing=None),
         "from": custom_fields.Address(required=True),
         "to": custom_fields.Address(required=True),
+        "fee_payer": fields.Str(
+            required=False,
+            validate=validate.OneOf(["sender", "receiver"]),
+            missing="sender",
+        ),
     }
 
     @use_args(args)
@@ -431,18 +436,35 @@ class Path(Resource):
         value = args["value"]
         max_fees = args["maxFees"]
         max_hops = args["maxHops"]
+        sender_pays_fees = args["fee_payer"] == "sender"
 
-        cost, path = self.trustlines.currency_network_graphs[network_address].find_transfer_path_sender_pays_fees(
-            source=source,
-            target=target,
-            value=value,
-            max_fees=max_fees,
-            max_hops=max_hops,
-            timestamp=timestamp,
-        )
+        if sender_pays_fees:
+            cost, path = self.trustlines.currency_network_graphs[
+                network_address
+            ].find_transfer_path_sender_pays_fees(
+                source=source,
+                target=target,
+                value=value,
+                max_fees=max_fees,
+                max_hops=max_hops,
+                timestamp=timestamp,
+            )
+        else:
+            cost, path = self.trustlines.currency_network_graphs[
+                network_address
+            ].find_transfer_path_receiver_pays_fees(
+                source=source,
+                target=target,
+                value=value,
+                max_fees=max_fees,
+                max_hops=max_hops,
+                timestamp=timestamp,
+            )
 
         return _estimate_gas_for_transfer(
-            self.trustlines, PaymentPath(cost, path, value), network_address
+            self.trustlines,
+            PaymentPath(cost, path, value, sender_pays_fees=sender_pays_fees),
+            network_address,
         )
 
 

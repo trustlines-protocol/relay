@@ -33,7 +33,7 @@ https://relay0.testnet.trustlines.network/api/v1
 - [Transfer path in currency network](#transfer-path-in-currency-network)
 - [Closing trustline path in currency network](#closing-trustline-path-in-currency-network)
 - [All events in currency network](#all-events-in-currency-network)
-- [Events of user in currency network](#events-of-user-in-currency-network)
+- [Events of a user in currency network](#events-of-a-user-in-currency-network)
 ### User context
 - [Events of user in all currency networks](#events-of-user-in-all-currency-networks)
 - [Transaction infos for user](#transaction-infos-for-user)
@@ -341,6 +341,7 @@ POST /networks/:networkAddress/path-info
 |value|string|YES|Transfer amount in smallest unit|
 |maxFees|string|NO|Upper bound for transfer fees|
 |maxHops|string|NO|Upper bound for hops in transfer path|
+|fee_payer|string|NO|Either `sender` or `receiver`|
 #### Example Request
 ```bash
 curl --header "Content-Type: application/json" \
@@ -841,7 +842,7 @@ The endpoint returns an object with the following fields:
 
 #### Example Response
 ```json
-{"identity": "0x43950642C8685ED8e3Fb89a5C5aeCb12862A87fd", "nextNonce": 0, "balance", "0"}
+{"identity": "0x43950642C8685ED8e3Fb89a5C5aeCb12862A87fd", "nextNonce": 0, "balance": "0"}
 ```
 
 ### Get identity information
