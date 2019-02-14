@@ -42,6 +42,8 @@ https://relay0.testnet.trustlines.network/api/v1
 - [Relay transaction](#relay-transaction)
 - [Relay meta transaction](#relay-meta-transaction)
 - [Deploy identity contract](#deploy-identity-contract)
+- [Get identity information](#get-identity-information)
+
 ---
 
 ### Currency networks list
@@ -831,11 +833,42 @@ curl --header "Content-Type: application/json" \
 #### Response
 The endpoint returns an object with the following fields:
 
-| Name     | Type    | Description                                    |
-|----------|---------|------------------------------------------------|
-| identity | Address | The address of the deployed identity contract  |
+| Name      | Type    | Description                                   |
+|-----------|---------|-----------------------------------------------|
+| identity  | Address | the address of the deployed identity contract |
+| nextNonce | int     | the next available nonce
+| balance   | string  | contracts balance in wei                      |
 
 #### Example Response
 ```json
-{"identity": "0x43950642C8685ED8e3Fb89a5C5aeCb12862A87fd"}
+{"identity": "0x43950642C8685ED8e3Fb89a5C5aeCb12862A87fd", "nextNonce": 0, "balance", "0"}
+```
+
+### Get identity information
+#### Request
+```
+GET /identities/:identity
+```
+#### URL Parameters
+
+| Name     | Type    | Required | Description                                   |
+|----------|---------|----------|-----------------------------------------------|
+| identity | Address | YES      | the address of the deployed identity contract |
+
+#### Example Request
+```bash
+curl https://relay0.testnet.trustlines.network/api/v1/identities/0x2AbCc1389258Dc187DB787E33FD2B99d53695DE3
+```
+
+#### Response
+The endpoint returns an object with the following fields:
+
+| Name      | Type    | Description                                   |
+|-----------|---------|-----------------------------------------------|
+| identity  | Address | the address of the deployed identity contract |
+| nextNonce | int     | the next available nonce
+| balance   | string  | contracts balance in wei                      |
+#### Example Response
+```json
+{"identity": "0x2AbCc1389258Dc187DB787E33FD2B99d53695DE3", "nextNonce": 0, "balance": "0"}
 ```
