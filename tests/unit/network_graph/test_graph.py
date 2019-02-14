@@ -12,9 +12,9 @@ A, B, C, D, E, F, G, H = addresses
 
 def assert_maximum_path(community, max_path, max_amount):
     """Asserts that the found path and amount is indeed the maximum"""
-    fee, path = community.find_path(max_path[0], max_path[-1], max_amount)
+    fee, path = community.find_path_sender_pays_fees(max_path[0], max_path[-1], max_amount)
     assert path == max_path
-    fee, path = community.find_path(max_path[0], max_path[-1], max_amount + 1)
+    fee, path = community.find_path_sender_pays_fees(max_path[0], max_path[-1], max_amount + 1)
     assert path == []
 
 
@@ -86,6 +86,17 @@ def complex_community_with_trustlines_and_fees_configurable_balances(complex_com
     for user, counter_party, balance in request.param:
         complex_community_with_trustlines.update_balance(user, counter_party, balance)
     return complex_community_with_trustlines
+
+
+@pytest.fixture(
+    params=[
+        CurrencyNetworkGraph.find_path_sender_pays_fees,
+        CurrencyNetworkGraph.find_path_receiver_pays_fees
+    ]
+)
+def find_path_sender_then_receiver_pays(community_with_trustlines, request):
+
+    return request.param
 
 
 def test_users(community_with_trustlines):
@@ -397,43 +408,51 @@ def test_mediated_transfer(community_with_trustlines):
     assert community.get_account_sum(B, C).balance == -50
 
 
-def test_path(community_with_trustlines):
+def test_path(community_with_trustlines, find_path_sender_then_receiver_pays):
+    find_path = find_path_sender_then_receiver_pays
     community = community_with_trustlines
-    cost, path = community.find_path(A, B, 10)
+
+    cost, path = find_path(community, A, B, 10)
     assert path == [A, B]
     assert cost == 0
-    cost, path = community.find_path(A, D, 10)
+    cost, path = find_path(community, A, D, 10)
     assert path == [A, E, D]
     assert cost == 0
 
 
-def test_no_path(community_with_trustlines):
+def test_no_path(community_with_trustlines, find_path_sender_then_receiver_pays):
     community = community_with_trustlines
+    find_path = find_path_sender_then_receiver_pays
+
     community.update_trustline(F, G, 100, 0)
-    cost, path = community.find_path(G, F, 10)
+    cost, path = find_path(community, G, F, 10)
     assert path == [G, F]
-    cost, path = community.find_path(A, G, 10)  # no path at all
+    cost, path = find_path(community, A, G, 10)  # no path at all
     assert path == []
 
 
-def test_no_capacity(community_with_trustlines):
+def test_no_capacity(community_with_trustlines, find_path_sender_then_receiver_pays):
     community = community_with_trustlines
-    cost, path = community.find_path(A, E, 550)
+    find_path = find_path_sender_then_receiver_pays
+
+    cost, path = find_path(community, A, E, 550)
     assert path == [A, E]
-    cost, path = community.find_path(A, E, 551)
+    cost, path = find_path(community, A, E, 551)
     assert path == []
-    cost, path = community.find_path(E, A, 500)
+    cost, path = find_path(community, E, A, 500)
     assert path == [E, A]
-    cost, path = community.find_path(E, A, 501)
+    cost, path = find_path(community, E, A, 501)
     assert path == []
 
 
-def test_no_direction(community_with_trustlines):
+def test_no_direction(community_with_trustlines, find_path_sender_then_receiver_pays):
     community = community_with_trustlines
+    find_path = find_path_sender_then_receiver_pays
+
     community.update_trustline(F, G, 100, 0)
-    cost, path = community.find_path(G, F, 10)
+    cost, path = find_path(community_with_trustlines, G, F, 10)
     assert path == [G, F]
-    cost, path = community.find_path(F, G, 10)  # no creditline in this direction
+    cost, path = find_path(community_with_trustlines, F, G, 10)  # no creditline in this direction
     assert path == []
 
 
@@ -445,42 +464,47 @@ def test_valid_path_raises_no_value_error(complex_community_with_trustlines_and_
     complex_community_with_trustlines_and_fees.update_balance(B, D, -10000)
     complex_community_with_trustlines_and_fees.update_balance(C, D, 10000)
     complex_community_with_trustlines_and_fees.update_balance(D, E, 0)
-    cost, path = complex_community_with_trustlines_and_fees.find_path(E, A, 10000)  # should not raise ValueError
+    # should not raise ValueError
+    cost, path = complex_community_with_trustlines_and_fees.find_path_sender_pays_fees(E, A, 10000)
 
 
-def test_max_hops(community_with_trustlines):
+def test_max_hops(community_with_trustlines, find_path_sender_then_receiver_pays):
     community = community_with_trustlines
-    cost, path = community.find_path(A, D, 10)
+    find_path = find_path_sender_then_receiver_pays
+
+    cost, path = find_path(community, A, D, 10)
     assert path == [A, E, D]
-    cost, path = community.find_path(A, D, 10, max_hops=1)
+    cost, path = find_path(community, A, D, 10, max_hops=1)
     assert path == []
 
 
 def test_send_back(community_with_trustlines):
     community = community_with_trustlines
+
     assert community.get_account_sum(A, B).balance == 0
-    assert community.find_path(B, A, 120)[1] == [B, C, D, E, A]
-    assert community.find_path(A, B, 120)[1] == [A, B]
+    assert community.find_path_sender_pays_fees(B, A, 120)[1] == [B, C, D, E, A]
+    assert community.find_path_sender_pays_fees(A, B, 120)[1] == [A, B]
     community.mediated_transfer(A, B, 120)
     assert community.get_account_sum(B, A).balance == 120
-    assert community.find_path(B, A, 120)[1] == [B, A]
-    assert community.find_path(A, B, 120)[1] == [A, E, D, C, B]
+    assert community.find_path_sender_pays_fees(B, A, 120)[1] == [B, A]
+    assert community.find_path_sender_pays_fees(A, B, 120)[1] == [A, E, D, C, B]
     community.mediated_transfer(B, A, 120)
     assert community.get_account_sum(A, B).balance == 0
 
 
 def test_send_more(community_with_trustlines):
     community = community_with_trustlines
+
     assert community.get_account_sum(A, B).balance == 0
     assert community.get_account_sum(A, B).creditline_left_received == 150
     assert community.get_account_sum(B, A).creditline_left_received == 100
-    assert community.find_path(A, B, 120)[1] == [A, B]
-    assert community.find_path(B, A, 120)[1] == [B, C, D, E, A]
+    assert community.find_path_sender_pays_fees(A, B, 120)[1] == [A, B]
+    assert community.find_path_sender_pays_fees(B, A, 120)[1] == [B, C, D, E, A]
     community.mediated_transfer(A, B, 120)
     assert community.get_account_sum(B, A).balance == 120
     assert community.get_account_sum(B, A).creditline_left_received == 220
-    assert community.find_path(A, B, 200)[1] == [A, E, D, C, B]
-    assert community.find_path(B, A, 200)[1] == [B, A]
+    assert community.find_path_sender_pays_fees(A, B, 200)[1] == [A, E, D, C, B]
+    assert community.find_path_sender_pays_fees(B, A, 200)[1] == [B, A]
     community.mediated_transfer(B, A, 200)
     assert community.get_account_sum(A, B).balance == 80
 
@@ -490,14 +514,14 @@ def test_send_more_nopath(community_with_trustlines):
     assert community.get_account_sum(A, B).balance == 0
     assert community.get_account_sum(A, B).creditline_left_received == 150
     assert community.get_account_sum(B, A).creditline_left_received == 100
-    assert community.find_path(A, B, 160)[1] == [A, E, D, C, B]
-    assert community.find_path(B, A, 160)[1] == [B, C, D, E, A]
+    assert community.find_path_sender_pays_fees(A, B, 160)[1] == [A, E, D, C, B]
+    assert community.find_path_sender_pays_fees(B, A, 160)[1] == [B, C, D, E, A]
     community.mediated_transfer(A, B, 50)
     assert community.get_account_sum(B, A).balance == 50
     assert community.get_account_sum(A, B).creditline_left_received == 100
     assert community.get_account_sum(B, A).creditline_left_received == 150
-    assert community.find_path(A, B, 160)[1] == [A, E, D, C, B]
-    assert community.find_path(B, A, 160)[1] == [B, C, D, E, A]
+    assert community.find_path_sender_pays_fees(A, B, 160)[1] == [A, E, D, C, B]
+    assert community.find_path_sender_pays_fees(B, A, 160)[1] == [B, C, D, E, A]
     community.mediated_transfer(B, A, 50)
     assert community.get_account_sum(A, B).balance == 0
 
@@ -532,46 +556,71 @@ def test_mediated_transfer_with_fees(community_with_trustlines_and_fees):
     assert community.get_account_sum(B, C).balance == -50
 
 
-def test_path_with_fees(community_with_trustlines_and_fees):
+def test_path_with_fees_sender_pays(community_with_trustlines_and_fees):
     community = community_with_trustlines_and_fees
-    cost, path = community.find_path(A, B, 10)
+    cost, path = community.find_path_sender_pays_fees(A, B, 10)
     assert path == [A, B]
     assert cost == 0
-    cost, path = community.find_path(A, D, 10)
+    cost, path = community.find_path_sender_pays_fees(A, D, 10)
     assert path == [A, E, D]
     assert cost == 1
 
 
+def test_path_with_fees_receiver_pays(community_with_trustlines_and_fees):
+    community = community_with_trustlines_and_fees
+    cost, path = community.find_path_receiver_pays_fees(A, B, 10)
+    assert path == [A, B]
+    assert cost == 0
+    cost, path = community.find_path_receiver_pays_fees(A, D, 10)
+    assert path == [A, E, D]
+    assert cost == 1
+
+
+def test_path_fee_symmetry_sanity(complex_community_with_trustlines_and_fees):
+    community = complex_community_with_trustlines_and_fees
+
+    sender_pays = 50000
+
+    cost, path = community.find_path_receiver_pays_fees(A, H, sender_pays)
+    assert path == [A, B, D, E, F, G, H]
+    assert cost == 2453
+
+    receiver_receives = sender_pays - cost
+    cost, path = community.find_path_sender_pays_fees(A, H, receiver_receives)
+    assert path == [A, B, D, E, F, G, H]
+    assert cost == 2453
+
+
 def test_max_fees(community_with_trustlines_and_fees):
     community = community_with_trustlines_and_fees
-    cost, path = community.find_path(A, D, 110)
+    cost, path = community.find_path_sender_pays_fees(A, D, 110)
     assert path == [A, E, D]
     assert cost == 2
-    cost, path = community.find_path(A, D, 110, max_fees=1)
+    cost, path = community.find_path_sender_pays_fees(A, D, 110, max_fees=1)
     assert path == []
 
 
 def test_no_capacity_with_fees(community_with_trustlines_and_fees):
     community = community_with_trustlines_and_fees
-    cost, path = community.find_path(A, E, 550)
+    cost, path = community.find_path_sender_pays_fees(A, E, 550)
     assert path == [A, E]
-    cost, path = community.find_path(A, E, 551)
+    cost, path = community.find_path_sender_pays_fees(A, E, 551)
     assert path == []
-    cost, path = community.find_path(E, A, 500)
+    cost, path = community.find_path_sender_pays_fees(E, A, 500)
     assert path == [E, A]
-    cost, path = community.find_path(E, A, 501)
+    cost, path = community.find_path_sender_pays_fees(E, A, 501)
     assert path == []
 
 
 def test_send_back_with_fees(community_with_trustlines_and_fees):
     community = community_with_trustlines_and_fees
     assert community.get_account_sum(A, B).balance == 0
-    assert community.find_path(B, A, 120)[1] == [B, C, D, E, A]
-    assert community.find_path(A, B, 120)[1] == [A, B]
+    assert community.find_path_sender_pays_fees(B, A, 120)[1] == [B, C, D, E, A]
+    assert community.find_path_sender_pays_fees(A, B, 120)[1] == [A, B]
     assert community.mediated_transfer(A, B, 120) == 0
     assert community.get_account_sum(B, A).balance == 120
-    assert community.find_path(B, A, 120)[1] == [B, A]
-    assert community.find_path(A, B, 120)[1] == [A, E, D, C, B]
+    assert community.find_path_sender_pays_fees(B, A, 120)[1] == [B, A]
+    assert community.find_path_sender_pays_fees(A, B, 120)[1] == [A, E, D, C, B]
     assert community.mediated_transfer(B, A, 120) == 0
     assert community.get_account_sum(A, B).balance == 0
 
@@ -581,13 +630,13 @@ def test_send_more_with_fees(community_with_trustlines_and_fees):
     assert community.get_account_sum(A, B).balance == 0
     assert community.get_account_sum(A, B).creditline_left_received == 150
     assert community.get_account_sum(B, A).creditline_left_received == 100
-    assert community.find_path(A, B, 120)[1] == [A, B]
-    assert community.find_path(B, A, 120)[1] == [B, C, D, E, A]
+    assert community.find_path_sender_pays_fees(A, B, 120)[1] == [A, B]
+    assert community.find_path_sender_pays_fees(B, A, 120)[1] == [B, C, D, E, A]
     assert community.mediated_transfer(A, B, 120) == 0
     assert community.get_account_sum(B, A).balance == 120 + 0
     assert community.get_account_sum(B, A).creditline_left_received == 220 + 0
-    assert community.find_path(A, B, 201)[1] == []
-    assert community.find_path(B, A, 200)[1] == [B, A]
+    assert community.find_path_sender_pays_fees(A, B, 201)[1] == []
+    assert community.find_path_sender_pays_fees(B, A, 200)[1] == [B, A]
     assert community.mediated_transfer(B, A, 200) == 0
     assert community.get_account_sum(A, B).balance == 80
 

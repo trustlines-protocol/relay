@@ -119,7 +119,7 @@ def test_interests_calculation_delta_time(basic_account):
 def test_interests_path_from_A_balance_positive_relevant_interests(configurable_community):
     # B owes to A
     # 1% interest given by A to B
-    cost, path = configurable_community.find_path(A, B, 100)
+    cost, path = configurable_community.find_path_sender_pays_fees(A, B, 100)
     assert path == [A, B]
 
 
@@ -132,7 +132,7 @@ def test_interests_path_from_A_balance_positive_relevant_interests(configurable_
 def test_interests_path_from_A_balance_negative_relevant_interests(configurable_community):
     # A owes to B
     # 1% interest given by B to A
-    cost, path = configurable_community.find_path(A, B, 100)
+    cost, path = configurable_community.find_path_sender_pays_fees(A, B, 100)
     assert path == []
 
 
@@ -146,7 +146,7 @@ def test_interests_path_from_A_balance_positive_irrelevant_interests(configurabl
     # B owes to A
     # 1% interest given by B to A
 
-    cost, path = configurable_community.find_path(A, B, 100)
+    cost, path = configurable_community.find_path_sender_pays_fees(A, B, 100)
     assert path == [A, B]
 
 
@@ -159,7 +159,7 @@ def test_interests_path_from_A_balance_positive_irrelevant_interests(configurabl
 def test_interests_path_from_A_balance_negative_irrelevant_interests(configurable_community):
     # A owes to B
     # 1% interest given by A to B
-    cost, path = configurable_community.find_path(A, B, 100)
+    cost, path = configurable_community.find_path_sender_pays_fees(A, B, 100)
     assert path == [A, B]
 
 
@@ -172,7 +172,7 @@ def test_interests_path_from_A_balance_negative_irrelevant_interests(configurabl
 def test_interests_path_from_B_balance_positive_relevant_interests(configurable_community):
     # B owes to A
     # 1% interest given by A to B
-    cost, path = configurable_community.find_path(B, A, 100)
+    cost, path = configurable_community.find_path_sender_pays_fees(B, A, 100)
     assert path == []
 
 
@@ -185,7 +185,7 @@ def test_interests_path_from_B_balance_positive_relevant_interests(configurable_
 def test_interests_path_from_B_balance_negative_relevant_interests(configurable_community):
     # A owes to B
     # 1% interest given by B to A
-    cost, path = configurable_community.find_path(B, A, 100)
+    cost, path = configurable_community.find_path_sender_pays_fees(B, A, 100)
     assert path == [B, A]
 
 
@@ -198,7 +198,7 @@ def test_interests_path_from_B_balance_negative_relevant_interests(configurable_
 def test_interests_path_from_B_balance_positive_irrelevant_interests(configurable_community):
     # B owes to A
     # 1% interest given by B to A
-    cost, path = configurable_community.find_path(B, A, 100)
+    cost, path = configurable_community.find_path_sender_pays_fees(B, A, 100)
     assert path == [B, A]
 
 
@@ -211,5 +211,5 @@ def test_interests_path_from_B_balance_positive_irrelevant_interests(configurabl
 def test_interests_path_from_B_balance_negative_irrelevant_interests(configurable_community):
     # A owes to B
     # 1% interest given by A to B
-    cost, path = configurable_community.find_path(B, A, 100)
+    cost, path = configurable_community.find_path_sender_pays_fees(B, A, 100)
     assert path == [B, A]
