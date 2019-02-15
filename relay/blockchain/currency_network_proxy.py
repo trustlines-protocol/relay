@@ -60,7 +60,8 @@ class CurrencyNetworkProxy(Proxy):
         self.prevent_mediator_interests = (
             self._proxy.functions.preventMediatorInterests().call()
         )
-        self.interest_rate_decimals = 2  # Fixed for now, see contracts
+        # Fixed for now, see contracts
+        self.interest_rate_decimals = 2
 
     @property
     def users(self) -> List[str]:

@@ -96,8 +96,8 @@ class OrderBookDB(object):
 
     @synchronized
     def add_order(self, order: Order) -> None:
-        # remove 0x to keep backwards compatibility
         order_orm = self.session.query(OrderORM).get(
+            # remove 0x to keep backwards compatibility
             remove_0x_prefix(order.hash().hex())
         )
         if order_orm is None:
@@ -176,8 +176,8 @@ class OrderBookDB(object):
 
     @synchronized
     def delete_order_by_hash(self, order_hash: hexbytes.HexBytes) -> None:
-        # remove 0x to keep backwards compatibility
         self.session.query(OrderORM).filter_by(
+            # remove 0x to keep backwards compatibility
             msg_hash=remove_0x_prefix(order_hash.hex())
         ).delete(synchronize_session=False)
         self.session.commit()
@@ -185,8 +185,8 @@ class OrderBookDB(object):
     @synchronized
     def delete_orders_by_hash(self, order_hashes: Sequence[hexbytes.HexBytes]) -> None:
         for order_hash in order_hashes:
-            # remove 0x to keep backwards compatibility
             self.session.query(OrderORM).filter_by(
+                # remove 0x to keep backwards compatibility
                 msg_hash=remove_0x_prefix(order_hash.hex())
             ).delete(synchronize_session=False)
         self.session.commit()
@@ -205,11 +205,10 @@ class OrderBookDB(object):
         filled_maker_token_amount: int,
         filled_taker_token_amount: int,
     ) -> None:
-        # remove 0x to keep backwards compatibility
         order_orm = (
             self.session.query(OrderORM)
-            .filter_by(msg_hash=remove_0x_prefix(order_hash.hex()))
-            .first()
+            # remove 0x to keep backwards compatibility
+            .filter_by(msg_hash=remove_0x_prefix(order_hash.hex())).first()
         )
         if order_orm is not None:
             order_orm.filled_maker_token_amount += filled_maker_token_amount
@@ -225,11 +224,10 @@ class OrderBookDB(object):
         cancelled_maker_token_amount: int,
         cancelled_taker_token_amount: int,
     ) -> None:
-        # remove 0x to keep backwards compatibility
         order_orm = (
             self.session.query(OrderORM)
-            .filter_by(msg_hash=remove_0x_prefix(order_hash.hex()))
-            .first()
+            # remove 0x to keep backwards compatibility
+            .filter_by(msg_hash=remove_0x_prefix(order_hash.hex())).first()
         )
         if order_orm is not None:
             order_orm.cancelled_maker_token_amount += cancelled_maker_token_amount

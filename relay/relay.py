@@ -218,17 +218,12 @@ class TrustlinesRelay:
         self.currency_network_proxies[address] = CurrencyNetworkProxy(
             self._web3, self.contracts["CurrencyNetwork"]["abi"], address
         )
+        currency_network_proxy = self.currency_network_proxies[address]
         self.currency_network_graphs[address] = CurrencyNetworkGraph(
-            capacity_imbalance_fee_divisor=self.currency_network_proxies[
-                address
-            ].capacity_imbalance_fee_divisor,
-            default_interest_rate=self.currency_network_proxies[
-                address
-            ].default_interest_rate,
-            custom_interests=self.currency_network_proxies[address].custom_interests,
-            prevent_mediator_interests=self.currency_network_proxies[
-                address
-            ].prevent_mediator_interests,
+            capacity_imbalance_fee_divisor=currency_network_proxy.capacity_imbalance_fee_divisor,
+            default_interest_rate=currency_network_proxy.default_interest_rate,
+            custom_interests=currency_network_proxy.custom_interests,
+            prevent_mediator_interests=currency_network_proxy.prevent_mediator_interests,
         )
         self._start_listen_network(address)
 

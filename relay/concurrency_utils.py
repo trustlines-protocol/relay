@@ -30,9 +30,8 @@ def joinall(functions: Iterable[Callable], timeout: float = None) -> List[Any]:
     if len(finished_greenlets) < len(spawned_greenlets):
         raise TimeoutException("Could not finish all jobs before the timeout")
 
-    return [
-        g.value for g in spawned_greenlets if g.value is not None
-    ]  # Use spawned greenlets to preserve order
+    # Use spawned greenlets to preserve order
+    return [g.value for g in spawned_greenlets if g.value is not None]
 
 
 # adapted from https://github.com/GrahamDumpleton/wrapt/blob/develop/blog/07-the-missing-synchronized-decorator.md

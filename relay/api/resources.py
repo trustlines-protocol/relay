@@ -371,7 +371,7 @@ class DeployIdentity(Resource):
     def post(self, args):
         owner_address = args["ownerAddress"]
         identity_contract = self.trustlines.deploy_identity(owner_address)
-        # we may like to return additonal fields here in the future, therefore
+        # we may like to return additional fields here in the future, therefore
         # the return value is a map
         return {"identity": identity_contract.address}
 
@@ -382,7 +382,8 @@ def _estimate_gas_for_transfer(
     proxy = trustlines.currency_network_proxies[network_address]
     try:
         payment_path.estimated_gas = proxy.estimate_gas_for_payment_path(payment_path)
-    except ValueError:  # should mean out of gas, so path was not right.
+    except ValueError:
+        # should mean out of gas, so path was not right.
         return PaymentPath(fee=0, path=[], value=payment_path.value, estimated_gas=0)
 
     return payment_path
@@ -470,7 +471,8 @@ class CloseTrustline(Resource):
                 max_fee=max_fees or 2 ** 32 - 1,
                 path=payment_path.path,
             )
-        except ValueError:  # should mean out of gas, so path was not right.
+        except ValueError:
+            # should mean out of gas, so path was not right.
             return PaymentPath(
                 fee=0, path=[], value=payment_path.value, estimated_gas=0
             )

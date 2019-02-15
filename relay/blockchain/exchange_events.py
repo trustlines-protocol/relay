@@ -1,6 +1,6 @@
 import hexbytes
 
-from .events import TLNetworkEvent, BlockchainEvent  # NOQA
+from .events import TLNetworkEvent
 
 LogFillEventType = "LogFill"
 LogCancelEventType = "LogCancel"

@@ -244,7 +244,8 @@ class SenderPaysCostAccumulatorSnapshot(alg.CostAccumulator):
         # check that we don't exceed the creditline
         capacity = pre_balance + get_creditline(edge_data, node, dst)
         if self.value + sum_fees + fee > capacity:
-            return None  # creditline exceeded
+            # creditline exceeded
+            return None
 
         return self.Cost(fees=sum_fees + fee, num_hops=num_hops + 1)
 
@@ -332,7 +333,8 @@ class ReceiverPaysCostAccumulatorSnapshot(alg.CostAccumulator):
         # check that we don't exceed the creditline
         capacity = pre_balance + get_creditline(edge_data, dst, node)
         if self.value - sum_fees - previous_hop_fee > capacity:
-            return None  # creditline exceeded
+            # creditline exceeded
+            return None
 
         return self.Cost(
             fees=sum_fees + previous_hop_fee,
@@ -388,7 +390,6 @@ class SenderPaysCapacityAccumulator(alg.CostAccumulator):
     def total_cost_from_start_to_dst(
         self, cost_from_start_to_node: Cost, node, dst, edge_data
     ):
-
         capacity_from_start_to_node = -cost_from_start_to_node.minus_capacity
         num_hops = cost_from_start_to_node.num_hops
         previous_hop_fee = cost_from_start_to_node.previous_hop_fee
@@ -463,9 +464,8 @@ class CurrencyNetworkGraph(object):
 
     @property
     def money_created(self):
-        return sum(
-            [abs(edge[2]) for edge in self.graph.edges(data=balance_ab)]
-        )  # does not include interests
+        # does not include interests
+        return sum([abs(edge[2]) for edge in self.graph.edges(data=balance_ab)])
 
     @property
     def has_interests(self) -> bool:
@@ -660,8 +660,9 @@ class CurrencyNetworkGraph(object):
             )
         except (
             nx.NetworkXNoPath,
+            # key error if source or target is not in graph
             KeyError,
-        ):  # key error for if source or target is not in graph
+        ):
             return 0, []
         return cost[0], list(reversed(path))
 
