@@ -10,6 +10,8 @@ from webargs import fields
 from webargs.flaskparser import use_args
 from marshmallow import validate, fields as marshmallow_fields
 from tldeploy import identity
+
+from relay.blockchain.delegate import InvalidIdentityContractException
 from relay.utils import sha3
 from relay.blockchain.currency_network_proxy import CurrencyNetworkProxy
 from relay.blockchain.unw_eth_proxy import UnwEthProxy
@@ -25,6 +27,7 @@ from .schemas import (
     TrustlineSchema,
     CurrencyNetworkSchema,
     MetaTransactionSchema,
+    IdentityInfosSchema,
 )
 from relay.relay import TrustlinesRelay
 from relay.concurrency_utils import TimeoutException
@@ -332,6 +335,11 @@ class RelayMetaTransaction(Resource):
             return self.trustlines.delegate_metatransaction(meta_transaction).hex()
         except InvalidMetaTransactionException:
             abort(400, "The meta-transaction is invalid")
+        except InvalidIdentityContractException:
+            abort(
+                400,
+                "This meta transaction belongs to an invalid or unknown identity contract",
+            )
         except ValueError:
             abort(409, "There was an error while relaying this meta-transaction")
 
@@ -368,12 +376,23 @@ class DeployIdentity(Resource):
     args = {"ownerAddress": custom_fields.Address(required=True)}
 
     @use_args(args)
+    @dump_result_with_schema(IdentityInfosSchema())
     def post(self, args):
         owner_address = args["ownerAddress"]
-        identity_contract = self.trustlines.deploy_identity(owner_address)
-        # we may like to return additional fields here in the future, therefore
-        # the return value is a map
-        return {"identity": identity_contract.address}
+        identity_contract_address = self.trustlines.deploy_identity(owner_address)
+        return self.trustlines.get_identity_info(identity_contract_address)
+
+
+class IdentityInfos(Resource):
+    def __init__(self, trustlines: TrustlinesRelay) -> None:
+        self.trustlines = trustlines
+
+    @dump_result_with_schema(IdentityInfosSchema())
+    def get(self, identity_address: str):
+        try:
+            return self.trustlines.get_identity_info(identity_address)
+        except InvalidIdentityContractException:
+            abort(404, "Identity Contract not found or invalid")
 
 
 def _estimate_gas_for_transfer(

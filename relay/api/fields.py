@@ -19,6 +19,7 @@ class Address(fields.String):
 
 class BigInteger(fields.String):
     def _serialize(self, value, attr, obj):
+        assert isinstance(value, int)
         value = str(value)
         return super()._serialize(value, attr, obj)
 

@@ -21,7 +21,7 @@ psycogreen
 wrapt
 attrs
 click
-trustlines-contracts-deploy>=0.6.1
+trustlines-contracts-deploy>=0.6.2
 
 # --- development dependencies, i.e. dependencies not needed for running tl-relay
 black

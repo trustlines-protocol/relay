@@ -187,10 +187,17 @@ class TrustlinesRelay:
         return self.currency_network_graphs[network_address].users
 
     def deploy_identity(self, owner_address):
-        return self.delegate.deploy_identity(self._web3, owner_address)
+        return self.delegate.deploy_identity(owner_address)
 
     def delegate_metatransaction(self, meta_transaction: MetaTransaction):
         return self.delegate.send_signed_meta_transaction(meta_transaction)
+
+    def get_identity_info(self, identity_address: str):
+        return {
+            "balance": self.node.balance_wei(identity_address),
+            "identity": identity_address,
+            "nextNonce": self.delegate.calc_next_nonce(identity_address),
+        }
 
     def start(self):
         self._load_config()

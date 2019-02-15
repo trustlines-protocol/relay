@@ -30,6 +30,7 @@ from .resources import (
     CloseTrustline,
     RelayMetaTransaction,
     DeployIdentity,
+    IdentityInfos,
 )
 from .streams.app import WebSocketRPCHandler, MessagingWebSocketRPCHandler
 
@@ -121,6 +122,7 @@ def ApiApp(trustlines):
     if trustlines.enable_deploy_identity:
         add_resource(DeployIdentity, "/identities")
 
+    add_resource(IdentityInfos, "/identities/<address:identity_address>")
     add_resource(OrderBook, "/exchange/orderbook")
     add_resource(Orders, "/exchange/orders")
     add_resource(OrderSubmission, "/exchange/order")
