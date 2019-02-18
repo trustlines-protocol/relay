@@ -1,6 +1,12 @@
 ==========
 Change Log
 ==========
+`0.5.0`_ (2019-02-18)
+-------------------------------
+* implement meta transaction related functionality
+* reduce CPU usage
+* refactor usage of time.time() calls inside graph
+
 `0.4.1`_ (2019-01-25)
 -------------------------------
 * fix broken dependency on old version of trustlines-contracts-bin
@@ -56,3 +62,4 @@ Change Log
 .. _0.3.0: https://github.com/trustlines-network/relay/compare/0.2.0...0.3.0
 .. _0.4.0: https://github.com/trustlines-network/relay/compare/0.3.0...0.4.0
 .. _0.4.1: https://github.com/trustlines-network/relay/compare/0.4.0...0.4.1
+.. _0.5.0: https://github.com/trustlines-network/relay/compare/0.4.1...0.5.0
