@@ -1,5 +1,3 @@
-import time
-
 from relay.network_graph.graph import AccountSummary
 
 
@@ -17,10 +15,8 @@ class AccountEvent(Event):
         network_address: str,
         user: str,
         account_summary: AccountSummary,
-        timestamp: int = None,
+        timestamp: int,
     ) -> None:
-        if timestamp is None:
-            timestamp = int(time.time())
         super().__init__(timestamp)
         self.user = user
         self.balance = account_summary.balance
@@ -41,7 +37,7 @@ class BalanceEvent(AccountEvent):
         from_: str,
         to: str,
         account_summary: AccountSummary,
-        timestamp: int = None,
+        timestamp: int,
     ) -> None:
         super().__init__(network_address, from_, account_summary, timestamp)
         self.from_ = from_
@@ -58,9 +54,7 @@ class MessageEvent(Event):
 
     type = "Message"
 
-    def __init__(self, message: str, type: str = None, timestamp: int = None) -> None:
-        if timestamp is None:
-            timestamp = int(time.time())
+    def __init__(self, message: str, *, timestamp: int, type: str = None) -> None:
         super().__init__(timestamp)
         if type is not None:
             self.type = type

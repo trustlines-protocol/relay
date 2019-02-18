@@ -1,6 +1,5 @@
 import csv
 import io
-import time
 import math
 from typing import Iterable, Any, NamedTuple
 
@@ -562,9 +561,9 @@ class CurrencyNetworkGraph(object):
                 "No timestamp was given. When using interests a timestamp is mandatory"
             )
 
-    def get_account_sum(self, user, counter_party=None, timestamp=None):
-        if timestamp is None:
-            timestamp = int(time.time())
+    def get_account_sum(
+        self, user: str, counter_party: str = None, *, timestamp: int = 0
+    ):
 
         if counter_party is None:
             account_summary = AccountSummary()
@@ -629,7 +628,7 @@ class CurrencyNetworkGraph(object):
         return output.getvalue()
 
     def find_path(
-        self, source, target, value=None, max_hops=None, max_fees=None, timestamp=None
+        self, source, target, value=None, max_hops=None, max_fees=None, timestamp=0
     ):
         """
         find path between source and target
@@ -639,8 +638,6 @@ class CurrencyNetworkGraph(object):
         """
         if value is None:
             value = 1
-        if timestamp is None:
-            timestamp = int(time.time())
 
         cost_accumulator = SenderPaysCostAccumulatorSnapshot(
             timestamp=timestamp,
@@ -728,7 +725,7 @@ class CurrencyNetworkGraph(object):
 
         return PaymentPath(fee=cost[0], path=path, value=value)
 
-    def find_maximum_capacity_path(self, source, target, max_hops=None, timestamp=None):
+    def find_maximum_capacity_path(self, source, target, max_hops=None, timestamp=0):
         """
         find a path probably with the maximum capacity to transfer from source to target
         The "imbalance_fee" function not being bijective, only an estimate of the fees can be found from "value + fee"
@@ -741,8 +738,6 @@ class CurrencyNetworkGraph(object):
         Returns:
             returns the value that can be send in the max capacity path and the path,
         """
-        if timestamp is None:
-            timestamp = int(time.time())
         capacity_accumulator = SenderPaysCapacityAccumulator(
             timestamp=timestamp,
             capacity_imbalance_fee_divisor=self.capacity_imbalance_fee_divisor,
@@ -791,10 +786,10 @@ class CurrencyNetworkGraphForTesting(CurrencyNetworkGraph):
             prevent_mediator_interests=prevent_mediator_interests,
         )
 
-    def transfer_path(self, path, value, expected_fees):
+    def transfer_path(self, path, value, expected_fees, timestamp=0):
         assert value > 0
         cost_accumulator = SenderPaysCostAccumulatorSnapshot(
-            timestamp=int(time.time()),
+            timestamp=timestamp,
             value=value,
             capacity_imbalance_fee_divisor=self.capacity_imbalance_fee_divisor,
         )
@@ -814,9 +809,9 @@ class CurrencyNetworkGraphForTesting(CurrencyNetworkGraph):
         assert expected_fees == cost[0]
         return cost[0]
 
-    def mediated_transfer(self, source, target, value):
+    def mediated_transfer(self, source, target, value, timestamp=0):
         """simulate mediated transfer off chain"""
-        cost, path = self.find_path(source, target, value)
+        cost, path = self.find_path(source, target, value, timestamp=timestamp)
         assert path[0] == source
         assert path[-1] == target
-        return self.transfer_path(path, value, cost)
+        return self.transfer_path(path, value, cost, timestamp=timestamp)

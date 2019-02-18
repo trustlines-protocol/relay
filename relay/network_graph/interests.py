@@ -8,6 +8,7 @@ def calculate_interests(
     delta_time_in_seconds: int,
     highest_order: int = 15,
 ) -> int:
+    assert delta_time_in_seconds >= 0
     intermediate_order = balance
     interests = 0
     # Calculate compound interests using taylor approximation
@@ -32,6 +33,7 @@ def balance_with_interests(
     internal_interest_rate_negative_balance: int,
     delta_time_in_seconds: int,
 ) -> int:
+    assert delta_time_in_seconds >= 0
     if balance > 0:
         interest = calculate_interests(
             balance, internal_interest_rate_positive_balance, delta_time_in_seconds

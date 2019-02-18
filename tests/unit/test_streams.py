@@ -62,7 +62,7 @@ def client():
 
 def test_subscription(subject, client):
     subscription = subject.subscribe(client)
-    subject.publish(event=MessageEvent("test"))
+    subject.publish(event=MessageEvent("test", timestamp=0))
     id = subscription.id
     item = client.events[0]
     assert item.id == id
@@ -74,7 +74,7 @@ def test_subscription(subject, client):
 def test_cancel_subscription(subject, client):
     subscription = subject.subscribe(client)
     subscription.unsubscribe()
-    subject.publish(event=MessageEvent("test"))
+    subject.publish(event=MessageEvent("test", timestamp=0))
     assert client.events == []
     assert subscription.closed
     assert len(subject.subscriptions) == 0
@@ -83,9 +83,9 @@ def test_cancel_subscription(subject, client):
 def test_auto_unsubscribe(subject, client):
     subscription = subject.subscribe(client)
     subject.publish(
-        event=MessageEvent("disconnect")
+        event=MessageEvent("disconnect", timestamp=0)
     )  # throws disconnected error, should unsubscribe
-    subject.publish(event=MessageEvent("test"))
+    subject.publish(event=MessageEvent("test", timestamp=0))
     assert client.events == []
     assert subscription.closed
     assert len(subject.subscriptions) == 0
@@ -98,13 +98,13 @@ def test_auto_unsubscribe_dont_skip(subject):
     for c in clients:
         subject.subscribe(c)
     subject.publish(
-        event=MessageEvent("disconnect")
+        event=MessageEvent("disconnect", timestamp=0)
     )  # the first one throws and get's auto-unsubscribed
     assert clients[1].events, "second client not notified"
 
 
 def test_subscription_after_puplish(messaging_subject, client):
-    assert not messaging_subject.publish(event=MessageEvent("test"))
+    assert not messaging_subject.publish(event=MessageEvent("test", timestamp=0))
     subscription = messaging_subject.subscribe(client)
     missed_messages = messaging_subject.get_missed_messages()
     assert len(missed_messages) == 1
@@ -113,7 +113,7 @@ def test_subscription_after_puplish(messaging_subject, client):
 
 
 def test_subscription_after_resubscribe(messaging_subject, client):
-    messaging_subject.publish(event=MessageEvent("test"))
+    messaging_subject.publish(event=MessageEvent("test", timestamp=0))
     subscription = messaging_subject.subscribe(client)
     messaging_subject.get_missed_messages()
     subscription.unsubscribe()
@@ -124,9 +124,9 @@ def test_subscription_after_resubscribe(messaging_subject, client):
 
 
 def test_subscription_both(messaging_subject, client):
-    assert not messaging_subject.publish(event=MessageEvent("test1"))
+    assert not messaging_subject.publish(event=MessageEvent("test1", timestamp=0))
     subscription = messaging_subject.subscribe(client)
-    assert messaging_subject.publish(event=MessageEvent("test2"))
+    assert messaging_subject.publish(event=MessageEvent("test2", timestamp=0))
     id = subscription.id
     missed_messages = messaging_subject.get_missed_messages()
     assert len(missed_messages) == 1
@@ -144,8 +144,8 @@ def test_unsubscription_race_condition(subject):
     # publish will unsubscribe because client is disconnected. Because it is delayed it will try to unsubscribe twice
     gevent.joinall(
         (
-            gevent.spawn(subject.publish, MessageEvent("test1")),
-            gevent.spawn(subject.publish, MessageEvent("test2")),
+            gevent.spawn(subject.publish, MessageEvent("test1", timestamp=0)),
+            gevent.spawn(subject.publish, MessageEvent("test2", timestamp=0)),
         ),
         raise_error=True,
     )

@@ -160,13 +160,7 @@ def test_interests_calculation_delta_time(basic_account):
         NetworkGraphConfig(
             trustlines=[
                 Trustline(
-                    A,
-                    B,
-                    200,
-                    200,
-                    balance=100,
-                    m_time=1505260800,
-                    interest_rate_given=100,
+                    A, B, 200, 200, balance=100, m_time=0, interest_rate_given=100
                 )
             ]
         )
@@ -178,7 +172,7 @@ def test_interests_path_from_A_balance_positive_relevant_interests(
 ):
     # B owes to A
     # 1% interest given by A to B
-    cost, path = configurable_community.find_path(A, B, 100)
+    cost, path = configurable_community.find_path(A, B, 100, timestamp=SECONDS_PER_YEAR)
     assert path == [A, B]
 
 
@@ -188,13 +182,7 @@ def test_interests_path_from_A_balance_positive_relevant_interests(
         NetworkGraphConfig(
             trustlines=[
                 Trustline(
-                    A,
-                    B,
-                    200,
-                    200,
-                    balance=-100,
-                    m_time=1505260800,
-                    interest_rate_received=100,
+                    A, B, 200, 200, balance=-100, m_time=0, interest_rate_received=100
                 )
             ]
         )
@@ -206,7 +194,7 @@ def test_interests_path_from_A_balance_negative_relevant_interests(
 ):
     # A owes to B
     # 1% interest given by B to A
-    cost, path = configurable_community.find_path(A, B, 100)
+    cost, path = configurable_community.find_path(A, B, 100, timestamp=SECONDS_PER_YEAR)
     assert path == []
 
 
@@ -216,13 +204,7 @@ def test_interests_path_from_A_balance_negative_relevant_interests(
         NetworkGraphConfig(
             trustlines=[
                 Trustline(
-                    A,
-                    B,
-                    200,
-                    200,
-                    balance=100,
-                    m_time=1505260800,
-                    interest_rate_received=100,
+                    A, B, 200, 200, balance=100, m_time=0, interest_rate_received=100
                 )
             ]
         )
@@ -235,7 +217,7 @@ def test_interests_path_from_A_balance_positive_irrelevant_interests(
     # B owes to A
     # 1% interest given by B to A
 
-    cost, path = configurable_community.find_path(A, B, 100)
+    cost, path = configurable_community.find_path(A, B, 100, timestamp=SECONDS_PER_YEAR)
     assert path == [A, B]
 
 
@@ -245,13 +227,7 @@ def test_interests_path_from_A_balance_positive_irrelevant_interests(
         NetworkGraphConfig(
             trustlines=[
                 Trustline(
-                    A,
-                    B,
-                    200,
-                    200,
-                    balance=-100,
-                    m_time=1505260800,
-                    interest_rate_given=100,
+                    A, B, 200, 200, balance=-100, m_time=0, interest_rate_given=100
                 )
             ]
         )
@@ -263,7 +239,7 @@ def test_interests_path_from_A_balance_negative_irrelevant_interests(
 ):
     # A owes to B
     # 1% interest given by A to B
-    cost, path = configurable_community.find_path(A, B, 100)
+    cost, path = configurable_community.find_path(A, B, 100, timestamp=SECONDS_PER_YEAR)
     assert path == [A, B]
 
 
@@ -273,13 +249,7 @@ def test_interests_path_from_A_balance_negative_irrelevant_interests(
         NetworkGraphConfig(
             trustlines=[
                 Trustline(
-                    A,
-                    B,
-                    200,
-                    200,
-                    balance=100,
-                    m_time=1505260800,
-                    interest_rate_given=100,
+                    A, B, 200, 200, balance=100, m_time=0, interest_rate_given=100
                 )
             ]
         )
@@ -291,7 +261,7 @@ def test_interests_path_from_B_balance_positive_relevant_interests(
 ):
     # B owes to A
     # 1% interest given by A to B
-    cost, path = configurable_community.find_path(B, A, 100)
+    cost, path = configurable_community.find_path(B, A, 100, timestamp=SECONDS_PER_YEAR)
     assert path == []
 
 
@@ -301,13 +271,7 @@ def test_interests_path_from_B_balance_positive_relevant_interests(
         NetworkGraphConfig(
             trustlines=[
                 Trustline(
-                    A,
-                    B,
-                    200,
-                    200,
-                    balance=-100,
-                    m_time=1505260800,
-                    interest_rate_received=100,
+                    A, B, 200, 200, balance=-100, m_time=0, interest_rate_received=100
                 )
             ]
         )
@@ -319,7 +283,7 @@ def test_interests_path_from_B_balance_negative_relevant_interests(
 ):
     # A owes to B
     # 1% interest given by B to A
-    cost, path = configurable_community.find_path(B, A, 100)
+    cost, path = configurable_community.find_path(B, A, 100, timestamp=SECONDS_PER_YEAR)
     assert path == [B, A]
 
 
@@ -329,13 +293,7 @@ def test_interests_path_from_B_balance_negative_relevant_interests(
         NetworkGraphConfig(
             trustlines=[
                 Trustline(
-                    A,
-                    B,
-                    200,
-                    200,
-                    balance=100,
-                    m_time=1505260800,
-                    interest_rate_received=100,
+                    A, B, 200, 200, balance=100, m_time=0, interest_rate_received=100
                 )
             ]
         )
@@ -347,7 +305,7 @@ def test_interests_path_from_B_balance_positive_irrelevant_interests(
 ):
     # B owes to A
     # 1% interest given by B to A
-    cost, path = configurable_community.find_path(B, A, 100)
+    cost, path = configurable_community.find_path(B, A, 100, timestamp=SECONDS_PER_YEAR)
     assert path == [B, A]
 
 
@@ -357,13 +315,7 @@ def test_interests_path_from_B_balance_positive_irrelevant_interests(
         NetworkGraphConfig(
             trustlines=[
                 Trustline(
-                    A,
-                    B,
-                    200,
-                    200,
-                    balance=-100,
-                    m_time=1505260800,
-                    interest_rate_given=100,
+                    A, B, 200, 200, balance=-100, m_time=0, interest_rate_given=100
                 )
             ]
         )
@@ -375,5 +327,5 @@ def test_interests_path_from_B_balance_negative_irrelevant_interests(
 ):
     # A owes to B
     # 1% interest given by A to B
-    cost, path = configurable_community.find_path(B, A, 100)
+    cost, path = configurable_community.find_path(B, A, 100, timestamp=SECONDS_PER_YEAR)
     assert path == [B, A]
