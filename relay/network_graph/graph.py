@@ -548,9 +548,17 @@ class CurrencyNetworkGraph(object):
                              'Creditline BA': account.reverse_creditline})
         return output.getvalue()
 
-    def find_path_sender_pays_fees(self, source, target, value=None, max_hops=None, max_fees=None, timestamp=None):
+    def find_transfer_path_sender_pays_fees(
+            self,
+            source,
+            target,
+            value=None,
+            max_hops=None,
+            max_fees=None,
+            timestamp=None,
+    ):
 
-        cost, path = self._find_path(
+        cost, path = self._find_transfer_path(
             source=target,  # we are searching path from target to source, to accumulate fees correctly.
             target=source,
             value=value,
@@ -562,9 +570,17 @@ class CurrencyNetworkGraph(object):
 
         return cost, list(reversed(path))
 
-    def find_path_receiver_pays_fees(self, source, target, value=None, max_hops=None, max_fees=None, timestamp=None):
+    def find_transfer_path_receiver_pays_fees(
+            self,
+            source,
+            target,
+            value=None,
+            max_hops=None,
+            max_fees=None,
+            timestamp=None,
+    ):
 
-        return self._find_path(
+        return self._find_transfer_path(
             source=source,
             target=target,
             value=value,
@@ -574,7 +590,7 @@ class CurrencyNetworkGraph(object):
             cost_accumulator_function=ReceiverPaysCostAccumulatorSnapshot,
         )
 
-    def _find_path(
+    def _find_transfer_path(
             self,
             *,
             source,
@@ -739,7 +755,7 @@ class CurrencyNetworkGraphForTesting(CurrencyNetworkGraph):
 
     def mediated_transfer(self, source, target, value):
         """simulate mediated transfer off chain"""
-        cost, path = self.find_path_sender_pays_fees(source, target, value)
+        cost, path = self.find_transfer_path_sender_pays_fees(source, target, value)
         assert path[0] == source
         assert path[-1] == target
         return self.transfer_path(path, value, cost)
