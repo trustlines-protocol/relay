@@ -10,6 +10,7 @@ import gevent
 import relay.concurrency_utils as concurrency_utils
 from .proxy import Proxy, reconnect_interval, sorted_events
 from relay.logger import get_logger
+from relay.network_graph.payment_path import PaymentPath, FeePayer
 
 from .events import BlockchainEvent
 from .currency_network_events import (
@@ -216,18 +217,18 @@ class CurrencyNetworkProxy(Proxy):
             receiver, value, max_fee, path
         ).estimateGas({"from": sender})
 
-    def estimate_gas_for_payment_path(self, payment_path):
+    def estimate_gas_for_payment_path(self, payment_path: PaymentPath):
         """estimate gas for doing a transfer for the given payment_path"""
         if not payment_path.path:
             return 0
         source = payment_path.path[0]
         target = payment_path.path[-1]
 
-        if payment_path.sender_pays_fees:
+        if payment_path.fee_payer is FeePayer.SENDER:
             return self._proxy.functions.transfer(
                 target, payment_path.value, payment_path.fee, payment_path.path[1:]
             ).estimateGas({"from": source})
-        else:
+        elif payment_path.fee_payer is FeePayer.RECEIVER:
             return self._proxy.functions.transferReceiverPays(
                 target, payment_path.value, payment_path.fee, payment_path.path[1:]
             ).estimateGas({"from": source})

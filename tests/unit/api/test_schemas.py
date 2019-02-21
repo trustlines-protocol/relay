@@ -7,6 +7,7 @@ from hexbytes import HexBytes
 from tldeploy import identity
 from relay.api import schemas
 from marshmallow import ValidationError
+from relay.network_graph.payment_path import PaymentPath, FeePayer
 
 
 a_valid_meta_transaction = identity.MetaTransaction(
@@ -92,3 +93,28 @@ def test_load_meta_transaction_valid_values(values):
     dumped = schemas.MetaTransactionSchema().dump(a_valid_meta_transaction).data
     dumped.update(values)
     assert not schemas.MetaTransactionSchema().load(dumped).errors
+
+
+@pytest.fixture(params=[FeePayer.SENDER, FeePayer.RECEIVER])
+def payment_path(request):
+
+    cost = 1
+    path = []
+    value = 1
+    fee_payer = request.param
+    estimated_gas = 0
+
+    return PaymentPath(
+        cost, path, value, fee_payer=fee_payer, estimated_gas=estimated_gas
+    )
+
+
+def test_payment_path_roundtrip(payment_path):
+
+    dumped = schemas.PaymentPathSchema().dump(payment_path).data
+    print("DUMPED", dumped)
+
+    loaded = schemas.PaymentPathSchema().load(dumped).data
+    print("LOADED", loaded)
+
+    assert loaded == payment_path

@@ -1,11 +1,12 @@
 from marshmallow import Schema, fields, post_load, ValidationError
 from marshmallow_oneofschema import OneOfSchema
 
-from .fields import Address, BigInteger, HexBytes, HexEncodedBytes
+from .fields import Address, BigInteger, HexBytes, HexEncodedBytes, FeePayerField
 
 from relay.blockchain.unw_eth_events import UnwEthEvent
 from relay.blockchain.exchange_events import ExchangeEvent
 from relay.blockchain.currency_network_events import CurrencyNetworkEvent
+from relay.network_graph.payment_path import PaymentPath
 from tldeploy import identity
 
 
@@ -191,7 +192,12 @@ class PaymentPathSchema(Schema):
     class Meta:
         strict = True
 
+    @post_load
+    def make_payment_path(self, data):
+        return PaymentPath(**data)
+
     fees = BigInteger(required=True, attribute="fee")
     path = fields.List(Address(), required=True)
-    estimatedGas = BigInteger(attribute="estimated_gas")
     value = BigInteger()
+    feePayer = FeePayerField(required=True, attribute="fee_payer")
+    estimatedGas = BigInteger(attribute="estimated_gas")

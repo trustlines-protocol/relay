@@ -18,7 +18,7 @@ from relay.network_graph.trustline_data import (
     set_fees_outstanding,
 )
 
-from .payment_path import PaymentPath
+from .payment_path import PaymentPath, FeePayer
 
 from .fees import calculate_fees_reverse, calculate_fees, imbalance_generated
 from .interests import balance_with_interests
@@ -180,7 +180,7 @@ class SenderPaysCostAccumulatorSnapshot(alg.CostAccumulator):
         capacity_imbalance_fee_divisor,
         max_hops=None,
         max_fees=None,
-        ignore=None,
+        ignore=None
     ):
         if max_hops is None:
             max_hops = math.inf
@@ -277,7 +277,7 @@ class ReceiverPaysCostAccumulatorSnapshot(alg.CostAccumulator):
         capacity_imbalance_fee_divisor,
         max_hops=None,
         max_fees=None,
-        ignore=None,
+        ignore=None
     ):
         if max_hops is None:
             max_hops = math.inf
@@ -666,7 +666,7 @@ class CurrencyNetworkGraph(object):
         max_hops=None,
         max_fees=None,
         timestamp=0,
-        cost_accumulator_function,
+        cost_accumulator_function
     ):
 
         if value is None:
@@ -705,7 +705,7 @@ class CurrencyNetworkGraph(object):
             max_hops -= 2  # we compute the path without source at the beginning and end
 
         if balance == 0:
-            return PaymentPath(fee=0, path=[], value=0)
+            return PaymentPath(fee=0, path=[], value=0, fee_payer=FeePayer.SENDER)
         elif balance < 0:
             # payment looks like
             #
@@ -750,12 +750,14 @@ class CurrencyNetworkGraph(object):
             )  # don't check max_hops, we know we're below
             cost = cost_accumulator.compute_cost_for_path(self.graph, path)
         except nx.NetworkXNoPath:
-            return PaymentPath(fee=0, path=[], value=value)
+            return PaymentPath(fee=0, path=[], value=value, fee_payer=FeePayer.SENDER)
 
         if balance < 0:
             path.reverse()
 
-        return PaymentPath(fee=cost[0], path=path, value=value)
+        return PaymentPath(
+            fee=cost[0], path=path, value=value, fee_payer=FeePayer.SENDER
+        )
 
     def find_maximum_capacity_path(self, source, target, max_hops=None, timestamp=0):
         """

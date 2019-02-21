@@ -33,7 +33,7 @@ from relay.relay import TrustlinesRelay
 from relay.concurrency_utils import TimeoutException
 from relay.logger import get_logger
 
-from relay.network_graph.payment_path import PaymentPath
+from relay.network_graph.payment_path import PaymentPath, FeePayer
 
 logger = get_logger("api.resources", logging.DEBUG)
 
@@ -395,7 +395,7 @@ class IdentityInfos(Resource):
             abort(404, "Identity Contract not found or invalid")
 
 
-def _estimate_gas_for_transfer(
+def _fill_estimated_gas_in_payment_path(
     trustlines: TrustlinesRelay, payment_path: PaymentPath, network_address: str
 ) -> PaymentPath:
     proxy = trustlines.currency_network_proxies[network_address]
@@ -403,7 +403,13 @@ def _estimate_gas_for_transfer(
         payment_path.estimated_gas = proxy.estimate_gas_for_payment_path(payment_path)
     except ValueError:
         # should mean out of gas, so path was not right.
-        return PaymentPath(fee=0, path=[], value=payment_path.value, estimated_gas=0)
+        return PaymentPath(
+            fee=0,
+            path=[],
+            value=payment_path.value,
+            estimated_gas=0,
+            fee_payer=payment_path.fee_payer,
+        )
 
     return payment_path
 
@@ -420,7 +426,7 @@ class Path(Resource):
         "to": custom_fields.Address(required=True),
         "fee_payer": fields.Str(
             required=False,
-            validate=validate.OneOf(["sender", "receiver"]),
+            validate=validate.OneOf([fee_payer.value for fee_payer in FeePayer]),
             missing="sender",
         ),
     }
@@ -436,9 +442,9 @@ class Path(Resource):
         value = args["value"]
         max_fees = args["maxFees"]
         max_hops = args["maxHops"]
-        sender_pays_fees = args["fee_payer"] == "sender"
+        fee_payer = FeePayer(args["fee_payer"])
 
-        if sender_pays_fees:
+        if fee_payer == FeePayer.SENDER:
             cost, path = self.trustlines.currency_network_graphs[
                 network_address
             ].find_transfer_path_sender_pays_fees(
@@ -449,7 +455,7 @@ class Path(Resource):
                 max_hops=max_hops,
                 timestamp=timestamp,
             )
-        else:
+        elif fee_payer == FeePayer.RECEIVER:
             cost, path = self.trustlines.currency_network_graphs[
                 network_address
             ].find_transfer_path_receiver_pays_fees(
@@ -461,11 +467,13 @@ class Path(Resource):
                 timestamp=timestamp,
             )
 
-        return _estimate_gas_for_transfer(
+        payment_path = _fill_estimated_gas_in_payment_path(
             self.trustlines,
-            PaymentPath(cost, path, value, sender_pays_fees=sender_pays_fees),
+            PaymentPath(cost, path, value, fee_payer=fee_payer),
             network_address,
         )
+
+        return payment_path
 
 
 # CloseTrustline is similar to the above ReduceDebtPath, though it does not
@@ -515,7 +523,11 @@ class CloseTrustline(Resource):
         except ValueError:
             # should mean out of gas, so path was not right.
             return PaymentPath(
-                fee=0, path=[], value=payment_path.value, estimated_gas=0
+                fee=0,
+                path=[],
+                value=payment_path.value,
+                fee_payer=FeePayer.SENDER,
+                estimated_gas=0,
             )
 
         return payment_path

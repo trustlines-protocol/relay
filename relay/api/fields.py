@@ -2,6 +2,7 @@ import hexbytes
 from webargs import ValidationError
 from marshmallow import fields
 from eth_utils import is_address, to_checksum_address
+from relay.network_graph.payment_path import FeePayer
 
 
 class Address(fields.String):
@@ -72,3 +73,18 @@ class HexEncodedBytes(fields.Field):
             raise ValidationError(
                 f"Could not parse hex-encoded bytes objects of attribute {attr}: {value}"
             )
+
+
+class FeePayerField(fields.Field):
+    def _serialize(self, value, attr, obj):
+
+        if isinstance(value, FeePayer):
+            # serialises into the value of the FeePayer enum
+            return value.value
+        else:
+            raise ValidationError("Value must be of type FeePayer")
+
+    def _deserialize(self, value, attr, data):
+
+        # deserialises into the FeePayer enum instance corresponding to the value
+        return FeePayer(value)
