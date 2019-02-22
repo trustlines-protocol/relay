@@ -223,15 +223,20 @@ class CurrencyNetworkProxy(Proxy):
             return 0
         source = payment_path.path[0]
         target = payment_path.path[-1]
+        fee_payer = payment_path.fee_payer
 
-        if payment_path.fee_payer is FeePayer.SENDER:
+        if fee_payer is FeePayer.SENDER:
             return self._proxy.functions.transfer(
                 target, payment_path.value, payment_path.fee, payment_path.path[1:]
             ).estimateGas({"from": source})
-        elif payment_path.fee_payer is FeePayer.RECEIVER:
+        elif fee_payer is FeePayer.RECEIVER:
             return self._proxy.functions.transferReceiverPays(
                 target, payment_path.value, payment_path.fee, payment_path.path[1:]
             ).estimateGas({"from": source})
+        else:
+            raise ValueError(
+                f"fee_payer has to be one of {[fee_payer.name for fee_payer in FeePayer]}: {fee_payer}"
+            )
 
     def estimate_gas_for_close_trustline(self, source, other_party, max_fee, path):
         """estimate gas for doing a transfer for the given payment_path"""

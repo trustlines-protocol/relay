@@ -698,14 +698,17 @@ class CurrencyNetworkGraph(object):
     def close_trustline_path_triangulation(
         self, timestamp, source, target, max_hops=None, max_fees=None
     ):
+
         neighbors = {x[0] for x in self.graph.adj[source].items()} - {target}
         balance = self.get_balance_with_interests(source, target, timestamp)
         value = abs(balance)
+
         if max_hops is not None:
             max_hops -= 2  # we compute the path without source at the beginning and end
 
         if balance == 0:
             return PaymentPath(fee=0, path=[], value=0, fee_payer=FeePayer.SENDER)
+
         elif balance < 0:
             # payment looks like
             #
@@ -713,7 +716,9 @@ class CurrencyNetworkGraph(object):
             #
             # since in this case we use sender pays, we search in reverse from
             # target to neighbor
+            fee_payer = FeePayer.SENDER
             cost_accumulator_class = SenderPaysCostAccumulatorSnapshot
+
         elif balance > 0:
             # payment looks like
             #
@@ -721,6 +726,7 @@ class CurrencyNetworkGraph(object):
             #
             # in this case we use receiver pays, so we search in right order
             # from target to neighbor
+            fee_payer = FeePayer.RECEIVER
             cost_accumulator_class = ReceiverPaysCostAccumulatorSnapshot
 
         cost_accumulator = cost_accumulator_class(
@@ -749,15 +755,14 @@ class CurrencyNetworkGraph(object):
                 math.inf
             )  # don't check max_hops, we know we're below
             cost = cost_accumulator.compute_cost_for_path(self.graph, path)
+
         except nx.NetworkXNoPath:
             return PaymentPath(fee=0, path=[], value=value, fee_payer=FeePayer.SENDER)
 
         if balance < 0:
             path.reverse()
 
-        return PaymentPath(
-            fee=cost[0], path=path, value=value, fee_payer=FeePayer.SENDER
-        )
+        return PaymentPath(fee=cost[0], path=path, value=value, fee_payer=fee_payer)
 
     def find_maximum_capacity_path(self, source, target, max_hops=None, timestamp=0):
         """

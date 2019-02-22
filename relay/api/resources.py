@@ -466,6 +466,10 @@ class Path(Resource):
                 max_hops=max_hops,
                 timestamp=timestamp,
             )
+        else:
+            raise ValueError(
+                f"fee_payer has to be one of {[fee_payer.name for fee_payer in FeePayer]}: {fee_payer}"
+            )
 
         payment_path = _fill_estimated_gas_in_payment_path(
             self.trustlines,
