@@ -813,7 +813,7 @@ def test_close_trustline_positive_balance(complex_community_with_trustlines_and_
         path=[C, H, G, F, E, D, C],
         value=5000,
         estimated_gas=None,
-        fee_payer=FeePayer.SENDER,
+        fee_payer=FeePayer.RECEIVER,
     )
 
 
