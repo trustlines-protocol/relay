@@ -394,7 +394,7 @@ POST /networks/:networkAddress/close-trustline-path-info
 | to      | string | YES      | Address of user with whom the trustline should be closed |
 | maxFees | string | NO       | Upper bound for transfer fees                            |
 | maxHops | string | NO       | Upper bound for hops in transfer path                    |
-|         |        |          |                                                          |
+
 #### Example Request
 ```bash
 curl --header "Content-Type: application/json" \
@@ -409,6 +409,7 @@ https://relay0.testnet.trustlines.network/api/v1/networks/0xc5F45B680e81759E3FBc
 | fees         | string   | Estimated transfer fees                   |
 | estimatedGas | int      | Estimated gas costs for transfer          |
 | value        | string   | Amount to be transferred in smallest unit |
+| feePayer     | string   | Either `sender` or `receiver` |
 
 #### Example Response
 ```json
@@ -421,7 +422,8 @@ https://relay0.testnet.trustlines.network/api/v1/networks/0xc5F45B680e81759E3FBc
         "0xaE8446e5ea18F6d7647b28eEf01e568BE672AF6c",
         "0x186ec4A5E2c9Ed2B392599843375383D40C94F57"
     ],
-    "value": "410"
+    "value": "410",
+    "feePayer": "sender"
 }
 ```
 
