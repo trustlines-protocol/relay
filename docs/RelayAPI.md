@@ -341,7 +341,7 @@ POST /networks/:networkAddress/path-info
 |value|string|YES|Transfer amount in smallest unit|
 |maxFees|string|NO|Upper bound for transfer fees|
 |maxHops|string|NO|Upper bound for hops in transfer path|
-|fee_payer|string|NO|Either `sender` or `receiver`|
+|feePayer|string|NO|Either `sender` or `receiver`|
 #### Example Request
 ```bash
 curl --header "Content-Type: application/json" \
@@ -353,6 +353,8 @@ curl --header "Content-Type: application/json" \
 |Attribute|Type|Description|
 |---------|----|-----------|
 |path|string[]|Addresses of users on transfer path|
+|value|int|Transfer amount in smallest unit|
+|feePayer|string|Either `sender` or `receiver`|
 |fees|string|Maximal transfer fees|
 |estimatedGas|int|Estimated gas costs for transfer|
 #### Example Response
@@ -362,7 +364,9 @@ curl --header "Content-Type: application/json" \
     "0xcbF1153F6e5AC01D363d432e24112e8aA56c55ce",
     "0x7Ec3543702FA8F2C7b2bD84C034aAc36C263cA8b"
   ],
+  "value": 1000,
   "fees": "2",
+  "feePayer": "sender",
   "estimatedGas": 76324
 }
 ```

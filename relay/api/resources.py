@@ -424,7 +424,7 @@ class Path(Resource):
         "maxFees": fields.Int(required=False, missing=None),
         "from": custom_fields.Address(required=True),
         "to": custom_fields.Address(required=True),
-        "fee_payer": fields.Str(
+        "feePayer": fields.Str(
             required=False,
             validate=validate.OneOf([fee_payer.value for fee_payer in FeePayer]),
             missing="sender",
@@ -442,7 +442,7 @@ class Path(Resource):
         value = args["value"]
         max_fees = args["maxFees"]
         max_hops = args["maxHops"]
-        fee_payer = FeePayer(args["fee_payer"])
+        fee_payer = FeePayer(args["feePayer"])
 
         if fee_payer == FeePayer.SENDER:
             cost, path = self.trustlines.currency_network_graphs[
@@ -468,7 +468,7 @@ class Path(Resource):
             )
         else:
             raise ValueError(
-                f"fee_payer has to be one of {[fee_payer.name for fee_payer in FeePayer]}: {fee_payer}"
+                f"feePayer has to be one of {[fee_payer.name for fee_payer in FeePayer]}: {fee_payer}"
             )
 
         payment_path = _fill_estimated_gas_in_payment_path(
