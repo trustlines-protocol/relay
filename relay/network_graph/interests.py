@@ -1,5 +1,18 @@
 SECONDS_PER_YEAR = 60 * 60 * 24 * 365
 INTERESTS_DECIMALS = 2
+DELTA_TIME_MINIMAL_ALLOWED_VALUE = -60
+
+
+def _ensure_non_negative_delta_time(delta_time):
+    """make sure the delta_time - used for computation of interests - is mostly
+    positive. Every value passed in that's less than
+    DELTA_TIME_MINIMAL_ALLOWED_VALUE will trigger a ValueError.
+
+    see https://github.com/trustlines-network/relay/issues/279
+    """
+    if delta_time < DELTA_TIME_MINIMAL_ALLOWED_VALUE:
+        raise ValueError("delta_time out of bounds")
+    return max(delta_time, 0)
 
 
 def calculate_interests(
@@ -8,7 +21,7 @@ def calculate_interests(
     delta_time_in_seconds: int,
     highest_order: int = 15,
 ) -> int:
-    assert delta_time_in_seconds >= 0
+    delta_time_in_seconds = _ensure_non_negative_delta_time(delta_time_in_seconds)
     intermediate_order = balance
     interests = 0
     # Calculate compound interests using taylor approximation
@@ -33,7 +46,7 @@ def balance_with_interests(
     internal_interest_rate_negative_balance: int,
     delta_time_in_seconds: int,
 ) -> int:
-    assert delta_time_in_seconds >= 0
+    delta_time_in_seconds = _ensure_non_negative_delta_time(delta_time_in_seconds)
     if balance > 0:
         interest = calculate_interests(
             balance, internal_interest_rate_positive_balance, delta_time_in_seconds
