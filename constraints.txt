@@ -153,5 +153,5 @@ webargs==4.0.0
 websockets==6.0
 Werkzeug==0.14.1
 wheel==0.33.1
-wrapt==1.10.11
+wrapt==1.11.1
 zipp==0.3.3
