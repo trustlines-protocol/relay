@@ -25,6 +25,7 @@ coverage==4.5.2
 cryptography==2.3.1
 cytoolz==0.9.0.1
 decorator==4.3.0
+entrypoints==0.3
 eth-abi==1.2.0
 eth-account==0.3.0
 eth-bloom==1.0.1
@@ -39,7 +40,7 @@ eth-utils==1.2.1
 ethereum==1.6.1
 filelock==3.0.10
 firebase-admin==2.13.0
-flake8==3.6.0
+flake8==3.7.7
 flake8-string-format==0.2.3
 Flask==1.0.2
 Flask-Cors==3.0.6
@@ -104,11 +105,11 @@ py-geth==2.0.1
 py-solc==3.1.0
 pyasn1==0.4.4
 pyasn1-modules==0.2.2
-pycodestyle==2.4.0
+pycodestyle==2.5.0
 pycparser==2.18
 pycryptodome==3.6.6
 pyethash==0.1.27
-pyflakes==2.0.0
+pyflakes==2.1.1
 Pygments==2.2.0
 pygraphviz==1.5
 pylru==1.1.0
