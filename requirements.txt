@@ -26,7 +26,6 @@ click
 black
 flake8
 flake8-string-format
-flake8-per-file-ignores
 pytest
 pytest-cov
 mypy
