@@ -7,7 +7,7 @@ web3>=4.7.1
 networkx>=2.0
 pygraphviz
 trustlines-contracts-bin
-trustlines-contracts-deploy
+trustlines-contracts-deploy>=0.6.2
 sqlalchemy
 eth-utils
 tinyrpc
@@ -21,7 +21,6 @@ psycogreen
 wrapt
 attrs
 click
-trustlines-contracts-deploy>=0.6.2
 
 # --- development dependencies, i.e. dependencies not needed for running tl-relay
 black
