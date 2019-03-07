@@ -115,7 +115,7 @@ pygraphviz==1.5
 pylru==1.1.0
 pysha3==1.0.2
 pytest==4.3.0
-pytest-cov==2.6.0
+pytest-cov==2.6.1
 pytz==2018.5
 PyYAML==3.13
 repoze.lru==0.7
