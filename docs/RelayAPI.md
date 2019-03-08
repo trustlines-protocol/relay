@@ -795,13 +795,13 @@ The MetaTransaction object must have the following fields:
 
 | Name       | Type    | Description                                                        |
 |------------|---------|--------------------------------------------------------------------|
-| from       | address | address of identity contract                                       |
-| to         | address | the address on which the call of the meta transaction is happening |
-| value      | uint256 | the amount of wei to be sent along from 'from' to 'to'             |
-| data       | bytes   | the data object encoding the function call including arguments     |
-| nonce      | uint256 | nonce used for replay protection                                   |
-| extra_data | bytes   | bytes extra data for backwards compatibility                       |
-| signature  | bytes   | 65 bytes containing concatenated. v,r,s of the signature           |
+| from       | string   | address of identity contract                                       |
+| to         | string   | the address on which the call of the meta transaction is happening |
+| value      | number   | the amount of wei to be sent along from 'from' to 'to'             |
+| data       | string   | the data object encoding the function call including arguments     |
+| nonce      | number   | nonce used for replay protection                                   |
+| extra_data | string   | bytes extra data for backwards compatibility                       |
+| signature  | string   | 65 bytes containing concatenated. v,r,s of the signature           |
 
 #### Example Request
 ```bash
@@ -826,7 +826,7 @@ POST /identities
 #### Data Parameters
 | Name         | Type    | Required | Description            |
 |--------------|---------|----------|------------------------|
-| ownerAddress | Address | YES      | MetaTransaction object |
+| ownerAddress | string | YES      | MetaTransaction object |
 
 
 
@@ -842,8 +842,8 @@ The endpoint returns an object with the following fields:
 
 | Name      | Type    | Description                                   |
 |-----------|---------|-----------------------------------------------|
-| identity  | Address | the address of the deployed identity contract |
-| nextNonce | int     | the next available nonce
+| identity  | string  | the address of the deployed identity contract |
+| nextNonce | number  | the next available nonce
 | balance   | string  | contracts balance in wei                      |
 
 #### Example Response
@@ -860,7 +860,7 @@ GET /identities/:identity
 
 | Name     | Type    | Required | Description                                   |
 |----------|---------|----------|-----------------------------------------------|
-| identity | Address | YES      | the address of the deployed identity contract |
+| identity | string | YES      | the address of the deployed identity contract |
 
 #### Example Request
 ```bash
@@ -872,8 +872,8 @@ The endpoint returns an object with the following fields:
 
 | Name      | Type    | Description                                   |
 |-----------|---------|-----------------------------------------------|
-| identity  | Address | the address of the deployed identity contract |
-| nextNonce | int     | the next available nonce
+| identity  | string | the address of the deployed identity contract |
+| nextNonce | number  | the next available nonce
 | balance   | string  | contracts balance in wei                      |
 #### Example Response
 ```json
