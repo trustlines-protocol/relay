@@ -57,11 +57,11 @@ GET /networks
 curl https://relay0.testnet.trustlines.network/api/v1/networks
 ```
 #### Response
-|Attribute|Type|Description|
-|---------|----|-----------|
-|name|string|Full name of the currency network|
-|abbreviation|string|Abbreviated name of currency network|
-|address|string|Contract address of currency network|
+|Attribute      |Type   |JSON Type  |Description|
+|-----------    |----   |---------  |----------|
+|name           |string |string     |Full name of the currency network|
+|abbreviation   |string |string     |Abbreviated name of currency network|
+|address        |address|string - hex-encoded prefixed with "0x"   |Contract address of currency network|
 #### Example Response
 ```json
 [
@@ -87,25 +87,25 @@ Returns detailed information of currency network.
 GET /networks/:networkAddress
 ```
 #### URL Parameters
-|Name|Type|Required|Description|
-|----|----|--------|-----------|
-|networkAddress|string|YES|Address of currency network|
+|Name           |Type                     |Required   |Description|
+|----           |----                     |--------   |-----------|
+|networkAddress |string prefixed with "0x"|YES        |Address of currency network|
 #### Example Request
 ```
 curl https://relay0.testnet.trustlines.network/api/v1/networks/0xC0B33D88C704455075a0724AA167a286da778DDE
 ```
 #### Response
-|Attribute|Type|Description|
-|---------|----|-----------|
-|abbreviation|string|Abbreviated name of currency network|
-|address|string|Contract address of currency network|
-|decimals|int|Decimals specified in currency network|
-|name|string|Full name of the currency network|
-|numUsers|int|Total number of users in currency network|
-|defaultInterestRate|string|The default interest rate for every user in the network|
-|interestRateDecimals|int|Decimals of the interest rate|
-|customInterests|bool|Whether custom interest rate can be set by users|
-|preventMediatorInterests|bool|Whether to prevent mediators from paying interest|
+|Attribute                  |Type  |JSON Type                               |Description|
+|---------                  |----  |-----------                             |---------|
+|abbreviation               |string|string                                  |Abbreviated name of currency network|
+|address                    |address|string - hex-encoded prefixed with "0x"|Contract address of currency network|
+|decimals                   |int   |number                                  |Decimals specified in currency network|
+|name                       |string|string                                  |Full name of the currency network|
+|numUsers                   |int   |number                                  |Total number of users in currency network|
+|defaultInterestRate        |BigInteger|string                              |The default interest rate for every user in the network|
+|interestRateDecimals       |int   |number                                  |Decimals of the interest rate|
+|customInterests            |bool  |bool|Whether custom interest rate can be set by users|
+|preventMediatorInterests   |bool  |bool|Whether to prevent mediators from paying interest|
 #### Example Response
 ```json
 {
@@ -793,15 +793,15 @@ POST /relay-meta-transaction
 
 The MetaTransaction object must have the following fields:
 
-| Name       | Type    | Description                                                        |
-|------------|---------|--------------------------------------------------------------------|
-| from       | string   | address of identity contract                                       |
-| to         | string   | the address on which the call of the meta transaction is happening |
-| value      | number   | the amount of wei to be sent along from 'from' to 'to'             |
-| data       | string   | the data object encoding the function call including arguments     |
-| nonce      | number   | nonce used for replay protection                                   |
-| extra_data | string   | bytes extra data for backwards compatibility                       |
-| signature  | string   | 65 bytes containing concatenated. v,r,s of the signature           |
+| Name       | Type     | JSON Type                                 | Description |
+|------------|--------- |-------------------------------------------|-------------|
+| from       | address  | string - hex-encoded prefixed with "0x"   | address of identity contract |
+| to         | address  | string - hex-encoded prefixed with "0x"   | the address on which the call of the meta transaction is happening |
+| value      |BigInteger| string                                    | the amount of wei to be sent along from 'from' to 'to'             |
+| data       | bytes    | string - hex-encoded prefixed with "0x"   | the data object encoding the function call including arguments     |
+| nonce      | int      | number                                    | nonce used for replay protection                                   |
+| extra_data | bytes    | string - hex-encoded prefixed with "0x"   | bytes extra data for backwards compatibility                       |
+| signature  | bytes    | string - hex-encoded prefixed with "0x"   | 65 bytes containing concatenated. v,r,s of the signature           |
 
 #### Example Request
 ```bash
@@ -824,9 +824,9 @@ This endpoint can be used to deploy an identity contract to the blockchain.
 POST /identities
 ```
 #### Data Parameters
-| Name         | Type    | Required | Description            |
-|--------------|---------|----------|------------------------|
-| ownerAddress | string | YES      | MetaTransaction object |
+| Name         | Type    | JSON Type                                 | Required | Description            |
+|--------------|---------|-------------------------------------------|----------| ---------- |
+| ownerAddress | address | string - hex-encoded prefixed with "0x"   |YES       | MetaTransaction object |
 
 
 
@@ -840,11 +840,11 @@ curl --header "Content-Type: application/json" \
 #### Response
 The endpoint returns an object with the following fields:
 
-| Name      | Type    | Description                                   |
-|-----------|---------|-----------------------------------------------|
-| identity  | string  | the address of the deployed identity contract |
-| nextNonce | number  | the next available nonce
-| balance   | string  | contracts balance in wei                      |
+| Name      | Type       | JSON Type                                 | Description                                   |
+|-----------|------------|-------------------------------------------|-----------------------------------------------|
+| identity  | address    | string - hex-encoded prefixed with "0x"   | the address of the deployed identity contract |
+| nextNonce | number     | number                                    | the next available nonce                      |
+| balance   | BigInteger | string                                    | contracts balance in wei                      |
 
 #### Example Response
 ```json
@@ -858,9 +858,9 @@ GET /identities/:identity
 ```
 #### URL Parameters
 
-| Name     | Type    | Required | Description                                   |
-|----------|---------|----------|-----------------------------------------------|
-| identity | string | YES      | the address of the deployed identity contract |
+| Name     | Type                      | Required | Description                                   |
+|----------|---------------------------|----------|-----------------------------------------------|
+| identity | string prefixed with "0x" | YES      | the address of the deployed identity contract |
 
 #### Example Request
 ```bash
@@ -870,11 +870,11 @@ curl https://relay0.testnet.trustlines.network/api/v1/identities/0x2AbCc1389258D
 #### Response
 The endpoint returns an object with the following fields:
 
-| Name      | Type    | Description                                   |
-|-----------|---------|-----------------------------------------------|
-| identity  | string | the address of the deployed identity contract |
-| nextNonce | number  | the next available nonce
-| balance   | string  | contracts balance in wei                      |
+| Name      | Type       | JSON Type                                 | Description                                   |
+|-----------|---------   |-------------------------------------------|-----------------------------------------------|
+| identity  | string     | string - hex-encoded prefixed with "0x"   | the address of the deployed identity contract |
+| nextNonce | int        | number                                    | the next available nonce                      |
+| balance   | BigInteger | string                                    | contracts balance in wei                      |
 #### Example Response
 ```json
 {"identity": "0x2AbCc1389258Dc187DB787E33FD2B99d53695DE3", "nextNonce": 0, "balance": "0"}
