@@ -1,6 +1,10 @@
 ==========
 Change Log
 ==========
+`0.6.0`_ (2019-03-14)
+-------------------------------
+* Allow find_path to search for paths for receiver pays transfers
+* Fixed a bug, where the time being slighly off resulted in an internal server error
 `0.5.0`_ (2019-02-18)
 -------------------------------
 * implement meta transaction related functionality
@@ -63,3 +67,4 @@ Change Log
 .. _0.4.0: https://github.com/trustlines-network/relay/compare/0.3.0...0.4.0
 .. _0.4.1: https://github.com/trustlines-network/relay/compare/0.4.0...0.4.1
 .. _0.5.0: https://github.com/trustlines-network/relay/compare/0.4.1...0.5.0
+.. _0.6.0: https://github.com/trustlines-network/relay/compare/0.5.0...0.6.0
