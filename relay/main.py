@@ -97,7 +97,7 @@ def main(ctx, port, config, addresses, version):
     """run the relay server"""
     logger.info("Starting relay server version %s", get_version())
     # silence warnings from urllib3, see github issue 246
-    get_logger("urllib3.connectionpool", level=logging.CRITICAL)
+    # get_logger("urllib3.connectionpool", level=logging.CRITICAL)
     trustlines = TrustlinesRelay(config_json_path=config, addresses_json_path=addresses)
     trustlines.start()
     ipport = ("", port)
