@@ -11,5 +11,8 @@
   "enableEtherFaucet": false,
   "enableRelayMetaTransaction": false,
   "enableDeployIdentity": false,
-  "fixedGasPrice": false
+  "gasPriceComputation": {
+    "method": "rpc",
+    "gasPrice": 0
+  }
 }
