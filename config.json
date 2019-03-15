@@ -10,5 +10,6 @@
   "eventQueryTimeout": 20,
   "enableEtherFaucet": false,
   "enableRelayMetaTransaction": false,
-  "enableDeployIdentity": false
+  "enableDeployIdentity": false,
+  "fixedGasPrice": false
 }
