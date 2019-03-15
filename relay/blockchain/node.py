@@ -13,9 +13,19 @@ logger = get_logger("node", logging.DEBUG)
 
 
 class Node:
-    def __init__(self, web3, is_parity=True):
+    def __init__(self, web3, *, is_parity=True, fixed_gas_price: int = None):
+        """
+        Abstraction to talk directly to an ethereum node
+        :param web3: web3 object connected to the node
+        :param is_parity: whether connected to a parity node or not. This will enable parity only rpc calls
+        :param fixed_gas_price: Sets the gasprice that will be suggested to clients. If not set,
+        the ethereuem node will be asked for a suggestion. This feature is useful, if the suggestion by the node will
+        likely be wrong, for example because there are not so many transactions. This is also a workaround if the
+        eth_gasPrice rpc call is slow
+        """
         self._web3 = web3
         self.is_parity = is_parity
+        self.fixed_gas_price = fixed_gas_price
         if is_parity:
             logger.info(
                 "Assuming connected to parity node: Enabling parity-only rpc methods."
@@ -58,8 +68,14 @@ class Node:
                 user_address, block_identifier=block_identifier
             ),
             nonce=nonce,
-            gas_price=self._web3.eth.gasPrice,
+            gas_price=self.fetch_gas_price(),
         )
+
+    def fetch_gas_price(self) -> int:
+        if self.fixed_gas_price is not None:
+            return self.fixed_gas_price
+        else:
+            return self._web3.eth.gasPrice
 
     @property
     def address(self):

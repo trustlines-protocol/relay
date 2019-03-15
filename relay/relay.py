@@ -105,6 +105,16 @@ class TrustlinesRelay:
         return self.config.get("eventQueryTimeout", 20)
 
     @property
+    def fixed_gas_price(self) -> Optional[int]:
+        fixed_gas_price = self.config.get("fixedGasPrice", None)
+        # setting it to false is allowed, but means no fixed gas price
+        if fixed_gas_price is False:
+            fixed_gas_price = None
+        if fixed_gas_price is not None and type(fixed_gas_price) is not int:
+            raise ValueError("fixedGasPrice must be either false or an int")
+        return fixed_gas_price
+
+    @property
     def use_eth_index(self) -> bool:
         return os.environ.get("ETHINDEX", "1") == "1"
 
@@ -211,7 +221,7 @@ class TrustlinesRelay:
         )
         logger.info("using web3 URL {}".format(url))
         self._web3 = Web3(Web3.HTTPProvider(url))
-        self.node = Node(self._web3)
+        self.node = Node(self._web3, fixed_gas_price=self.fixed_gas_price)
         self.delegate = Delegate(
             self._web3, self.node.address, self.contracts["Identity"]["abi"]
         )
