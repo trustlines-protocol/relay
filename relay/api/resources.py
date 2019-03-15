@@ -57,6 +57,16 @@ def dump_result_with_schema(schema):
     return dump_result
 
 
+class Ping(Resource):
+    def __init__(self, trustlines: TrustlinesRelay) -> None:
+        self.trustlines = trustlines
+
+    def get(self):
+        from relay import main
+
+        return dict(pong={"time": time.time(), "version": main.get_version()})
+
+
 class NetworkList(Resource):
     def __init__(self, trustlines: TrustlinesRelay) -> None:
         self.trustlines = trustlines

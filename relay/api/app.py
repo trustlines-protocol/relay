@@ -14,6 +14,7 @@ from .resources import (
     User,
     UserList,
     Network,
+    Ping,
     NetworkList,
     ContactList,
     TrustlineList,
@@ -76,6 +77,7 @@ def ApiApp(trustlines):
     def add_resource(resource, url):
         api.add_resource(resource, url, resource_class_args=[trustlines])
 
+    add_resource(Ping, "/ping")
     add_resource(NetworkList, "/networks")
     add_resource(Network, "/networks/<address:network_address>")
     add_resource(UserList, "/networks/<address:network_address>/users")
