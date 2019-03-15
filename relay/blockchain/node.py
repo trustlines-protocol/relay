@@ -1,4 +1,5 @@
 import os
+import time
 import logging
 from collections import namedtuple
 
@@ -44,6 +45,13 @@ class Node:
         return self._web3.eth.getTransactionReceipt(txn_hash)
 
     def get_tx_infos(self, user_address, block_identifier="pending"):
+        logger.info(
+            "get_tx_infos user_address=%s block_identifier=%s is_parity=%s",
+            user_address,
+            block_identifier,
+            self.is_parity,
+        )
+        stime = time.time()
         if self.is_parity and block_identifier == "pending":
             nonce = int(
                 self._web3.manager.request_blocking("parity_nextNonce", [user_address]),
@@ -53,13 +61,22 @@ class Node:
             nonce = self._web3.eth.getTransactionCount(
                 user_address, block_identifier=block_identifier
             )
-        return TxInfos(
-            balance=self._web3.eth.getBalance(
-                user_address, block_identifier=block_identifier
-            ),
-            nonce=nonce,
-            gas_price=self._web3.eth.gasPrice,
+
+        logger.info("have nonce %s after %ss", nonce, time.time() - stime)
+
+        logger.info("getting gas price")
+        stime = time.time()
+        gas_price = self._web3.eth.gasPrice
+        logger.info("gave gas price after %s", time.time() - stime)
+
+        logger.info("getting balance")
+        stime = time.time()
+        balance = self._web3.eth.getBalance(
+            user_address, block_identifier=block_identifier
         )
+        logger.info("have balance after %ss", time.time() - stime)
+
+        return TxInfos(balance=balance, nonce=nonce, gas_price=gas_price)
 
     @property
     def address(self):
