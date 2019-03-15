@@ -1,6 +1,10 @@
 ==========
 Change Log
 ==========
+`0.6.1`_ (2019-03-15)
+-------------------------------
+* Add an option to set the gasprice calculation method. This is necesarry if the rpc endpoint by parity is too slow. 
+
 `0.6.0`_ (2019-03-14)
 -------------------------------
 * Allow find_path to search for paths for receiver pays transfers
@@ -68,3 +72,4 @@ Change Log
 .. _0.4.1: https://github.com/trustlines-network/relay/compare/0.4.0...0.4.1
 .. _0.5.0: https://github.com/trustlines-network/relay/compare/0.4.1...0.5.0
 .. _0.6.0: https://github.com/trustlines-network/relay/compare/0.5.0...0.6.0
+.. _0.6.1: https://github.com/trustlines-network/relay/compare/0.6.0...0.6.1
