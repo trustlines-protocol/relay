@@ -62,6 +62,7 @@ class Ping(Resource):
         self.trustlines = trustlines
 
     def get(self):
+        logger.info("ping!")
         from relay import main
 
         return dict(pong={"time": time.time(), "version": main.get_version()})
