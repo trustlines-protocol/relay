@@ -71,6 +71,7 @@ class TrustlinesRelay:
         self.token_proxies: Dict[str, TokenProxy] = {}
         self._firebase_raw_push_service: Optional[FirebaseRawPushService] = None
         self._client_token_db: Optional[ClientTokenDB] = None
+        self.fixed_gas_price: Optional[int] = None
 
     @property
     def network_addresses(self) -> Iterable[str]:
@@ -103,16 +104,6 @@ class TrustlinesRelay:
     @property
     def event_query_timeout(self) -> int:
         return self.config.get("eventQueryTimeout", 20)
-
-    @property
-    def fixed_gas_price(self) -> Optional[int]:
-        fixed_gas_price = self.config.get("fixedGasPrice", None)
-        # setting it to false is allowed, but means no fixed gas price
-        if fixed_gas_price is False:
-            fixed_gas_price = None
-        if fixed_gas_price is not None and type(fixed_gas_price) is not int:
-            raise ValueError("fixedGasPrice must be either false or an int")
-        return fixed_gas_price
 
     @property
     def use_eth_index(self) -> bool:
@@ -563,6 +554,22 @@ class TrustlinesRelay:
     def _load_config(self):
         with open(self.config_json_path) as data_file:
             self.config = json.load(data_file)
+        self._load_gas_price_settings(self.config.get("gasPriceComputation", {}))
+
+    def _load_gas_price_settings(self, gas_price_settings: Dict):
+        method = gas_price_settings.get("method", "rpc")
+        methods = ["fixed", "rpc"]
+        if method not in methods:
+            raise ValueError(
+                f"Given gasprice computation method: {method} must be on of {methods}"
+            )
+        if method == "fixed":
+            fixed_gas_price = gas_price_settings.get("gasPrice", 0)
+            if not isinstance(fixed_gas_price, int) or fixed_gas_price < 0:
+                raise ValueError(
+                    f"Given gasprice: {fixed_gas_price} must be a non negative integer"
+                )
+            self.fixed_gas_price = fixed_gas_price
 
     def _load_contracts(self):
         with open(
