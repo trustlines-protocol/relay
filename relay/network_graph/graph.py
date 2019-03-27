@@ -401,6 +401,9 @@ class SenderPaysCapacityAccumulator(alg.CostAccumulator):
             capacity_from_start_to_node - previous_hop_fee,
         )
 
+        if capacity_this_edge <= 0:
+            return None
+
         fee = calculate_fees(
             imbalance_generated=imbalance_generated(
                 value=capacity_this_edge, balance=self.get_balance(node, dst, edge_data)
