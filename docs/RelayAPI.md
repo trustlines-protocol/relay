@@ -37,6 +37,7 @@ https://relay0.testnet.trustlines.network/api/v1
 ### User context
 - [Events of user in all currency networks](#events-of-user-in-all-currency-networks)
 - [Transaction infos for user](#transaction-infos-for-user)
+- [Balance of user](#balance-of-user)
 ### Other
 - [Latest block number](#latest-block-number)
 - [Relay transaction](#relay-transaction)
@@ -166,13 +167,13 @@ GET /networks/:networkAddress/users/:userAddress
 curl https://relay0.testnet.trustlines.network/api/v1/networks/0xC0B33D88C704455075a0724AA167a286da778DDE/users/0xcbF1153F6e5AC01D363d432e24112e8aA56c55ce
 ```
 #### Response
-|Attribute|Type|Description|
-|---------|----|-----------|
-|balance|string|Sum over balances of all trustlines user has in currency network|
-|given|string|Sum of all creditlines given by user in currency network|
-|received|string|Sum of all creditlines received by user in currency network|
-|leftGiven|string|given - balance|
-|leftReceived|string|received + balance|
+| Attribute     | Type       | JSON Type | Description                                                      |
+| ---------     | ---------- | ------    | ---------------------------------------------                    |
+| balance       | BigInteger | string    | Sum over balances of all trustlines user has in currency network |
+| given         | BigInteger | string    | Sum of all creditlines given by user in currency network         |
+| received      | BigInteger | string    | Sum of all creditlines received by user in currency network      |
+| leftGiven     | BigInteger | string    | given - balance                                                  |
+| leftReceived  | BigInteger | string    | received + balance                                               |
 #### Example Response
 ```json
 {
@@ -703,6 +704,33 @@ Following additional attributes for `Transfer` events:
 
 ---
 
+### Balance of user
+Returns the balance of the given address.
+#### Request
+```
+GET /users/:userAddress/balance
+```
+#### Example Request
+```
+curl https://relay0.testnet.trustlines.network/api/v1/users/0xcbF1153F6e5AC01D363d432e24112e8aA56c55ce/balance
+```
+#### URL Parameters
+| Name        | Type   | Required | Description     |
+| ----------- | ------ | -------- | --------------- |
+| userAddress | string | YES      | Address of user |
+#### Response
+| Attribute | Type   | JSON Type | Description            |
+| --------- | ------ | --------- | ---------------------- |
+| balance   | string | string    | Balance of user in eth |
+#### Example Response
+```json
+{
+  "balance": "2.377634165348042492"
+}
+```
+
+---
+
 ### Transaction infos for user
 Returns information that is needed to sign a transaction.
 #### Request
@@ -800,7 +828,7 @@ The MetaTransaction object must have the following fields:
 | value      |BigInteger| string                                    | the amount of wei to be sent along from 'from' to 'to'             |
 | data       | bytes    | string - hex-encoded prefixed with "0x"   | the data object encoding the function call including arguments     |
 | nonce      | int      | number                                    | nonce used for replay protection                                   |
-| extra_data | bytes    | string - hex-encoded prefixed with "0x"   | bytes extra data for backwards compatibility                       |
+| extraData  | bytes    | string - hex-encoded prefixed with "0x"   | bytes extra data for backwards compatibility                       |
 | signature  | bytes    | string - hex-encoded prefixed with "0x"   | 65 bytes containing concatenated. v,r,s of the signature           |
 
 #### Example Request
