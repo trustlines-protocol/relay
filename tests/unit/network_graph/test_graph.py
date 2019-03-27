@@ -473,6 +473,19 @@ def test_max_capacity_estimation_long_path_offset_by_two(
     )
 
 
+def test_max_path_closed_trustlines(balances_community):
+    """
+    Tests whether we have an assertion error when we look for max path on a closed trustline with negative balance
+    See issue https://github.com/trustlines-network/relay/issues/285
+    """
+
+    balances_community.update_trustline(B, C, 0, 0)
+    value, path = balances_community.find_maximum_capacity_path(B, C)
+
+    assert value == 0
+    assert path == []
+
+
 def test_mediated_transfer(community_with_trustlines):
     community = community_with_trustlines
     community.mediated_transfer(A, C, 50)
