@@ -284,7 +284,7 @@ workflows:
           filters:
             <<: *tagged-filter
             branches:
-              only: develop
+              only: master
           requires:
             - run-flake8
             - run-black
