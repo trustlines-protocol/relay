@@ -20,12 +20,12 @@ files directly into the user's home directory. Else, adapt the paths to your nee
 
 You need to run our modified parity node, which provides the JSONRPC API to the relay
 server and the indexer. The documentation on how to run it can be found on the
-[github page](https://github.com/trustlines-network/blockchain)
+[github page](https://github.com/trustlines-protocol/blockchain)
 ### Contracts
 The [trustlines-contracts
-repository](https://github.com/trustlines-network/contracts) contains the
+repository](https://github.com/trustlines-protocol/contracts) contains the
 solidity contracts to be deployed on the blockchain and a commandline tool to deploy the contracts. The [how to deploy the
-contracts guide](https://github.com/trustlines-network/contracts) contains more information on how to deploy the contracts.
+contracts guide](https://github.com/trustlines-protocol/contracts) contains more information on how to deploy the contracts.
 The tool will return the addresses of the deployed contracts. You need to provide that information to the relay server with as json file `addresses.json` with the following format:
 
 ```
@@ -94,7 +94,7 @@ information about passwords. The [py-eth-index section](#py-eth-index) describes
 how to create the trustlines specific tables.
 
 ### Py-eth-index
-The [py-eth-index repository](https://github.com/trustlines-network/py-eth-index)
+The [py-eth-index repository](https://github.com/trustlines-protocol/py-eth-index)
 contains a helper program that synchronizes the relevant information from the
 blockchain into a postgresql database.
 
@@ -103,7 +103,7 @@ blockchain into a postgresql database.
 Clone the git repository:
 ```
 cd ~
-git clone https://github.com/trustlines-network/py-eth-index
+git clone https://github.com/trustlines-protocol/py-eth-index
 ```
 Let’s create a virtualenv for this repository:
 ```
@@ -160,7 +160,7 @@ Clone the git repository, create a virtualenv and install into
 that.
 ```
 cd ~
-git clone https://github.com/trustlines-network/relay
+git clone https://github.com/trustlines-protocol/relay
 python3 -m venv ~/opt/relay; ~/opt/relay/bin/pip install -U pip
 cd ~/relay;
 ~/opt/relay/bin/pip install -c constraints.txt -r requirements.txt

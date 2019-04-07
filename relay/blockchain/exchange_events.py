@@ -13,7 +13,7 @@ class ExchangeEvent(TLNetworkEvent):
         )
         self.exchange_address = web3_event.get("address")
         # NOTE: The argument orderHash can be a hex string because the indexer currently can
-        #       not save bytes in the database. See issue https://github.com/trustlines-network/py-eth-index/issues/16
+        #       not save bytes in the database. See issue https://github.com/trustlines-protocol/py-eth-index/issues/16
         order_hash = web3_event.get("args").get("orderHash")
         if not isinstance(order_hash, hexbytes.HexBytes):
             self.order_hash = hexbytes.HexBytes(order_hash)

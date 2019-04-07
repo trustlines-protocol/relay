@@ -26,7 +26,7 @@ Setup
 To install all needed development dependencies run the following commands in a
 fresh virtualenv::
 
-    git clone https://github.com/trustlines-network/relay.git
+    git clone https://github.com/trustlines-protocol/relay.git
     cd relay
     pip install -c constraints.txt -r requirements.txt
     pip install -c constraints.txt -e .
@@ -39,7 +39,7 @@ committing changes to the git repository.
 
 We also need to deploy trustlines smart contracts on a local node or
 testrpc as described
-`here <https://github.com/trustlines-network/contracts>`__.
+`here <https://github.com/trustlines-protocol/contracts>`__.
 
 Add the ``address`` of the deployed ``Currency Network`` to the file
 ``/relay/networks``:
@@ -60,7 +60,7 @@ Docs
 Change log
 ----------
 
-See `CHANGELOG <https://github.com/trustlines-network/relay/blob/develop/CHANGELOG.rst>`_.
+See `CHANGELOG <https://github.com/trustlines-protocol/relay/blob/develop/CHANGELOG.rst>`_.
 
 .. |Code style: black| image:: https://img.shields.io/badge/code%20style-black-000000.svg
    :target: https://github.com/ambv/black

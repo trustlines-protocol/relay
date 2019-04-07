@@ -19,7 +19,7 @@ class FeeCostAccumulatorCounter(alg.CostAccumulator):
 def test_optimize_number_of_costfn_calls():
     """test that least_cost_path does not call costfn excessively
 
-    see https://github.com/trustlines-network/relay/issues/237
+    see https://github.com/trustlines-protocol/relay/issues/237
     """
     g = nx.Graph()
     nodes = list(range(1, 20))

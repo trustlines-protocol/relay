@@ -408,7 +408,7 @@ def test_capacity_path_single_hop_reducing_imbalance(
     complex_community_with_trustlines_and_fees
 ):
     """Test whether a path with potential reduction of imbalance will show to provide more capacity and less fees
-    this exposes the bug detailed in https://github.com/trustlines-network/mobileapp/issues/296"""
+    this exposes the bug detailed in https://github.com/trustlines-protocol/mobileapp/issues/296"""
     complex_community_with_trustlines_and_fees.update_balance(A, B, 50000)
 
     source = A
@@ -476,7 +476,7 @@ def test_max_capacity_estimation_long_path_offset_by_two(
 def test_max_path_closed_trustlines(balances_community):
     """
     Tests whether we have an assertion error when we look for max path on a closed trustline with negative balance
-    See issue https://github.com/trustlines-network/relay/issues/285
+    See issue https://github.com/trustlines-protocol/relay/issues/285
     """
 
     balances_community.update_trustline(B, C, 0, 0)
@@ -552,7 +552,7 @@ def test_no_direction(
 
 def test_valid_path_raises_no_value_error(complex_community_with_trustlines_and_fees):
     """Verifies that the condition for raising a ValueError is not faulty
-    see https://github.com/trustlines-network/relay/issues/91"""
+    see https://github.com/trustlines-protocol/relay/issues/91"""
     complex_community_with_trustlines_and_fees.update_balance(
         A, B, -10000
     )  # amount B owes A because A < B

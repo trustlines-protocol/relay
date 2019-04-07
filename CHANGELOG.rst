@@ -66,10 +66,10 @@ Change Log
   contracts. The installation has become easier, since populus and solc isn't
   required anymore. Therefore tl-deploy isn't being installed anymore.
 
-.. _0.2.0: https://github.com/trustlines-network/relay/compare/0.1.0...0.2.0
-.. _0.3.0: https://github.com/trustlines-network/relay/compare/0.2.0...0.3.0
-.. _0.4.0: https://github.com/trustlines-network/relay/compare/0.3.0...0.4.0
-.. _0.4.1: https://github.com/trustlines-network/relay/compare/0.4.0...0.4.1
-.. _0.5.0: https://github.com/trustlines-network/relay/compare/0.4.1...0.5.0
-.. _0.6.0: https://github.com/trustlines-network/relay/compare/0.5.0...0.6.0
-.. _0.6.1: https://github.com/trustlines-network/relay/compare/0.6.0...0.6.1
+.. _0.2.0: https://github.com/trustlines-protocol/relay/compare/0.1.0...0.2.0
+.. _0.3.0: https://github.com/trustlines-protocol/relay/compare/0.2.0...0.3.0
+.. _0.4.0: https://github.com/trustlines-protocol/relay/compare/0.3.0...0.4.0
+.. _0.4.1: https://github.com/trustlines-protocol/relay/compare/0.4.0...0.4.1
+.. _0.5.0: https://github.com/trustlines-protocol/relay/compare/0.4.1...0.5.0
+.. _0.6.0: https://github.com/trustlines-protocol/relay/compare/0.5.0...0.6.0
+.. _0.6.1: https://github.com/trustlines-protocol/relay/compare/0.6.0...0.6.1

@@ -8,7 +8,7 @@ def _ensure_non_negative_delta_time(delta_time):
     positive. Every value passed in that's less than
     DELTA_TIME_MINIMAL_ALLOWED_VALUE will trigger a ValueError.
 
-    see https://github.com/trustlines-network/relay/issues/279
+    see https://github.com/trustlines-protocol/relay/issues/279
     """
     if delta_time < DELTA_TIME_MINIMAL_ALLOWED_VALUE:
         raise ValueError("delta_time out of bounds")

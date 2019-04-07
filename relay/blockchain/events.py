@@ -13,7 +13,7 @@ class BlockchainEvent(Event):
         self._current_blocknumber = current_blocknumber
         # NOTE: The field transactionHash is of type HexBytes sind web3 v4. It can also be a hex string because
         # the indexer currently can not save bytes in the database.
-        # See issue https://github.com/trustlines-network/py-eth-index/issues/16
+        # See issue https://github.com/trustlines-protocol/py-eth-index/issues/16
         self.transaction_id: hexbytes.HexBytes
         transaction_id = web3_event.get("transactionHash")
         if not isinstance(transaction_id, hexbytes.HexBytes):

@@ -28,7 +28,7 @@ setup(
     description="Relay Server for the Trustlines Network",
     long_description=long_description,
     # The project's main homepage.
-    url="https://github.com/trustlines-network/relay",
+    url="https://github.com/trustlines-protocol/relay",
     # Author details
     author="Trustlines-Network",
     author_email="contact@brainbot.com",

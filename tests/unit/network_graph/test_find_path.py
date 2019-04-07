@@ -43,7 +43,7 @@ def test_find_path_cost_wrong_bug_issue_219(graph):
     """our old implementation of find_transfer_path_sender_pays_fees failed to compute the correct cost
     for some paths
 
-    This is a test for https://github.com/trustlines-network/relay/issues/219"""
+    This is a test for https://github.com/trustlines-protocol/relay/issues/219"""
     cost_path = alg.least_cost_path(
         graph=graph,
         starting_nodes={1},

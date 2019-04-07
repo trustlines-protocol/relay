@@ -93,7 +93,7 @@ def test_auto_unsubscribe(subject, client):
 
 def test_auto_unsubscribe_dont_skip(subject):
     """test that publishing also works when auto-unsubscribing
-    see https://github.com/trustlines-network/relay/issues/85"""
+    see https://github.com/trustlines-protocol/relay/issues/85"""
     clients = [LogClient(), SafeLogClient()]
     for c in clients:
         subject.subscribe(c)
