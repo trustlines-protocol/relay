@@ -10,7 +10,7 @@ attrdict==2.0.0
 attrs==18.2.0
 backcall==0.1.0
 bernhard==0.2.6
-black==18.9b0
+black==19.3b0
 bitcoin==1.1.42
 CacheControl==0.12.5
 cachetools==2.1.0
