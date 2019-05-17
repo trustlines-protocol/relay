@@ -180,7 +180,7 @@ class SenderPaysCostAccumulatorSnapshot(alg.CostAccumulator):
         capacity_imbalance_fee_divisor,
         max_hops=None,
         max_fees=None,
-        ignore=None
+        ignore=None,
     ):
         if max_hops is None:
             max_hops = math.inf
@@ -277,7 +277,7 @@ class ReceiverPaysCostAccumulatorSnapshot(alg.CostAccumulator):
         capacity_imbalance_fee_divisor,
         max_hops=None,
         max_fees=None,
-        ignore=None
+        ignore=None,
     ):
         if max_hops is None:
             max_hops = math.inf
@@ -669,7 +669,7 @@ class CurrencyNetworkGraph(object):
         max_hops=None,
         max_fees=None,
         timestamp=0,
-        cost_accumulator_function
+        cost_accumulator_function,
     ):
 
         if value is None:

@@ -3,7 +3,7 @@ Change Log
 ==========
 `0.6.1`_ (2019-03-15)
 -------------------------------
-* Add an option to set the gasprice calculation method. This is necessary if the rpc endpoint by parity is too slow. 
+* Add an option to set the gasprice calculation method. This is necessary if the rpc endpoint by parity is too slow.
 
 `0.6.0`_ (2019-03-14)
 -------------------------------
