@@ -35,7 +35,6 @@ ethpm==0.1.4a19
 filelock==3.0.12
 firebase-admin==2.13.0
 flake8==3.7.7
-flake8-per-file-ignores==0.6
 flake8-string-format==0.2.3
 Flask==1.0.2
 Flask-Cors==3.0.6
