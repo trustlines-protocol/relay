@@ -112,7 +112,7 @@ pytest==4.6.2
 pytest-cov==2.7.1
 pytest-ethereum==0.1.3a6
 pytz==2019.1
-PyYAML==5.1
+PyYAML==5.1.1
 requests==2.22.0
 rlp==1.1.0
 rsa==3.4.2
@@ -120,7 +120,7 @@ semantic-version==2.6.0
 setuptools==41.0.1
 setuptools-scm==3.3.3
 six==1.12.0
-SQLAlchemy==1.2.11
+SQLAlchemy==1.3.4
 testing.common.database==2.0.3
 testing.postgresql==1.3.0
 tinyrpc==0.9.3
