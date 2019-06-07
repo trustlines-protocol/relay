@@ -90,7 +90,7 @@ pluggy==0.12.0
 pre-commit==1.17.0
 prompt-toolkit==2.0.9
 protobuf==3.8.0
-psycogreen==1.0
+psycogreen==1.0.1
 psycopg2==2.8.2
 ptyprocess==0.6.0
 py==1.8.0
@@ -111,7 +111,7 @@ pyparsing==2.4.0
 pytest==4.6.2
 pytest-cov==2.7.1
 pytest-ethereum==0.1.3a6
-pytz==2018.5
+pytz==2019.1
 PyYAML==5.1
 requests==2.22.0
 rlp==1.1.0
@@ -142,5 +142,5 @@ webargs==4.0.0
 websockets==7.0
 Werkzeug==0.14.1
 wheel==0.33.4
-wrapt==1.10.11
+wrapt==1.11.1
 zipp==0.5.1
