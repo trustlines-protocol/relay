@@ -114,6 +114,18 @@ class Account(object):
     def reverse_fees_outstanding(self, fees):
         set_fees_outstanding(self.data, self.b, self.a, fees)
 
+    def can_be_closed(self):
+        if (
+            self.balance
+            == self.creditline
+            == self.reverse_creditline
+            == self.interest_rate
+            == self.reverse_interest_rate
+            == 0
+        ):
+            return True
+        return False
+
     def __repr__(self):
         return "Account({}, {}, {})".format(self.a, self.b, self.data)
 
@@ -533,6 +545,8 @@ class CurrencyNetworkGraph(object):
             raise RuntimeError(
                 "No timestamp was given. When using interests a timestamp is mandatory"
             )
+        if account.can_be_closed():
+            self.remove_trustline(creditor, debtor)
 
     def get_balance_with_interests(self, a, b, timestamp):
         if not self.graph.has_edge(a, b):
@@ -563,6 +577,17 @@ class CurrencyNetworkGraph(object):
             raise RuntimeError(
                 "No timestamp was given. When using interests a timestamp is mandatory"
             )
+        if account.can_be_closed():
+            self.remove_trustline(a, b)
+
+    def remove_trustline(self, a, b):
+        self.graph.remove_edge(a, b)
+
+        if len(self.graph.edges(a)) == 0:
+            self.graph.remove_node(a)
+
+        if len(self.graph.edges(b)) == 0:
+            self.graph.remove_node(b)
 
     def get_account_sum(
         self, user: str, counter_party: str = None, *, timestamp: int = 0

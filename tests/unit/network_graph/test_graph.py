@@ -887,3 +887,31 @@ def test_close_trustline_multi(complex_community_with_trustlines_and_fees):
             fee_payer=FeePayer.SENDER,
         ),
     ]
+
+
+def test_update_to_closed_trustlines_remove_from_graph(
+    complex_community_with_trustlines_and_fees
+):
+    """Tests that an edge / node is removed from the graph
+    when a trustline is estimated as closed after updating the credit limits"""
+    assert complex_community_with_trustlines_and_fees.graph.has_edge(G, H)
+    complex_community_with_trustlines_and_fees.update_trustline(G, H, 0, 0)
+    assert complex_community_with_trustlines_and_fees.graph.has_edge(G, H) is False
+    assert complex_community_with_trustlines_and_fees.graph.has_node(G)
+    assert complex_community_with_trustlines_and_fees.graph.has_node(H) is False
+
+
+def test_update_balance_to_closed_trustlines_remove_from_graph(
+    complex_community_with_trustlines_and_fees
+):
+    """Tests that an edge / node is removed from the graph
+    when a trustline is estimated as closed after updating the balance"""
+    # we update the balance first so that it is not removed when updating the credit limit
+    complex_community_with_trustlines_and_fees.update_balance(G, H, 10)
+    complex_community_with_trustlines_and_fees.update_trustline(G, H, 0, 0)
+
+    assert complex_community_with_trustlines_and_fees.graph.has_edge(G, H)
+    complex_community_with_trustlines_and_fees.update_balance(G, H, 0)
+    assert complex_community_with_trustlines_and_fees.graph.has_edge(G, H) is False
+    assert complex_community_with_trustlines_and_fees.graph.has_node(G)
+    assert complex_community_with_trustlines_and_fees.graph.has_node(H) is False
