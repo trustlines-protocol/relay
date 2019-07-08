@@ -538,13 +538,6 @@ class CurrencyNetworkGraph(object):
             raise RuntimeError(
                 "Not interests specified even though custom interests are enabled"
             )
-
-        if timestamp is not None:
-            account.m_time = timestamp
-        elif self.has_interests:
-            raise RuntimeError(
-                "No timestamp was given. When using interests a timestamp is mandatory"
-            )
         if account.can_be_closed():
             self.remove_trustline(creditor, debtor)
 
