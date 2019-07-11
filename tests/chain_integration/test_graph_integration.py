@@ -29,7 +29,6 @@ def _create_on_trustline(graph):
             event.creditline_received,
             event.interest_rate_given,
             event.interest_rate_received,
-            event.timestamp,
         )
 
     return update_trustline
