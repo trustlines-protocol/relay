@@ -505,7 +505,6 @@ class CurrencyNetworkGraph(object):
         creditline_received: int,
         interest_rate_given: int = None,
         interest_rate_received: int = None,
-        timestamp: int = None,
     ):
         """to update the creditlines, used to react on changes on the blockchain"""
         if not self.graph.has_edge(creditor, debtor):

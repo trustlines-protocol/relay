@@ -724,7 +724,6 @@ class TrustlinesRelay:
             creditline_received=trustline_update_event.creditline_received,
             interest_rate_given=trustline_update_event.interest_rate_given,
             interest_rate_received=trustline_update_event.interest_rate_received,
-            timestamp=trustline_update_event.timestamp,
         )
         self._publish_blockchain_event(trustline_update_event)
         self._publish_trustline_events(
