@@ -1,6 +1,5 @@
 from .events import TLNetworkEvent
 
-
 TrustlineRequestEventType = "TrustlineUpdateRequest"
 TrustlineUpdateEventType = "TrustlineUpdate"
 BalanceUpdateEventType = "BalanceUpdate"
@@ -22,7 +21,12 @@ class ValueEvent(CurrencyNetworkEvent):
 
 
 class TransferEvent(ValueEvent):
-    pass
+    @property
+    def extra_data(self):
+        extra_data = self._web3_event.get("args").get("_extraData")
+        if extra_data:
+            return f"0x{extra_data.hex()}"
+        return "0x"
 
 
 class BalanceUpdateEvent(ValueEvent):

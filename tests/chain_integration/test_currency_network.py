@@ -140,6 +140,7 @@ def test_get_transfer_event(currency_network_with_events, accounts):
     assert transfer_event.user == accounts[0]
     assert transfer_event.counter_party == accounts[1]
     assert transfer_event.direction == "received"
+    assert transfer_event.extra_data == "0x"
 
 
 def test_number_of_get_all_events(currency_network_with_events, accounts):
