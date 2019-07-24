@@ -212,14 +212,14 @@ class CurrencyNetworkProxy(Proxy):
         results = concurrency_utils.joinall(queries, timeout=timeout)
         return sorted_events(list(itertools.chain.from_iterable(results)))
 
-    empty_extra_data = b""
-
-    def estimate_gas_for_transfer(self, sender, receiver, value, max_fee, path):
+    def estimate_gas_for_transfer(
+        self, sender, receiver, value, max_fee, path, extra_data="0x"
+    ):
         return self._proxy.functions.transfer(
-            receiver, value, max_fee, path, self.empty_extra_data
+            receiver, value, max_fee, path, extra_data
         ).estimateGas({"from": sender})
 
-    def estimate_gas_for_payment_path(self, payment_path: PaymentPath):
+    def estimate_gas_for_payment_path(self, payment_path: PaymentPath, extra_data="0x"):
         """estimate gas for doing a transfer for the given payment_path"""
         if not payment_path.path:
             return 0
@@ -233,7 +233,7 @@ class CurrencyNetworkProxy(Proxy):
                 payment_path.value,
                 payment_path.fee,
                 payment_path.path[1:],
-                self.empty_extra_data,
+                extra_data,
             ).estimateGas({"from": source})
         elif fee_payer is FeePayer.RECEIVER:
             return self._proxy.functions.transferReceiverPays(
@@ -241,7 +241,7 @@ class CurrencyNetworkProxy(Proxy):
                 payment_path.value,
                 payment_path.fee,
                 payment_path.path[1:],
-                self.empty_extra_data,
+                extra_data,
             ).estimateGas({"from": source})
         else:
             raise ValueError(

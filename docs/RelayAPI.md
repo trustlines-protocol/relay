@@ -343,6 +343,7 @@ POST /networks/:networkAddress/path-info
 |maxFees|string|NO|Upper bound for transfer fees|
 |maxHops|string|NO|Upper bound for hops in transfer path|
 |feePayer|string|NO|Either `sender` or `receiver`|
+|extraData|string|NO|Hex encoded extra data string "0x"|
 #### Example Request
 ```bash
 curl --header "Content-Type: application/json" \

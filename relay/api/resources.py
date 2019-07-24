@@ -396,11 +396,16 @@ class IdentityInfos(Resource):
 
 
 def _fill_estimated_gas_in_payment_path(
-    trustlines: TrustlinesRelay, payment_path: PaymentPath, network_address: str
+    trustlines: TrustlinesRelay,
+    payment_path: PaymentPath,
+    network_address: str,
+    extra_data="0x",
 ) -> PaymentPath:
     proxy = trustlines.currency_network_proxies[network_address]
     try:
-        payment_path.estimated_gas = proxy.estimate_gas_for_payment_path(payment_path)
+        payment_path.estimated_gas = proxy.estimate_gas_for_payment_path(
+            payment_path, extra_data
+        )
     except ValueError:
         # should mean out of gas, so path was not right.
         return PaymentPath(
@@ -429,6 +434,7 @@ class Path(Resource):
             validate=validate.OneOf([fee_payer.value for fee_payer in FeePayer]),
             missing="sender",
         ),
+        "extraData": custom_fields.HexEncodedBytes(required=False, missing="0x"),
     }
 
     @use_args(args)
@@ -443,6 +449,7 @@ class Path(Resource):
         max_fees = args["maxFees"]
         max_hops = args["maxHops"]
         fee_payer = FeePayer(args["feePayer"])
+        extra_data = args["extraData"]
 
         if fee_payer == FeePayer.SENDER:
             cost, path = self.trustlines.currency_network_graphs[
@@ -475,6 +482,7 @@ class Path(Resource):
             self.trustlines,
             PaymentPath(cost, path, value, fee_payer=fee_payer),
             network_address,
+            extra_data,
         )
 
         return payment_path

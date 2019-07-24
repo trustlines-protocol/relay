@@ -118,13 +118,13 @@ class CurrencyNetworkProxy(CurrencyNetworkProxy):
             interest_rate_given,
         )
 
-    def transfer(self, from_, to, value, max_fee, path, extra_data=b""):
+    def transfer(self, from_, to, value, max_fee, path, extra_data="0x"):
         txid = self._proxy.functions.transfer(
             to, value, max_fee, path, extra_data
         ).transact({"from": from_})
         self._web3.eth.waitForTransactionReceipt(txid)
 
-    def transfer_meta_transaction(self, to, value, max_fee, path, extra_data=b""):
+    def transfer_meta_transaction(self, to, value, max_fee, path, extra_data="0x"):
 
         function_call = self._proxy.functions.transfer(
             to, value, max_fee, path, extra_data
