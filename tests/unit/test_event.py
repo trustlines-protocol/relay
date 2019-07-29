@@ -30,10 +30,15 @@ def web3_event_trustline_update(web3_event):
 
 
 @pytest.fixture()
-def web3_event_transfer(web3_event):
+def web3_event_transfer(web3_event, test_extra_data):
     web3_event.update(
         {
-            "args": {"_from": "0x123", "_to": "0x1234", "_value": 150},
+            "args": {
+                "_from": "0x123",
+                "_to": "0x1234",
+                "_value": 150,
+                "_extraData": test_extra_data,
+            },
             "event": TransferEventType,
         }
     )
@@ -53,7 +58,7 @@ def test_trustline_update_event(web3_event_trustline_update):
     assert event.direction == "received"
 
 
-def test_transfer_event(web3_event_transfer):
+def test_transfer_event(web3_event_transfer, test_extra_data):
     event = TransferEvent(web3_event_transfer, 6, 123456, "0x123")
 
     assert event.from_ == "0x123"
@@ -63,3 +68,4 @@ def test_transfer_event(web3_event_transfer):
     assert event.value == 150
     assert event.status == "pending"
     assert event.direction == "sent"
+    assert event.extra_data == test_extra_data

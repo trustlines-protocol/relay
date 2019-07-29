@@ -8,6 +8,7 @@ from pathlib import Path
 import pytest
 import py
 import operator
+import hexbytes
 
 # import the relay module so no pip install is necessary
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
@@ -57,6 +58,11 @@ def test_account():
         private_key=b"\x04HR\xb2\xa6p\xad\xe5@~x\xfb(c\xc5\x1d\xe9\xfc\xb9eB\xa0q\x86\xfe:\xed\xa6\xbb\x8a\x11m",
         address="0x82A978B3f5962A5b0957d9ee9eEf472EE55B42F1",
     )
+
+
+@pytest.fixture(scope="session")
+def test_extra_data():
+    return hexbytes.HexBytes("0x12345678123456781234567812345678")
 
 
 class TestDataReader:

@@ -517,7 +517,7 @@ Following additional attributes for `Transfer` events:
 		"status": "confirmed",
 		"transactionId": "0x05c91f6506e78b1ca2413df9985ca7d37d2da5fc076c0b55c5d9eb9fdd7513a6",
 		"amount": "100",
-		"extraDate": "0x1234"
+		"extraData": "0x1234"
 	}
 ]
 ```

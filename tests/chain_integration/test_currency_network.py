@@ -129,7 +129,7 @@ def test_get_events(currency_network_with_events, accounts):
     )
 
 
-def test_get_transfer_event(currency_network_with_events, accounts):
+def test_get_transfer_event(currency_network_with_events, accounts, test_extra_data):
     currency_network = currency_network_with_events
     transfer_event = currency_network.get_network_events(
         TransferEventType, user_address=accounts[0]
@@ -140,7 +140,7 @@ def test_get_transfer_event(currency_network_with_events, accounts):
     assert transfer_event.user == accounts[0]
     assert transfer_event.counter_party == accounts[1]
     assert transfer_event.direction == "received"
-    assert transfer_event.extra_data == "0x1234"
+    assert transfer_event.extra_data == test_extra_data
 
 
 def test_number_of_get_all_events(currency_network_with_events, accounts):

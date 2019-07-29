@@ -10,6 +10,7 @@ from webargs import fields
 from webargs.flaskparser import use_args
 from marshmallow import validate, fields as marshmallow_fields
 from tldeploy import identity
+import hexbytes
 
 from relay.blockchain.delegate import InvalidIdentityContractException
 from relay.utils import sha3
@@ -212,7 +213,6 @@ class UserEventsNetwork(Resource):
         from_block = args["fromBlock"]
         type = args["type"]
         try:
-
             return self.trustlines.get_user_network_events(
                 network_address, user_address, type=type, from_block=from_block
             )
@@ -399,7 +399,7 @@ def _fill_estimated_gas_in_payment_path(
     trustlines: TrustlinesRelay,
     payment_path: PaymentPath,
     network_address: str,
-    extra_data="0x",
+    extra_data: hexbytes = hexbytes.HexBytes(b""),
 ) -> PaymentPath:
     proxy = trustlines.currency_network_proxies[network_address]
     try:
@@ -434,7 +434,9 @@ class Path(Resource):
             validate=validate.OneOf([fee_payer.value for fee_payer in FeePayer]),
             missing="sender",
         ),
-        "extraData": custom_fields.HexEncodedBytes(required=False, missing="0x"),
+        "extraData": custom_fields.HexEncodedBytes(
+            required=False, missing=hexbytes.HexBytes(b"")
+        ),
     }
 
     @use_args(args)
