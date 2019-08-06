@@ -6,6 +6,7 @@ import functools
 import itertools
 
 import gevent
+import hexbytes
 
 import relay.concurrency_utils as concurrency_utils
 from .proxy import Proxy, reconnect_interval, sorted_events
@@ -212,12 +213,16 @@ class CurrencyNetworkProxy(Proxy):
         results = concurrency_utils.joinall(queries, timeout=timeout)
         return sorted_events(list(itertools.chain.from_iterable(results)))
 
-    def estimate_gas_for_transfer(self, sender, receiver, value, max_fee, path):
+    def estimate_gas_for_transfer(
+        self, sender, receiver, value, max_fee, path, extra_data=hexbytes.HexBytes(b"")
+    ):
         return self._proxy.functions.transfer(
-            receiver, value, max_fee, path
+            receiver, value, max_fee, path, extra_data
         ).estimateGas({"from": sender})
 
-    def estimate_gas_for_payment_path(self, payment_path: PaymentPath):
+    def estimate_gas_for_payment_path(
+        self, payment_path: PaymentPath, extra_data=hexbytes.HexBytes(b"")
+    ):
         """estimate gas for doing a transfer for the given payment_path"""
         if not payment_path.path:
             return 0
@@ -227,11 +232,19 @@ class CurrencyNetworkProxy(Proxy):
 
         if fee_payer is FeePayer.SENDER:
             return self._proxy.functions.transfer(
-                target, payment_path.value, payment_path.fee, payment_path.path[1:]
+                target,
+                payment_path.value,
+                payment_path.fee,
+                payment_path.path[1:],
+                extra_data,
             ).estimateGas({"from": source})
         elif fee_payer is FeePayer.RECEIVER:
             return self._proxy.functions.transferReceiverPays(
-                target, payment_path.value, payment_path.fee, payment_path.path[1:]
+                target,
+                payment_path.value,
+                payment_path.fee,
+                payment_path.path[1:],
+                extra_data,
             ).estimateGas({"from": source})
         else:
             raise ValueError(

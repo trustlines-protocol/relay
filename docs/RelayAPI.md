@@ -343,6 +343,7 @@ POST /networks/:networkAddress/path-info
 |maxFees|string|NO|Upper bound for transfer fees|
 |maxHops|string|NO|Upper bound for hops in transfer path|
 |feePayer|string|NO|Either `sender` or `receiver`|
+|extraData|string|NO|Hex encoded extra data string "0x"|
 #### Example Request
 ```bash
 curl --header "Content-Type: application/json" \
@@ -470,10 +471,11 @@ Following additional attributes for `TrustlineUpdate` and `TrustlineUpdateReques
 
 Following additional attributes for `Transfer` events:
 
-| Attribute | Type   | Description                  |
-|-----------|--------|------------------------------|
-| amount    | string | Transfer amount `from -> to` |
-|           |        |                              |
+| Attribute | Type   | Description                                          |
+|-----------|--------|------------------------------------------------------|
+| amount    | string | Transfer amount `from -> to`                         |
+| extraData | string | extraData as specified in the corresponding transfer |
+|           |        |                                                      |
 #### Example Response
 ```json
 [
@@ -514,7 +516,8 @@ Following additional attributes for `Transfer` events:
 		"to": "0x7Ec3543702FA8F2C7b2bD84C034aAc36C263cA8b",
 		"status": "confirmed",
 		"transactionId": "0x05c91f6506e78b1ca2413df9985ca7d37d2da5fc076c0b55c5d9eb9fdd7513a6",
-		"amount": "100"
+		"amount": "100",
+		"extraData": "0x1234"
 	}
 ]
 ```
@@ -562,10 +565,11 @@ Following additional attributes for `TrustlineUpdate` and `TrustlineUpdateReques
 
 Following additional attributes for `Transfer` events:
 
-| Attribute | Type   | Description                  |
-|-----------|--------|------------------------------|
-| amount    | string | Transfer amount `from -> to` |
-|           |        |                              |
+| Attribute | Type   | Description                                          |
+|-----------|--------|------------------------------------------------------|
+| amount    | string | Transfer amount `from -> to`                         |
+| extraData | string | extraData as specified in the corresponding transfer |
+|           |        |                                                      |
 #### Example Response
 ```json
 [
@@ -606,7 +610,8 @@ Following additional attributes for `Transfer` events:
 		"to": "0x7Ec3543702FA8F2C7b2bD84C034aAc36C263cA8b",
 		"status": "confirmed",
 		"transactionId": "0x05c91f6506e78b1ca2413df9985ca7d37d2da5fc076c0b55c5d9eb9fdd7513a6",
-		"amount": "100"
+		"amount": "100",
+		"extraData": "0x1234"
 	}
 ]
 ```
@@ -653,9 +658,11 @@ Following additional attributes for `TrustlineUpdate` and `TrustlineUpdateReques
 
 Following additional attributes for `Transfer` events:
 
-| Attribute | Type   | Description                  |
-|-----------|--------|------------------------------|
-| amount    | string | Transfer amount `from -> to` |
+| Attribute | Type   | Description                                          |
+|-----------|--------|------------------------------------------------------|
+| amount    | string | Transfer amount `from -> to`                         |
+| extraData | string | extraData as specified in the corresponding transfer |
+|           |        |                                                      |
 
 #### Example Response
 ```json
@@ -697,7 +704,8 @@ Following additional attributes for `Transfer` events:
 		"to": "0x7Ec3543702FA8F2C7b2bD84C034aAc36C263cA8b",
 		"status": "confirmed",
 		"transactionId": "0x05c91f6506e78b1ca2413df9985ca7d37d2da5fc076c0b55c5d9eb9fdd7513a6",
-		"amount": "100"
+		"amount": "100",
+		"extraData": "0x1234"
 	}
 ]
 ```

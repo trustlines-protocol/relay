@@ -1,5 +1,6 @@
-from .events import TLNetworkEvent
+import hexbytes
 
+from .events import TLNetworkEvent
 
 TrustlineRequestEventType = "TrustlineUpdateRequest"
 TrustlineUpdateEventType = "TrustlineUpdate"
@@ -22,7 +23,15 @@ class ValueEvent(CurrencyNetworkEvent):
 
 
 class TransferEvent(ValueEvent):
-    pass
+    @property
+    def extra_data(self):
+        extra_data = self._web3_event.get("args").get("_extraData")
+        # NOTE: The argument extraData can be a hex string because the indexer currently can
+        #       not save bytes in the database. See issue https://github.com/trustlines-protocol/py-eth-index/issues/16
+        if not isinstance(extra_data, hexbytes.HexBytes):
+            return hexbytes.HexBytes(extra_data)
+        else:
+            return extra_data
 
 
 class BalanceUpdateEvent(ValueEvent):
