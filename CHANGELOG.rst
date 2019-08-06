@@ -1,6 +1,12 @@
 ==========
 Change Log
 ==========
+`0.7.0`_ (2019-08-06)
+-------------------------------
+* Update web3 to version 5.0.0 and other dependencies
+* Improve local view of Currency Networks graphs
+* Add extraData to transfers and Transfer events
+
 `0.6.1`_ (2019-03-15)
 -------------------------------
 * Add an option to set the gasprice calculation method. This is necessary if the rpc endpoint by parity is too slow.
@@ -9,6 +15,7 @@ Change Log
 -------------------------------
 * Allow find_path to search for paths for receiver pays transfers
 * Fixed a bug, where the time being slighly off resulted in an internal server error
+
 `0.5.0`_ (2019-02-18)
 -------------------------------
 * implement meta transaction related functionality
@@ -73,3 +80,4 @@ Change Log
 .. _0.5.0: https://github.com/trustlines-protocol/relay/compare/0.4.1...0.5.0
 .. _0.6.0: https://github.com/trustlines-protocol/relay/compare/0.5.0...0.6.0
 .. _0.6.1: https://github.com/trustlines-protocol/relay/compare/0.6.0...0.6.1
+.. _0.7.0: https://github.com/trustlines-protocol/relay/compare/0.6.1...0.7.0
