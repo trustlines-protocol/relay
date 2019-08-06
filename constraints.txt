@@ -107,8 +107,8 @@ toml==0.10.0
 toolz==0.10.0
 tox==3.13.2
 trie==1.4.0
-trustlines-contracts-bin==0.6.3
-trustlines-contracts-deploy==0.6.3
+trustlines-contracts-bin==0.7.0
+trustlines-contracts-deploy==0.7.0
 typed-ast==1.4.0
 typing-extensions==3.7.4
 urllib3==1.25.3

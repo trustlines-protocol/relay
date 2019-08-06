@@ -69,6 +69,7 @@ class CurrencyNetworkEventSchema(BlockchainEventSchema):
     leftReceived = BigInteger(attribute="left_received")
     from_ = Address(dump_to="from", load_from="from")
     to = Address()
+    extraData = HexEncodedBytes(attribute="extra_data")
 
 
 class UserCurrencyNetworkEventSchema(CurrencyNetworkEventSchema):
