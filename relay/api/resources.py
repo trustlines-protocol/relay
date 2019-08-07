@@ -434,9 +434,7 @@ class Path(Resource):
             validate=validate.OneOf([fee_payer.value for fee_payer in FeePayer]),
             missing="sender",
         ),
-        "extraData": custom_fields.HexEncodedBytes(
-            required=False, missing=hexbytes.HexBytes(b"")
-        ),
+        "extraData": custom_fields.HexEncodedBytes(required=False, missing="0x"),
     }
 
     @use_args(args)
