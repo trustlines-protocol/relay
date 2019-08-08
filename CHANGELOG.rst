@@ -1,11 +1,11 @@
 ==========
 Change Log
 ==========
-`0.7.0`_ (2019-08-06)
+`0.7.0`_ (2019-08-08)
 -------------------------------
 * Update web3 to version 5.0.0 and other dependencies
 * Improve local view of Currency Networks graphs
-* Add extraData to transfers and Transfer events
+* Add extraData to transfers and Transfer events (BREAKING)
 
 `0.6.1`_ (2019-03-15)
 -------------------------------
