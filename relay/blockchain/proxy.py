@@ -2,7 +2,7 @@ import logging
 import math
 import time
 import functools
-from typing import List, Dict, Callable, Any
+from typing import List, Dict, Callable, Any, Mapping
 
 import gevent
 import itertools
@@ -36,7 +36,7 @@ def watch_filter(filter, callback):
 
 
 class Proxy(object):
-    event_builders: Dict[str, Callable[[Any, int, int], BlockchainEvent]] = {}
+    event_builders: Mapping[str, Callable[[Any, int, int], BlockchainEvent]] = {}
     standard_event_types: List[str] = []
 
     def __init__(self, web3, abi, address: str) -> None:

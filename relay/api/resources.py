@@ -399,7 +399,7 @@ def _fill_estimated_gas_in_payment_path(
     trustlines: TrustlinesRelay,
     payment_path: PaymentPath,
     network_address: str,
-    extra_data: hexbytes = hexbytes.HexBytes(b""),
+    extra_data: hexbytes.HexBytes = hexbytes.HexBytes(b""),
 ) -> PaymentPath:
     proxy = trustlines.currency_network_proxies[network_address]
     try:
