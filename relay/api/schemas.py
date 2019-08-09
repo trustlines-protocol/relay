@@ -26,7 +26,7 @@ class MetaTransactionSchema(Schema):
             raise ValidationError(f"value={value} is out of bounds")
 
     @post_load
-    def make_meta_transaction(self, data):
+    def make_meta_transaction(self, data, partial, many):
         self._validate(data)
         return identity.MetaTransaction(**data)
 
@@ -194,7 +194,7 @@ class PaymentPathSchema(Schema):
         strict = True
 
     @post_load
-    def make_payment_path(self, data):
+    def make_payment_path(self, data, partial, many):
         return PaymentPath(**data)
 
     fees = BigInteger(required=True, attribute="fee")
