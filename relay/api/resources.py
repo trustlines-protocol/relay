@@ -53,7 +53,7 @@ def dump_result_with_schema(schema):
 
     @wrapt.decorator
     def dump_result(wrapped, instance, args, kwargs):
-        return schema.dump(wrapped(*args, **kwargs)).data
+        return schema.dump(wrapped(*args, **kwargs))
 
     return dump_result
 

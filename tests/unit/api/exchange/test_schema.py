@@ -27,12 +27,12 @@ def order():
 
 
 def test_sig_v(order):
-    serialized_order = OrderSchema().dump(order).data
+    serialized_order = OrderSchema().dump(order)
     assert type(serialized_order["ecSignature"]["v"]) == int
 
 
 def test_sig_rs(order):
-    serialized_order = OrderSchema().dump(order).data
+    serialized_order = OrderSchema().dump(order)
     r = serialized_order["ecSignature"]["r"]
     s = serialized_order["ecSignature"]["s"]
     for x in r, s:
@@ -42,7 +42,7 @@ def test_sig_rs(order):
 
 
 def test_sig_lowercase(order):
-    serialized_order = OrderSchema().dump(order).data
+    serialized_order = OrderSchema().dump(order)
     r = serialized_order["ecSignature"]["r"]
     s = serialized_order["ecSignature"]["s"]
     for x in r, s:

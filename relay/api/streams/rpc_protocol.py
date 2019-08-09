@@ -19,7 +19,7 @@ def check_args(schema):
     def check_args_decorator(func):
         @wraps(func)
         def func_wrapper(*args, **kwargs):
-            data = schema.load(kwargs).data
+            data = schema.load(kwargs)
             return func(*args, **data)
 
         return func_wrapper

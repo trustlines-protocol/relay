@@ -51,10 +51,8 @@ def get_missed_messages(
     trustlines: TrustlinesRelay, client: Client, type: str, user: str
 ) -> Iterable[Dict]:
     if type == "all":
-        messages = (
-            MessageEventSchema()
-            .dump(trustlines.messaging[user].get_missed_messages(), many=True)
-            .data
+        messages = MessageEventSchema().dump(
+            trustlines.messaging[user].get_missed_messages(), many=True
         )
     else:
         raise ValidationError("Invalid message type")

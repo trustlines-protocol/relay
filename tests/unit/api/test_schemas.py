@@ -41,10 +41,10 @@ def gen_meta_transactions():
 
 @pytest.mark.parametrize("meta_transaction", gen_meta_transactions())
 def test_meta_transaction_roundtrip(meta_transaction):
-    dumped = schemas.MetaTransactionSchema().dump(meta_transaction).data
+    dumped = schemas.MetaTransactionSchema().dump(meta_transaction)
     print("DUMPED", dumped)
 
-    loaded = schemas.MetaTransactionSchema().load(dumped).data
+    loaded = schemas.MetaTransactionSchema().load(dumped)
     print("LOADED", loaded)
 
     assert loaded == meta_transaction
@@ -69,7 +69,7 @@ def test_meta_transaction_roundtrip(meta_transaction):
     ],
 )
 def test_load_meta_transaction_invalid_values(values):
-    dumped = schemas.MetaTransactionSchema().dump(a_valid_meta_transaction).data
+    dumped = schemas.MetaTransactionSchema().dump(a_valid_meta_transaction)
     dumped.update(values)
     with pytest.raises(ValidationError):
         schemas.MetaTransactionSchema().load(dumped)
@@ -90,9 +90,10 @@ def test_load_meta_transaction_invalid_values(values):
     ],
 )
 def test_load_meta_transaction_valid_values(values):
-    dumped = schemas.MetaTransactionSchema().dump(a_valid_meta_transaction).data
+    dumped = schemas.MetaTransactionSchema().dump(a_valid_meta_transaction)
     dumped.update(values)
-    assert not schemas.MetaTransactionSchema().load(dumped).errors
+    # If the load fails, a `<marshmallow.exceptions.ValidationError>` is raised
+    schemas.MetaTransactionSchema().load(dumped)
 
 
 @pytest.fixture(params=[FeePayer.SENDER, FeePayer.RECEIVER])
@@ -111,10 +112,10 @@ def payment_path(request):
 
 def test_payment_path_roundtrip(payment_path):
 
-    dumped = schemas.PaymentPathSchema().dump(payment_path).data
+    dumped = schemas.PaymentPathSchema().dump(payment_path)
     print("DUMPED", dumped)
 
-    loaded = schemas.PaymentPathSchema().load(dumped).data
+    loaded = schemas.PaymentPathSchema().load(dumped)
     print("LOADED", loaded)
 
     assert loaded == payment_path
