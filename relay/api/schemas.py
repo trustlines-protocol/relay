@@ -30,7 +30,7 @@ class MetaTransactionSchema(Schema):
         self._validate(data)
         return identity.MetaTransaction(**data)
 
-    from_ = Address(required=True, dump_to="from", load_from="from")
+    from_ = Address(required=True, data_key="from")
     to = Address(required=True)
     value = BigInteger(required=True)
     data = HexEncodedBytes(required=True)
@@ -67,7 +67,7 @@ class CurrencyNetworkEventSchema(BlockchainEventSchema):
     interestRateReceived = BigInteger(attribute="interest_rate_received")
     leftGiven = BigInteger(attribute="left_given")
     leftReceived = BigInteger(attribute="left_received")
-    from_ = Address(dump_to="from", load_from="from")
+    from_ = Address(data_key="from")
     to = Address()
     extraData = HexEncodedBytes(attribute="extra_data")
 
@@ -81,7 +81,7 @@ class UserCurrencyNetworkEventSchema(CurrencyNetworkEventSchema):
 class TokenEventSchema(BlockchainEventSchema):
     tokenAddress = Address(attribute="token_address")
     amount = BigInteger(attribute="value")
-    from_ = Address(dump_to="from", load_from="from")
+    from_ = Address(data_key="from")
     to = Address()
 
 
@@ -95,7 +95,7 @@ class ExchangeEventSchema(BlockchainEventSchema):
     exchangeAddress = Address(attribute="exchange_address")
     makerTokenAddress = Address(attribute="maker_token")
     takerTokenAddress = Address(attribute="taker_token")
-    from_ = Address(dump_to="from", load_from="from")
+    from_ = Address(data_key="from")
     orderHash = HexBytes(attribute="order_hash")
     filledMakerAmount = BigInteger(attribute="filled_maker_amount")
     filledTakerAmount = BigInteger(attribute="filled_taker_amount")
