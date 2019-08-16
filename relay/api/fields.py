@@ -6,11 +6,11 @@ from relay.network_graph.payment_path import FeePayer
 
 
 class Address(fields.String):
-    def _serialize(self, value, attr, obj):
-        return super()._serialize(value, attr, obj)
+    def _serialize(self, value, attr, obj, **kwargs):
+        return super()._serialize(value, attr, obj, **kwargs)
 
-    def _deserialize(self, value, attr, data):
-        value = super()._deserialize(value, attr, data)
+    def _deserialize(self, value, attr, data, **kwargs):
+        value = super()._deserialize(value, attr, data, **kwargs)
 
         if not is_address(value):
             raise ValidationError("Invalid Address")
@@ -19,13 +19,13 @@ class Address(fields.String):
 
 
 class BigInteger(fields.String):
-    def _serialize(self, value, attr, obj):
+    def _serialize(self, value, attr, obj, **kwargs):
         assert isinstance(value, int)
         value = str(value)
-        return super()._serialize(value, attr, obj)
+        return super()._serialize(value, attr, obj, **kwargs)
 
-    def _deserialize(self, value, attr, data):
-        value = super()._deserialize(value, attr, data)
+    def _deserialize(self, value, attr, data, **kwargs):
+        value = super()._deserialize(value, attr, data, **kwargs)
 
         try:
             int_value = int(value)
@@ -36,11 +36,11 @@ class BigInteger(fields.String):
 
 
 class HexBytes(fields.String):
-    def _serialize(self, value, attr, obj):
+    def _serialize(self, value, attr, obj, **kwargs):
         return "0x{:064X}".format(int.from_bytes(value, "big")).lower()
 
-    def _deserialize(self, value, attr, data):
-        value = super()._deserialize(value, attr, data)
+    def _deserialize(self, value, attr, data, **kwargs):
+        value = super()._deserialize(value, attr, data, **kwargs)
         try:
             hex_bytes = hexbytes.HexBytes(value)
         except ValueError:
@@ -53,7 +53,7 @@ class HexEncodedBytes(fields.Field):
     """hex encoded bytes field, correctly round-trips. was needed because
     HexBytes doesn't round trip correctly """
 
-    def _serialize(self, value, attr, obj):
+    def _serialize(self, value, attr, obj, **kwargs):
         if isinstance(value, hexbytes.HexBytes):
             return value.hex()
         elif isinstance(value, bytes):
@@ -61,7 +61,7 @@ class HexEncodedBytes(fields.Field):
         else:
             raise ValueError("Value must be of type bytes or HexBytes")
 
-    def _deserialize(self, value, attr, data):
+    def _deserialize(self, value, attr, data, **kwargs):
         if not value.startswith("0x"):
             raise ValidationError(
                 f"Could not parse hex-encoded bytes objects of attribute {attr}: {value}"
@@ -76,7 +76,7 @@ class HexEncodedBytes(fields.Field):
 
 
 class FeePayerField(fields.Field):
-    def _serialize(self, value, attr, obj):
+    def _serialize(self, value, attr, obj, **kwargs):
 
         if isinstance(value, FeePayer):
             # serialises into the value of the FeePayer enum
@@ -84,7 +84,7 @@ class FeePayerField(fields.Field):
         else:
             raise ValidationError("Value must be of type FeePayer")
 
-    def _deserialize(self, value, attr, data):
+    def _deserialize(self, value, attr, data, **kwargs):
 
         # deserialises into the FeePayer enum instance corresponding to the value
         return FeePayer(value)

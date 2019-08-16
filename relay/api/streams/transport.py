@@ -55,9 +55,9 @@ class RPCWebSocketClient(Client):
 
     def _execute_send(self, subscription: Subscription, event: Event) -> None:
         if isinstance(event, TLNetworkEvent) or isinstance(event, AccountEvent):
-            data = UserCurrencyNetworkEventSchema().dump(event).data
+            data = UserCurrencyNetworkEventSchema().dump(event)
         elif isinstance(event, MessageEvent):
-            data = MessageEventSchema().dump(event).data
+            data = MessageEventSchema().dump(event)
         else:
             logger.warning("Could not sent event of type: %s", type(event))
             return

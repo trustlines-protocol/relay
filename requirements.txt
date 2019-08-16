@@ -12,8 +12,8 @@ sqlalchemy
 eth-utils
 tinyrpc
 gevent-websocket
-marshmallow<3
-marshmallow-oneofschema
+marshmallow>=3.0.0b7
+marshmallow-oneofschema>=2.0.0
 flask-sockets
 firebase-admin
 psycopg2
