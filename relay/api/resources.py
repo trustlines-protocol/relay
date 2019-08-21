@@ -429,11 +429,7 @@ class Path(Resource):
         "maxFees": fields.Int(required=False, missing=None),
         "from": custom_fields.Address(required=True),
         "to": custom_fields.Address(required=True),
-        "feePayer": fields.Str(
-            required=False,
-            validate=validate.OneOf([fee_payer.value for fee_payer in FeePayer]),
-            missing="sender",
-        ),
+        "feePayer": custom_fields.FeePayerField(require=False, missing="sender"),
         "extraData": custom_fields.HexEncodedBytes(required=False, missing="0x"),
     }
 
