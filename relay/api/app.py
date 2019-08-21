@@ -189,7 +189,11 @@ def handle_request_parsing_error(err, req, schema, status_code, headers):
     """webargs error handler that uses Flask-RESTful's abort function to return
     a JSON error response to the client.
     """
-    abort(422, message="Validation errors in your request", error=err.messages)
+    abort(
+        422,
+        message=f"Validation errors in your request: {err.messages}",
+        error=err.messages,
+    )
 
 
 # Handle all errors as json
