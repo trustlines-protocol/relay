@@ -87,4 +87,9 @@ class FeePayerField(fields.Field):
     def _deserialize(self, value, attr, data, **kwargs):
 
         # deserialises into the FeePayer enum instance corresponding to the value
-        return FeePayer(value)
+        try:
+            return FeePayer(value)
+        except ValueError:
+            raise ValidationError(
+                f"{attr} has to be one of {[fee_payer.value for fee_payer in FeePayer]}: {value}"
+            )
