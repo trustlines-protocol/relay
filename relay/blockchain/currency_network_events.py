@@ -55,6 +55,10 @@ class TrustlineEvent(CurrencyNetworkEvent):
     def interest_rate_received(self):
         return self._web3_event.get("args").get("_interestRateReceived", 0)
 
+    @property
+    def is_frozen(self):
+        return self._web3_event.get("args").get("_isFrozen", False)
+
 
 class TrustlineUpdateEvent(TrustlineEvent):
     pass

@@ -9,6 +9,7 @@ from relay.network_graph.graph_constants import (
     creditline_ba,
     interest_ab,
     interest_ba,
+    is_frozen,
     fees_outstanding_a,
     fees_outstanding_b,
     m_time,
@@ -83,6 +84,14 @@ def set_interest_rate(data, user, counter_party, interest_rate):
         {interest_ab: interest_rate},
         {interest_ba: interest_rate},
     )
+
+
+def get_is_frozen(data):
+    return data[is_frozen]
+
+
+def set_is_frozen(data, _is_frozen):
+    data[is_frozen] = _is_frozen
 
 
 def get_fees_outstanding(data, user, counter_party):
