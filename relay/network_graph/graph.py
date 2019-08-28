@@ -14,6 +14,8 @@ from relay.network_graph.trustline_data import (
     set_creditline,
     get_interest_rate,
     set_interest_rate,
+    get_is_frozen,
+    set_is_frozen,
     get_fees_outstanding,
     set_fees_outstanding,
 )
@@ -97,6 +99,14 @@ class Account(object):
     @reverse_interest_rate.setter
     def reverse_interest_rate(self, interest_rate):
         set_interest_rate(self.data, self.b, self.a, interest_rate)
+
+    @property
+    def is_frozen(self):
+        return get_is_frozen(self.data)
+
+    @is_frozen.setter
+    def is_frozen(self, is_frozen):
+        set_is_frozen(self.data, is_frozen)
 
     @property
     def fees_outstanding(self):
@@ -505,6 +515,7 @@ class CurrencyNetworkGraph(object):
         creditline_received: int,
         interest_rate_given: int = None,
         interest_rate_received: int = None,
+        is_frozen: bool = False,
     ):
         """to update the creditlines, used to react on changes on the blockchain"""
         if not self.graph.has_edge(creditor, debtor):
@@ -515,6 +526,7 @@ class CurrencyNetworkGraph(object):
                 creditline_ba=0,
                 interest_ab=self.default_interest_rate,
                 interest_ba=self.default_interest_rate,
+                is_frozen=False,
                 fees_outstanding_a=0,
                 fees_outstanding_b=0,
                 m_time=0,
@@ -537,6 +549,9 @@ class CurrencyNetworkGraph(object):
             raise RuntimeError(
                 "Not interests specified even though custom interests are enabled"
             )
+
+        account.is_frozen = is_frozen
+
         if account.can_be_closed():
             self.remove_trustline(creditor, debtor)
 

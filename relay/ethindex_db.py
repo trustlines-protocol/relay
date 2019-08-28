@@ -32,7 +32,7 @@ EventsQuery = collections.namedtuple("EventsQuery", ["where_block", "params"])
 
 class EventBuilder:
     """Event Builder builds BlockchainEvents from web3 like events We use
-    pretty much the same logic like relay.blockchain.Proxy (or it's
+    pretty much the same logic like relay.blockchain.Proxy (or its
     subclasses). The handling for timestamps is different. We also don't ask
     web3 for the currentBlock. It's passed in from the caller.
 
