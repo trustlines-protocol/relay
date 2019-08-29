@@ -260,6 +260,8 @@ class SenderPaysCostAccumulatorSnapshot(alg.CostAccumulator):
     ):
         if dst == self.ignore or node == self.ignore:
             return None
+        if get_is_frozen(edge_data):
+            return None
 
         sum_fees, num_hops = cost_from_start_to_node
 
@@ -357,6 +359,8 @@ class ReceiverPaysCostAccumulatorSnapshot(alg.CostAccumulator):
     ):
         if dst == self.ignore or node == self.ignore:
             return None
+        if get_is_frozen(edge_data):
+            return None
 
         # For this case the pathfinding is not done in reverse.
         #
@@ -447,6 +451,9 @@ class SenderPaysCapacityAccumulator(alg.CostAccumulator):
     def total_cost_from_start_to_dst(
         self, cost_from_start_to_node: Cost, node, dst, edge_data
     ):
+        if get_is_frozen(edge_data):
+            return None
+
         capacity_from_start_to_node = -cost_from_start_to_node.minus_capacity
         num_hops = cost_from_start_to_node.num_hops
         previous_hop_fee = cost_from_start_to_node.previous_hop_fee
