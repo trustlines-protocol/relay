@@ -10,6 +10,9 @@ from relay.blockchain.currency_network_proxy import CurrencyNetworkProxy
 import eth_tester
 
 
+EXPIRATION_TIME = 4102444800  # 01/01/2100
+
+
 NETWORK_SETTINGS = [
     {
         "name": "Cash",
@@ -18,6 +21,8 @@ NETWORK_SETTINGS = [
         "fee_divisor": 1000,
         "default_interest_rate": 0,
         "custom_interests": True,
+        "account_management_enabled": True,
+        "expiration_time": EXPIRATION_TIME,
     },
     {
         "name": "Work Hours",
@@ -26,6 +31,8 @@ NETWORK_SETTINGS = [
         "fee_divisor": 0,
         "default_interest_rate": 1000,
         "custom_interests": False,
+        "account_management_enabled": True,
+        "expiration_time": EXPIRATION_TIME,
     },
     {
         "name": "Beers",
@@ -33,6 +40,8 @@ NETWORK_SETTINGS = [
         "decimals": 0,
         "fee_divisor": 0,
         "custom_interests": False,
+        "account_management_enabled": True,
+        "expiration_time": EXPIRATION_TIME,
     },
 ]
 
@@ -65,7 +74,7 @@ class CurrencyNetworkProxy(CurrencyNetworkProxy):
     def setup_trustlines(self, trustlines):
         for (A, B, clAB, clBA) in trustlines:
             txid = self._proxy.functions.setAccount(
-                A, B, clAB, clBA, 0, 0, 0, 0, 0, 0
+                A, B, clAB, clBA, 0, 0, False, 0, 0, 0, 0
             ).transact()
             self._web3.eth.waitForTransactionReceipt(txid)
 
@@ -77,6 +86,7 @@ class CurrencyNetworkProxy(CurrencyNetworkProxy):
         creditline_received,
         interest_rate_given=None,
         interest_rate_received=None,
+        is_frozen=False,
     ):
         if interest_rate_given is None or interest_rate_received is None:
             txid = self._proxy.functions.updateCreditlimits(
@@ -89,6 +99,7 @@ class CurrencyNetworkProxy(CurrencyNetworkProxy):
                 creditline_received,
                 interest_rate_given,
                 interest_rate_received,
+                is_frozen,
             ).transact({"from": from_})
         self._web3.eth.waitForTransactionReceipt(txid)
 
@@ -100,6 +111,7 @@ class CurrencyNetworkProxy(CurrencyNetworkProxy):
         creditline_received,
         interest_rate_given=None,
         interest_rate_received=None,
+        is_frozen=False,
     ):
         self.update_trustline(
             from_,
@@ -108,6 +120,7 @@ class CurrencyNetworkProxy(CurrencyNetworkProxy):
             creditline_received,
             interest_rate_given,
             interest_rate_received,
+            is_frozen,
         )
         self.update_trustline(
             to,
@@ -116,6 +129,7 @@ class CurrencyNetworkProxy(CurrencyNetworkProxy):
             creditline_given,
             interest_rate_received,
             interest_rate_given,
+            is_frozen,
         )
 
     def transfer(self, from_, to, value, max_fee, path, extra_data=b""):
@@ -151,7 +165,15 @@ def trustlines(accounts):
 
 
 def deploy_test_network(web3):
-    return deploy_network(web3, "Trustlines", "T", 6, fee_divisor=100)
+    return deploy_network(
+        web3,
+        "Trustlines",
+        "T",
+        6,
+        fee_divisor=100,
+        account_management_enabled=True,
+        expiration_time=EXPIRATION_TIME,
+    )
 
 
 def deploy_test_networks(web3):
