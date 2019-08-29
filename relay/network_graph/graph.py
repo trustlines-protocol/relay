@@ -60,6 +60,21 @@ class Account(object):
             timestamp_in_seconds - self.m_time,
         )
 
+    def unfrozen_balance(self):
+        """Returns the balance or 0 if account is frozen"""
+        if self.is_frozen:
+            return 0
+        else:
+            return self.balance
+
+    def unfrozen_balance_with_interests(self, timestamp_in_seconds: int) -> int:
+        """Returns the balance at a given time with an estimation of the interests
+        returns 0 if the account is frozen"""
+        if self.is_frozen:
+            return 0
+        else:
+            return self.balance_with_interests(timestamp_in_seconds)
+
     @property
     def m_time(self) -> int:
         return get_mtime(self.data)
@@ -140,11 +155,48 @@ class Account(object):
         return "Account({}, {}, {})".format(self.a, self.b, self.data)
 
 
-class AccountSummary(object):
-    """Representing an account summary"""
+class AccountSummary:
+    """Representing an account summary with interests """
 
-    def __init__(self, balance=0, creditline_given=0, creditline_received=0):
+    def __init__(
+        self,
+        balance=0,
+        creditline_given=0,
+        creditline_received=0,
+        interest_rate_given=0,
+        interests_received=0,
+        is_frozen=False,
+    ):
         self.balance = balance
+        self.creditline_given = creditline_given
+        self.creditline_received = creditline_received
+        self.interest_rate_given = interest_rate_given
+        self.interest_rate_received = interests_received
+        self.is_frozen = is_frozen
+
+    @property
+    def creditline_left_given(self):
+        return -self.balance + self.creditline_given
+
+    @property
+    def available(self):
+        if self.is_frozen:
+            return 0
+        return self.creditline_left_received
+
+    @property
+    def creditline_left_received(self):
+        return self.balance + self.creditline_received
+
+
+class AggregatedAccountSummary(object):
+    """Representing a summary of an aggregation of all trustlines for a user"""
+
+    def __init__(
+        self, balance=0, frozen_balance=0, creditline_given=0, creditline_received=0
+    ):
+        self.balance = balance
+        self.frozen_balance = frozen_balance
         self.creditline_given = creditline_given
         self.creditline_received = creditline_received
 
@@ -159,22 +211,6 @@ class AccountSummary(object):
     @property
     def creditline_left_received(self):
         return self.balance + self.creditline_received
-
-
-class AccountSummaryWithInterests(AccountSummary):
-    """Representing an account summary with interests """
-
-    def __init__(
-        self,
-        balance=0,
-        creditline_given=0,
-        creditline_received=0,
-        interest_rate_given=0,
-        interests_received=0,
-    ):
-        super().__init__(balance, creditline_given, creditline_received)
-        self.interest_rate_given = interest_rate_given
-        self.interest_rate_received = interests_received
 
 
 class SenderPaysCostAccumulatorSnapshot(alg.CostAccumulator):
@@ -468,6 +504,7 @@ class CurrencyNetworkGraph(object):
                 creditline_ba=trustline.creditline_received,
                 interest_ab=trustline.interest_rate_given,
                 interest_ba=trustline.interest_rate_received,
+                is_frozen=trustline.is_frozen,
                 fees_outstanding_a=trustline.fees_outstanding_user,
                 fees_outstanding_b=trustline.fees_outstanding_counter_party,
                 m_time=trustline.m_time,
@@ -571,6 +608,7 @@ class CurrencyNetworkGraph(object):
                 creditline_ba=0,
                 interest_ab=0,
                 interest_ba=0,
+                is_frozen=False,
                 fees_outstanding_a=0,
                 fees_outstanding_b=0,
                 m_time=0,
@@ -599,27 +637,40 @@ class CurrencyNetworkGraph(object):
     def get_account_sum(
         self, user: str, counter_party: str = None, *, timestamp: int = 0
     ):
-
         if counter_party is None:
-            account_summary = AccountSummary()
-            for counter_party in self.get_friends(user):
-                account = Account(self.graph[user][counter_party], user, counter_party)
-                account_summary.balance += account.balance_with_interests(timestamp)
-                account_summary.creditline_given += account.creditline
-                account_summary.creditline_received += account.reverse_creditline
-            return account_summary
+            return self.get_aggregated_account_summary(user, timestamp)
         else:
-            if self.graph.has_edge(user, counter_party):
-                account = Account(self.graph[user][counter_party], user, counter_party)
-                return AccountSummaryWithInterests(
-                    account.balance_with_interests(timestamp),
-                    account.creditline,
-                    account.reverse_creditline,
-                    account.interest_rate,
-                    account.reverse_interest_rate,
-                )
-            else:
-                return AccountSummaryWithInterests()
+            return self.get_account_summary(user, counter_party, timestamp)
+
+    def get_aggregated_account_summary(self, user, timestamp: int = 0):
+        aggregated_account_summary = AggregatedAccountSummary()
+
+        for counter_party in self.get_friends(user):
+            account = Account(self.graph[user][counter_party], user, counter_party)
+
+            unfrozen_balance = account.unfrozen_balance_with_interests(timestamp)
+            balance = account.balance_with_interests(timestamp)
+
+            aggregated_account_summary.balance += unfrozen_balance
+            aggregated_account_summary.frozen_balance += balance - unfrozen_balance
+            aggregated_account_summary.creditline_given += account.creditline
+            aggregated_account_summary.creditline_received += account.reverse_creditline
+
+        return aggregated_account_summary
+
+    def get_account_summary(self, user, counter_party, timestamp):
+        if self.graph.has_edge(user, counter_party):
+            account = Account(self.graph[user][counter_party], user, counter_party)
+            return AccountSummary(
+                account.balance_with_interests(timestamp),
+                account.creditline,
+                account.reverse_creditline,
+                account.interest_rate,
+                account.reverse_interest_rate,
+                account.is_frozen,
+            )
+        else:
+            return AccountSummary()
 
     def draw(self, filename):
         """draw graph to a file called filename"""
@@ -859,6 +910,13 @@ class CurrencyNetworkGraphForTesting(CurrencyNetworkGraph):
             custom_interests=custom_interests,
             prevent_mediator_interests=prevent_mediator_interests,
         )
+
+    def freeze_trustline(self, creditor, debtor):
+        if not self.graph.has_edge(creditor, debtor):
+            raise ValueError("Trustlines does not exist.")
+        else:
+            account = Account(self.graph[creditor][debtor], creditor, debtor)
+            account.is_frozen = True
 
     def transfer_path(self, path, value, expected_fees, timestamp=0):
         assert value > 0

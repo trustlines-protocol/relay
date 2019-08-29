@@ -22,6 +22,7 @@ def web3_event_trustline_update(web3_event):
                 "_debtor": "0x1234",
                 "_creditlineGiven": 50,
                 "_creditlineReceived": 100,
+                "_isFrozen": True,
             },
             "event": TrustlineUpdateEventType,
         }
@@ -54,6 +55,7 @@ def test_trustline_update_event(web3_event_trustline_update):
     assert event.counter_party == "0x123"
     assert event.creditline_given == 50
     assert event.creditline_received == 100
+    assert event.is_frozen is True
     assert event.status == "confirmed"
     assert event.direction == "received"
 

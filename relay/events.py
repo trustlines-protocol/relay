@@ -1,4 +1,4 @@
-from relay.network_graph.graph import AccountSummary
+from relay.network_graph.graph import AggregatedAccountSummary
 
 
 class Event(object):
@@ -14,7 +14,7 @@ class AccountEvent(Event):
         self,
         network_address: str,
         user: str,
-        account_summary: AccountSummary,
+        account_summary: AggregatedAccountSummary,
         timestamp: int,
     ) -> None:
         super().__init__(timestamp)
@@ -36,7 +36,7 @@ class BalanceEvent(AccountEvent):
         network_address: str,
         from_: str,
         to: str,
-        account_summary: AccountSummary,
+        account_summary: AggregatedAccountSummary,
         timestamp: int,
     ) -> None:
         super().__init__(network_address, from_, account_summary, timestamp)
