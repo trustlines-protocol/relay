@@ -19,6 +19,7 @@ def zero_edge_data():
         fees_outstanding_b=0,
         m_time=0,
         balance_ab=0,
+        is_frozen=False,
     )
 
 

@@ -505,6 +505,17 @@ def test_max_path_closed_trustlines(balances_community):
     assert path == []
 
 
+def test_max_path_ignores_frozen_lines(community_with_trustlines):
+    community = community_with_trustlines
+
+    value, path = community.find_maximum_capacity_path(A, D)
+    assert path == [A, E, D]
+
+    community.freeze_trustline(A, E)
+    value, path = community.find_maximum_capacity_path(A, D)
+    assert path == [A, B, C, D]
+
+
 def test_mediated_transfer(community_with_trustlines):
     community = community_with_trustlines
     community.mediated_transfer(A, C, 50)
@@ -593,6 +604,20 @@ def test_max_hops(community_with_trustlines, parametrised_find_transfer_path_fun
     assert path == [A, E, D]
     cost, path = find_path(community, A, D, 10, max_hops=1)
     assert path == []
+
+
+def test_finding_path_ignores_frozen_lines(
+    community_with_trustlines, parametrised_find_transfer_path_function
+):
+    community = community_with_trustlines
+    find_path = parametrised_find_transfer_path_function
+
+    cost, path = find_path(community, A, D, 10)
+    assert path == [A, E, D]
+    community.freeze_trustline(A, E)
+
+    cost, path = find_path(community, A, D, 10)
+    assert path == [A, B, C, D]
 
 
 def test_send_back(community_with_trustlines):
