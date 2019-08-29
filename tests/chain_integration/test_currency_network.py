@@ -47,6 +47,7 @@ def test_account1(currency_network_with_trustlines, accounts):
         150,
         0,
         0,
+        False,
         0,
         0,
         0,
@@ -60,6 +61,7 @@ def test_account2(currency_network_with_trustlines, accounts):
         350,
         0,
         0,
+        False,
         0,
         0,
         0,
@@ -201,6 +203,7 @@ def test_listen_on_trustline_update(currency_network, accounts):
     assert events[0].to == accounts[1]
     assert events[0].creditline_given == 25
     assert events[0].creditline_received == 50
+    assert events[0].is_frozen is False
 
 
 def test_listen_on_trustline_update_with_interests(currency_network, accounts):
@@ -222,3 +225,4 @@ def test_listen_on_trustline_update_with_interests(currency_network, accounts):
     assert events[0].creditline_received == 50
     assert events[0].interest_rate_given == 2
     assert events[0].interest_rate_received == 3
+    assert events[0].is_frozen is False
