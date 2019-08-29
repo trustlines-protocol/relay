@@ -135,6 +135,25 @@ def test_account_sum(community_with_trustlines):
     assert account.creditline_received == 700
 
 
+def test_frozen_account_summary(community_with_trustlines):
+    community_with_trustlines.freeze_trustline(D, C)
+    account = community_with_trustlines.get_account_sum(D, C)
+
+    assert account.is_frozen is True
+    assert account.available == 0
+
+
+def test_frozen_aggregated_account_summary(community_with_trustlines):
+    community_with_trustlines.update_balance(A, E, 10)
+
+    account = community_with_trustlines.get_account_sum(A)
+    assert account.balance == 10
+
+    community_with_trustlines.freeze_trustline(A, E)
+    account = community_with_trustlines.get_account_sum(A)
+    assert account.balance == 0
+
+
 def test_update_trustline(community_with_trustlines):
     community = community_with_trustlines
     assert community.get_account_sum(B, A).creditline_received == 100
