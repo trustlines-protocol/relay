@@ -167,19 +167,21 @@ GET /networks/:networkAddress/users/:userAddress
 curl https://relay0.testnet.trustlines.network/api/v1/networks/0xC0B33D88C704455075a0724AA167a286da778DDE/users/0xcbF1153F6e5AC01D363d432e24112e8aA56c55ce
 ```
 #### Response
-| Attribute     | Type       | JSON Type | Description                                                      |
-| ---------     | ---------- | ------    | ---------------------------------------------                    |
-| balance       | BigInteger | string    | Sum over balances of all trustlines user has in currency network |
-| given         | BigInteger | string    | Sum of all creditlines given by user in currency network         |
-| received      | BigInteger | string    | Sum of all creditlines received by user in currency network      |
-| leftGiven     | BigInteger | string    | given - balance                                                  |
-| leftReceived  | BigInteger | string    | received + balance                                               |
+| Attribute     | Type       | JSON Type | Description                                                                  |
+| ---------     | ---------- | ------    | ---------------------------------------------                                |
+| balance       | BigInteger | string    | Sum over balances of all non-frozen trustlines user has in currency network  |
+| frozenBalance | BigInteger | string    | Sum over balances of all frozen trustlines user has in currency network      |
+| given         | BigInteger | string    | Sum of all creditlines given by user in currency network                     |
+| received      | BigInteger | string    | Sum of all creditlines received by user in currency network                  |
+| leftGiven     | BigInteger | string    | given - balance                                                              |
+| leftReceived  | BigInteger | string    | received + balance                                                           |
 #### Example Response
 ```json
 {
   "balance": "-1000",
+  "frozenBalance": "1000",
   "given": "2000",
-  "received": "3000",
+  "received": "4000",
   "leftGiven": "3000",
   "leftReceived": "1000"
 }
@@ -214,6 +216,7 @@ curl https://relay0.testnet.trustlines.network/api/v1/networks/0xC0B33D88C704455
 |leftReceived|string|received + balance|
 |interestRateGiven|string|Interest Rate given to counterparty|
 |interestRateReceived|string|Interest Rate received from counterparty|
+|isFrozen|bool|Whether the trustlines is frozen|
 |id|string|Identifier of trustline|
 #### Example Response
 ```json
@@ -228,6 +231,7 @@ curl https://relay0.testnet.trustlines.network/api/v1/networks/0xC0B33D88C704455
     "received": "20000",
     "interestRateGiven": "1000",
     "interestRateReceived": "2000",
+    "isFrozen": false,
     "user": "0x04f9b217b334507c42Ad3b74BFf024c724aBB166"
   }
 ]
@@ -263,6 +267,7 @@ curl https://relay0.testnet.trustlines.network/api/v1/networks/0xC0B33D88C704455
 |leftReceived|string|received + balance|
 |interestRateGiven|string|Interest Rate given to counterparty|
 |interestRateReceived|string|Interest Rate received from counterparty|
+|isFrozen|bool|Whether the trustline is forzen|
 |id|string|Identifier of trustline|
 ### Example Response
 ```json
@@ -276,6 +281,7 @@ curl https://relay0.testnet.trustlines.network/api/v1/networks/0xC0B33D88C704455
     "received": "20000",
     "interestRateGiven": "1000",
     "interestRateReceived": "2000",
+    "isFrozen": false,
     "user": "0x04f9b217b334507c42Ad3b74BFf024c724aBB166"
 }
 ```
@@ -467,7 +473,7 @@ Following additional attributes for `TrustlineUpdate` and `TrustlineUpdateReques
 | received             | string | Proposed or accepted amount `to -> from`           |
 | interestRateGiven    | string | Proposed or accepted rate of interests `from -> to`|
 | interestRateReceived | string | Proposed or accepted rate of interests `to -> from`|
-|                      |        |                                                    |
+| isFrozen             | bool   | Proposed or accepted frozen status                 |
 
 Following additional attributes for `Transfer` events:
 
@@ -491,7 +497,8 @@ Following additional attributes for `Transfer` events:
 		"given": "20000",
 		"received": "20000",
 		"interestRateGiven": "1000",
-		"interestRateReceived": "1000"
+		"interestRateReceived": "1000",
+        "isFrozen": false
 	},
 	{
 		"networkAddress": "0xC0B33D88C704455075a0724AA167a286da778DDE",
@@ -505,7 +512,8 @@ Following additional attributes for `Transfer` events:
 		"given": "10000",
 		"received": "10000",
 		"interestRateGiven": "1000",
-		"interestRateReceived": "1000"
+		"interestRateReceived": "1000",
+        "isFrozen": false
 	},
 	{
 		"networkAddress": "0xC0B33D88C704455075a0724AA167a286da778DDE",
@@ -525,7 +533,7 @@ Following additional attributes for `Transfer` events:
 ---
 
 ### Events of a user in currency network
-Returns a list of event logs of an user in a currency network. That means all events where the given user address is either `from` or `to`.
+Returns a list of event logs of a user in a currency network. This means all events where the given user address is either `from` or `to`.
 #### Request
 ```
 GET /networks/:network/users/:user/events?type=:type&fromBlock=:fromBlock
@@ -561,7 +569,7 @@ Following additional attributes for `TrustlineUpdate` and `TrustlineUpdateReques
 | received             | string | Proposed or accepted amount `to -> from`           |
 | interestRateGiven    | string | Proposed or accepted rate of interests `from -> to`|
 | interestRateReceived | string | Proposed or accepted rate of interests `to -> from`|
-|                      |        |                                                    |
+| isFrozen             | bool   | Proposed or accepted frozen state                 |
 
 Following additional attributes for `Transfer` events:
 
@@ -569,7 +577,7 @@ Following additional attributes for `Transfer` events:
 |-----------|--------|------------------------------------------------------|
 | amount    | string | Transfer amount `from -> to`                         |
 | extraData | string | extraData as specified in the corresponding transfer |
-|           |        |                                                      |
+
 #### Example Response
 ```json
 [
@@ -585,7 +593,8 @@ Following additional attributes for `Transfer` events:
 		"given": "20000",
 		"received": "20000",
 		"interestRateGiven": "1000",
-		"interestRateReceived": "1000"
+		"interestRateReceived": "1000",
+        "isFrozen": false
 	},
 	{
 		"networkAddress": "0xC0B33D88C704455075a0724AA167a286da778DDE",
@@ -599,7 +608,8 @@ Following additional attributes for `Transfer` events:
 		"given": "10000",
 		"received": "10000",
 		"interestRateGiven": "1000",
-		"interestRateReceived": "1000"
+		"interestRateReceived": "1000",
+        "isFrozen": false
 	},
 	{
 		"networkAddress": "0xC0B33D88C704455075a0724AA167a286da778DDE",
@@ -654,7 +664,7 @@ Following additional attributes for `TrustlineUpdate` and `TrustlineUpdateReques
 | received             | string | Proposed or accepted amount `to -> from`           |
 | interestRateGiven    | string | Proposed or accepted rate of interests `from -> to`|
 | interestRateReceived | string | Proposed or accepted rate of interests `to -> from`|
-|                      |        |                                                    |
+| isFrozen             | bool   | Proposed or accepted frozen status                 |
 
 Following additional attributes for `Transfer` events:
 
@@ -662,7 +672,6 @@ Following additional attributes for `Transfer` events:
 |-----------|--------|------------------------------------------------------|
 | amount    | string | Transfer amount `from -> to`                         |
 | extraData | string | extraData as specified in the corresponding transfer |
-|           |        |                                                      |
 
 #### Example Response
 ```json
@@ -679,7 +688,8 @@ Following additional attributes for `Transfer` events:
 		"given": "20000",
 		"received": "20000",
 		"interestRateGiven": "1000",
-		"interestRateReceived": "1000"
+		"interestRateReceived": "1000",
+        "isFrozen": false
 	},
 	{
 		"networkAddress": "0xC0B33D88C704455075a0724AA167a286da778DDE",
@@ -693,7 +703,8 @@ Following additional attributes for `Transfer` events:
 		"given": "10000",
 		"received": "10000",
 		"interestRateGiven": "1000",
-		"interestRateReceived": "1000"
+		"interestRateReceived": "1000",
+        "isFrozen": false
 	},
 	{
 		"networkAddress": "0xC0B33D88C704455075a0724AA167a286da778DDE",
@@ -713,7 +724,7 @@ Following additional attributes for `Transfer` events:
 ---
 
 ### Balance of user
-Returns the balance of the given address.
+Returns the balance in ether of the given address.
 #### Request
 ```
 GET /users/:userAddress/balance

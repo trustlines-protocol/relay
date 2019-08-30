@@ -57,7 +57,7 @@ class TrustlineEvent(CurrencyNetworkEvent):
 
     @property
     def is_frozen(self):
-        return self._web3_event.get("args").get("_isFrozen", False)
+        return self._web3_event.get("args").get("_isFrozen")
 
 
 class TrustlineUpdateEvent(TrustlineEvent):

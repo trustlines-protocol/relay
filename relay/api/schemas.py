@@ -65,6 +65,7 @@ class CurrencyNetworkEventSchema(BlockchainEventSchema):
     balance = BigInteger()
     interestRateGiven = BigInteger(attribute="interest_rate_given")
     interestRateReceived = BigInteger(attribute="interest_rate_received")
+    isFrozen = fields.Bool(attribute="is_frozen")
     leftGiven = BigInteger(attribute="left_given")
     leftReceived = BigInteger(attribute="left_received")
     from_ = Address(data_key="from")
@@ -128,7 +129,7 @@ class AnyEventSchema(OneOfSchema):
         raise RuntimeError(f"Unknown object type: {obj.__class__.__name__}")
 
 
-class AccountSummarySchema(Schema):
+class AggregatedAccountSummarySchema(Schema):
     class Meta:
         strict = True
 
@@ -137,6 +138,7 @@ class AccountSummarySchema(Schema):
     given = BigInteger(attribute="creditline_given")
     received = BigInteger(attribute="creditline_received")
     balance = BigInteger()
+    frozenBalance = BigInteger(attribute="frozen_balance")
 
 
 class TrustlineSchema(Schema):
@@ -147,6 +149,7 @@ class TrustlineSchema(Schema):
     leftReceived = BigInteger(attribute="creditline_left_received")
     interestRateGiven = BigInteger(attribute="interest_rate_given")
     interestRateReceived = BigInteger(attribute="interest_rate_received")
+    isFrozen = fields.Bool(attribute="is_frozen")
     given = BigInteger(attribute="creditline_given")
     received = BigInteger(attribute="creditline_received")
     balance = BigInteger()
