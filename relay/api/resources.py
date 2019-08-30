@@ -21,7 +21,7 @@ from relay.api import fields as custom_fields
 from .schemas import (
     CurrencyNetworkEventSchema,
     UserCurrencyNetworkEventSchema,
-    AccountSummarySchema,
+    AggregatedAccountSummarySchema,
     TxInfosSchema,
     PaymentPathSchema,
     AnyEventSchema,
@@ -90,7 +90,7 @@ class User(Resource):
     def __init__(self, trustlines: TrustlinesRelay) -> None:
         self.trustlines = trustlines
 
-    @dump_result_with_schema(AccountSummarySchema())
+    @dump_result_with_schema(AggregatedAccountSummarySchema())
     def get(self, network_address: str, user_address: str):
         abort_if_unknown_network(self.trustlines, network_address)
         timestamp = int(time.time())
