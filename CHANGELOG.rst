@@ -1,15 +1,11 @@
 ==========
 Change Log
 ==========
-`0.8.0`_ (2019-09-02)
+`0.7.0`_ (2019-09-02)
 -------------------------------
 * Update marshmallow and other related dependencies
 * Update path finding to ignore frozen trustlines
 * Add information related to frozen trustlines to API
-
-
-`0.7.0`_ (2019-08-08)
--------------------------------
 * Update web3 to version 5.0.0 and other dependencies
 * Improve local view of Currency Networks graphs
 * Add extraData to transfers and Transfer events (BREAKING)
@@ -88,4 +84,3 @@ Change Log
 .. _0.6.0: https://github.com/trustlines-protocol/relay/compare/0.5.0...0.6.0
 .. _0.6.1: https://github.com/trustlines-protocol/relay/compare/0.6.0...0.6.1
 .. _0.7.0: https://github.com/trustlines-protocol/relay/compare/0.6.1...0.7.0
-.. _0.8.0: https://github.com/trustlines-protocol/relay/compare/0.7.0...0.8.0
