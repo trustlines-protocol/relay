@@ -16,8 +16,11 @@ class MetaTransactionSchema(Schema):
 
     def _validate(self, data):
         nonce = data["nonce"]
+        fees = data["fees"]
         if not 0 <= nonce < 2 ** 256:
             raise ValidationError(f"nonce={nonce} is out of bounds")
+        if not 0 <= fees < 2 ** 64:
+            raise ValidationError(f"delegationFees={fees} is out of bounds")
         if len(data["signature"]) != 65:
             raise ValidationError("signature must be 65 bytes")
 
@@ -34,6 +37,8 @@ class MetaTransactionSchema(Schema):
     to = Address(required=True)
     value = BigInteger(required=True)
     data = HexEncodedBytes(required=True)
+    delegationFees = BigInteger(missing=0, attribute="fees")
+    currencyNetworkOfFees = Address(missing=to, attribute="currency_network_of_fees")
     nonce = BigInteger(required=True)
     extraData = HexEncodedBytes(required=True, attribute="extra_data")
     signature = HexEncodedBytes(required=True)
