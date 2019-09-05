@@ -1,6 +1,6 @@
 from tldeploy.identity import (
     MetaTransaction,
-    Delegator,
+    Delegate as DelegateImplementation,
     UnexpectedIdentityContractException,
 )
 from tldeploy.core import deploy_identity
@@ -11,18 +11,18 @@ class Delegate:
 
         self._web3 = web3
 
-        self.delegator = Delegator(
+        self.delegate = DelegateImplementation(
             node_address, web3=web3, identity_contract_abi=identity_contract_abi
         )
 
     def send_signed_meta_transaction(self, signed_meta_transaction: MetaTransaction):
         try:
-            valid = self.delegator.validate_meta_transaction(signed_meta_transaction)
+            valid = self.delegate.validate_meta_transaction(signed_meta_transaction)
         except UnexpectedIdentityContractException as e:
             raise InvalidIdentityContractException(e)
 
         if valid:
-            return self.delegator.send_signed_meta_transaction(signed_meta_transaction)
+            return self.delegate.send_signed_meta_transaction(signed_meta_transaction)
         else:
             raise InvalidMetaTransactionException
 
@@ -31,7 +31,7 @@ class Delegate:
 
     def calc_next_nonce(self, identity_address: str):
         try:
-            return self.delegator.get_next_nonce(identity_address)
+            return self.delegate.get_next_nonce(identity_address)
         except UnexpectedIdentityContractException:
             raise InvalidIdentityContractException
 
