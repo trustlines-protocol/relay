@@ -5,42 +5,41 @@ from eth_utils import is_address, to_checksum_address
 from relay.network_graph.payment_path import FeePayer
 
 
-class Address(fields.String):
+class Address(fields.Field):
     def _serialize(self, value, attr, obj, **kwargs):
         return super()._serialize(value, attr, obj, **kwargs)
 
     def _deserialize(self, value, attr, data, **kwargs):
-        value = super()._deserialize(value, attr, data, **kwargs)
-
         if not is_address(value):
-            raise ValidationError("Invalid Address")
+            raise ValidationError(
+                f"Could not parse attribute {attr}: Invalid address {value}"
+            )
 
         return to_checksum_address(value)
 
 
-class BigInteger(fields.String):
+class BigInteger(fields.Field):
     def _serialize(self, value, attr, obj, **kwargs):
         assert isinstance(value, int)
         value = str(value)
         return super()._serialize(value, attr, obj, **kwargs)
 
     def _deserialize(self, value, attr, data, **kwargs):
-        value = super()._deserialize(value, attr, data, **kwargs)
-
+        if not isinstance(value, str):
+            raise ValidationError(f"{attr} has to be a string")
         try:
             int_value = int(value)
         except ValueError:
-            raise ValidationError("Could not parse Integer")
+            raise ValidationError("Could not parse integer")
 
         return int_value
 
 
-class HexBytes(fields.String):
+class HexBytes(fields.Field):
     def _serialize(self, value, attr, obj, **kwargs):
         return "0x{:064X}".format(int.from_bytes(value, "big")).lower()
 
     def _deserialize(self, value, attr, data, **kwargs):
-        value = super()._deserialize(value, attr, data, **kwargs)
         try:
             hex_bytes = hexbytes.HexBytes(value)
         except ValueError:
@@ -62,7 +61,7 @@ class HexEncodedBytes(fields.Field):
             raise ValueError("Value must be of type bytes or HexBytes")
 
     def _deserialize(self, value, attr, data, **kwargs):
-        if not value.startswith("0x"):
+        if not (isinstance(value, str) and value.startswith("0x")):
             raise ValidationError(
                 f"Could not parse hex-encoded bytes objects of attribute {attr}: {value}"
             )
@@ -86,10 +85,11 @@ class FeePayerField(fields.Field):
 
     def _deserialize(self, value, attr, data, **kwargs):
 
-        # deserialises into the FeePayer enum instance corresponding to the value
+        # deserialize into the FeePayer enum instance corresponding to the value
         try:
             return FeePayer(value)
         except ValueError:
             raise ValidationError(
-                f"{attr} has to be one of {[fee_payer.value for fee_payer in FeePayer]}: {value}"
+                f"Could not parse attribute {attr}: {value} has to be one of "
+                f"{[fee_payer.value for fee_payer in FeePayer]}"
             )
