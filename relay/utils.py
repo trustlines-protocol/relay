@@ -1,5 +1,7 @@
 import web3
 
+import pkg_resources
+
 
 def merge_two_dicts(x, y):
     """Given two dicts, merge them into a new dict as a shallow copy."""
@@ -17,3 +19,10 @@ def trim_args(args):
 
 def sha3(text: str) -> str:
     return web3.Web3.keccak(text=text).hex()
+
+
+def get_version():
+    try:
+        return pkg_resources.get_distribution("trustlines-relay").version
+    except pkg_resources.DistributionNotFound:
+        return "<UNKNOWN>"

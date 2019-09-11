@@ -8,6 +8,7 @@ from werkzeug.exceptions import HTTPException
 from eth_utils import is_address, to_checksum_address, is_checksum_address
 
 from .resources import (
+    Version,
     GraphDump,
     GraphImage,
     RequestEther,
@@ -76,6 +77,7 @@ def ApiApp(trustlines):
     def add_resource(resource, url):
         api.add_resource(resource, url, resource_class_args=[trustlines])
 
+    api.add_resource(Version, "/version")
     add_resource(NetworkList, "/networks")
     add_resource(Network, "/networks/<address:network_address>")
     add_resource(UserList, "/networks/<address:network_address>/users")

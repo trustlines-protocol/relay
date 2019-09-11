@@ -36,6 +36,8 @@ from relay.logger import get_logger
 
 from relay.network_graph.payment_path import PaymentPath, FeePayer
 
+from relay.utils import get_version
+
 logger = get_logger("api.resources", logging.DEBUG)
 
 
@@ -56,6 +58,11 @@ def dump_result_with_schema(schema):
         return schema.dump(wrapped(*args, **kwargs))
 
     return dump_result
+
+
+class Version(Resource):
+    def get(self):
+        return f"relay/v{get_version()}"
 
 
 class NetworkList(Resource):
