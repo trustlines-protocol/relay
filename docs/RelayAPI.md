@@ -44,6 +44,7 @@ https://relay0.testnet.trustlines.network/api/v1
 - [Relay meta transaction](#relay-meta-transaction)
 - [Deploy identity contract](#deploy-identity-contract)
 - [Get identity information](#get-identity-information)
+- [Get relay version](#get-relay-version)
 
 ---
 
@@ -925,4 +926,23 @@ The endpoint returns an object with the following fields:
 #### Example Response
 ```json
 {"identity": "0x2AbCc1389258Dc187DB787E33FD2B99d53695DE3", "nextNonce": 0, "balance": "0"}
+```
+
+### Get relay version
+#### Request
+```
+GET /version
+```
+
+#### Example Request
+```bash
+curl https://relay0.testnet.trustlines.network/api/v1/version
+```
+
+#### Response
+`string`: relay version
+
+#### Example Response
+```
+relay/v0.7.0
 ```
