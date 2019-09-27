@@ -380,13 +380,21 @@ class DeployIdentity(Resource):
     def __init__(self, trustlines: TrustlinesRelay) -> None:
         self.trustlines = trustlines
 
-    args = {"ownerAddress": custom_fields.Address(required=True)}
+    args = {
+        "factoryAddress": custom_fields.Address(required=True),
+        "implementationAddress": custom_fields.Address(required=True),
+        "signature": custom_fields.HexEncodedBytes(required=True),
+    }
 
     @use_args(args)
     @dump_result_with_schema(IdentityInfosSchema())
     def post(self, args):
-        owner_address = args["ownerAddress"]
-        identity_contract_address = self.trustlines.deploy_identity(owner_address)
+        implementation_address = args["implementationAddress"]
+        factory_address = args["factoryAddress"]
+        signature = args["signature"]
+        identity_contract_address = self.trustlines.deploy_identity(
+            factory_address, implementation_address, signature
+        )
         return self.trustlines.get_identity_info(identity_contract_address)
 
 

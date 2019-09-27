@@ -3,7 +3,7 @@ from tldeploy.identity import (
     Delegate as DelegateImplementation,
     UnexpectedIdentityContractException,
 )
-from tldeploy.core import deploy_identity
+from tldeploy.core import deploy_proxied_identity
 
 
 class Delegate:
@@ -26,8 +26,10 @@ class Delegate:
         else:
             raise InvalidMetaTransactionException
 
-    def deploy_identity(self, owner_address: str) -> str:
-        return deploy_identity(self._web3, owner_address).address
+    def deploy_identity(self, factory_address, implementation_address, signature):
+        return deploy_proxied_identity(
+            self._web3, factory_address, implementation_address, signature
+        ).address
 
     def calc_next_nonce(self, identity_address: str):
         try:
