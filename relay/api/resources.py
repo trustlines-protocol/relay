@@ -16,7 +16,10 @@ from relay.blockchain.delegate import InvalidIdentityContractException
 from relay.utils import sha3
 from relay.blockchain.currency_network_proxy import CurrencyNetworkProxy
 from relay.blockchain.unw_eth_proxy import UnwEthProxy
-from relay.blockchain.delegate import InvalidMetaTransactionException
+from relay.blockchain.delegate import (
+    InvalidMetaTransactionException,
+    IdentityDeploymentFailedException,
+)
 from relay.api import fields as custom_fields
 from .schemas import (
     CurrencyNetworkEventSchema,
@@ -392,9 +395,12 @@ class DeployIdentity(Resource):
         implementation_address = args["implementationAddress"]
         factory_address = args["factoryAddress"]
         signature = args["signature"]
-        identity_contract_address = self.trustlines.deploy_identity(
-            factory_address, implementation_address, signature
-        )
+        try:
+            identity_contract_address = self.trustlines.deploy_identity(
+                factory_address, implementation_address, signature
+            )
+        except IdentityDeploymentFailedException:
+            abort(400, "The identity deployment failed, identity already deployed?")
         return self.trustlines.get_identity_info(identity_contract_address)
 
 
