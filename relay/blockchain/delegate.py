@@ -3,10 +3,8 @@ from tldeploy.identity import (
     Delegate as DelegateImplementation,
     UnexpectedIdentityContractException,
 )
-from tldeploy.core import deploy_proxied_identity
-from deploy_tools.deploy import (
-    TransactionFailed,
-)  # I think this is wrong, the error should be importable form tldeply.core because raised by deploy_proxied_identity
+from tldeploy.identity import deploy_proxied_identity
+from deploy_tools.deploy import TransactionFailed
 
 
 class Delegate:
@@ -31,9 +29,12 @@ class Delegate:
 
     def deploy_identity(self, factory_address, implementation_address, signature):
         try:
-            return deploy_proxied_identity(
-                self._web3, factory_address, implementation_address, signature
-            ).address
+            # when getting an address via contract.address, the address might not be a checksummed address
+            return self._web3.toChecksumAddress(
+                deploy_proxied_identity(
+                    self._web3, factory_address, implementation_address, signature
+                ).address
+            )
         except TransactionFailed:
             raise IdentityDeploymentFailedException
 

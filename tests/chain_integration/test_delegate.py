@@ -1,14 +1,22 @@
 #! pytest
 import pytest
 import attr
-from tldeploy.identity import MetaTransaction, Identity
-from tldeploy.core import deploy_identity
+from tldeploy.identity import (
+    MetaTransaction,
+    Identity,
+    deploy_proxied_identity,
+    deploy_identity_implementation,
+    deploy_identity_proxy_factory,
+)
+from web3 import Web3
 
 from relay.blockchain.delegate import (
     Delegate,
     InvalidMetaTransactionException,
     InvalidIdentityContractException,
 )
+
+from hexbytes import HexBytes
 
 
 @pytest.fixture(scope="session")
@@ -18,9 +26,7 @@ def delegate_address(web3):
 
 @pytest.fixture(scope="session")
 def delegate(web3, delegate_address, contracts):
-
     identity_contract_abi = contracts["Identity"]["abi"]
-
     return Delegate(web3, delegate_address, identity_contract_abi)
 
 
@@ -35,9 +41,41 @@ def owner_key(account_keys):
 
 
 @pytest.fixture(scope="session")
-def identity_contract(web3, owner):
+def proxy_factory(web3):
 
-    identity_contract = deploy_identity(web3, owner)
+    return deploy_identity_proxy_factory(web3)
+
+
+@pytest.fixture(scope="session")
+def identity_implementation(web3):
+
+    return deploy_identity_implementation(web3)
+
+
+@pytest.fixture(scope="session")
+def signature_of_owner_on_implementation(
+    owner_key, identity_implementation, proxy_factory
+):
+    abi_types = ["bytes1", "bytes1", "address", "address"]
+    to_hash = ["0x19", "0x00", proxy_factory.address, identity_implementation.address]
+    to_sign = Web3.solidityKeccak(abi_types, to_hash)
+    return owner_key.sign_msg_hash(to_sign).to_bytes()
+
+
+@pytest.fixture()
+def identity_contract(
+    web3,
+    proxy_factory,
+    identity_implementation,
+    signature_of_owner_on_implementation,
+    owner,
+):
+    identity_contract = deploy_proxied_identity(
+        web3,
+        proxy_factory.address,
+        identity_implementation.address,
+        signature_of_owner_on_implementation,
+    )
     web3.eth.sendTransaction(
         {"to": identity_contract.address, "from": owner, "value": 1000000}
     )
@@ -45,7 +83,7 @@ def identity_contract(web3, owner):
     return identity_contract
 
 
-@pytest.fixture(scope="session")
+@pytest.fixture()
 def identity(identity_contract, owner_key):
     return Identity(contract=identity_contract, owner_private_key=owner_key)
 
@@ -84,7 +122,7 @@ def test_delegate_meta_transaction(delegate, identity, web3, accounts, owner_key
     tx = web3.eth.getTransaction(tx_hash)
 
     assert tx["from"] == web3.eth.coinbase
-    assert tx["to"] == identity.address
+    assert HexBytes(tx["to"]) == identity.address
 
 
 def test_delegated_transaction_trustlines_flow(
@@ -106,13 +144,25 @@ def test_delegated_transaction_trustlines_flow(
     assert currency_network.get_balance(source, destination) == -100
 
 
-def test_deploy_identity(currency_network, delegate, accounts, owner, owner_key):
+def test_deploy_identity(
+    currency_network,
+    delegate,
+    accounts,
+    proxy_factory,
+    owner_key,
+    identity_implementation,
+    signature_of_owner_on_implementation,
+):
     """
     Tests that the deployment of an identity contract by the relay server delegate works
     by using it to execute a meta-transaction
     """
 
-    identity_contract_address = delegate.deploy_identity(owner)
+    identity_contract_address = delegate.deploy_identity(
+        proxy_factory.address,
+        identity_implementation.address,
+        signature_of_owner_on_implementation,
+    )
 
     destination = accounts[3]
 
@@ -130,7 +180,7 @@ def test_deploy_identity(currency_network, delegate, accounts, owner, owner_key)
     assert currency_network.get_balance(identity_contract_address, destination) == -100
 
 
-def test_next_nonce(currency_network, delegate, identity_contract, accounts, owner_key):
+def test_next_nonce(delegate, identity_contract, accounts, owner_key):
 
     source = identity_contract.address
     destination = accounts[3]
