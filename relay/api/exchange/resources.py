@@ -52,22 +52,18 @@ class OrderBook(Resource):
         base_token_address = to_checksum_address(args["baseTokenAddress"])
         quote_token_address = to_checksum_address(args["quoteTokenAddress"])
         return {
-            "bids": OrderSchema()
-            .dump(
+            "bids": OrderSchema().dump(
                 self.trustlines.orderbook.get_bids_by_tokenpair(
                     (base_token_address, quote_token_address)
                 ),
                 many=True,
-            )
-            .data,
-            "asks": OrderSchema()
-            .dump(
+            ),
+            "asks": OrderSchema().dump(
                 self.trustlines.orderbook.get_asks_by_tokenpair(
                     (base_token_address, quote_token_address)
                 ),
                 many=True,
-            )
-            .data,
+            ),
         }
 
 
