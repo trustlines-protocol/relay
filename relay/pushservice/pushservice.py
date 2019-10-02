@@ -97,9 +97,9 @@ def _build_event_message(
     client_token: str, event: Event
 ) -> Optional[messaging.Message]:
     if isinstance(event, TLNetworkEvent) or isinstance(event, AccountEvent):
-        data = UserCurrencyNetworkEventSchema().dump(event).data
+        data = UserCurrencyNetworkEventSchema().dump(event)
     elif isinstance(event, MessageEvent):
-        data = MessageEventSchema().dump(event).data
+        data = MessageEventSchema().dump(event)
     else:
         return None
 
