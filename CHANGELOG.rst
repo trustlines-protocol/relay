@@ -1,6 +1,9 @@
 ==========
 Change Log
 ==========
+`0.8.1`_ (2019-10-03)
+-------------------------------
+* Fix a bug in the push notification service that was introduced by the marshmallow upgrade in 0.7.0
 `0.8.0`_ (2019-10-01)
 -------------------------------
 * Upgrade metatransactions to use fees (BREAKING)
@@ -91,3 +94,4 @@ Change Log
 .. _0.6.1: https://github.com/trustlines-protocol/relay/compare/0.6.0...0.6.1
 .. _0.7.0: https://github.com/trustlines-protocol/relay/compare/0.6.1...0.7.0
 .. _0.8.0: https://github.com/trustlines-protocol/relay/compare/0.7.0...0.8.0
+.. _0.8.1: https://github.com/trustlines-protocol/relay/compare/0.8.0...0.8.1
