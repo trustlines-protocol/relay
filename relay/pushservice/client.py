@@ -24,9 +24,15 @@ class PushNotificationClient(Client):
     def _execute_send(self, subscription: Subscription, event: Event) -> None:
         assert isinstance(event, Event)
         try:
+            logger.debug(
+                f"Sending push notification for {event.type} to {self.client_token}."
+            )
             self._rawPushService.send_event(self.client_token, event)
         except InvalidClientTokenException as e:
             # Token not longer valid means listener is not listing anymore
+            logger.debug(
+                f"Failed to send push notification, client token {self.client_token }is invalid."
+            )
             raise DisconnectedError from e
         except Exception as e:
             logger.warning(

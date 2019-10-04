@@ -63,9 +63,13 @@ class FirebaseRawPushService:
                 if e.code in INVALID_CLIENT_TOKEN_ERRORS:
                     raise InvalidClientTokenException from e
                 else:
-                    raise MessageNotSentException from e
+                    raise MessageNotSentException(
+                        f"Message could not be sent: {e.code}"
+                    ) from e
         else:
-            logger.warning("Could not sent event of type: %s", type(event))
+            logger.warning(
+                "Could not sent push notification for event of type: %s", type(event)
+            )
 
     def check_client_token(self, client_token: str) -> bool:
         """
@@ -87,8 +91,10 @@ class FirebaseRawPushService:
             # Check if error code is because token is invalid
             # see https://firebase.google.com/docs/cloud-messaging/admin/errors
             if e.code in INVALID_CLIENT_TOKEN_ERRORS:
+                logger.debug(f"Invalid client token: {client_token}")
                 return False
             else:
+
                 raise
         return True
 
@@ -161,6 +167,12 @@ class FirebasePushService:
         # Iterate over copy list, because we might delete from this list
         for client_token in list(self._client_token_db.get_client_tokens(user_address)):
             try:
+                logger.debug(
+                    f"Sending pushnotification of {event.type} to {user_address} with client token {client_token}"
+                )
                 self._firebaseRawPushService.send_event(client_token, event)
             except InvalidClientTokenException:
+                logger.debug(
+                    f"Removing invalid token {client_token} for {user_address}"
+                )
                 self._client_token_db.delete_client_token(user_address, client_token)
