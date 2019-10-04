@@ -25,6 +25,7 @@ INVALID_CLIENT_TOKEN_ERRORS = [
     "invalid-registration-token",
     "registration-token-not-registered",
     "invalid-argument",
+    "mismatched-credential",
 ]
 
 
@@ -91,10 +92,9 @@ class FirebaseRawPushService:
             # Check if error code is because token is invalid
             # see https://firebase.google.com/docs/cloud-messaging/admin/errors
             if e.code in INVALID_CLIENT_TOKEN_ERRORS:
-                logger.debug(f"Invalid client token: {client_token}")
+                logger.debug(f"Invalid client token {client_token}: {e.code}")
                 return False
             else:
-
                 raise
         return True
 

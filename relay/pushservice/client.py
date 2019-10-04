@@ -31,7 +31,7 @@ class PushNotificationClient(Client):
         except InvalidClientTokenException as e:
             # Token not longer valid means listener is not listing anymore
             logger.debug(
-                f"Failed to send push notification, client token {self.client_token }is invalid."
+                f"Failed to send push notification, client token {self.client_token} is invalid."
             )
             raise DisconnectedError from e
         except Exception as e:
