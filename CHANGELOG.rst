@@ -1,6 +1,12 @@
 ==========
 Change Log
 ==========
+`0.9.0`_ (2019-10-05)
+-------------------------------
+* Change identities endpoint to deploy identity contracts with determistic addresses via a factory contract
+* Change identities endpoint to deploy identity contracts as proxies to an implementation contract. Reduces the gas cost of deployment
+* Change the arguments of identies endpoint (BREAKING)
+* Increase debug output for push notifications
 `0.8.1`_ (2019-10-03)
 -------------------------------
 * Fix a bug in the push notification service that was introduced by the marshmallow upgrade in 0.7.0
@@ -95,3 +101,4 @@ Change Log
 .. _0.7.0: https://github.com/trustlines-protocol/relay/compare/0.6.1...0.7.0
 .. _0.8.0: https://github.com/trustlines-protocol/relay/compare/0.7.0...0.8.0
 .. _0.8.1: https://github.com/trustlines-protocol/relay/compare/0.8.0...0.8.1
+.. _0.9.0: https://github.com/trustlines-protocol/relay/compare/0.8.1...0.9.0
