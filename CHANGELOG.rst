@@ -3,9 +3,9 @@ Change Log
 ==========
 `0.9.0`_ (2019-10-05)
 -------------------------------
-* Change identities endpoint to deploy identity contracts with determistic addresses via a factory contract
+* Change identities endpoint to deploy identity contracts with deterministic addresses via a factory contract
 * Change identities endpoint to deploy identity contracts as proxies to an implementation contract. Reduces the gas cost of deployment
-* Change the arguments of identies endpoint (BREAKING)
+* Change the arguments of identities endpoint (BREAKING)
 * Increase debug output for push notifications
 `0.8.1`_ (2019-10-03)
 -------------------------------
