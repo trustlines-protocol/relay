@@ -3,7 +3,8 @@ from tldeploy.identity import (
     Delegate as DelegateImplementation,
     UnexpectedIdentityContractException,
 )
-from tldeploy.core import deploy_identity
+from tldeploy.identity import deploy_proxied_identity
+from deploy_tools.deploy import TransactionFailed
 
 
 class Delegate:
@@ -26,8 +27,16 @@ class Delegate:
         else:
             raise InvalidMetaTransactionException
 
-    def deploy_identity(self, owner_address: str) -> str:
-        return deploy_identity(self._web3, owner_address).address
+    def deploy_identity(self, factory_address, implementation_address, signature):
+        try:
+            # when getting an address via contract.address, the address might not be a checksummed address
+            return self._web3.toChecksumAddress(
+                deploy_proxied_identity(
+                    self._web3, factory_address, implementation_address, signature
+                ).address
+            )
+        except TransactionFailed:
+            raise IdentityDeploymentFailedException
 
     def calc_next_nonce(self, identity_address: str):
         try:
@@ -41,4 +50,8 @@ class InvalidIdentityContractException(Exception):
 
 
 class InvalidMetaTransactionException(Exception):
+    pass
+
+
+class IdentityDeploymentFailedException(Exception):
     pass
