@@ -101,4 +101,4 @@ Change Log
 .. _0.7.0: https://github.com/trustlines-protocol/relay/compare/0.6.1...0.7.0
 .. _0.8.0: https://github.com/trustlines-protocol/relay/compare/0.7.0...0.8.0
 .. _0.8.1: https://github.com/trustlines-protocol/relay/compare/0.8.0...0.8.1
-.. _0.8.1: https://github.com/trustlines-protocol/relay/compare/0.8.1...0.9.0
+.. _0.9.0: https://github.com/trustlines-protocol/relay/compare/0.8.1...0.9.0
