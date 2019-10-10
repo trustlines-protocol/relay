@@ -219,9 +219,12 @@ class CurrencyNetworkProxy(Proxy):
     def estimate_gas_for_transfer(
         self, sender, receiver, value, max_fee, path, extra_data=hexbytes.HexBytes(b"")
     ):
-        return self._proxy.functions.transfer(
+        transaction = self._proxy.functions.transfer(
             receiver, value, max_fee, path, extra_data
-        ).estimateGas({"from": sender})
+        ).buildTransaction({"from": sender, "gas": 0})
+        print(transaction)
+        estimation = self._web3.eth.estimateGas(transaction, block_identifier="pending")
+        return estimation
 
     def estimate_gas_for_payment_path(
         self, payment_path: PaymentPath, extra_data=hexbytes.HexBytes(b"")
