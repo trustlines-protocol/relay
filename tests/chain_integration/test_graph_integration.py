@@ -109,3 +109,38 @@ def test_transfer_update(fresh_community, currency_network, accounts):
     assert account_sum.balance == 20
     assert account_sum.creditline_left_given == 30
     assert account_sum.creditline_left_received == 120
+
+
+def test_pending_block_path_bug_698(
+    fresh_community, currency_network, currency_network_contract, accounts, chain
+):
+    """
+    Tests that we can query for path with a graph updated by the pending block.
+    The bug in https://github.com/trustlines-network/project/issues/698 made explicit that getting max capacity path
+    works with the pending block view and getting a path did not.
+    This test ensures it now works.
+    """
+    A, B, *rest = accounts
+    credit_limit = 50
+    transfer_value = 25
+
+    currency_network.update_trustline(A, B, credit_limit, credit_limit)
+    currency_network.update_trustline(B, A, credit_limit, credit_limit)
+
+    chain.disable_auto_mine_transactions()
+
+    # I avoid using the currency network proxy as it will wait for transaction receipt and we do not mine blocks
+    # So waiting for transaction receipt will wait forever
+    currency_network_contract.functions.transfer(
+        B, transfer_value, 10, [B], b""
+    ).transact({"from": A})
+    gevent.sleep(1)
+
+    # sanity test that the graph view was updated and we can find path and max capacity path
+    max_value, max_path = fresh_community.find_maximum_capacity_path(B, A)
+    assert max_value == credit_limit + transfer_value
+    value, path = fresh_community.find_transfer_path_sender_pays_fees(B, A, max_value)
+    assert path == max_path
+
+    # This should not raise an eth_tester.exceptions.TransactionFailed error
+    currency_network.estimate_gas_for_transfer(B, A, max_value, 10, path[1:])
