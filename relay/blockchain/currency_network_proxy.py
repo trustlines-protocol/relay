@@ -222,7 +222,6 @@ class CurrencyNetworkProxy(Proxy):
         transaction = self._proxy.functions.transfer(
             receiver, value, max_fee, path, extra_data
         ).buildTransaction({"from": sender, "gas": 0})
-        print(transaction)
         estimation = self._web3.eth.estimateGas(transaction, block_identifier="pending")
         return estimation
 

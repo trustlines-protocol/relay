@@ -261,11 +261,6 @@ def currency_network(web3, currency_network_abi, testnetwork1_address):
 
 
 @pytest.fixture()
-def currency_network_contract(web3, currency_network_abi, testnetwork1_address):
-    return web3.eth.contract(address=testnetwork1_address, abi=currency_network_abi)
-
-
-@pytest.fixture()
 def currency_network_with_trustlines(
     web3, currency_network_abi, testnetwork2_address, trustlines
 ):
