@@ -423,20 +423,9 @@ def _fill_estimated_gas_in_payment_path(
     extra_data: hexbytes.HexBytes = hexbytes.HexBytes(b""),
 ) -> PaymentPath:
     proxy = trustlines.currency_network_proxies[network_address]
-    try:
-        payment_path.estimated_gas = proxy.estimate_gas_for_payment_path(
-            payment_path, extra_data
-        )
-    except ValueError:
-        # should mean out of gas, so path was not right.
-        return PaymentPath(
-            fee=0,
-            path=[],
-            value=payment_path.value,
-            estimated_gas=0,
-            fee_payer=payment_path.fee_payer,
-        )
-
+    payment_path.estimated_gas = proxy.estimate_gas_for_payment_path(
+        payment_path, extra_data
+    )
     return payment_path
 
 
@@ -495,14 +484,18 @@ class Path(Resource):
                 f"feePayer has to be one of {[fee_payer.name for fee_payer in FeePayer]}: {fee_payer}"
             )
 
-        payment_path = _fill_estimated_gas_in_payment_path(
-            self.trustlines,
-            PaymentPath(cost, path, value, fee_payer=fee_payer),
-            network_address,
-            extra_data,
-        )
-
-        return payment_path
+        try:
+            return _fill_estimated_gas_in_payment_path(
+                self.trustlines,
+                PaymentPath(cost, path, value, fee_payer=fee_payer),
+                network_address,
+                extra_data,
+            )
+        except ValueError:
+            # Should mean the gas estimation failed, so the path is not valid anymore
+            # TODO Separate gas estimation from path finding
+            logger.warn("Gas estimation failed on computed path.")
+            abort(500, "Gas estimation failed on computed path.")
 
 
 # CloseTrustline is similar to the above ReduceDebtPath, though it does not
@@ -551,13 +544,9 @@ class CloseTrustline(Resource):
             )
         except ValueError:
             # should mean out of gas, so path was not right.
-            return PaymentPath(
-                fee=0,
-                path=[],
-                value=payment_path.value,
-                fee_payer=FeePayer.SENDER,
-                estimated_gas=0,
-            )
+            # TODO we should separate the gas estimation
+            logger.warn("Gas estimation failed on computed path.")
+            abort(500, "Gas estimation failed on computed path.")
 
         return payment_path
 
