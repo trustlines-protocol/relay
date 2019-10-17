@@ -257,6 +257,8 @@ class CurrencyNetworkProxy(Proxy):
 
     def estimate_gas_for_close_trustline(self, source, other_party, max_fee, path):
         """estimate gas for doing a transfer for the given payment_path"""
-        return self._proxy.functions.closeTrustlineByTriangularTransfer(
+        transaction = self._proxy.functions.closeTrustlineByTriangularTransfer(
             other_party, max_fee, path[1:]
-        ).estimateGas({"from": source})
+        ).buildTransaction({"from": source, "gas": 0})
+        estimation = self._web3.eth.estimateGas(transaction, block_identifier="pending")
+        return estimation
