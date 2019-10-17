@@ -216,15 +216,6 @@ class CurrencyNetworkProxy(Proxy):
         results = concurrency_utils.joinall(queries, timeout=timeout)
         return sorted_events(list(itertools.chain.from_iterable(results)))
 
-    def estimate_gas_for_transfer(
-        self, sender, receiver, value, max_fee, path, extra_data=hexbytes.HexBytes(b"")
-    ):
-        transaction = self._proxy.functions.transfer(
-            receiver, value, max_fee, path, extra_data
-        ).buildTransaction({"from": sender, "gas": 0})
-        estimation = self._web3.eth.estimateGas(transaction, block_identifier="pending")
-        return estimation
-
     def estimate_gas_for_payment_path(
         self, payment_path: PaymentPath, extra_data=hexbytes.HexBytes(b"")
     ):
@@ -236,21 +227,29 @@ class CurrencyNetworkProxy(Proxy):
         fee_payer = payment_path.fee_payer
 
         if fee_payer is FeePayer.SENDER:
-            return self._proxy.functions.transfer(
+            transaction = self._proxy.functions.transfer(
                 target,
                 payment_path.value,
                 payment_path.fee,
                 payment_path.path[1:],
                 extra_data,
-            ).estimateGas({"from": source})
+            ).buildTransaction({"from": source, "gas": 0})
+            estimation = self._web3.eth.estimateGas(
+                transaction, block_identifier="pending"
+            )
+            return estimation
         elif fee_payer is FeePayer.RECEIVER:
-            return self._proxy.functions.transferReceiverPays(
+            transaction = self._proxy.functions.transferReceiverPays(
                 target,
                 payment_path.value,
                 payment_path.fee,
                 payment_path.path[1:],
                 extra_data,
-            ).estimateGas({"from": source})
+            ).buildTransaction({"from": source, "gas": 0})
+            estimation = self._web3.eth.estimateGas(
+                transaction, block_identifier="pending"
+            )
+            return estimation
         else:
             raise ValueError(
                 f"fee_payer has to be one of {[fee_payer.name for fee_payer in FeePayer]}: {fee_payer}"
