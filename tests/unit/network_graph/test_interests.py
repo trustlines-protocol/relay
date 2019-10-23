@@ -1,23 +1,24 @@
-import pytest
 import math
+
+import pytest
+from tests.unit.network_graph.conftest import addresses
 
 from relay.blockchain.currency_network_proxy import Trustline
 from relay.network_graph.graph import Account, NetworkGraphConfig
 from relay.network_graph.graph_constants import (
+    balance_ab,
     creditline_ab,
     creditline_ba,
-    interest_ab,
-    interest_ba,
     fees_outstanding_a,
     fees_outstanding_b,
+    interest_ab,
+    interest_ba,
     m_time,
-    balance_ab,
 )
 from relay.network_graph.interests import (
-    calculate_interests,
     DELTA_TIME_MINIMAL_ALLOWED_VALUE,
+    calculate_interests,
 )
-from tests.unit.network_graph.conftest import addresses
 
 A, B, C, D, E, F, G, H = addresses
 

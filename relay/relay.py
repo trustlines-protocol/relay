@@ -1,49 +1,52 @@
+import functools
+import itertools
 import json
 import logging
 import os
 import sys
-import functools
-import itertools
 from collections import defaultdict
 from copy import deepcopy
-from typing import Dict, Iterable, List, Union, Optional
+from typing import Dict, Iterable, List, Optional, Union
 
 import gevent
+import sqlalchemy
 from eth_utils import is_checksum_address, to_checksum_address
 from gevent import sleep
-import sqlalchemy
 from sqlalchemy.engine.url import URL
-from web3 import Web3
 from tldeploy.identity import MetaTransaction
+from web3 import Web3
 
-from .blockchain.proxy import sorted_events
+import relay.concurrency_utils as concurrency_utils
+from relay import ethindex_db
 from relay.pushservice.client import PushNotificationClient
+from relay.pushservice.client_token_db import (
+    ClientTokenAlreadyExistsException,
+    ClientTokenDB,
+)
 from relay.pushservice.pushservice import (
     FirebaseRawPushService,
     InvalidClientTokenException,
 )
-from relay.pushservice.client_token_db import (
-    ClientTokenDB,
-    ClientTokenAlreadyExistsException,
+
+from .blockchain import (
+    currency_network_events,
+    exchange_events,
+    token_events,
+    unw_eth_events,
 )
-from relay import ethindex_db
-from .blockchain.exchange_proxy import ExchangeProxy
 from .blockchain.currency_network_proxy import CurrencyNetworkProxy
-from .blockchain import currency_network_events
-from .blockchain import token_events
-from .blockchain import unw_eth_events
-from .blockchain import exchange_events
-from .blockchain.node import Node
 from .blockchain.delegate import Delegate
+from .blockchain.events import BlockchainEvent
+from .blockchain.exchange_proxy import ExchangeProxy
+from .blockchain.node import Node
+from .blockchain.proxy import sorted_events
 from .blockchain.token_proxy import TokenProxy
 from .blockchain.unw_eth_proxy import UnwEthProxy
-from .blockchain.events import BlockchainEvent
-from .network_graph.graph import CurrencyNetworkGraph
+from .events import BalanceEvent, NetworkBalanceEvent
 from .exchange.orderbook import OrderBookGreenlet
 from .logger import get_logger
-from .streams import Subject, MessagingSubject
-from .events import NetworkBalanceEvent, BalanceEvent
-import relay.concurrency_utils as concurrency_utils
+from .network_graph.graph import CurrencyNetworkGraph
+from .streams import MessagingSubject, Subject
 
 logger = get_logger("relay", logging.DEBUG)
 

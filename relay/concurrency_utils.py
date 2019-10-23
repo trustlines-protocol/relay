@@ -1,8 +1,8 @@
-from typing import Callable, List, Any, Iterable
-import wrapt
+from typing import Any, Callable, Iterable, List
 
 import gevent
 import gevent.lock
+import wrapt
 
 
 class TimeoutException(Exception):

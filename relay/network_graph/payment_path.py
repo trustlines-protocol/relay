@@ -1,6 +1,7 @@
-from typing import List
-import attr
 from enum import Enum
+from typing import List
+
+import attr
 
 
 class FeePayer(Enum):

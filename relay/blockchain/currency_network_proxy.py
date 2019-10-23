@@ -1,29 +1,28 @@
-import logging
-import socket
-from typing import NamedTuple
-from typing import List
 import functools
 import itertools
+import logging
+import socket
+from typing import List, NamedTuple
 
 import gevent
 import hexbytes
 
 import relay.concurrency_utils as concurrency_utils
-from .proxy import Proxy, reconnect_interval, sorted_events
 from relay.logger import get_logger
-from relay.network_graph.payment_path import PaymentPath, FeePayer
+from relay.network_graph.payment_path import FeePayer, PaymentPath
 
-from .events import BlockchainEvent
 from .currency_network_events import (
-    CurrencyNetworkEvent,
-    TrustlineUpdateEventType,
-    TrustlineRequestEventType,
     BalanceUpdateEventType,
+    CurrencyNetworkEvent,
     TransferEventType,
-    from_to_types,
+    TrustlineRequestEventType,
+    TrustlineUpdateEventType,
     event_builders,
+    from_to_types,
     standard_event_types,
 )
+from .events import BlockchainEvent
+from .proxy import Proxy, reconnect_interval, sorted_events
 
 
 class Trustline(NamedTuple):

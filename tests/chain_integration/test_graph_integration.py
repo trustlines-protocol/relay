@@ -1,7 +1,7 @@
 import time
 
-import pytest
 import gevent
+import pytest
 
 from relay.network_graph.graph import CurrencyNetworkGraph
 

@@ -1,18 +1,17 @@
 from collections import namedtuple
 
-import pytest
 import gevent
+import pytest
 
+from relay.events import MessageEvent
 from relay.streams import (
     Client,
-    Subject,
-    MessagingSubject,
     DisconnectedError,
-    Subscription,
     Event,
+    MessagingSubject,
+    Subject,
+    Subscription,
 )
-from relay.events import MessageEvent
-
 
 IdEventTuple = namedtuple("IdEventTuple", "id, event")
 

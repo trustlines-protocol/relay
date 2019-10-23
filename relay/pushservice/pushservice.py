@@ -5,17 +5,17 @@ from typing import Optional
 import firebase_admin
 from firebase_admin import credentials, messaging
 
-from relay.events import Event, MessageEvent, AccountEvent
-from relay.blockchain.events import TLNetworkEvent
+from relay.api.schemas import MessageEventSchema, UserCurrencyNetworkEventSchema
 from relay.blockchain.currency_network_events import (
     TransferEvent,
     TrustlineRequestEvent,
     TrustlineUpdateEvent,
 )
-from relay.api.schemas import UserCurrencyNetworkEventSchema, MessageEventSchema
-from .client_token_db import ClientTokenDB
+from relay.blockchain.events import TLNetworkEvent
+from relay.events import AccountEvent, Event, MessageEvent
 from relay.logger import get_logger
 
+from .client_token_db import ClientTokenDB
 
 logger = get_logger("pushservice", logging.DEBUG)
 

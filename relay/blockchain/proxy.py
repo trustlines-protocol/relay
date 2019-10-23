@@ -1,16 +1,17 @@
+import functools
+import itertools
 import logging
 import math
+import socket
 import time
-import functools
-from typing import List, Dict, Callable, Any, Mapping
+from typing import Any, Callable, Dict, List, Mapping
 
 import gevent
-import itertools
-import socket
 
 import relay.concurrency_utils as concurrency_utils
-from .events import BlockchainEvent
 from relay.logger import get_logger
+
+from .events import BlockchainEvent
 
 logger = get_logger("proxy", logging.DEBUG)
 

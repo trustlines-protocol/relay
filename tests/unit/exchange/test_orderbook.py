@@ -1,8 +1,8 @@
 import pytest
 
-from relay.exchange.orderbook import OrderBook, OrderInvalidException
 from relay.blockchain.exchange_proxy import DummyExchangeProxy
 from relay.exchange.order import Order
+from relay.exchange.orderbook import OrderBook, OrderInvalidException
 
 
 @pytest.fixture()

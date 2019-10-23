@@ -1,7 +1,7 @@
 import pytest
 
-from relay.exchange.orderbook import OrderBook
 from relay.blockchain.exchange_proxy import DummyExchangeProxy
+from relay.exchange.orderbook import OrderBook
 
 
 @pytest.fixture()

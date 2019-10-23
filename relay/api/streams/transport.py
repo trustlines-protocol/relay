@@ -3,12 +3,13 @@ import logging
 from geventwebsocket import WebSocketApplication, WebSocketError
 from tinyrpc import BadRequestError
 
-from relay.streams import Client, DisconnectedError, Subscription
-from .rpc_protocol import validating_rpc_caller
-from ..schemas import UserCurrencyNetworkEventSchema, MessageEventSchema
 from relay.blockchain.events import Event, TLNetworkEvent
-from relay.events import MessageEvent, AccountEvent
+from relay.events import AccountEvent, MessageEvent
 from relay.logger import get_logger
+from relay.streams import Client, DisconnectedError, Subscription
+
+from ..schemas import MessageEventSchema, UserCurrencyNetworkEventSchema
+from .rpc_protocol import validating_rpc_caller
 
 logger = get_logger("websockets", logging.DEBUG)
 

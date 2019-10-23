@@ -2,13 +2,12 @@ import json
 import os
 import sys
 
+import eth_tester
 import pytest
-from tldeploy.core import deploy_networks, deploy_network
+from tldeploy.core import deploy_network, deploy_networks
 from tldeploy.identity import MetaTransaction
 
 from relay.blockchain.currency_network_proxy import CurrencyNetworkProxy
-import eth_tester
-
 
 EXPIRATION_TIME = 4102444800  # 01/01/2100
 

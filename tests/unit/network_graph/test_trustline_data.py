@@ -1,18 +1,18 @@
 import pytest
 
 from relay.network_graph.trustline_data import (
-    set,
     get,
-    set_balance,
     get_balance,
-    set_creditline,
     get_creditline,
-    set_interest_rate,
-    get_interest_rate,
-    set_fees_outstanding,
     get_fees_outstanding,
-    set_mtime,
+    get_interest_rate,
     get_mtime,
+    set,
+    set_balance,
+    set_creditline,
+    set_fees_outstanding,
+    set_interest_rate,
+    set_mtime,
 )
 
 a = "0xA"

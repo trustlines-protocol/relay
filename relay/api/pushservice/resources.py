@@ -2,9 +2,9 @@ from flask import abort
 from flask_restful import Resource
 
 from relay.relay import (
-    TrustlinesRelay,
-    TokenNotFoundException,
     InvalidClientTokenException,
+    TokenNotFoundException,
+    TrustlinesRelay,
 )
 
 

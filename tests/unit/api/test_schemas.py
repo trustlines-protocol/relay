@@ -1,14 +1,14 @@
 #! pytest
 
 
-import pytest
 import attr
+import pytest
 from hexbytes import HexBytes
-from tldeploy import identity
-from relay.api import schemas
 from marshmallow import ValidationError
-from relay.network_graph.payment_path import PaymentPath, FeePayer
+from tldeploy import identity
 
+from relay.api import schemas
+from relay.network_graph.payment_path import FeePayer, PaymentPath
 
 a_valid_meta_transaction = identity.MetaTransaction(
     from_="0xF2E246BB76DF876Cef8b38ae84130F4F55De395b",

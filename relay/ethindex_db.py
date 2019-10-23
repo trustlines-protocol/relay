@@ -1,17 +1,21 @@
 """provide access to the ethindex database"""
 
+import collections
 import itertools
 import logging
-import collections
+from typing import Any, Dict, List
+
 import psycopg2
 import psycopg2.extras
-from typing import List, Any, Dict
-from relay.blockchain import currency_network_events
-from relay.blockchain import token_events
-from relay.blockchain import unw_eth_events
-from relay.blockchain import exchange_events
-from relay.blockchain.events import BlockchainEvent, TLNetworkEvent
+
 import relay.blockchain.token_proxy
+from relay.blockchain import (
+    currency_network_events,
+    exchange_events,
+    token_events,
+    unw_eth_events,
+)
+from relay.blockchain.events import BlockchainEvent, TLNetworkEvent
 from relay.blockchain.proxy import sorted_events
 
 # proxy.get_all_events just asks for these network events. so we need the list

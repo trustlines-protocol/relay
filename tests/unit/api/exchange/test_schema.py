@@ -1,8 +1,7 @@
 import pytest
 
-
-from relay.exchange.order import Order
 from relay.api.exchange.schemas import OrderSchema
+from relay.exchange.order import Order
 
 
 @pytest.fixture()

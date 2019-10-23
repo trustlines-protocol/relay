@@ -1,22 +1,22 @@
-import logging
-from typing import List
 import functools
 import itertools
+import logging
+from typing import List
 
 import relay.concurrency_utils as concurrency_utils
 from relay.blockchain.events import BlockchainEvent
-from .proxy import Proxy, sorted_events
+from relay.exchange.order import Order
 from relay.logger import get_logger
 
-from relay.exchange.order import Order
 from .exchange_events import (
     ExchangeEvent,
-    LogFillEventType,
     LogCancelEventType,
-    from_to_types,
+    LogFillEventType,
     event_builders,
+    from_to_types,
     standard_event_types,
 )
+from .proxy import Proxy, sorted_events
 
 logger = get_logger("token", logging.DEBUG)
 

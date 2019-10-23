@@ -1,13 +1,13 @@
-from relay.api.resources import dump_result_with_schema
-from relay.blockchain.unw_eth_proxy import UnwEthProxy
-from relay.blockchain.token_proxy import TokenProxy
-
-from relay.api.schemas import TokenEventSchema, UserTokenEventSchema
-from flask_restful import Resource
 from flask import abort
+from flask_restful import Resource
+from marshmallow import validate
 from webargs import fields
 from webargs.flaskparser import use_args
-from marshmallow import validate
+
+from relay.api.resources import dump_result_with_schema
+from relay.api.schemas import TokenEventSchema, UserTokenEventSchema
+from relay.blockchain.token_proxy import TokenProxy
+from relay.blockchain.unw_eth_proxy import UnwEthProxy
 from relay.relay import TrustlinesRelay
 
 

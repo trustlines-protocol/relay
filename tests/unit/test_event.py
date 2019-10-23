@@ -1,9 +1,9 @@
 import pytest
 
 from relay.blockchain.currency_network_events import (
-    TrustlineUpdateEvent,
     TransferEvent,
     TransferEventType,
+    TrustlineUpdateEvent,
     TrustlineUpdateEventType,
 )
 

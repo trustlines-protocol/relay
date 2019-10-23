@@ -1,8 +1,8 @@
 import pytest
 from eth_utils import to_checksum_address
 
-from relay.exchange.order import Order, SignableOrder
 from relay.constants import NULL_ADDRESS
+from relay.exchange.order import Order, SignableOrder
 
 
 @pytest.fixture()

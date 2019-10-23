@@ -1,10 +1,10 @@
-from tldeploy.identity import (
-    MetaTransaction,
-    Delegate as DelegateImplementation,
-    UnexpectedIdentityContractException,
-)
-from tldeploy.identity import deploy_proxied_identity
 from deploy_tools.deploy import TransactionFailed
+from tldeploy.identity import (
+    Delegate as DelegateImplementation,
+    MetaTransaction,
+    UnexpectedIdentityContractException,
+    deploy_proxied_identity,
+)
 
 
 class Delegate:

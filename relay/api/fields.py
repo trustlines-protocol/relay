@@ -1,7 +1,8 @@
 import hexbytes
-from webargs import ValidationError
-from marshmallow import fields
 from eth_utils import is_address, to_checksum_address
+from marshmallow import fields
+from webargs import ValidationError
+
 from relay.network_graph.payment_path import FeePayer
 
 

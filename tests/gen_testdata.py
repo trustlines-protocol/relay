@@ -7,16 +7,17 @@ The TestCurrencyNetwork contract can be deployed with:
 
 
 """
-import os
-import sys
-import json
-import random
 import abc
-import click
 import itertools
-from web3 import Web3
+import json
+import os
+import random
+import sys
+
+import click
 import eth_utils
 import tldeploy.core
+from web3 import Web3
 
 
 class TestDataGenerator(metaclass=abc.ABCMeta):

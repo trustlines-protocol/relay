@@ -1,9 +1,9 @@
 import gevent
 
 from relay.blockchain.currency_network_events import (
+    TransferEventType,
     TrustlineRequestEventType,
     TrustlineUpdateEventType,
-    TransferEventType,
 )
 
 

@@ -1,5 +1,6 @@
 import pytest
-from relay.signing import eth_validate, eth_sign
+
+from relay.signing import eth_sign, eth_validate
 
 pytestmark = pytest.mark.unit
 
