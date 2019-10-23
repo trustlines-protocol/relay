@@ -41,7 +41,7 @@ services:
       - "db"
       - "tlbc"
     volumes:
-      - ./config.json:/opt/relay/config.json
+      - ./config.toml:/opt/relay/config.toml
       - ./addresses.json:/opt/relay/addresses.json
     # make relay server listen on port 5000. In a real scenario you will want to
     # put a proxy like nginx, apache or traefik in front of the relay server

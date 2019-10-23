@@ -10,6 +10,7 @@ from typing import Dict, Iterable, List, Optional, Union
 
 import gevent
 import sqlalchemy
+import toml
 from eth_utils import is_checksum_address, to_checksum_address
 from gevent import sleep
 from sqlalchemy.engine.url import URL
@@ -56,9 +57,9 @@ class TokenNotFoundException(Exception):
 
 class TrustlinesRelay:
     def __init__(
-        self, config_json_path="config.json", addresses_json_path="addresses.json"
+        self, config_toml_path="config.toml", addresses_json_path="addresses.json"
     ):
-        self.config_json_path = config_json_path
+        self.config_toml_path = config_toml_path
         self.addresses_json_path = addresses_json_path
         self.currency_network_proxies: Dict[str, CurrencyNetworkProxy] = {}
         self.currency_network_graphs: Dict[str, CurrencyNetworkGraph] = {}
@@ -556,8 +557,8 @@ class TrustlinesRelay:
         return sorted_events(list(itertools.chain.from_iterable(results)))
 
     def _load_config(self):
-        with open(self.config_json_path) as data_file:
-            self.config = json.load(data_file)
+        with open(self.config_toml_path) as data_file:
+            self.config = toml.load(data_file).get("relay")
         self._load_gas_price_settings(self.config.get("gasPriceComputation", {}))
 
     def _load_gas_price_settings(self, gas_price_settings: Dict):

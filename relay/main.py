@@ -67,8 +67,8 @@ def _show_version(ctx, param, value):
 @click.option("--port", default=5000, show_default=True, help="port to listen on")
 @click.option(
     "--config",
-    default="config.json",
-    help="path to json configuration file",
+    default="config.toml",
+    help="path to toml configuration file",
     show_default=True,
     type=click.Path(exists=True, dir_okay=False),
 )
@@ -95,7 +95,7 @@ def main(ctx, port, config, addresses, version):
     logger.info("Starting relay server version %s", get_version())
     # silence warnings from urllib3, see github issue 246
     logging.getLogger("urllib3.connectionpool").setLevel(logging.CRITICAL)
-    trustlines = TrustlinesRelay(config_json_path=config, addresses_json_path=addresses)
+    trustlines = TrustlinesRelay(config_toml_path=config, addresses_json_path=addresses)
     trustlines.start()
     ipport = ("", port)
     app = ApiApp(trustlines)
