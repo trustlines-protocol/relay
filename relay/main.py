@@ -6,6 +6,7 @@ monkey.patch_all(thread=False)  # noqa: E702 isort:skip
 import psycogreen.gevent  # isort:skip
 
 psycogreen.gevent.patch_psycopg()  # noqa: E702 isort:skip
+import json
 import logging
 import logging.config
 import os
@@ -117,11 +118,18 @@ def main(ctx, port, config, addresses, version):
 
     logger.info("Starting relay server version %s", get_version())
 
+    # we still handle the json file for now. This will be removed
+    # soon. But it's nice to see the end2end tests succeed.
     with open(config) as config_file:
-        config_dict = toml.load(config_file)
+        if config.lower().endswith(".json"):
+            config_dict = {"relay": json.load(config_file)}
+        else:
+            config_dict = toml.load(config_file)
     configure_logging(config_dict)
 
-    trustlines = TrustlinesRelay(config_toml_path=config, addresses_json_path=addresses)
+    trustlines = TrustlinesRelay(
+        config=config_dict["relay"], addresses_json_path=addresses
+    )
     trustlines.start()
     ipport = ("", port)
     app = ApiApp(trustlines)

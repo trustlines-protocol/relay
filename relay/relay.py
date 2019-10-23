@@ -10,7 +10,6 @@ from typing import Dict, Iterable, List, Optional, Union
 
 import gevent
 import sqlalchemy
-import toml
 from eth_utils import is_checksum_address, to_checksum_address
 from gevent import sleep
 from sqlalchemy.engine.url import URL
@@ -56,16 +55,15 @@ class TokenNotFoundException(Exception):
 
 
 class TrustlinesRelay:
-    def __init__(
-        self, config_toml_path="config.toml", addresses_json_path="addresses.json"
-    ):
-        self.config_toml_path = config_toml_path
+    def __init__(self, config=None, addresses_json_path="addresses.json"):
+        if config is None:
+            config = {}
+        self.config = config
         self.addresses_json_path = addresses_json_path
         self.currency_network_proxies: Dict[str, CurrencyNetworkProxy] = {}
         self.currency_network_graphs: Dict[str, CurrencyNetworkGraph] = {}
         self.subjects = defaultdict(Subject)
         self.messaging = defaultdict(MessagingSubject)
-        self.config = {}
         self.contracts = {}
         self.node: Node = None
         self._web3 = None
@@ -206,7 +204,7 @@ class TrustlinesRelay:
         }
 
     def start(self):
-        self._load_config()
+        self._load_gas_price_settings(self.config.get("gasPriceComputation", {}))
         self._load_contracts()
         self._load_orderbook()
         self._start_push_service()
@@ -555,11 +553,6 @@ class TrustlinesRelay:
         )
         results = concurrency_utils.joinall(exchange_event_queries, timeout=timeout)
         return sorted_events(list(itertools.chain.from_iterable(results)))
-
-    def _load_config(self):
-        with open(self.config_toml_path) as data_file:
-            self.config = toml.load(data_file).get("relay")
-        self._load_gas_price_settings(self.config.get("gasPriceComputation", {}))
 
     def _load_gas_price_settings(self, gas_price_settings: Dict):
         method = gas_price_settings.get("method", "rpc")
