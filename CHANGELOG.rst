@@ -1,6 +1,11 @@
 ==========
 Change Log
 ==========
+`0.10.0`_ (not released yet)
+-------------------------------
+- Use TOML as a configuration file format
+- Make logging configurable via the TOML configuration file
+
 `0.9.0`_ (2019-10-05)
 -------------------------------
 * Change identities endpoint to deploy identity contracts with deterministic addresses via a factory contract
@@ -102,3 +107,4 @@ Change Log
 .. _0.8.0: https://github.com/trustlines-protocol/relay/compare/0.7.0...0.8.0
 .. _0.8.1: https://github.com/trustlines-protocol/relay/compare/0.8.0...0.8.1
 .. _0.9.0: https://github.com/trustlines-protocol/relay/compare/0.8.1...0.9.0
+.. _0.10.0: https://github.com/trustlines-protocol/relay/compare/0.9.0...0.10.0
