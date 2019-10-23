@@ -9,11 +9,10 @@ from typing import Any, Callable, Dict, List, Mapping
 import gevent
 
 import relay.concurrency_utils as concurrency_utils
-from relay.logger import get_logger
 
 from .events import BlockchainEvent
 
-logger = get_logger("proxy", logging.DEBUG)
+logger = logging.getLogger("proxy")
 
 
 queryBlock = "latest"

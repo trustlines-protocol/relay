@@ -8,7 +8,6 @@ from typing import Any, Dict, List
 import psycopg2
 import psycopg2.extras
 
-import relay.blockchain.token_proxy
 from relay.blockchain import (
     currency_network_events,
     exchange_events,
@@ -22,7 +21,7 @@ from relay.blockchain.proxy import sorted_events
 # here.
 
 
-logger = relay.logger.get_logger("ethindex_db", level=logging.DEBUG)
+logger = logging.getLogger("ethindex_db")
 
 
 def connect(dsn):

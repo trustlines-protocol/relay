@@ -7,18 +7,18 @@ import psycogreen.gevent  # isort:skip
 
 psycogreen.gevent.patch_psycopg()  # noqa: E702 isort:skip
 import logging
+import os
 
 import click
 from gevent.pywsgi import WSGIServer
 from geventwebsocket.handler import WebSocketHandler
 
-from relay.logger import get_logger
 from relay.relay import TrustlinesRelay
 from relay.utils import get_version
 
 from .api.app import ApiApp
 
-logger = get_logger("trustlines", logging.DEBUG)
+logger = logging.getLogger("trustlines")
 
 
 def patch_warnings_module():
@@ -88,9 +88,13 @@ def _show_version(ctx, param, value):
 @click.pass_context
 def main(ctx, port, config, addresses, version):
     """run the relay server"""
+    logging.basicConfig(
+        format="%(asctime)s[%(levelname)s] %(name)s: %(message)s",
+        level=os.environ.get("LOGLEVEL", "INFO").upper(),
+    )
     logger.info("Starting relay server version %s", get_version())
     # silence warnings from urllib3, see github issue 246
-    get_logger("urllib3.connectionpool", level=logging.CRITICAL)
+    logging.getLogger("urllib3.connectionpool").setLevel(logging.CRITICAL)
     trustlines = TrustlinesRelay(config_json_path=config, addresses_json_path=addresses)
     trustlines.start()
     ipport = ("", port)
