@@ -2,7 +2,7 @@
 
 .. image:: https://circleci.com/gh/trustlines-protocol/relay.svg?style=svg
     :target: https://circleci.com/gh/trustlines-protocol/relay
-    
+
 trustlines relay server
 =======================
 
