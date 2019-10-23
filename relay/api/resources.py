@@ -1,45 +1,43 @@
-import tempfile
 import logging
+import tempfile
 import time
 
+import hexbytes
 import wrapt
-from flask import request, send_file, make_response, abort
+from flask import abort, make_response, request, send_file
 from flask.views import MethodView
 from flask_restful import Resource
+from marshmallow import fields as marshmallow_fields, validate
+from tldeploy import identity
 from webargs import fields
 from webargs.flaskparser import use_args
-from marshmallow import validate, fields as marshmallow_fields
-from tldeploy import identity
-import hexbytes
 
-from relay.blockchain.delegate import InvalidIdentityContractException
-from relay.utils import sha3
-from relay.blockchain.currency_network_proxy import CurrencyNetworkProxy
-from relay.blockchain.unw_eth_proxy import UnwEthProxy
-from relay.blockchain.delegate import (
-    InvalidMetaTransactionException,
-    IdentityDeploymentFailedException,
-)
 from relay.api import fields as custom_fields
-from .schemas import (
-    CurrencyNetworkEventSchema,
-    UserCurrencyNetworkEventSchema,
-    AggregatedAccountSummarySchema,
-    TxInfosSchema,
-    PaymentPathSchema,
-    AnyEventSchema,
-    TrustlineSchema,
-    CurrencyNetworkSchema,
-    MetaTransactionSchema,
-    IdentityInfosSchema,
+from relay.blockchain.currency_network_proxy import CurrencyNetworkProxy
+from relay.blockchain.delegate import (
+    IdentityDeploymentFailedException,
+    InvalidIdentityContractException,
+    InvalidMetaTransactionException,
 )
-from relay.relay import TrustlinesRelay
+from relay.blockchain.unw_eth_proxy import UnwEthProxy
 from relay.concurrency_utils import TimeoutException
 from relay.logger import get_logger
+from relay.network_graph.payment_path import FeePayer, PaymentPath
+from relay.relay import TrustlinesRelay
+from relay.utils import get_version, sha3
 
-from relay.network_graph.payment_path import PaymentPath, FeePayer
-
-from relay.utils import get_version
+from .schemas import (
+    AggregatedAccountSummarySchema,
+    AnyEventSchema,
+    CurrencyNetworkEventSchema,
+    CurrencyNetworkSchema,
+    IdentityInfosSchema,
+    MetaTransactionSchema,
+    PaymentPathSchema,
+    TrustlineSchema,
+    TxInfosSchema,
+    UserCurrencyNetworkEventSchema,
+)
 
 logger = get_logger("api.resources", logging.DEBUG)
 

@@ -1,10 +1,9 @@
-import os
 import logging
+import os
 from collections import namedtuple
 
-from relay.logger import get_logger
 from relay.concurrency_utils import synchronized
-
+from relay.logger import get_logger
 
 TxInfos = namedtuple("TxInfos", "balance, nonce, gas_price")
 

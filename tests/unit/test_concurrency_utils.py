@@ -1,7 +1,7 @@
-import pytest
 import gevent
+import pytest
 
-from relay.concurrency_utils import joinall, TimeoutException, synchronized
+from relay.concurrency_utils import TimeoutException, joinall, synchronized
 
 
 def test_success():

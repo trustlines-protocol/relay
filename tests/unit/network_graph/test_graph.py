@@ -1,12 +1,13 @@
 import time
+
 import pytest
+from tests.unit.network_graph.conftest import addresses
 
 from relay.blockchain.currency_network_proxy import Trustline
 from relay.network_graph.graph import (
     CurrencyNetworkGraphForTesting as CurrencyNetworkGraph,
 )
-from relay.network_graph.payment_path import PaymentPath, FeePayer
-from tests.unit.network_graph.conftest import addresses
+from relay.network_graph.payment_path import FeePayer, PaymentPath
 
 A, B, C, D, E, F, G, H = addresses
 

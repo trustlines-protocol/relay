@@ -1,6 +1,6 @@
+import networkx as nx
 import pytest
 
-import networkx as nx
 from relay.network_graph import alg
 
 

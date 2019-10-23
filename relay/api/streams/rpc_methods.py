@@ -1,13 +1,13 @@
-from typing import Iterable, Dict
+from typing import Dict, Iterable
 
-from marshmallow import fields, Schema, ValidationError
-
-from ..schemas import MessageEventSchema
-from .rpc_protocol import check_args
-from ..fields import Address
+from marshmallow import Schema, ValidationError, fields
 
 from relay.relay import TrustlinesRelay
 from relay.streams import Client
+
+from ..fields import Address
+from ..schemas import MessageEventSchema
+from .rpc_protocol import check_args
 
 
 class SubscribeSchema(Schema):

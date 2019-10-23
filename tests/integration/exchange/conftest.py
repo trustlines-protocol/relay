@@ -1,8 +1,8 @@
 import pytest
 from sqlalchemy import create_engine
 
-from relay.exchange.order import SignableOrder
 from relay.constants import NULL_ADDRESS
+from relay.exchange.order import SignableOrder
 
 
 @pytest.fixture()

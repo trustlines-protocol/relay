@@ -1,6 +1,5 @@
-import web3
-
 import pkg_resources
+import web3
 
 
 def merge_two_dicts(x, y):

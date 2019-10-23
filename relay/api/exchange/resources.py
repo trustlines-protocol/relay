@@ -1,22 +1,21 @@
 import logging
 
 import hexbytes
+from eth_utils import is_hex, to_checksum_address
 from flask_restful import Resource
-from webargs.flaskparser import use_args
-from webargs import fields as webfields
-from webargs.flaskparser import abort
-from eth_utils import to_checksum_address, is_hex
 from marshmallow import validate
+from webargs import fields as webfields
+from webargs.flaskparser import abort, use_args
 
-from relay.api.resources import dump_result_with_schema
-from relay.relay import TrustlinesRelay
 from relay.api import fields
 from relay.api.exchange.schemas import OrderSchema
-from relay.exchange.order import Order
-from relay.exchange.orderbook import OrderInvalidException
+from relay.api.resources import dump_result_with_schema
 from relay.blockchain.exchange_proxy import ExchangeProxy
 from relay.concurrency_utils import TimeoutException
+from relay.exchange.order import Order
+from relay.exchange.orderbook import OrderInvalidException
 from relay.logger import get_logger
+from relay.relay import TrustlinesRelay
 
 from ..schemas import ExchangeEventSchema, UserExchangeEventSchema
 

@@ -1,11 +1,12 @@
 import time
-from typing import Tuple, Sequence, Iterable
+from typing import Iterable, Sequence, Tuple
 
 import gevent
 import hexbytes
 
 from relay.blockchain.exchange_proxy import ExchangeProxy
 from relay.constants import NULL_ADDRESS
+
 from .exchange_db import OrderBookDB
 from .order import Order
 

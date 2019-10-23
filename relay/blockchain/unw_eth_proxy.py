@@ -1,17 +1,18 @@
-import logging
-from typing import List
 import functools
 import itertools
+import logging
+from typing import List
 
 import relay.concurrency_utils as concurrency_utils
-from .proxy import Proxy, sorted_events
 from relay.logger import get_logger
+
 from .events import BlockchainEvent
+from .proxy import Proxy, sorted_events
 from .unw_eth_events import (
-    UnwEthEvent,
     TransferEventType,
-    from_to_types,
+    UnwEthEvent,
     event_builders,
+    from_to_types,
     standard_event_types,
 )
 

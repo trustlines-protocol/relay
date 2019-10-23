@@ -1,55 +1,53 @@
-from flask import Flask, Blueprint, jsonify
+from eth_utils import is_address, is_checksum_address, to_checksum_address
+from flask import Blueprint, Flask, jsonify
 from flask_cors import CORS
 from flask_restful import Api
 from flask_sockets import Sockets
-from webargs.flaskparser import parser, abort
-from werkzeug.routing import BaseConverter, ValidationError
+from webargs.flaskparser import abort, parser
 from werkzeug.exceptions import HTTPException
-from eth_utils import is_address, to_checksum_address, is_checksum_address
-
-from .resources import (
-    Version,
-    GraphDump,
-    GraphImage,
-    RequestEther,
-    User,
-    UserList,
-    Network,
-    NetworkList,
-    ContactList,
-    TrustlineList,
-    Trustline,
-    MaxCapacityPath,
-    Path,
-    UserEventsNetwork,
-    UserEvents,
-    Relay,
-    Balance,
-    TransactionInfos,
-    Block,
-    EventsNetwork,
-    CloseTrustline,
-    RelayMetaTransaction,
-    DeployIdentity,
-    IdentityInfos,
-)
-from .streams.app import WebSocketRPCHandler, MessagingWebSocketRPCHandler
+from werkzeug.routing import BaseConverter, ValidationError
 
 from .exchange.resources import (
-    OrderBook,
-    OrderSubmission,
+    EventsExchange,
     ExchangeAddresses,
-    UnwEthAddresses,
+    OrderBook,
     OrderDetail,
     Orders,
-    UserEventsExchange,
-    EventsExchange,
+    OrderSubmission,
+    UnwEthAddresses,
     UserEventsAllExchanges,
+    UserEventsExchange,
 )
-
 from .messaging.resources import PostMessage
-from .tokens.resources import TokenAddresses, EventsToken, TokenBalance, UserEventsToken
 from .pushservice.resources import AddClientToken, DeleteClientToken
+from .resources import (
+    Balance,
+    Block,
+    CloseTrustline,
+    ContactList,
+    DeployIdentity,
+    EventsNetwork,
+    GraphDump,
+    GraphImage,
+    IdentityInfos,
+    MaxCapacityPath,
+    Network,
+    NetworkList,
+    Path,
+    Relay,
+    RelayMetaTransaction,
+    RequestEther,
+    TransactionInfos,
+    Trustline,
+    TrustlineList,
+    User,
+    UserEvents,
+    UserEventsNetwork,
+    UserList,
+    Version,
+)
+from .streams.app import MessagingWebSocketRPCHandler, WebSocketRPCHandler
+from .tokens.resources import EventsToken, TokenAddresses, TokenBalance, UserEventsToken
 
 
 class AddressConverter(BaseConverter):

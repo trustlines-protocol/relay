@@ -1,12 +1,14 @@
 #! /usr/bin/env pytest
 """test the cost accumulators, SenderPaysCostAccumulatorSnapshot and ReceiverPaysCostAccumulatorSnapshot
 """
-import pytest
-import attr
-from relay.network_graph import graph, alg
-import networkx as nx
-from relay.network_graph.trustline_data import set_balance, set_creditline
 from typing import List
+
+import attr
+import networkx as nx
+import pytest
+
+from relay.network_graph import alg, graph
+from relay.network_graph.trustline_data import set_balance, set_creditline
 
 
 def zero_edge_data():

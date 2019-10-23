@@ -2,7 +2,7 @@ from typing import Tuple
 
 from eth_keys import keys
 from eth_keys.exceptions import BadSignature
-from eth_utils import decode_hex, keccak, is_0x_prefixed
+from eth_utils import decode_hex, is_0x_prefixed, keccak
 
 
 def pack(*args) -> bytes:

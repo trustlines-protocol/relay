@@ -1,13 +1,13 @@
-from marshmallow import Schema, fields, post_load, ValidationError
+from marshmallow import Schema, ValidationError, fields, post_load
 from marshmallow_oneofschema import OneOfSchema
-
-from .fields import Address, BigInteger, HexBytes, HexEncodedBytes, FeePayerField
-
-from relay.blockchain.unw_eth_events import UnwEthEvent
-from relay.blockchain.exchange_events import ExchangeEvent
-from relay.blockchain.currency_network_events import CurrencyNetworkEvent
-from relay.network_graph.payment_path import PaymentPath
 from tldeploy import identity
+
+from relay.blockchain.currency_network_events import CurrencyNetworkEvent
+from relay.blockchain.exchange_events import ExchangeEvent
+from relay.blockchain.unw_eth_events import UnwEthEvent
+from relay.network_graph.payment_path import PaymentPath
+
+from .fields import Address, BigInteger, FeePayerField, HexBytes, HexEncodedBytes
 
 
 class MetaTransactionSchema(Schema):

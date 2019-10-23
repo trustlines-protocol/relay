@@ -1,22 +1,22 @@
 # Make external libs work with gevent, but still enable real threading
-from gevent import monkey
+from gevent import monkey  # isort:skip
 
-monkey.patch_all(thread=False)  # noqa: E702
+monkey.patch_all(thread=False)  # noqa: E702 isort:skip
 # Make postgresql usable with gevent
-import psycogreen.gevent
+import psycogreen.gevent  # isort:skip
 
-psycogreen.gevent.patch_psycopg()  # noqa: E702
+psycogreen.gevent.patch_psycopg()  # noqa: E702 isort:skip
 import logging
 
 import click
 from gevent.pywsgi import WSGIServer
 from geventwebsocket.handler import WebSocketHandler
+
+from relay.logger import get_logger
+from relay.relay import TrustlinesRelay
 from relay.utils import get_version
 
-from relay.relay import TrustlinesRelay
-from relay.logger import get_logger
 from .api.app import ApiApp
-
 
 logger = get_logger("trustlines", logging.DEBUG)
 

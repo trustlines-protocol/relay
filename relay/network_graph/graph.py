@@ -1,32 +1,30 @@
 import csv
 import io
 import math
-from typing import Iterable, Any, NamedTuple
+from typing import Any, Iterable, NamedTuple
 
 import networkx as nx
 
+from relay.network_graph.graph_constants import balance_ab, creditline_ab, creditline_ba
 from relay.network_graph.trustline_data import (
     get_balance,
-    set_balance,
-    get_mtime,
-    set_mtime,
     get_creditline,
-    set_creditline,
-    get_interest_rate,
-    set_interest_rate,
-    get_is_frozen,
-    set_is_frozen,
     get_fees_outstanding,
+    get_interest_rate,
+    get_is_frozen,
+    get_mtime,
+    set_balance,
+    set_creditline,
     set_fees_outstanding,
+    set_interest_rate,
+    set_is_frozen,
+    set_mtime,
 )
 
-from .payment_path import PaymentPath, FeePayer
-
-from .fees import calculate_fees_reverse, calculate_fees, imbalance_generated
-from .interests import balance_with_interests
-from relay.network_graph.graph_constants import creditline_ab, creditline_ba, balance_ab
-
 from . import alg
+from .fees import calculate_fees, calculate_fees_reverse, imbalance_generated
+from .interests import balance_with_interests
+from .payment_path import FeePayer, PaymentPath
 
 
 class NetworkGraphConfig(NamedTuple):

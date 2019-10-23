@@ -1,9 +1,10 @@
 """graph algorithms"""
 
-import heapq
-from typing import List, Set, Dict, Callable, Iterable
-import networkx as nx
 import abc
+import heapq
+from typing import Callable, Dict, Iterable, List, Set
+
+import networkx as nx
 
 
 class CostAccumulator(metaclass=abc.ABCMeta):

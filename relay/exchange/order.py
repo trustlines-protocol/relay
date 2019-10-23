@@ -3,8 +3,7 @@ from collections import namedtuple
 import hexbytes
 from eth_utils import is_checksum_address
 
-from relay.signing import keccak256, eth_sign, eth_validate
-
+from relay.signing import eth_sign, eth_validate, keccak256
 
 EcSignature = namedtuple("EcSignature", "v r s")
 

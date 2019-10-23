@@ -1,14 +1,14 @@
-from typing import Tuple, Sequence, Optional
+from typing import Optional, Sequence, Tuple
 
 import hexbytes
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy import Column, Integer, String, Float, BigInteger
-from sqlalchemy.orm import sessionmaker
 from eth_utils.hexadecimal import remove_0x_prefix
+from sqlalchemy import BigInteger, Column, Float, Integer, String
+from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm import sessionmaker
 
-from .order import Order
 from relay.concurrency_utils import synchronized
 
+from .order import Order
 
 Base = declarative_base()
 

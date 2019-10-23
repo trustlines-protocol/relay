@@ -1,11 +1,11 @@
-from typing import Iterable
 from collections import namedtuple
-
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy import Column, String
-from sqlalchemy.orm import sessionmaker
-from sqlalchemy.exc import IntegrityError
 from contextlib import contextmanager
+from typing import Iterable
+
+from sqlalchemy import Column, String
+from sqlalchemy.exc import IntegrityError
+from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm import sessionmaker
 
 Base = declarative_base()
 

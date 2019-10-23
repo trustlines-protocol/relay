@@ -4,8 +4,8 @@ from flask_restful import Resource
 from webargs import fields
 from webargs.flaskparser import use_args
 
-from relay.relay import TrustlinesRelay
 from relay.events import MessageEvent
+from relay.relay import TrustlinesRelay
 
 
 class PostMessage(Resource):

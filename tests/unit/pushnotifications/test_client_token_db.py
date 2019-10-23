@@ -1,10 +1,9 @@
 import pytest
-
 from sqlalchemy import create_engine
 
 from relay.pushservice.client_token_db import (
-    ClientTokenDB,
     ClientTokenAlreadyExistsException,
+    ClientTokenDB,
 )
 
 

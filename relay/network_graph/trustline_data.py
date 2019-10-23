@@ -7,11 +7,11 @@ from relay.network_graph.graph_constants import (
     balance_ab,
     creditline_ab,
     creditline_ba,
+    fees_outstanding_a,
+    fees_outstanding_b,
     interest_ab,
     interest_ba,
     is_frozen,
-    fees_outstanding_a,
-    fees_outstanding_b,
     m_time,
 )
 

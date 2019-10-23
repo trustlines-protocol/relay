@@ -221,6 +221,56 @@ jobs:
             cd end2end
             ./run-e2e.sh
 
+  pre-commit-checks:
+    executor: ubuntu-builder
+    steps:
+      - checkout
+      - run:
+          name: Configuring PATH
+          command: |
+            echo 'export PATH=~/bin:~/repo/venv/bin:${PATH}' >> ${BASH_ENV}
+      - run:
+          name: Create python virtualenv
+          command: |
+            python3 -m venv venv
+            pip install -c constraints.txt pip wheel setuptools
+      - run:
+          name: Install pre-commit
+          command: |
+            pip install -c constraints.txt pre-commit
+      - run:
+          name: Check for large files
+          command: |
+            pre-commit run -a check-added-large-files
+      - run:
+          name: Check byte order mark
+          command: |
+            pre-commit run -a check-byte-order-marker
+      - run:
+          name: Check merge conflict
+          command: |
+            pre-commit run -a check-merge-conflict
+      - run:
+          name: Check json files
+          command: |
+            pre-commit run -a check-json
+      - run:
+          name: Check yaml files
+          command: |
+            pre-commit run -a check-yaml
+      - run:
+          name: Run end-of-file-fixer
+          command: |
+            pre-commit run -a end-of-file-fixer
+      - run:
+          name: Run trailing-whitespace fixer
+          command: |
+            pre-commit run -a trailing-whitespace
+      - run:
+          name: Run isort
+          command: |
+            pre-commit run -a isort
+
 workflows:
   version: 2
   default:
@@ -245,6 +295,10 @@ workflows:
           filters:
             <<: *tagged-filter
 
+      - pre-commit-checks:
+          filters:
+            <<: *tagged-filter
+
       - run-pytest:
           requires:
             - install
@@ -261,6 +315,7 @@ workflows:
           requires:
             - run-flake8
             - run-black
+            - pre-commit-checks
             - run-pytest
             - run-mypy
             - build-sdist
@@ -288,6 +343,7 @@ workflows:
           requires:
             - run-flake8
             - run-black
+            - pre-commit-checks
             - run-pytest
             - run-mypy
             - install

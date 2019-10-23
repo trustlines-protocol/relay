@@ -1,7 +1,7 @@
 from functools import wraps
 
-from tinyrpc.protocols.jsonrpc import JSONRPCInvalidParamsError
 from marshmallow import ValidationError
+from tinyrpc.protocols.jsonrpc import JSONRPCInvalidParamsError
 
 
 def validating_rpc_caller(method, args, kwargs, client):

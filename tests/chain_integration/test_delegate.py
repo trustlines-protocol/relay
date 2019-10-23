@@ -1,22 +1,21 @@
 #! pytest
-import pytest
 import attr
+import pytest
+from hexbytes import HexBytes
 from tldeploy.identity import (
-    MetaTransaction,
     Identity,
-    deploy_proxied_identity,
+    MetaTransaction,
     deploy_identity_implementation,
     deploy_identity_proxy_factory,
+    deploy_proxied_identity,
 )
 from web3 import Web3
 
 from relay.blockchain.delegate import (
     Delegate,
-    InvalidMetaTransactionException,
     InvalidIdentityContractException,
+    InvalidMetaTransactionException,
 )
-
-from hexbytes import HexBytes
 
 
 @pytest.fixture(scope="session")

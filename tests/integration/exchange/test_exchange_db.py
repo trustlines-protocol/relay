@@ -2,8 +2,8 @@ from typing import Sequence
 
 import pytest
 
-from relay.exchange.order import Order
 from relay.exchange.exchange_db import OrderBookDB
+from relay.exchange.order import Order
 
 
 @pytest.fixture()
