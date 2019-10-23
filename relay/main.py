@@ -7,9 +7,11 @@ import psycogreen.gevent  # isort:skip
 
 psycogreen.gevent.patch_psycopg()  # noqa: E702 isort:skip
 import logging
+import logging.config
 import os
 
 import click
+import toml
 from gevent.pywsgi import WSGIServer
 from geventwebsocket.handler import WebSocketHandler
 
@@ -49,6 +51,23 @@ def patch_warnings_module():
     warnings.simplefilter = simplefilter
     logger.info(
         "the warnings module has been patched. You will not see the DeprecationWarning messages from web3"
+    )
+
+
+def configure_logging(config):
+    """configure the logging subsystem via the 'logging' key in the TOML config"""
+    try:
+        logging_dict = {"version": 1, "incremental": True}
+        logging_dict.update(config.get("logging", {}))
+        logging.config.dictConfig(logging_dict)
+    except (ValueError, TypeError, AttributeError, ImportError) as err:
+        click.echo(
+            f"Error configuring logging: {err}\n" "Please check your configuration file"
+        )
+        raise click.Abort()
+
+    logger.debug(
+        "Initialized logging system with the following config: %r", logging_dict
     )
 
 
@@ -92,9 +111,16 @@ def main(ctx, port, config, addresses, version):
         format="%(asctime)s[%(levelname)s] %(name)s: %(message)s",
         level=os.environ.get("LOGLEVEL", "INFO").upper(),
     )
-    logger.info("Starting relay server version %s", get_version())
+
     # silence warnings from urllib3, see github issue 246
     logging.getLogger("urllib3.connectionpool").setLevel(logging.CRITICAL)
+
+    logger.info("Starting relay server version %s", get_version())
+
+    with open(config) as config_file:
+        config_dict = toml.load(config_file)
+    configure_logging(config_dict)
+
     trustlines = TrustlinesRelay(config_toml_path=config, addresses_json_path=addresses)
     trustlines.start()
     ipport = ("", port)
