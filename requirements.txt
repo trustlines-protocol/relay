@@ -21,6 +21,7 @@ psycogreen
 wrapt
 attrs
 click
+toml
 
 # --- development dependencies, i.e. dependencies not needed for running tl-relay
 black

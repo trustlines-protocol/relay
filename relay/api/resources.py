@@ -21,7 +21,6 @@ from relay.blockchain.delegate import (
 )
 from relay.blockchain.unw_eth_proxy import UnwEthProxy
 from relay.concurrency_utils import TimeoutException
-from relay.logger import get_logger
 from relay.network_graph.payment_path import FeePayer, PaymentPath
 from relay.relay import TrustlinesRelay
 from relay.utils import get_version, sha3
@@ -39,7 +38,7 @@ from .schemas import (
     UserCurrencyNetworkEventSchema,
 )
 
-logger = get_logger("api.resources", logging.DEBUG)
+logger = logging.getLogger("api.resources")
 
 
 TIMEOUT_MESSAGE = "The server could not handle the request in time"

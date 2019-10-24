@@ -6,7 +6,6 @@ from typing import List
 import relay.concurrency_utils as concurrency_utils
 from relay.blockchain.events import BlockchainEvent
 from relay.exchange.order import Order
-from relay.logger import get_logger
 
 from .exchange_events import (
     ExchangeEvent,
@@ -18,7 +17,7 @@ from .exchange_events import (
 )
 from .proxy import Proxy, sorted_events
 
-logger = get_logger("token", logging.DEBUG)
+logger = logging.getLogger("token")
 
 
 class ExchangeProxy(Proxy):

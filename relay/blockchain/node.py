@@ -3,12 +3,11 @@ import os
 from collections import namedtuple
 
 from relay.concurrency_utils import synchronized
-from relay.logger import get_logger
 
 TxInfos = namedtuple("TxInfos", "balance, nonce, gas_price")
 
 
-logger = get_logger("node", logging.DEBUG)
+logger = logging.getLogger("node")
 
 
 class Node:

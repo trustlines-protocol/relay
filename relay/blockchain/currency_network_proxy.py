@@ -8,7 +8,6 @@ import gevent
 import hexbytes
 
 import relay.concurrency_utils as concurrency_utils
-from relay.logger import get_logger
 from relay.network_graph.payment_path import FeePayer, PaymentPath
 
 from .currency_network_events import (
@@ -39,7 +38,7 @@ class Trustline(NamedTuple):
     balance: int = 0
 
 
-logger = get_logger("currency network", logging.DEBUG)
+logger = logging.getLogger("currency network")
 
 
 class CurrencyNetworkProxy(Proxy):

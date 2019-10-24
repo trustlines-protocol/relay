@@ -44,11 +44,10 @@ from .blockchain.token_proxy import TokenProxy
 from .blockchain.unw_eth_proxy import UnwEthProxy
 from .events import BalanceEvent, NetworkBalanceEvent
 from .exchange.orderbook import OrderBookGreenlet
-from .logger import get_logger
 from .network_graph.graph import CurrencyNetworkGraph
 from .streams import MessagingSubject, Subject
 
-logger = get_logger("relay", logging.DEBUG)
+logger = logging.getLogger("relay")
 
 
 class TokenNotFoundException(Exception):
@@ -56,16 +55,15 @@ class TokenNotFoundException(Exception):
 
 
 class TrustlinesRelay:
-    def __init__(
-        self, config_json_path="config.json", addresses_json_path="addresses.json"
-    ):
-        self.config_json_path = config_json_path
+    def __init__(self, config=None, addresses_json_path="addresses.json"):
+        if config is None:
+            config = {}
+        self.config = config
         self.addresses_json_path = addresses_json_path
         self.currency_network_proxies: Dict[str, CurrencyNetworkProxy] = {}
         self.currency_network_graphs: Dict[str, CurrencyNetworkGraph] = {}
         self.subjects = defaultdict(Subject)
         self.messaging = defaultdict(MessagingSubject)
-        self.config = {}
         self.contracts = {}
         self.node: Node = None
         self._web3 = None
@@ -206,7 +204,7 @@ class TrustlinesRelay:
         }
 
     def start(self):
-        self._load_config()
+        self._load_gas_price_settings(self.config.get("gasPriceComputation", {}))
         self._load_contracts()
         self._load_orderbook()
         self._start_push_service()
@@ -555,11 +553,6 @@ class TrustlinesRelay:
         )
         results = concurrency_utils.joinall(exchange_event_queries, timeout=timeout)
         return sorted_events(list(itertools.chain.from_iterable(results)))
-
-    def _load_config(self):
-        with open(self.config_json_path) as data_file:
-            self.config = json.load(data_file)
-        self._load_gas_price_settings(self.config.get("gasPriceComputation", {}))
 
     def _load_gas_price_settings(self, gas_price_settings: Dict):
         method = gas_price_settings.get("method", "rpc")

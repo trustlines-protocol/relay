@@ -175,7 +175,7 @@ deployed your own contracts, please copy addresses.json to `~`.
 We will also need a config file. You can use the one from the git checkout:
 
 ```
-cp ~/relay/config.json ~
+cp ~/relay/config.toml ~
 ```
 
 The relay server reads both files from the current directory per default,

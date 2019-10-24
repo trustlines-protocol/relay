@@ -6,19 +6,22 @@ monkey.patch_all(thread=False)  # noqa: E702 isort:skip
 import psycogreen.gevent  # isort:skip
 
 psycogreen.gevent.patch_psycopg()  # noqa: E702 isort:skip
+import json
 import logging
+import logging.config
+import os
 
 import click
+import toml
 from gevent.pywsgi import WSGIServer
 from geventwebsocket.handler import WebSocketHandler
 
-from relay.logger import get_logger
 from relay.relay import TrustlinesRelay
 from relay.utils import get_version
 
 from .api.app import ApiApp
 
-logger = get_logger("trustlines", logging.DEBUG)
+logger = logging.getLogger("trustlines")
 
 
 def patch_warnings_module():
@@ -52,6 +55,23 @@ def patch_warnings_module():
     )
 
 
+def configure_logging(config):
+    """configure the logging subsystem via the 'logging' key in the TOML config"""
+    try:
+        logging_dict = {"version": 1, "incremental": True}
+        logging_dict.update(config.get("logging", {}))
+        logging.config.dictConfig(logging_dict)
+    except (ValueError, TypeError, AttributeError, ImportError) as err:
+        click.echo(
+            f"Error configuring logging: {err}\n" "Please check your configuration file"
+        )
+        raise click.Abort()
+
+    logger.debug(
+        "Initialized logging system with the following config: %r", logging_dict
+    )
+
+
 def _show_version(ctx, param, value):
     """handle --version argumemt
 
@@ -67,8 +87,8 @@ def _show_version(ctx, param, value):
 @click.option("--port", default=5000, show_default=True, help="port to listen on")
 @click.option(
     "--config",
-    default="config.json",
-    help="path to json configuration file",
+    default="config.toml",
+    help="path to toml configuration file",
     show_default=True,
     type=click.Path(exists=True, dir_okay=False),
 )
@@ -88,10 +108,28 @@ def _show_version(ctx, param, value):
 @click.pass_context
 def main(ctx, port, config, addresses, version):
     """run the relay server"""
-    logger.info("Starting relay server version %s", get_version())
+    logging.basicConfig(
+        format="%(asctime)s[%(levelname)s] %(name)s: %(message)s",
+        level=os.environ.get("LOGLEVEL", "INFO").upper(),
+    )
+
     # silence warnings from urllib3, see github issue 246
-    get_logger("urllib3.connectionpool", level=logging.CRITICAL)
-    trustlines = TrustlinesRelay(config_json_path=config, addresses_json_path=addresses)
+    logging.getLogger("urllib3.connectionpool").setLevel(logging.CRITICAL)
+
+    logger.info("Starting relay server version %s", get_version())
+
+    # we still handle the json file for now. This will be removed
+    # soon. But it's nice to see the end2end tests succeed.
+    with open(config) as config_file:
+        if config.lower().endswith(".json"):
+            config_dict = {"relay": json.load(config_file)}
+        else:
+            config_dict = toml.load(config_file)
+    configure_logging(config_dict)
+
+    trustlines = TrustlinesRelay(
+        config=config_dict["relay"], addresses_json_path=addresses
+    )
     trustlines.start()
     ipport = ("", port)
     app = ApiApp(trustlines)

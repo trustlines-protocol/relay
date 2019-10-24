@@ -13,11 +13,10 @@ from relay.blockchain.currency_network_events import (
 )
 from relay.blockchain.events import TLNetworkEvent
 from relay.events import AccountEvent, Event, MessageEvent
-from relay.logger import get_logger
 
 from .client_token_db import ClientTokenDB
 
-logger = get_logger("pushservice", logging.DEBUG)
+logger = logging.getLogger("pushservice")
 
 
 # see https://firebase.google.com/docs/cloud-messaging/admin/errors

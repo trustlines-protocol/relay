@@ -4,7 +4,6 @@ import logging
 from typing import List
 
 import relay.concurrency_utils as concurrency_utils
-from relay.logger import get_logger
 
 from .events import BlockchainEvent
 from .proxy import Proxy, sorted_events
@@ -16,7 +15,7 @@ from .token_events import (
     standard_event_types,
 )
 
-logger = get_logger("token", logging.DEBUG)
+logger = logging.getLogger("token")
 
 
 class TokenProxy(Proxy):
