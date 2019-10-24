@@ -103,11 +103,8 @@ def payment_path(request):
     path = []
     value = 1
     fee_payer = request.param
-    estimated_gas = 0
 
-    return PaymentPath(
-        cost, path, value, fee_payer=fee_payer, estimated_gas=estimated_gas
-    )
+    return PaymentPath(cost, path, value, fee_payer=fee_payer)
 
 
 def test_payment_path_roundtrip(payment_path):
