@@ -855,9 +855,7 @@ def test_close_trustline_zero_balance(complex_community_with_trustlines_and_fees
     result = complex_community_with_trustlines_and_fees.close_trustline_path_triangulation(
         timestamp=int(time.time()), source=C, target=H
     )
-    assert result == PaymentPath(
-        fee=0, path=[], value=0, estimated_gas=None, fee_payer=FeePayer.SENDER
-    )
+    assert result == PaymentPath(fee=0, path=[], value=0, fee_payer=FeePayer.SENDER)
 
 
 def test_close_trustline_positive_balance(complex_community_with_trustlines_and_fees):
@@ -867,11 +865,7 @@ def test_close_trustline_positive_balance(complex_community_with_trustlines_and_
         timestamp=int(time.time()), source=C, target=H
     )
     assert result == PaymentPath(
-        fee=198,
-        path=[C, H, G, F, E, D, C],
-        value=5000,
-        estimated_gas=None,
-        fee_payer=FeePayer.RECEIVER,
+        fee=198, path=[C, H, G, F, E, D, C], value=5000, fee_payer=FeePayer.RECEIVER
     )
 
 
@@ -882,11 +876,7 @@ def test_close_trustline_negative_balance(complex_community_with_trustlines_and_
         timestamp=int(time.time()), source=C, target=H
     )
     assert result == PaymentPath(
-        fee=261,
-        path=[C, D, E, F, G, H, C],
-        value=5000,
-        estimated_gas=None,
-        fee_payer=FeePayer.SENDER,
+        fee=261, path=[C, D, E, F, G, H, C], value=5000, fee_payer=FeePayer.SENDER
     )
 
 
@@ -904,11 +894,7 @@ def test_close_trustline_with_cost_exact_amount(
         timestamp=int(time.time()), source=A, target=B
     )
     assert result == PaymentPath(
-        fee=309,
-        path=[A, C, D, B, A],
-        value=10000,
-        estimated_gas=None,
-        fee_payer=FeePayer.SENDER,
+        fee=309, path=[A, C, D, B, A], value=10000, fee_payer=FeePayer.SENDER
     )
 
 
