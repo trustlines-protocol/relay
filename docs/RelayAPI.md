@@ -333,7 +333,7 @@ curl --header "Content-Type: application/json" \
 ---
 
 ### Transfer path in currency network
-Returns the cheapest path, the estimated gas costs and maximal fees for a transfer.
+Returns the cheapest path and maximal fees for a transfer.
 #### Request
 ```
 POST /networks/:networkAddress/path-info
@@ -351,7 +351,6 @@ POST /networks/:networkAddress/path-info
 |maxFees|string|NO|Upper bound for transfer fees|
 |maxHops|string|NO|Upper bound for hops in transfer path|
 |feePayer|string|NO|Either `sender` or `receiver`|
-|extraData|string|NO|Hex encoded extra data string "0x"|
 #### Example Request
 ```bash
 curl --header "Content-Type: application/json" \
@@ -366,7 +365,6 @@ curl --header "Content-Type: application/json" \
 |value|int|Transfer amount in smallest unit|
 |feePayer|string|Either `sender` or `receiver`|
 |fees|string|Maximal transfer fees|
-|estimatedGas|int|Estimated gas costs for transfer|
 #### Example Response
 ```json
 {
@@ -376,8 +374,7 @@ curl --header "Content-Type: application/json" \
   ],
   "value": 1000,
   "fees": "2",
-  "feePayer": "sender",
-  "estimatedGas": 76324
+  "feePayer": "sender"
 }
 ```
 
@@ -385,7 +382,7 @@ curl --header "Content-Type: application/json" \
 
 ### Closing trustline path in currency network
 This endpoint is used in preparation for closing a trustline. It returns the
-cheapest path, the estimated gas costs and fees and a value for a payment,
+cheapest path, the fees and a value for a payment,
 which reduces the balance to zero. At the moment this only works for negative
 balances.
 
@@ -417,14 +414,12 @@ https://relay0.testnet.trustlines.network/api/v1/networks/0xc5F45B680e81759E3FBc
 |--------------|----------|-------------------------------------------|
 | path         | string[] | Addresses of users on transfer path       |
 | fees         | string   | Estimated transfer fees                   |
-| estimatedGas | int      | Estimated gas costs for transfer          |
 | value        | string   | Amount to be transferred in smallest unit |
 | feePayer     | string   | Either `sender` or `receiver` |
 
 #### Example Response
 ```json
 {
-    "estimatedGas": "175165",
     "fees": "6",
     "path": [
         "0x186ec4A5E2c9Ed2B392599843375383D40C94F57",
