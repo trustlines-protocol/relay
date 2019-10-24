@@ -15,4 +15,3 @@ class PaymentPath:
     path: List
     value: int
     fee_payer: FeePayer
-    estimated_gas: int = attr.ib(default=None)

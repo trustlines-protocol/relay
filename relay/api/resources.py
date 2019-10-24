@@ -2,7 +2,6 @@ import logging
 import tempfile
 import time
 
-import hexbytes
 import wrapt
 from flask import abort, make_response, request, send_file
 from flask.views import MethodView
@@ -427,30 +426,6 @@ class Factories(Resource):
         return self.trustlines.known_identity_factories
 
 
-def _fill_estimated_gas_in_payment_path(
-    trustlines: TrustlinesRelay,
-    payment_path: PaymentPath,
-    network_address: str,
-    extra_data: hexbytes.HexBytes = hexbytes.HexBytes(b""),
-) -> PaymentPath:
-    proxy = trustlines.currency_network_proxies[network_address]
-    try:
-        payment_path.estimated_gas = proxy.estimate_gas_for_payment_path(
-            payment_path, extra_data
-        )
-    except ValueError:
-        # should mean out of gas, so path was not right.
-        return PaymentPath(
-            fee=0,
-            path=[],
-            value=payment_path.value,
-            estimated_gas=0,
-            fee_payer=payment_path.fee_payer,
-        )
-
-    return payment_path
-
-
 class Path(Resource):
     def __init__(self, trustlines: TrustlinesRelay) -> None:
         self.trustlines = trustlines
@@ -462,7 +437,6 @@ class Path(Resource):
         "from": custom_fields.Address(required=True),
         "to": custom_fields.Address(required=True),
         "feePayer": custom_fields.FeePayerField(require=False, missing="sender"),
-        "extraData": custom_fields.HexEncodedBytes(required=False, missing="0x"),
     }
 
     @use_args(args)
@@ -477,7 +451,6 @@ class Path(Resource):
         max_fees = args["maxFees"]
         max_hops = args["maxHops"]
         fee_payer = FeePayer(args["feePayer"])
-        extra_data = args["extraData"]
 
         if fee_payer == FeePayer.SENDER:
             cost, path = self.trustlines.currency_network_graphs[
@@ -506,14 +479,7 @@ class Path(Resource):
                 f"feePayer has to be one of {[fee_payer.name for fee_payer in FeePayer]}: {fee_payer}"
             )
 
-        payment_path = _fill_estimated_gas_in_payment_path(
-            self.trustlines,
-            PaymentPath(cost, path, value, fee_payer=fee_payer),
-            network_address,
-            extra_data,
-        )
-
-        return payment_path
+        return PaymentPath(cost, path, value, fee_payer=fee_payer)
 
 
 # CloseTrustline is similar to the above ReduceDebtPath, though it does not
@@ -551,24 +517,6 @@ class CloseTrustline(Resource):
             max_hops=max_hops,
             max_fees=max_fees,
         )
-
-        proxy = self.trustlines.currency_network_proxies[network_address]
-        try:
-            payment_path.estimated_gas = proxy.estimate_gas_for_close_trustline(
-                source=source,
-                other_party=target,
-                max_fee=max_fees or 2 ** 32 - 1,
-                path=payment_path.path,
-            )
-        except ValueError:
-            # should mean out of gas, so path was not right.
-            return PaymentPath(
-                fee=0,
-                path=[],
-                value=payment_path.value,
-                fee_payer=FeePayer.SENDER,
-                estimated_gas=0,
-            )
 
         return payment_path
 
