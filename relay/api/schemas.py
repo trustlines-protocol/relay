@@ -209,4 +209,3 @@ class PaymentPathSchema(Schema):
     path = fields.List(Address(), required=True)
     value = BigInteger()
     feePayer = FeePayerField(required=True, attribute="fee_payer")
-    estimatedGas = BigInteger(attribute="estimated_gas")
