@@ -27,6 +27,7 @@ from .resources import (
     ContactList,
     DeployIdentity,
     EventsNetwork,
+    Factories,
     GraphDump,
     GraphImage,
     IdentityInfos,
@@ -123,6 +124,7 @@ def ApiApp(trustlines):
         add_resource(DeployIdentity, "/identities")
 
     add_resource(IdentityInfos, "/identities/<address:identity_address>")
+    add_resource(Factories, "/factories")
     add_resource(OrderBook, "/exchange/orderbook")
     add_resource(Orders, "/exchange/orders")
     add_resource(OrderSubmission, "/exchange/order")

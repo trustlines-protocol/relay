@@ -18,6 +18,7 @@ from relay.blockchain.delegate import (
     IdentityDeploymentFailedException,
     InvalidIdentityContractException,
     InvalidMetaTransactionException,
+    UnknownIdentityFactoryException,
 )
 from relay.blockchain.unw_eth_proxy import UnwEthProxy
 from relay.concurrency_utils import TimeoutException
@@ -396,6 +397,11 @@ class DeployIdentity(Resource):
             identity_contract_address = self.trustlines.deploy_identity(
                 factory_address, implementation_address, signature
             )
+        except UnknownIdentityFactoryException as exception:
+            abort(
+                400,
+                f"The identity deployment was rejected, unknown factory: {exception.args}",
+            )
         except IdentityDeploymentFailedException:
             abort(400, "The identity deployment failed, identity already deployed?")
         return self.trustlines.get_identity_info(identity_contract_address)
@@ -411,6 +417,14 @@ class IdentityInfos(Resource):
             return self.trustlines.get_identity_info(identity_address)
         except InvalidIdentityContractException:
             abort(404, "Identity Contract not found or invalid")
+
+
+class Factories(Resource):
+    def __init__(self, trustlines: TrustlinesRelay) -> None:
+        self.trustlines = trustlines
+
+    def get(self):
+        return self.trustlines.known_identity_factories
 
 
 def _fill_estimated_gas_in_payment_path(

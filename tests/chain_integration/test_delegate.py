@@ -24,9 +24,11 @@ def delegate_address(web3):
 
 
 @pytest.fixture(scope="session")
-def delegate(web3, delegate_address, contracts):
+def delegate(web3, delegate_address, contracts, proxy_factory):
     identity_contract_abi = contracts["Identity"]["abi"]
-    return Delegate(web3, delegate_address, identity_contract_abi)
+    return Delegate(
+        web3, delegate_address, identity_contract_abi, [proxy_factory.address]
+    )
 
 
 @pytest.fixture(scope="session")
