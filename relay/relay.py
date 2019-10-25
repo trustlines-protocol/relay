@@ -73,6 +73,7 @@ class TrustlinesRelay:
         self._firebase_raw_push_service: Optional[FirebaseRawPushService] = None
         self._client_token_db: Optional[ClientTokenDB] = None
         self.fixed_gas_price: Optional[int] = None
+        self.known_identity_factories: List[str] = []
 
     @property
     def network_addresses(self) -> Iterable[str]:
@@ -217,7 +218,10 @@ class TrustlinesRelay:
         self._web3 = Web3(Web3.HTTPProvider(url))
         self.node = Node(self._web3, fixed_gas_price=self.fixed_gas_price)
         self.delegate = Delegate(
-            self._web3, self.node.address, self.contracts["Identity"]["abi"]
+            self._web3,
+            self.node.address,
+            self.contracts["Identity"]["abi"],
+            self.known_identity_factories,
         )
         self._start_listen_on_new_addresses()
 
@@ -267,6 +271,13 @@ class TrustlinesRelay:
             self.token_proxies[address] = TokenProxy(
                 self._web3, self.contracts["Token"]["abi"], address
             )
+
+    def new_known_factory(self, address: str) -> None:
+        logger.info("New identity factory contract: {}".format(address))
+        assert is_checksum_address(address)
+        if address not in self.known_identity_factories:
+            logger.info("New identity factory contract: {}".format(address))
+            self.known_identity_factories.append(address)
 
     def get_networks_of_user(self, user_address: str) -> List[str]:
         assert is_checksum_address(user_address)
@@ -600,6 +611,12 @@ class TrustlinesRelay:
         new_unw_eth_address = addresses.get("unwEth", None)
         if new_unw_eth_address is not None:
             self.new_unw_eth(to_checksum_address(new_unw_eth_address))
+        known_factories = addresses.get("identityProxyFactory", [])
+        if type(known_factories) is list:
+            for address in known_factories:
+                self.new_known_factory(address)
+        else:
+            self.new_known_factory(known_factories)
 
     def _start_listen_network(self, address):
         assert is_checksum_address(address)

@@ -8,13 +8,13 @@ from tldeploy.identity import (
 
 
 class Delegate:
-    def __init__(self, web3, node_address, identity_contract_abi):
-
+    def __init__(self, web3, node_address, identity_contract_abi, known_factories):
         self._web3 = web3
 
         self.delegate = DelegateImplementation(
             node_address, web3=web3, identity_contract_abi=identity_contract_abi
         )
+        self.known_factories = known_factories
 
     def send_signed_meta_transaction(self, signed_meta_transaction: MetaTransaction):
         try:
@@ -28,6 +28,8 @@ class Delegate:
             raise InvalidMetaTransactionException
 
     def deploy_identity(self, factory_address, implementation_address, signature):
+        if factory_address not in self.known_factories:
+            raise UnknownIdentityFactoryException(factory_address)
         try:
             # when getting an address via contract.address, the address might not be a checksummed address
             return self._web3.toChecksumAddress(
@@ -54,4 +56,8 @@ class InvalidMetaTransactionException(Exception):
 
 
 class IdentityDeploymentFailedException(Exception):
+    pass
+
+
+class UnknownIdentityFactoryException(Exception):
     pass
