@@ -43,6 +43,7 @@ https://relay0.testnet.trustlines.network/api/v1
 - [Relay transaction](#relay-transaction)
 - [Relay meta transaction](#relay-meta-transaction)
 - [Deploy identity contract](#deploy-identity-contract)
+- [Get authorized identity factories](#get-authorized-identity-factories)
 - [Get identity information](#get-identity-information)
 - [Get relay version](#get-relay-version)
 
@@ -897,6 +898,25 @@ The endpoint returns an object with the following fields:
 #### Example Response
 ```json
 {"identity": "0x43950642C8685ED8e3Fb89a5C5aeCb12862A87fd", "nextNonce": 0, "balance": "0"}
+```
+
+### Get authorized identity factories
+#### Request
+```
+GET /factories
+```
+
+#### Example Request
+```bash
+curl https://relay0.testnet.trustlines.network/api/v1/factories
+```
+
+#### Response
+`string[]`: list of known identity factories through which identity deployment is possible
+
+#### Example Response
+```
+["0x43950642C8685ED8e3Fb89a5C5aeCb12862A87fd"]
 ```
 
 ### Get identity information
