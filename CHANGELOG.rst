@@ -1,10 +1,15 @@
 ==========
 Change Log
 ==========
-`0.10.0`_ (not released yet)
+`0.11.0`_ (unreleased)
 -------------------------------
-- Use TOML as a configuration file format
-- Make logging configurable via the TOML configuration file
+`0.10.0`_ (2019-11-05)
+-------------------------------
+- Add make logging configurable via the TOML configuration file
+- Remove gas estimation on find path requests (BREAKING)
+- Change deploy identity requests are only allowed for known identity factories (BREAKING)
+- Change config file format to TOML
+- Fix an issue that identity deployment did not work when two identity 
 
 `0.9.0`_ (2019-10-05)
 -------------------------------
@@ -108,3 +113,4 @@ Change Log
 .. _0.8.1: https://github.com/trustlines-protocol/relay/compare/0.8.0...0.8.1
 .. _0.9.0: https://github.com/trustlines-protocol/relay/compare/0.8.1...0.9.0
 .. _0.10.0: https://github.com/trustlines-protocol/relay/compare/0.9.0...0.10.0
+.. _0.11.0: https://github.com/trustlines-protocol/relay/compare/0.10.0...master
