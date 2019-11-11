@@ -273,7 +273,6 @@ class TrustlinesRelay:
             )
 
     def new_known_factory(self, address: str) -> None:
-        logger.info("New identity factory contract: {}".format(address))
         assert is_checksum_address(address)
         if address not in self.known_identity_factories:
             logger.info("New identity factory contract: {}".format(address))

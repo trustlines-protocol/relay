@@ -9,7 +9,7 @@ Change Log
 - Remove gas estimation on find path requests (BREAKING)
 - Change: deploy identity requests are only allowed for known identity factories (BREAKING)
 - Change config file format to TOML
-- Fix an issue that identity deployment did not work when two identity were deployed in the same block. 
+- Fix an issue that identity deployment did not work when two identity were deployed in the same block.
 
 `0.9.0`_ (2019-10-05)
 -------------------------------
