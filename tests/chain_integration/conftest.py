@@ -20,7 +20,6 @@ NETWORK_SETTINGS = [
         "fee_divisor": 1000,
         "default_interest_rate": 0,
         "custom_interests": True,
-        "account_management_enabled": True,
         "expiration_time": EXPIRATION_TIME,
     },
     {
@@ -30,7 +29,6 @@ NETWORK_SETTINGS = [
         "fee_divisor": 0,
         "default_interest_rate": 1000,
         "custom_interests": False,
-        "account_management_enabled": True,
         "expiration_time": EXPIRATION_TIME,
     },
     {
@@ -39,7 +37,6 @@ NETWORK_SETTINGS = [
         "decimals": 0,
         "fee_divisor": 0,
         "custom_interests": False,
-        "account_management_enabled": True,
         "expiration_time": EXPIRATION_TIME,
     },
 ]
@@ -170,8 +167,8 @@ def deploy_test_network(web3):
         "T",
         6,
         fee_divisor=100,
-        account_management_enabled=True,
         expiration_time=EXPIRATION_TIME,
+        currency_network_contract_name="TestCurrencyNetwork",
     )
 
 
@@ -189,7 +186,7 @@ def contracts():
 
 @pytest.fixture(scope="session")
 def currency_network_abi(contracts):
-    return contracts["CurrencyNetwork"]["abi"]
+    return contracts["TestCurrencyNetwork"]["abi"]
 
 
 @pytest.fixture(scope="session")

@@ -44,13 +44,13 @@ def owner_key(account_keys):
 @pytest.fixture(scope="session")
 def proxy_factory(web3):
 
-    return deploy_identity_proxy_factory(web3)
+    return deploy_identity_proxy_factory(web3=web3)
 
 
 @pytest.fixture(scope="session")
 def identity_implementation(web3):
 
-    return deploy_identity_implementation(web3)
+    return deploy_identity_implementation(web3=web3)
 
 
 @pytest.fixture(scope="session")

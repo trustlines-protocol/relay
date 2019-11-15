@@ -6,8 +6,8 @@ gevent
 web3>=4.7.1
 networkx>=2.0
 pygraphviz
-trustlines-contracts-bin>=0.9.3
-trustlines-contracts-deploy>=0.9.3
+trustlines-contracts-bin>=0.10.0
+trustlines-contracts-deploy>=0.10.0
 sqlalchemy
 eth-utils
 tinyrpc
