@@ -11,6 +11,7 @@ import relay.concurrency_utils as concurrency_utils
 from .currency_network_events import (
     BalanceUpdateEventType,
     CurrencyNetworkEvent,
+    NetworkFreezeEventType,
     TransferEventType,
     TrustlineRequestEventType,
     TrustlineUpdateEventType,
@@ -61,6 +62,7 @@ class CurrencyNetworkProxy(Proxy):
         )
         # Fixed for now, see contracts
         self.interest_rate_decimals = 2
+        self.is_frozen = self._proxy.functions.isNetworkFrozen().call()
 
     @property
     def users(self) -> List[str]:
@@ -158,6 +160,12 @@ class CurrencyNetworkProxy(Proxy):
             on_transfer(self._build_event(log_entry))
 
         self.start_listen_on(TransferEventType, log)
+
+    def start_listen_on_network_freeze(self, on_network_freeze):
+        def log(log_entry):
+            on_network_freeze(self._build_event(log_entry))
+
+        self.start_listen_on(NetworkFreezeEventType, log)
 
     def get_network_events(
         self,

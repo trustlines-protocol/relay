@@ -48,6 +48,11 @@ assert eth_tester.backends.pyevm.main.GENESIS_GAS_LIMIT < 6 * 10 ** 6
 eth_tester.backends.pyevm.main.GENESIS_GAS_LIMIT = 6 * 10 ** 6
 
 
+@pytest.fixture()
+def expiration_time():
+    return EXPIRATION_TIME
+
+
 @pytest.fixture
 def maker(accounts):
     """checksum maker address"""
@@ -147,6 +152,9 @@ class CurrencyNetworkProxy(CurrencyNetworkProxy):
 
     def get_balance(self, from_, to):
         return self._proxy.functions.balance(from_, to).call()
+
+    def freeze_network(self):
+        self._proxy.functions.freezeNetwork().transact()
 
 
 @pytest.fixture()

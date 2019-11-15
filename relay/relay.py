@@ -628,6 +628,7 @@ class TrustlinesRelay:
         proxy.start_listen_on_trustline(self._process_trustline_update)
         proxy.start_listen_on_transfer(self._process_transfer)
         proxy.start_listen_on_trustline_request(self._process_trustline_request)
+        proxy.start_listen_on_network_freeze(self._process_network_freeze)
 
     def _start_listen_on_new_addresses(self):
         def listen():
@@ -693,6 +694,12 @@ class TrustlinesRelay:
     def _process_trustline_request(self, trustline_request_event):
         logger.debug("Process trustline request event")
         self._publish_blockchain_event(trustline_request_event)
+
+    def _process_network_freeze(self, network_freeze_event):
+        logger.info(f"Currency network frozen: {network_freeze_event.network_address}")
+        self.currency_network_proxies[
+            network_freeze_event.network_address
+        ].is_frozen = True
 
     def _generate_trustline_events(self, *, user1, user2, network_address, timestamp):
         events = []
