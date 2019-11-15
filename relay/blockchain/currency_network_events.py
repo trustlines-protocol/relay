@@ -1,11 +1,12 @@
 import hexbytes
 
-from .events import TLNetworkEvent
+from .events import BlockchainEvent, TLNetworkEvent
 
 TrustlineRequestEventType = "TrustlineUpdateRequest"
 TrustlineUpdateEventType = "TrustlineUpdate"
 BalanceUpdateEventType = "BalanceUpdate"
 TransferEventType = "Transfer"
+NetworkFreezeEventType = "NetworkFreeze"
 
 
 class CurrencyNetworkEvent(TLNetworkEvent):
@@ -68,11 +69,18 @@ class TrustlineRequestEvent(TrustlineEvent):
     pass
 
 
+class NetworkFreezeEvent(BlockchainEvent):
+    def __init__(self, web3_event, current_blocknumber: int, timestamp: int):
+        super().__init__(web3_event, current_blocknumber, timestamp)
+        self.network_address = web3_event.get("address")
+
+
 event_builders = {
     TransferEventType: TransferEvent,
     TrustlineUpdateEventType: TrustlineUpdateEvent,
     TrustlineRequestEventType: TrustlineRequestEvent,
     BalanceUpdateEventType: BalanceUpdateEvent,
+    NetworkFreezeEventType: NetworkFreezeEvent,
 }
 
 
