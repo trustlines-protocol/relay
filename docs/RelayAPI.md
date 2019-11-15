@@ -107,8 +107,9 @@ curl https://relay0.testnet.trustlines.network/api/v1/networks/0xC0B33D88C704455
 |numUsers                   |int   |number                                  |Total number of users in currency network|
 |defaultInterestRate        |BigInteger|string                              |The default interest rate for every user in the network|
 |interestRateDecimals       |int   |number                                  |Decimals of the interest rate|
-|customInterests            |bool  |bool|Whether custom interest rate can be set by users|
-|preventMediatorInterests   |bool  |bool|Whether to prevent mediators from paying interest|
+|customInterests            |bool  |bool                                    |Whether custom interest rate can be set by users|
+|preventMediatorInterests   |bool  |bool                                    |Whether to prevent mediators from paying interest|
+|isFrozen                   |bool  |bool                                    |Whether the currency network is frozen|
 #### Example Response
 ```json
 {
@@ -120,7 +121,8 @@ curl https://relay0.testnet.trustlines.network/api/v1/networks/0xC0B33D88C704455
   "defaultInterestRate": "100",
   "interestRateDecimals": 2,
   "customInterests": false,
-  "preventMediatorInterests": false
+  "preventMediatorInterests": false,
+  "isFrozen": false
 }
 ```
 
