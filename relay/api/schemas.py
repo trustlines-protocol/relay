@@ -195,6 +195,7 @@ class CurrencyNetworkSchema(Schema):
     interestRateDecimals = fields.Int(attribute="interest_rate_decimals")
     customInterests = fields.Bool(attribute="custom_interests")
     preventMediatorInterests = fields.Bool(attribute="prevent_mediator_interests")
+    isFrozen = fields.Bool(attribute="is_frozen")
 
 
 class PaymentPathSchema(Schema):
