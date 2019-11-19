@@ -174,6 +174,9 @@ class TrustlinesRelay:
     def is_currency_network(self, address: str) -> bool:
         return address in self.network_addresses
 
+    def is_currency_network_frozen(self, address: str) -> bool:
+        return self.currency_network_proxies[address].is_frozen
+
     def is_trusted_token(self, address: str) -> bool:
         return address in self.token_addresses or address in self.unw_eth_addresses
 
