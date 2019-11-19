@@ -45,8 +45,18 @@ TIMEOUT_MESSAGE = "The server could not handle the request in time"
 
 
 def abort_if_unknown_network(trustlines, network_address):
-    if network_address not in trustlines.network_addresses:
+    if not trustlines.is_currency_network(network_address):
         abort(404, "Unknown network: {}".format(network_address))
+
+
+def abort_if_frozen_network(trustlines, network_address):
+    if trustlines.is_currency_network_frozen(network_address):
+        abort(400, "Frozen network: {}".format(network_address))
+
+
+def abort_if_unknown_or_frozen_network(trustlines, network_address):
+    abort_if_unknown_network(trustlines, network_address)
+    abort_if_frozen_network(trustlines, network_address)
 
 
 def dump_result_with_schema(schema):
@@ -183,7 +193,7 @@ class MaxCapacityPath(Resource):
 
     @use_args(args)
     def post(self, args, network_address: str):
-        abort_if_unknown_network(self.trustlines, network_address)
+        abort_if_unknown_or_frozen_network(self.trustlines, network_address)
 
         source = args["from"]
         target = args["to"]
@@ -442,7 +452,7 @@ class Path(Resource):
     @use_args(args)
     @dump_result_with_schema(PaymentPathSchema())
     def post(self, args, network_address: str):
-        abort_if_unknown_network(self.trustlines, network_address)
+        abort_if_unknown_or_frozen_network(self.trustlines, network_address)
         timestamp = int(time.time())
 
         source = args["from"]
@@ -501,7 +511,7 @@ class CloseTrustline(Resource):
     @use_args(args)
     @dump_result_with_schema(PaymentPathSchema())
     def post(self, args, network_address: str):
-        abort_if_unknown_network(self.trustlines, network_address)
+        abort_if_unknown_or_frozen_network(self.trustlines, network_address)
         source = args["from"]
         target = args["to"]
         max_fees = args["maxFees"]
