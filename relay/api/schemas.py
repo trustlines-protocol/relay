@@ -44,6 +44,14 @@ class MetaTransactionSchema(Schema):
     signature = HexEncodedBytes(required=True)
 
 
+class MetaTransactionFeeSchema(Schema):
+    class Meta:
+        strict = True
+
+    delegationFees = BigInteger(required=True, attribute="value")
+    currencyNetworkOfFees = Address(required=True, attribute="currency_network")
+
+
 class EventSchema(Schema):
     class Meta:
         strict = True

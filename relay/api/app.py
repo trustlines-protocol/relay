@@ -32,6 +32,7 @@ from .resources import (
     GraphImage,
     IdentityInfos,
     MaxCapacityPath,
+    MetaTransactionFees,
     Network,
     NetworkList,
     Path,
@@ -116,6 +117,7 @@ def ApiApp(trustlines):
 
     if trustlines.enable_relay_meta_transaction:
         add_resource(RelayMetaTransaction, "/relay-meta-transaction")
+        add_resource(MetaTransactionFees, "/meta-transaction-fees")
 
     if trustlines.enable_ether_faucet:
         add_resource(RequestEther, "/request-ether")
