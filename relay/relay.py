@@ -197,8 +197,11 @@ class TrustlinesRelay:
             factory_address, implementation_address, signature
         )
 
-    def delegate_metatransaction(self, meta_transaction: MetaTransaction):
+    def delegate_meta_transaction(self, meta_transaction: MetaTransaction):
         return self.delegate.send_signed_meta_transaction(meta_transaction)
+
+    def meta_transaction_fees(self, meta_transaction: MetaTransaction):
+        return self.delegate.calculate_fees_for_meta_transaction(meta_transaction)
 
     def get_identity_info(self, identity_address: str):
         return {

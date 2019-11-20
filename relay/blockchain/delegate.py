@@ -1,3 +1,5 @@
+from collections import namedtuple
+
 from deploy_tools.deploy import TransactionFailed
 from tldeploy.identity import (
     Delegate as DelegateImplementation,
@@ -5,6 +7,10 @@ from tldeploy.identity import (
     UnexpectedIdentityContractException,
     deploy_proxied_identity,
 )
+
+META_TRANSACTION_FEE_VALUE = 1
+
+DelegationFees = namedtuple("DelegationFees", ["value", "currency_network"])
 
 
 class Delegate:
@@ -45,6 +51,17 @@ class Delegate:
             return self.delegate.get_next_nonce(identity_address)
         except UnexpectedIdentityContractException:
             raise InvalidIdentityContractException
+
+    def calculate_fees_for_meta_transaction(self, meta_transaction: MetaTransaction):
+        try:
+            valid = self.delegate.validate_nonce(meta_transaction)
+        except UnexpectedIdentityContractException as e:
+            raise InvalidIdentityContractException(e)
+
+        if valid:
+            return DelegationFees(META_TRANSACTION_FEE_VALUE, meta_transaction.to)
+        else:
+            raise InvalidMetaTransactionException
 
 
 class InvalidIdentityContractException(Exception):
