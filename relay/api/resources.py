@@ -31,6 +31,7 @@ from .schemas import (
     CurrencyNetworkEventSchema,
     CurrencyNetworkSchema,
     IdentityInfosSchema,
+    MetaTransactionFeeSchema,
     MetaTransactionSchema,
     PaymentPathSchema,
     TrustlineSchema,
@@ -339,7 +340,7 @@ class RelayMetaTransaction(Resource):
     def post(self, args):
         meta_transaction: identity.MetaTransaction = args["metaTransaction"]
         try:
-            return self.trustlines.delegate_metatransaction(meta_transaction).hex()
+            return self.trustlines.delegate_meta_transaction(meta_transaction).hex()
         except InvalidMetaTransactionException:
             abort(400, "The meta-transaction is invalid")
         except InvalidIdentityContractException:
@@ -349,6 +350,31 @@ class RelayMetaTransaction(Resource):
             )
         except ValueError:
             abort(409, "There was an error while relaying this meta-transaction")
+
+
+class MetaTransactionFees(Resource):
+    def __init__(self, trustlines: TrustlinesRelay) -> None:
+        self.trustlines = trustlines
+
+    args = {
+        "metaTransaction": marshmallow_fields.Nested(
+            MetaTransactionSchema, required=True
+        )
+    }
+
+    @use_args(args)
+    @dump_result_with_schema(MetaTransactionFeeSchema())
+    def post(self, args):
+        meta_transaction: identity.MetaTransaction = args["metaTransaction"]
+        try:
+            return self.trustlines.meta_transaction_fees(meta_transaction)
+        except InvalidMetaTransactionException:
+            abort(400, "The meta-transaction is invalid")
+        except InvalidIdentityContractException:
+            abort(
+                400,
+                "This meta transaction belongs to an invalid or unknown identity contract",
+            )
 
 
 class Balance(Resource):
