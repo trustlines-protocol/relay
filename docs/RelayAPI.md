@@ -42,6 +42,7 @@ https://relay0.testnet.trustlines.network/api/v1
 - [Latest block number](#latest-block-number)
 - [Relay transaction](#relay-transaction)
 - [Relay meta transaction](#relay-meta-transaction)
+- [Fees for meta transaction](#fees-for-meta-transaction)
 - [Deploy identity contract](#deploy-identity-contract)
 - [Get authorized identity factories](#get-authorized-identity-factories)
 - [Get identity information](#get-identity-information)
@@ -825,6 +826,56 @@ curl --header "Content-Type: application/json" \
 
 ---
 
+### Fees for meta transaction
+Get the fees the user should pay for a given meta transaction to be relayed.
+#### Request
+```
+POST /meta-transaction-fees
+```
+#### Data Parameters
+| Name            | Type                   | Required | Description            |
+|-----------------|------------------------|----------|------------------------|
+| metaTransaction | object                 | YES      | MetaTransaction object |
+
+
+The MetaTransaction object must have the following fields:
+
+| Name                  | Type     | JSON Type                                 | Description |
+|-----------------------|--------- |-------------------------------------------|-------------|
+| from                  | address  | string - hex-encoded prefixed with "0x"   | address of identity contract |
+| to                    | address  | string - hex-encoded prefixed with "0x"   | the address on which the call of the meta transaction is happening |
+| value                 |BigInteger| string                                    | the amount of wei to be sent along from 'from' to 'to'             |
+| data                  | bytes    | string - hex-encoded prefixed with "0x"   | the data object encoding the function call including arguments     |
+| delegationFees        |BigInteger| string                                    | the fees the delegate will receive for the meta transaction        |
+| currencyNetworkOfFees | address  | string - hex-encoded prefixed with "0x"   | the currency network used to pay the fees of the meta transaction  |
+| nonce                 | int      | number                                    | nonce used for replay protection                                   |
+| extraData             | bytes    | string - hex-encoded prefixed with "0x"   | bytes extra data for backwards compatibility                       |
+| signature             | bytes    | string - hex-encoded prefixed with "0x"   | 65 bytes containing concatenated. v,r,s of the signature           |
+
+#### Example Request
+```bash
+curl --header "Content-Type: application/json" \
+  --request POST \
+  --data '{"metaTransaction": {"value": "0", "to": "0x51a240271AB8AB9f9a21C82d9a85396b704E164d", "nonce": "1", "data": "0x46432830000000000000000000000000000000000000000000000000000000000000000a", "from": "0xF2E246BB76DF876Cef8b38ae84130F4F55De395b", "delegationFees": 1, "currencyNetworkOfFees": "0x51a240271AB8AB9f9a21C82d9a85396b704E164d", signature": "0x6d2fe56ef6648cb3f0398966ad3b05d891cde786d8074bdac15bcb92ebfa7222489b8eb6ed87165feeede19b031bb69e12036a5fa13b3a46ad0c2c19d051ea9101", "extraData": "0x"}}' \
+  https://relay0.testnet.trustlines.network/api/v1/meta-transaction-fees
+```
+
+#### Response
+|Attribute|Type|Description|
+|---------|----|-----------|
+|delegationFees|string|Fees to be paid for the meta transaction|
+|currencyNetworkOfFees|string|the currency network used to pay the fees of the meta transaction|
+
+#### Example Response
+```json
+{
+  "delegationFees": "1",
+  "currencyNetworkOfFees": "0x51a240271AB8AB9f9a21C82d9a85396b704E164d"
+}
+```
+
+---
+
 ### Relay meta transaction
 Relays a meta transaction to the blockchain.
 #### Request
@@ -839,15 +890,17 @@ POST /relay-meta-transaction
 
 The MetaTransaction object must have the following fields:
 
-| Name       | Type     | JSON Type                                 | Description |
-|------------|--------- |-------------------------------------------|-------------|
-| from       | address  | string - hex-encoded prefixed with "0x"   | address of identity contract |
-| to         | address  | string - hex-encoded prefixed with "0x"   | the address on which the call of the meta transaction is happening |
-| value      |BigInteger| string                                    | the amount of wei to be sent along from 'from' to 'to'             |
-| data       | bytes    | string - hex-encoded prefixed with "0x"   | the data object encoding the function call including arguments     |
-| nonce      | int      | number                                    | nonce used for replay protection                                   |
-| extraData  | bytes    | string - hex-encoded prefixed with "0x"   | bytes extra data for backwards compatibility                       |
-| signature  | bytes    | string - hex-encoded prefixed with "0x"   | 65 bytes containing concatenated. v,r,s of the signature           |
+| Name                  | Type     | JSON Type                                 | Description |
+|-----------------------|--------- |-------------------------------------------|-------------|
+| from                  | address  | string - hex-encoded prefixed with "0x"   | address of identity contract |
+| to                    | address  | string - hex-encoded prefixed with "0x"   | the address on which the call of the meta transaction is happening |
+| value                 |BigInteger| string                                    | the amount of wei to be sent along from 'from' to 'to'             |
+| data                  | bytes    | string - hex-encoded prefixed with "0x"   | the data object encoding the function call including arguments     |
+| delegationFees        |BigInteger| string                                    | the fees the delegate will receive for the meta transaction        |
+| currencyNetworkOfFees | address  | string - hex-encoded prefixed with "0x"   | the currency network used to pay the fees of the meta transaction  |
+| nonce                 | int      | number                                    | nonce used for replay protection                                   |
+| extraData             | bytes    | string - hex-encoded prefixed with "0x"   | bytes extra data for backwards compatibility                       |
+| signature             | bytes    | string - hex-encoded prefixed with "0x"   | 65 bytes containing concatenated. v,r,s of the signature           |
 
 #### Example Request
 ```bash
