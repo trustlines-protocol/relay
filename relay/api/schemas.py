@@ -41,7 +41,7 @@ class MetaTransactionSchema(Schema):
     currencyNetworkOfFees = Address(missing=to, attribute="currency_network_of_fees")
     nonce = BigInteger(required=True)
     extraData = HexEncodedBytes(required=True, attribute="extra_data")
-    signature = HexEncodedBytes(required=True)
+    signature = HexEncodedBytes(missing="0x")
 
 
 class MetaTransactionFeeSchema(Schema):
