@@ -1,4 +1,5 @@
 from collections import namedtuple
+from typing import List
 
 from deploy_tools.deploy import TransactionFailed
 from tldeploy.identity import (
@@ -29,6 +30,7 @@ class Delegate:
         self.delegation_fees = delegation_fees
 
     def send_signed_meta_transaction(self, signed_meta_transaction: MetaTransaction):
+        self.validate_meta_transaction_fees(signed_meta_transaction)
         try:
             valid = self.delegate.validate_meta_transaction(signed_meta_transaction)
         except UnexpectedIdentityContractException as e:
@@ -58,7 +60,9 @@ class Delegate:
         except UnexpectedIdentityContractException:
             raise InvalidIdentityContractException
 
-    def calculate_fees_for_meta_transaction(self, meta_transaction: MetaTransaction):
+    def calculate_fees_for_meta_transaction(
+        self, meta_transaction: MetaTransaction
+    ) -> List[DelegationFees]:
         try:
             valid = self.delegate.validate_nonce(meta_transaction)
         except UnexpectedIdentityContractException as e:
@@ -68,6 +72,18 @@ class Delegate:
             return self.delegation_fees
         else:
             raise InvalidMetaTransactionException
+
+    def validate_meta_transaction_fees(self, meta_transaction: MetaTransaction):
+        fees_estimations = self.calculate_fees_for_meta_transaction(meta_transaction)
+        for fees_estimation in fees_estimations:
+            if (
+                fees_estimation.currency_network
+                == meta_transaction.currency_network_of_fees
+                and fees_estimation.value <= meta_transaction.fees
+            ):
+                return
+
+        raise InvalidDelegationFeesException()
 
 
 class InvalidIdentityContractException(Exception):
@@ -83,4 +99,8 @@ class IdentityDeploymentFailedException(Exception):
 
 
 class UnknownIdentityFactoryException(Exception):
+    pass
+
+
+class InvalidDelegationFeesException(Exception):
     pass

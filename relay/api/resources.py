@@ -15,6 +15,7 @@ from relay.api import fields as custom_fields
 from relay.blockchain.currency_network_proxy import CurrencyNetworkProxy
 from relay.blockchain.delegate import (
     IdentityDeploymentFailedException,
+    InvalidDelegationFeesException,
     InvalidIdentityContractException,
     InvalidMetaTransactionException,
     UnknownIdentityFactoryException,
@@ -351,6 +352,11 @@ class RelayMetaTransaction(Resource):
         meta_transaction: identity.MetaTransaction = args["metaTransaction"]
         try:
             return self.trustlines.delegate_meta_transaction(meta_transaction).hex()
+        except InvalidDelegationFeesException:
+            abort(
+                400,
+                f"Invalid delegation fees: fees too low or not supported currency network of fees",
+            )
         except InvalidMetaTransactionException:
             abort(400, "The meta-transaction is invalid")
         except InvalidIdentityContractException:

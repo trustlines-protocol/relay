@@ -96,6 +96,20 @@ def identity(identity_contract, owner_key):
     return Identity(contract=identity_contract, owner_private_key=owner_key)
 
 
+@pytest.fixture()
+def signed_meta_transaction(identity, owner_key, accounts):
+    meta_transaction = MetaTransaction(
+        from_=identity.address,
+        to=accounts[2],
+        value=123,
+        data=(1234).to_bytes(10, byteorder="big"),
+        nonce=1,
+        extra_data=(123456789).to_bytes(10, byteorder="big"),
+    )
+
+    return meta_transaction.signed(owner_key)
+
+
 def meta_transaction_for_currency_network_transfer(
     currency_network, identity, source, destination
 ):
@@ -110,21 +124,10 @@ def meta_transaction_for_currency_network_transfer(
     return meta_transaction
 
 
-def test_delegate_meta_transaction(delegate, identity, web3, accounts, owner_key):
+def test_delegate_meta_transaction(delegate, identity, web3, signed_meta_transaction):
     """"
     Tests that a transaction is sent by the delegate upon receiving a meta-transaction.
     """
-
-    meta_transaction = MetaTransaction(
-        from_=identity.address,
-        to=accounts[2],
-        value=123,
-        data=(1234).to_bytes(10, byteorder="big"),
-        nonce=1,
-        extra_data=(123456789).to_bytes(10, byteorder="big"),
-    )
-
-    signed_meta_transaction = meta_transaction.signed(owner_key)
 
     tx_hash = delegate.send_signed_meta_transaction(signed_meta_transaction)
     tx = web3.eth.getTransaction(tx_hash)
@@ -256,3 +259,13 @@ def test_delegated_transaction_invalid_identity_contract(
 
     with pytest.raises(InvalidIdentityContractException):
         delegate.send_signed_meta_transaction(meta_transaction)
+
+
+def test_meta_transaction_fees_valid(delegate, meta_transaction):
+    """
+    Check that no exception is raised when validating a valid meta_transaction
+    """
+    delegation_fees = delegate.calculate_fees_for_meta_transaction(meta_transaction)
+    meta_transaction.fees = delegation_fees.value
+    meta_transaction.currency_network_of_fees = delegation_fees.currency_network
+    delegate.validate_meta_transaction_fees(meta_transaction)
