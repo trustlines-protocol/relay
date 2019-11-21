@@ -207,7 +207,7 @@ def token_abi(contracts):
     return contracts["Token"]["abi"]
 
 
-@pytest.fixture()
+@pytest.fixture(scope="session")
 def testnetwork1_address(web3):
     return deploy_test_network(web3).address
 
@@ -256,7 +256,7 @@ def network_addresses_with_exchange(testnetworks):
     return [network.address for network in testnetworks[0]]
 
 
-@pytest.fixture()
+@pytest.fixture(scope="session")
 def currency_network(web3, currency_network_abi, testnetwork1_address):
     currency_network = CurrencyNetworkProxy(
         web3, currency_network_abi, testnetwork1_address

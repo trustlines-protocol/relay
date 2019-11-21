@@ -8,19 +8,28 @@ from tldeploy.identity import (
     deploy_proxied_identity,
 )
 
-META_TRANSACTION_FEE_VALUE = 1
-
 DelegationFees = namedtuple("DelegationFees", ["value", "currency_network"])
 
 
 class Delegate:
-    def __init__(self, web3, node_address, identity_contract_abi, known_factories):
+    def __init__(
+        self,
+        web3,
+        node_address,
+        identity_contract_abi,
+        known_factories,
+        delegation_fees_value,
+        currency_network_of_fees,
+    ):
         self._web3 = web3
 
         self.delegate = DelegateImplementation(
             node_address, web3=web3, identity_contract_abi=identity_contract_abi
         )
         self.known_factories = known_factories
+        self.delegation_fees = DelegationFees(
+            delegation_fees_value, currency_network_of_fees
+        )
 
     def send_signed_meta_transaction(self, signed_meta_transaction: MetaTransaction):
         try:
@@ -59,7 +68,7 @@ class Delegate:
             raise InvalidIdentityContractException(e)
 
         if valid:
-            return DelegationFees(META_TRANSACTION_FEE_VALUE, meta_transaction.to)
+            return self.delegation_fees
         else:
             raise InvalidMetaTransactionException
 
