@@ -225,6 +225,8 @@ class TrustlinesRelay:
             self.node.address,
             self.contracts["Identity"]["abi"],
             self.known_identity_factories,
+            self.config.get("delegationFees", {}).get("value", 0),
+            self.config.get("delegationFees", {}).get("currencyNetwork", "0x"),
         )
         self._start_listen_on_new_addresses()
 

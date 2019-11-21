@@ -846,11 +846,8 @@ The MetaTransaction object must have the following fields:
 | to                    | address  | string - hex-encoded prefixed with "0x"   | the address on which the call of the meta transaction is happening |
 | value                 |BigInteger| string                                    | the amount of wei to be sent along from 'from' to 'to'             |
 | data                  | bytes    | string - hex-encoded prefixed with "0x"   | the data object encoding the function call including arguments     |
-| delegationFees        |BigInteger| string                                    | the fees the delegate will receive for the meta transaction        |
-| currencyNetworkOfFees | address  | string - hex-encoded prefixed with "0x"   | the currency network used to pay the fees of the meta transaction  |
 | nonce                 | int      | number                                    | nonce used for replay protection                                   |
 | extraData             | bytes    | string - hex-encoded prefixed with "0x"   | bytes extra data for backwards compatibility                       |
-| signature             | bytes    | string - hex-encoded prefixed with "0x"   | 65 bytes containing concatenated. v,r,s of the signature           |
 
 #### Example Request
 ```bash
