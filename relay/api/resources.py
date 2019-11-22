@@ -363,7 +363,7 @@ class MetaTransactionFees(Resource):
     }
 
     @use_args(args)
-    @dump_result_with_schema(MetaTransactionFeeSchema())
+    @dump_result_with_schema(MetaTransactionFeeSchema(many=True))
     def post(self, args):
         meta_transaction: identity.MetaTransaction = args["metaTransaction"]
         try:

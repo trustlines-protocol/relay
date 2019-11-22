@@ -68,7 +68,7 @@ class Delegate:
             raise InvalidIdentityContractException(e)
 
         if valid:
-            return self.delegation_fees
+            return [self.delegation_fees]
         else:
             raise InvalidMetaTransactionException
 
