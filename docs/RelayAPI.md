@@ -827,7 +827,7 @@ curl --header "Content-Type: application/json" \
 ---
 
 ### Fees for meta transaction
-Get the fees the user should pay for a given meta transaction to be relayed.
+Get a list of the fees the delegate will accept for the given metaTransaction.
 #### Request
 ```
 POST /meta-transaction-fees
@@ -865,10 +865,16 @@ curl --header "Content-Type: application/json" \
 
 #### Example Response
 ```json
-{
-  "delegationFees": "1",
-  "currencyNetworkOfFees": "0x51a240271AB8AB9f9a21C82d9a85396b704E164d"
-}
+[
+    {
+      "delegationFees": "1",
+      "currencyNetworkOfFees": "0x51a240271AB8AB9f9a21C82d9a85396b704E164d"
+    },
+    {
+      "delegationFees": "23",
+      "currencyNetworkOfFees": "0xcbF1153F6e5AC01D363d432e24112e8aA56c55ce"
+    }
+]
 ```
 
 ---
