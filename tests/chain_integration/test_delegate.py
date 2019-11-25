@@ -32,8 +32,8 @@ def delegate(web3, delegate_address, contracts, proxy_factory, currency_network)
         delegate_address,
         identity_contract_abi,
         [proxy_factory.address],
-        delegation_fees_value,
-        currency_network.address,
+        [delegation_fees_value],
+        [currency_network.address],
     )
 
 

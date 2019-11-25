@@ -16,8 +16,8 @@ method = "rpc"
 gasPrice = 0
 
 [relay.delegationFees]
-value = 0
-currencyNetwork = "0x"
+value = [0]
+currencyNetwork = ["0x"]
 
 # Configure logging
 [logging.root]
