@@ -17,12 +17,12 @@ class MetaTransactionSchema(Schema):
     def _validate(self, data):
         nonce = data["nonce"]
         fees = data["fees"]
-        signature = data.get("signature", "")
+        signature = data["signature"]
         if not 0 <= nonce < 2 ** 256:
             raise ValidationError(f"nonce={nonce} is out of bounds")
         if not 0 <= fees < 2 ** 64:
             raise ValidationError(f"delegationFees={fees} is out of bounds")
-        if len(signature) != 65 and signature != "":
+        if len(signature) != 65 and signature != "0x":
             raise ValidationError("signature must be 65 bytes")
 
         value = data["value"]
