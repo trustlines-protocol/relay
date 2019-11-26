@@ -1,3 +1,4 @@
+import hexbytes
 from marshmallow import Schema, ValidationError, fields, post_load
 from marshmallow_oneofschema import OneOfSchema
 from tldeploy import identity
@@ -22,7 +23,7 @@ class MetaTransactionSchema(Schema):
             raise ValidationError(f"nonce={nonce} is out of bounds")
         if not 0 <= fees < 2 ** 64:
             raise ValidationError(f"delegationFees={fees} is out of bounds")
-        if len(signature) != 65 and signature != "0x":
+        if len(signature) != 65 and signature != hexbytes.HexBytes(""):
             raise ValidationError("signature must be 65 bytes")
 
         value = data["value"]
@@ -42,7 +43,7 @@ class MetaTransactionSchema(Schema):
     currencyNetworkOfFees = Address(missing=to, attribute="currency_network_of_fees")
     nonce = BigInteger(required=True)
     extraData = HexEncodedBytes(required=True, attribute="extra_data")
-    signature = HexEncodedBytes(missing="0x")
+    signature = HexEncodedBytes(missing=hexbytes.HexBytes(""))
 
 
 class MetaTransactionFeeSchema(Schema):
