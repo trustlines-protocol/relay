@@ -17,7 +17,7 @@ gasPrice = 0
 
 [relay.delegationFees]
 value = [0]
-currencyNetwork = ["0x"]
+currencyNetwork = [""]
 
 # Configure logging
 [logging.root]
