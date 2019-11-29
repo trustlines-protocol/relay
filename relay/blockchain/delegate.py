@@ -76,6 +76,8 @@ class Delegate:
     def validate_meta_transaction_fees(self, meta_transaction: MetaTransaction):
         fees_estimations = self.calculate_fees_for_meta_transaction(meta_transaction)
         for fees_estimation in fees_estimations:
+            if fees_estimation.value == 0:
+                return
             if (
                 fees_estimation.currency_network
                 == meta_transaction.currency_network_of_fees
