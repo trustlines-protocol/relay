@@ -1,7 +1,7 @@
 import math
 
 import pytest
-from tests.unit.network_graph.conftest import addresses
+from conftest import addresses
 
 from relay.blockchain.currency_network_proxy import Trustline
 from relay.network_graph.graph import Account, NetworkGraphConfig
