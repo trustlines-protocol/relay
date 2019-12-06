@@ -18,8 +18,7 @@ class Delegate:
         node_address,
         identity_contract_abi,
         known_factories,
-        delegation_fees_values,
-        currency_networks_of_fees,
+        delegation_fees,
     ):
         self._web3 = web3
 
@@ -27,12 +26,7 @@ class Delegate:
             node_address, web3=web3, identity_contract_abi=identity_contract_abi
         )
         self.known_factories = known_factories
-        self.delegation_fees = [
-            DelegationFees(delegation_fees_value, currency_network_of_fees)
-            for (delegation_fees_value, currency_network_of_fees) in zip(
-                delegation_fees_values, currency_networks_of_fees
-            )
-        ]
+        self.delegation_fees = delegation_fees
 
     def send_signed_meta_transaction(self, signed_meta_transaction: MetaTransaction):
         try:

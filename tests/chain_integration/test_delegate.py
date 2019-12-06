@@ -13,6 +13,7 @@ from web3 import Web3
 
 from relay.blockchain.delegate import (
     Delegate,
+    DelegationFees,
     InvalidIdentityContractException,
     InvalidMetaTransactionException,
 )
@@ -26,14 +27,14 @@ def delegate_address(web3):
 @pytest.fixture(scope="session")
 def delegate(web3, delegate_address, contracts, proxy_factory, currency_network):
     identity_contract_abi = contracts["Identity"]["abi"]
-    delegation_fees_value = 1
     return Delegate(
         web3,
         delegate_address,
         identity_contract_abi,
         [proxy_factory.address],
-        [delegation_fees_value],
-        [currency_network.address],
+        delegation_fees=[
+            DelegationFees(value=1, currency_network=currency_network.address)
+        ],
     )
 
 

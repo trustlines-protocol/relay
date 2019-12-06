@@ -35,7 +35,7 @@ from .blockchain import (
     unw_eth_events,
 )
 from .blockchain.currency_network_proxy import CurrencyNetworkProxy
-from .blockchain.delegate import Delegate
+from .blockchain.delegate import Delegate, DelegationFees
 from .blockchain.events import BlockchainEvent
 from .blockchain.exchange_proxy import ExchangeProxy
 from .blockchain.node import Node
@@ -223,13 +223,19 @@ class TrustlinesRelay:
         logger.info("using web3 URL {}".format(url))
         self._web3 = Web3(Web3.HTTPProvider(url))
         self.node = Node(self._web3, fixed_gas_price=self.fixed_gas_price)
+
+        delegation_fees = [
+            DelegationFees(value=d["value"], currency_network=d["currencyNetwork"])
+            for d in self.config.get("delegationFees", [])
+            if d
+        ]
+
         self.delegate = Delegate(
             self._web3,
             self.node.address,
             self.contracts["Identity"]["abi"],
             self.known_identity_factories,
-            self.config.get("delegationFees", {}).get("value", [0]),
-            self.config.get("delegationFees", {}).get("currencyNetwork", [""]),
+            delegation_fees=delegation_fees,
         )
         self._start_listen_on_new_addresses()
 

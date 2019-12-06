@@ -15,9 +15,9 @@ ssl = false
 method = "rpc"
 gasPrice = 0
 
-[relay.delegationFees]
-value = [0]
-currencyNetwork = [""]
+[[relay.delegationFees]]
+# value = 0
+# currencyNetwork = "0x000..."
 
 # Configure logging
 [logging.root]
