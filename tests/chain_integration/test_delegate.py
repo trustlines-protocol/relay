@@ -14,6 +14,7 @@ from web3 import Web3
 from relay.blockchain.delegate import (
     Delegate,
     DelegationFees,
+    InvalidDelegationFeesException,
     InvalidIdentityContractException,
     InvalidMetaTransactionException,
 )
@@ -42,7 +43,7 @@ def delegate(web3, delegate_address, contracts, proxy_factory, currency_network)
 
 
 @pytest.fixture(scope="session")
-def delegate_with_fees(
+def delegate_with_one_fees(
     web3, delegate_address, contracts, proxy_factory, currency_network
 ):
     identity_contract_abi = contracts["Identity"]["abi"]
@@ -284,13 +285,13 @@ def test_delegated_transaction_invalid_identity_contract(
 
 
 def test_meta_transaction_fees_valid(
-    delegate_with_fees, signed_meta_transaction, owner_key
+    delegate_with_one_fees, signed_meta_transaction, owner_key
 ):
     """
     Check that no exception is raised when validating a valid meta_transaction
     """
 
-    delegation_fees = delegate_with_fees.calculate_fees_for_meta_transaction(
+    delegation_fees = delegate_with_one_fees.calculate_fees_for_meta_transaction(
         signed_meta_transaction
     )[0]
     meta_transaction_with_fees = attr.evolve(
@@ -299,4 +300,60 @@ def test_meta_transaction_fees_valid(
         currency_network_of_fees=delegation_fees.currency_network,
     )
     signed_meta_transaction_with_fees = meta_transaction_with_fees.signed(owner_key)
-    delegate_with_fees.validate_meta_transaction_fees(signed_meta_transaction_with_fees)
+    delegate_with_one_fees.validate_meta_transaction_fees(
+        signed_meta_transaction_with_fees
+    )
+
+
+def test_meta_transaction_fees_invalid_value(
+    delegate_with_one_fees, signed_meta_transaction, owner_key
+):
+    """
+    Check that an exception is raised when validating an invalid meta_transaction
+    """
+
+    delegation_fees = delegate_with_one_fees.calculate_fees_for_meta_transaction(
+        signed_meta_transaction
+    )[0]
+
+    wrong_fees_value = 0
+    assert delegation_fees.value >= wrong_fees_value
+
+    meta_transaction_with_fees = attr.evolve(
+        signed_meta_transaction,
+        fees=wrong_fees_value,
+        currency_network_of_fees=delegation_fees.currency_network,
+    )
+    signed_meta_transaction_with_fees = meta_transaction_with_fees.signed(owner_key)
+
+    with pytest.raises(InvalidDelegationFeesException):
+        delegate_with_one_fees.validate_meta_transaction_fees(
+            signed_meta_transaction_with_fees
+        )
+
+
+def test_meta_transaction_fees_invalid_network(
+    delegate_with_one_fees, signed_meta_transaction, owner_key
+):
+    """
+    Check that an exception is raised when validating an invalid meta_transaction
+    """
+
+    delegation_fees = delegate_with_one_fees.calculate_fees_for_meta_transaction(
+        signed_meta_transaction
+    )[0]
+
+    wrong_network = signed_meta_transaction.from_
+    assert delegation_fees.currency_network != wrong_network
+
+    meta_transaction_with_fees = attr.evolve(
+        signed_meta_transaction,
+        fees=delegation_fees.value,
+        currency_network_of_fees=wrong_network,
+    )
+    signed_meta_transaction_with_fees = meta_transaction_with_fees.signed(owner_key)
+
+    with pytest.raises(InvalidDelegationFeesException):
+        delegate_with_one_fees.validate_meta_transaction_fees(
+            signed_meta_transaction_with_fees
+        )
