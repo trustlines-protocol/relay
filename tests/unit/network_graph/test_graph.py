@@ -9,6 +9,7 @@ from relay.network_graph.graph import (
 )
 from relay.network_graph.payment_path import FeePayer, PaymentPath
 
+addresses = ["0x0A", "0x0B", "0x0C", "0x0D", "0x0E", "0x0F", "0x10", "0x11"]
 A, B, C, D, E, F, G, H = addresses
 
 
