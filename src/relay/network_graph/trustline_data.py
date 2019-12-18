@@ -7,8 +7,6 @@ from relay.network_graph.graph_constants import (
     balance_ab,
     creditline_ab,
     creditline_ba,
-    fees_outstanding_a,
-    fees_outstanding_b,
     interest_ab,
     interest_ba,
     is_frozen,
@@ -92,22 +90,6 @@ def get_is_frozen(data):
 
 def set_is_frozen(data, _is_frozen):
     data[is_frozen] = _is_frozen
-
-
-def get_fees_outstanding(data, user, counter_party):
-    """Unused at the moment"""
-    return get(user, counter_party, data[fees_outstanding_a], data[fees_outstanding_b])
-
-
-def set_fees_outstanding(data, user, counter_party, fees_outstanding):
-    """Unused at the moment"""
-    set(
-        data,
-        user,
-        counter_party,
-        {fees_outstanding_a: fees_outstanding},
-        {fees_outstanding_b: fees_outstanding},
-    )
 
 
 def get_mtime(data):

@@ -9,8 +9,6 @@ from relay.network_graph.graph_constants import (
     balance_ab,
     creditline_ab,
     creditline_ba,
-    fees_outstanding_a,
-    fees_outstanding_b,
     interest_ab,
     interest_ba,
     m_time,
@@ -38,8 +36,6 @@ def basic_data():
         creditline_ba: 0,
         interest_ab: 0,
         interest_ba: 0,
-        fees_outstanding_a: 0,
-        fees_outstanding_b: 0,
         m_time: 0,
         balance_ab: 0,
     }

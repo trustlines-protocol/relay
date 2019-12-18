@@ -9,13 +9,11 @@ from relay.network_graph.graph_constants import balance_ab, creditline_ab, credi
 from relay.network_graph.trustline_data import (
     get_balance,
     get_creditline,
-    get_fees_outstanding,
     get_interest_rate,
     get_is_frozen,
     get_mtime,
     set_balance,
     set_creditline,
-    set_fees_outstanding,
     set_interest_rate,
     set_is_frozen,
     set_mtime,
@@ -120,22 +118,6 @@ class Account(object):
     @is_frozen.setter
     def is_frozen(self, is_frozen):
         set_is_frozen(self.data, is_frozen)
-
-    @property
-    def fees_outstanding(self):
-        return get_fees_outstanding(self.data, self.a, self.b)
-
-    @fees_outstanding.setter
-    def fees_outstanding(self, fees):
-        set_fees_outstanding(self.data, self.a, self.b, fees)
-
-    @property
-    def reverse_fees_outstanding(self):
-        return get_fees_outstanding(self.data, self.b, self.a)
-
-    @reverse_fees_outstanding.setter
-    def reverse_fees_outstanding(self, fees):
-        set_fees_outstanding(self.data, self.b, self.a, fees)
 
     def can_be_closed(self):
         if (
@@ -510,8 +492,6 @@ class CurrencyNetworkGraph(object):
                 interest_ab=trustline.interest_rate_given,
                 interest_ba=trustline.interest_rate_received,
                 is_frozen=trustline.is_frozen,
-                fees_outstanding_a=trustline.fees_outstanding_user,
-                fees_outstanding_b=trustline.fees_outstanding_counter_party,
                 m_time=trustline.m_time,
                 balance_ab=trustline.balance,
             )
@@ -569,8 +549,6 @@ class CurrencyNetworkGraph(object):
                 interest_ab=self.default_interest_rate,
                 interest_ba=self.default_interest_rate,
                 is_frozen=False,
-                fees_outstanding_a=0,
-                fees_outstanding_b=0,
                 m_time=0,
                 balance_ab=0,
             )
@@ -614,8 +592,6 @@ class CurrencyNetworkGraph(object):
                 interest_ab=0,
                 interest_ba=0,
                 is_frozen=False,
-                fees_outstanding_a=0,
-                fees_outstanding_b=0,
                 m_time=0,
                 balance_ab=0,
             )
