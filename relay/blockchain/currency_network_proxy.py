@@ -31,8 +31,6 @@ class Trustline(NamedTuple):
     interest_rate_given: int = 0
     interest_rate_received: int = 0
     is_frozen: bool = False
-    fees_outstanding_user: int = 0
-    fees_outstanding_counter_party: int = 0
     m_time: int = 0
     balance: int = 0
 
@@ -90,8 +88,6 @@ class CurrencyNetworkProxy(Proxy):
                         interest_ab,
                         interest_ba,
                         is_frozen,
-                        fees_outstanding_a,
-                        fees_outstanding_b,
                         mtime,
                         balance_ab,
                     ) = self.account(user, friend)
@@ -104,8 +100,6 @@ class CurrencyNetworkProxy(Proxy):
                             interest_rate_given=interest_ab,
                             interest_rate_received=interest_ba,
                             is_frozen=is_frozen,
-                            fees_outstanding_user=fees_outstanding_a,
-                            fees_outstanding_counter_party=fees_outstanding_b,
                             m_time=mtime,
                             balance=balance_ab,
                         )
