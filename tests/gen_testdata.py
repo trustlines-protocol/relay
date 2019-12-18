@@ -1,11 +1,9 @@
 #! /usr/bin/env python3
-"""generate test data from TestCurrencyNetwork contract
+"""generate test data from TestCurrencyNetwork contract.
 
 The TestCurrencyNetwork contract can be deployed with:
 
     tl-deploy test --currency-network-contract-name=TestCurrencyNetwork
-
-
 """
 import abc
 import itertools
@@ -158,7 +156,7 @@ class Transfer(TestDataGenerator):
 
         for a, b, balance in zip(addresses, addresses[1:], balances_before):
             self.contract.functions.setAccount(
-                a, b, 100_000_000, 100_000_000, 0, 0, 0, 0, 0, balance
+                a, b, 100_000_000, 100_000_000, 0, 0, False, 0, balance
             ).transact()
 
         assert fees_paid_by in ("sender", "receiver")

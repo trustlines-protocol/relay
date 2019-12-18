@@ -75,7 +75,7 @@ class CurrencyNetworkProxy(currency_network_proxy.CurrencyNetworkProxy):
     def setup_trustlines(self, trustlines):
         for (A, B, clAB, clBA) in trustlines:
             txid = self._proxy.functions.setAccount(
-                A, B, clAB, clBA, 0, 0, False, 0, 0, 0, 0
+                A, B, clAB, clBA, 0, 0, False, 0, 0
             ).transact()
             self._web3.eth.waitForTransactionReceipt(txid)
 

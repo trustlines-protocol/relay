@@ -4,13 +4,11 @@ from relay.network_graph.trustline_data import (
     get,
     get_balance,
     get_creditline,
-    get_fees_outstanding,
     get_interest_rate,
     get_mtime,
     set,
     set_balance,
     set_creditline,
-    set_fees_outstanding,
     set_interest_rate,
     set_mtime,
 )
@@ -49,13 +47,6 @@ def test_interests(data):
     set_interest_rate(data, b, a, 200)
     assert get_interest_rate(data, a, b) == 100
     assert get_interest_rate(data, b, a) == 200
-
-
-def test_fees_outstanding(data):
-    set_fees_outstanding(data, a, b, 100)
-    set_fees_outstanding(data, b, a, 200)
-    assert get_fees_outstanding(data, a, b) == 100
-    assert get_fees_outstanding(data, b, a) == 200
 
 
 def test_mtime(data):
