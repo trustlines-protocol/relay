@@ -73,14 +73,6 @@ def test_users(currency_network_with_trustlines, accounts):
     assert currency_network_with_trustlines.users == accounts[0:5]
 
 
-def test_spendable(currency_network_with_trustlines, accounts):
-    assert currency_network_with_trustlines.spendable(accounts[1]) == 350
-
-
-def test_spendable_to(currency_network_with_trustlines, accounts):
-    assert currency_network_with_trustlines.spendableTo(accounts[3], accounts[4]) == 450
-
-
 def test_gen_graph_representation(currency_network_with_trustlines, accounts):
     graph_representation = currency_network_with_trustlines.gen_graph_representation()
 
