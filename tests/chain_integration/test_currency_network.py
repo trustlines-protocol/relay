@@ -50,8 +50,6 @@ def test_account1(currency_network_with_trustlines, accounts):
         False,
         0,
         0,
-        0,
-        0,
     ]
 
 
@@ -62,8 +60,6 @@ def test_account2(currency_network_with_trustlines, accounts):
         0,
         0,
         False,
-        0,
-        0,
         0,
         0,
     ]
@@ -151,7 +147,7 @@ def test_listen_on_balance_update(currency_network, accounts):
     currency_network.start_listen_on_balance(f)
     context_switch()
     currency_network.update_trustline_with_accept(accounts[0], accounts[1], 25, 50)
-    currency_network.transfer(accounts[1], accounts[0], 10, 10, [accounts[0]])
+    currency_network.transfer(accounts[1], 10, 10, [accounts[1], accounts[0]])
     gevent.sleep(1)
 
     assert len(events) == 1
@@ -169,7 +165,7 @@ def test_listen_on_transfer(currency_network, accounts):
     currency_network.start_listen_on_transfer(f)
     context_switch()
     currency_network.update_trustline_with_accept(accounts[0], accounts[1], 25, 50)
-    currency_network.transfer(accounts[1], accounts[0], 10, 10, [accounts[0]])
+    currency_network.transfer(accounts[1], 10, 10, [accounts[1], accounts[0]])
     gevent.sleep(1)
 
     assert len(events) == 1

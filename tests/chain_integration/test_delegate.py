@@ -140,7 +140,7 @@ def meta_transaction_for_currency_network_transfer(
     trustlines = [(source, destination, 100, 100)]
     currency_network.setup_trustlines(trustlines)
     meta_transaction = currency_network.transfer_meta_transaction(
-        destination, 100, 0, [destination]
+        100, 0, [source, destination]
     )
     meta_transaction = identity.filled_and_signed_meta_transaction(meta_transaction)
 
@@ -201,7 +201,7 @@ def test_deploy_identity(
     destination = accounts[3]
 
     meta_transaction = currency_network.transfer_meta_transaction(
-        destination, 100, 0, [destination]
+        100, 0, [identity_contract_address, destination]
     )
     signed_meta_transaction = attr.evolve(
         meta_transaction, from_=identity_contract_address, nonce=0

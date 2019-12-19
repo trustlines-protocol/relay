@@ -133,17 +133,15 @@ class CurrencyNetworkProxy(currency_network_proxy.CurrencyNetworkProxy):
             is_frozen,
         )
 
-    def transfer(self, from_, to, value, max_fee, path, extra_data=b""):
+    def transfer(self, from_, value, max_fee, path, extra_data=b""):
         txid = self._proxy.functions.transfer(
-            to, value, max_fee, path, extra_data
+            value, max_fee, path, extra_data
         ).transact({"from": from_})
         self._web3.eth.waitForTransactionReceipt(txid)
 
-    def transfer_meta_transaction(self, to, value, max_fee, path, extra_data=b""):
+    def transfer_meta_transaction(self, value, max_fee, path, extra_data=b""):
 
-        function_call = self._proxy.functions.transfer(
-            to, value, max_fee, path, extra_data
-        )
+        function_call = self._proxy.functions.transfer(value, max_fee, path, extra_data)
         meta_transaction = MetaTransaction.from_function_call(
             function_call, to=self.address
         )
@@ -224,9 +222,11 @@ def testnetwork3_address(web3):
 
 @pytest.fixture()
 def testnetworks(web3, maker, taker):
-    currency_network_contracts, exchange_contract, unw_eth_contract = deploy_test_networks(
-        web3
-    )
+    (
+        currency_network_contracts,
+        exchange_contract,
+        unw_eth_contract,
+    ) = deploy_test_networks(web3)
 
     unw_eth_contract.functions.deposit().transact({"from": taker, "value": 200})
 
@@ -280,7 +280,7 @@ def currency_network_with_trustlines(
 def currency_network_with_events(currency_network, accounts, test_extra_data):
     currency_network.update_trustline_with_accept(accounts[0], accounts[1], 25, 50)
     currency_network.transfer(
-        accounts[1], accounts[0], 10, 10, [accounts[0]], test_extra_data
+        accounts[1], 10, 10, [accounts[1], accounts[0]], test_extra_data
     )
     currency_network.update_trustline_with_accept(accounts[0], accounts[2], 25, 50)
     currency_network.update_trustline_with_accept(accounts[0], accounts[4], 25, 50)

@@ -99,7 +99,7 @@ def test_transfer_update(fresh_community, currency_network, accounts):
 
     currency_network.update_trustline(A, B, 50, 100)
     currency_network.update_trustline(B, A, 100, 50)
-    currency_network.transfer(B, A, 20, 0, [A])
+    currency_network.transfer(B, 20, 0, [B, A])
 
     gevent.sleep(1)
 
