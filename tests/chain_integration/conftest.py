@@ -7,7 +7,7 @@ import pytest
 from tldeploy.core import deploy_network, deploy_networks
 from tldeploy.identity import MetaTransaction
 
-from relay.blockchain.currency_network_proxy import CurrencyNetworkProxy
+from relay.blockchain import currency_network_proxy
 
 EXPIRATION_TIME = 4102444800  # 01/01/2100
 
@@ -71,7 +71,7 @@ def taker(accounts):
     return accounts[1]
 
 
-class CurrencyNetworkProxy(CurrencyNetworkProxy):
+class CurrencyNetworkProxy(currency_network_proxy.CurrencyNetworkProxy):
     def setup_trustlines(self, trustlines):
         for (A, B, clAB, clBA) in trustlines:
             txid = self._proxy.functions.setAccount(
