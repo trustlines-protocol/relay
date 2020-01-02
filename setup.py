@@ -1,4 +1,5 @@
 """A setuptools based setup module.
+
 See:
 https://packaging.python.org/en/latest/distributing.html
 https://github.com/pypa/sampleproject
@@ -72,8 +73,8 @@ setup(
         "web3>=4.7.1",
         "networkx>=2.0",
         "pygraphviz",
-        "trustlines-contracts-bin>=0.10.1,<0.11.0",
-        "trustlines-contracts-deploy>=0.10.1,<0.11.0",
+        "trustlines-contracts-bin>=1.0.0,<1.1.0",
+        "trustlines-contracts-deploy>=1.0.0,<1.1.0",
         "sqlalchemy",
         "eth-utils",
         "tinyrpc",
