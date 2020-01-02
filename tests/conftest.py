@@ -1,7 +1,5 @@
 import json
 import operator
-import os
-import sys
 from collections import namedtuple
 from pathlib import Path
 from typing import Sequence
@@ -9,9 +7,6 @@ from typing import Sequence
 import hexbytes
 import py
 import pytest
-
-# import the relay module so no pip install is necessary
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
 
 @pytest.hookimpl(tryfirst=True)

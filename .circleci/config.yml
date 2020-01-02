@@ -89,7 +89,7 @@ jobs:
       - run:
           name: Run flake8
           command: |
-            flake8 setup.py relay tests
+            flake8 setup.py src tests
 
   run-black:
     executor: ubuntu-builder
@@ -100,7 +100,7 @@ jobs:
       - run:
           name: Run black
           command: |
-            black --check setup.py relay tests
+            black --check setup.py src tests
 
   run-pytest:
     executor: ubuntu-builder
@@ -123,7 +123,7 @@ jobs:
       - run:
           name: Run mypy
           command: |
-            mypy --ignore-missing-imports relay tests
+            mypy --ignore-missing-imports src/relay tests
 
   upload-pypi:
     executor: ubuntu-builder
