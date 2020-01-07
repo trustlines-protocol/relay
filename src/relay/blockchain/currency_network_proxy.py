@@ -13,6 +13,7 @@ from .currency_network_events import (
     CurrencyNetworkEvent,
     NetworkFreezeEventType,
     TransferEventType,
+    TrustlineRequestCancelEventType,
     TrustlineRequestEventType,
     TrustlineUpdateEventType,
     event_builders,
@@ -142,6 +143,16 @@ class CurrencyNetworkProxy(Proxy):
             on_trustline_request(self._build_event(log_entry))
 
         self.start_listen_on(TrustlineRequestEventType, log_trustline_request)
+
+    def start_listen_on_trustline_request_cancel(
+        self, on_trustline_request_cancel
+    ) -> None:
+        def log_trustline_request_cancel(log_entry):
+            on_trustline_request_cancel(self._build_event(log_entry))
+
+        self.start_listen_on(
+            TrustlineRequestCancelEventType, log_trustline_request_cancel
+        )
 
     def start_listen_on_transfer(self, on_transfer) -> None:
         def log(log_entry):

@@ -3,6 +3,7 @@ import hexbytes
 from .events import BlockchainEvent, TLNetworkEvent
 
 TrustlineRequestEventType = "TrustlineUpdateRequest"
+TrustlineRequestCancelEventType = "TrustlineUpdateCancel"
 TrustlineUpdateEventType = "TrustlineUpdate"
 BalanceUpdateEventType = "BalanceUpdate"
 TransferEventType = "Transfer"
