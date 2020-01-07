@@ -28,7 +28,7 @@ https://relay0.testnet.trustlines.network/api/v1
 - [Users list in currency network](#users-list-in-currency-network)
 - [User details in currency network](#user-details-in-currency-network)
 - [Trustlines of user in currency network](#trustlines-of-user-in-currency-network)
-- [Trustline details of user in currency network](#trustline-details-of-user-in-currency-network)
+- [Trustline between users in currency network](#trustline-details-of-user-in-currency-network)
 - [Spendable amount and path to any user in currency network](#spendable-amount-and-path-to-any-user-in-currency-network)
 - [Transfer path in currency network](#transfer-path-in-currency-network)
 - [Closing trustline path in currency network](#closing-trustline-path-in-currency-network)
@@ -244,7 +244,7 @@ curl https://relay0.testnet.trustlines.network/api/v1/networks/0xC0B33D88C704455
 
 ---
 
-### Trustline of user in currency network
+### Trustline between users in currency network
 Returns a trustline between users A and B in a currency network.
 #### Request
 ```
@@ -447,7 +447,7 @@ GET /networks/:networkAddress/events?type=:type&fromBlock=:fromBlock
 |Name|Type|Required|Description|
 |-|-|-|-|
 |network|string|YES|Address of currency network|
-|type|string|NO|Either `TrustlineUpdate`, `TrustlineUpdateRequest` or `Transfer`|
+|type|string|NO|Either `TrustlineUpdate`, `TrustlineUpdateRequest`, `TrustlineUpdateCancel` or `Transfer`|
 |fromBlock|int|NO|Start of block range|
 #### Example Request
 ```
@@ -459,7 +459,7 @@ curl https://relay0.testnet.trustlines.network/api/v1/networks/0xC0B33D88C704455
 |networkAddress|string|Address of currency network|
 |blockNumber|string|Number of block|
 |timestamp|int|UNIX timestamp|
-|type|string|Either `TrustlineUpdate`, `TrustlineUpdateRequest` or `Transfer`|
+|type|string|Either `TrustlineUpdate`, `TrustlineUpdateRequest`, `TrustlineUpdateCancel` or `Transfer`|
 |from|string|Address of `from` user|
 |to|string|Address of `to` user|
 |status|string| `sent`, `pending` or `confirmed` depending on block height|
@@ -482,6 +482,7 @@ Following additional attributes for `Transfer` events:
 | amount    | string | Transfer amount `from -> to`                         |
 | extraData | string | extraData as specified in the corresponding transfer |
 |           |        |                                                      |
+
 #### Example Response
 ```json
 [
@@ -499,6 +500,16 @@ Following additional attributes for `Transfer` events:
 		"interestRateGiven": "1000",
 		"interestRateReceived": "1000",
         "isFrozen": false
+	},
+    {
+		"networkAddress": "0xC0B33D88C704455075a0724AA167a286da778DDE",
+		"blockNumber": 6997877,
+		"timestamp": 1524655432,
+		"type": "TrustlineUpdateCancel",
+		"from": "0xcbF1153F6e5AC01D363d432e24112e8aA56c55ce",
+		"to": "0x7Ff66eb1A824FF9D1bB7e234a2d3B7A3b0345320",
+		"status": "confirmed",
+		"transactionId": "0xb141aa3baec4e7151d8bd6ecab46d26b1add131e50bcc517c956a7ac979815cd",
 	},
 	{
 		"networkAddress": "0xC0B33D88C704455075a0724AA167a286da778DDE",
@@ -547,7 +558,7 @@ curl https://relay0.testnet.trustlines.network/api/v1/networks/0xC0B33D88C704455
 |-|-|-|-|
 |network|string|YES|Address of currency network|
 |user|string|YES|Address of user|
-|type|string|NO|Either `TrustlineUpdate`, `TrustlineUpdateRequest` or `Transfer`|
+|type|string|NO|Either `TrustlineUpdate`, `TrustlineUpdateRequest`, `TrustlineUpdateCancel` or `Transfer`|
 |fromBlock|int|NO|Start of block range|
 #### Response
 |Attribute|Type|Description|
@@ -555,7 +566,7 @@ curl https://relay0.testnet.trustlines.network/api/v1/networks/0xC0B33D88C704455
 |networkAddress|string|Address of currency network|
 |blockNumber|string|Number of block|
 |timestamp|int|UNIX timestamp|
-|type|string|Either `TrustlineUpdate`, `TrustlineUpdateRequest` or `Transfer`|
+|type|string|Either `TrustlineUpdate`, `TrustlineUpdateRequest`, `TrustlineUpdateCancel` or `Transfer`|
 |from|string|Address of `from` user|
 |to|string|Address of `to` user|
 |status|string| `sent`, `pending` or `confirmed` depending on block height|
@@ -595,6 +606,16 @@ Following additional attributes for `Transfer` events:
 		"interestRateGiven": "1000",
 		"interestRateReceived": "1000",
         "isFrozen": false
+	},
+    {
+		"networkAddress": "0xC0B33D88C704455075a0724AA167a286da778DDE",
+		"blockNumber": 6997877,
+		"timestamp": 1524655432,
+		"type": "TrustlineUpdateCancel",
+		"from": "0xcbF1153F6e5AC01D363d432e24112e8aA56c55ce",
+		"to": "0x7Ff66eb1A824FF9D1bB7e234a2d3B7A3b0345320",
+		"status": "confirmed",
+		"transactionId": "0xb141aa3baec4e7151d8bd6ecab46d26b1add131e50bcc517c956a7ac979815cd",
 	},
 	{
 		"networkAddress": "0xC0B33D88C704455075a0724AA167a286da778DDE",
@@ -642,7 +663,7 @@ curl https://relay0.testnet.trustlines.network/api/v1/users/0xcbF1153F6e5AC01D36
 |Name|Type|Required|Description|
 |-|-|-|-|
 |user|string|YES|Address of user|
-|type|string|NO|Either `TrustlineUpdate`, `TrustlineUpdateRequest` or `Transfer`|
+|type|string|NO|Either `TrustlineUpdate`, `TrustlineUpdateRequest`, `TrustlineUpdateCancel` or `Transfer`|
 |fromBlock|int|NO|Start of block range|
 #### Response
 |Attribute|Type|Description|
@@ -650,7 +671,7 @@ curl https://relay0.testnet.trustlines.network/api/v1/users/0xcbF1153F6e5AC01D36
 |networkAddress|string|Address of currency network|
 |blockNumber|string|Number of block|
 |timestamp|int|UNIX timestamp|
-|type|string|Either `TrustlineUpdate`, `TrustlineUpdateRequest` or `Transfer`|
+|type|string|Either `TrustlineUpdate`, `TrustlineUpdateRequest`, `TrustlineUpdateCancel` or `Transfer`|
 |from|string|Address of `from` user|
 |to|string|Address of `to` user|
 |status|string| `sent`, `pending` or `confirmed` depending on block height|
@@ -690,6 +711,16 @@ Following additional attributes for `Transfer` events:
 		"interestRateGiven": "1000",
 		"interestRateReceived": "1000",
         "isFrozen": false
+	},
+    {
+		"networkAddress": "0xC0B33D88C704455075a0724AA167a286da778DDE",
+		"blockNumber": 6997877,
+		"timestamp": 1524655432,
+		"type": "TrustlineUpdateCancel",
+		"from": "0xcbF1153F6e5AC01D363d432e24112e8aA56c55ce",
+		"to": "0x7Ff66eb1A824FF9D1bB7e234a2d3B7A3b0345320",
+		"status": "confirmed",
+		"transactionId": "0xb141aa3baec4e7151d8bd6ecab46d26b1add131e50bcc517c956a7ac979815cd",
 	},
 	{
 		"networkAddress": "0xC0B33D88C704455075a0724AA167a286da778DDE",

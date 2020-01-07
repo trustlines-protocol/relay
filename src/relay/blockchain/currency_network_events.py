@@ -70,6 +70,10 @@ class TrustlineRequestEvent(TrustlineEvent):
     pass
 
 
+class TrustlineRequestCancelEvent(CurrencyNetworkEvent):
+    pass
+
+
 class NetworkFreezeEvent(BlockchainEvent):
     def __init__(self, web3_event, current_blocknumber: int, timestamp: int):
         super().__init__(web3_event, current_blocknumber, timestamp)
@@ -80,6 +84,7 @@ event_builders = {
     TransferEventType: TransferEvent,
     TrustlineUpdateEventType: TrustlineUpdateEvent,
     TrustlineRequestEventType: TrustlineRequestEvent,
+    TrustlineRequestCancelEventType: TrustlineRequestCancelEvent,
     BalanceUpdateEventType: BalanceUpdateEvent,
     NetworkFreezeEventType: NetworkFreezeEvent,
 }
@@ -88,6 +93,7 @@ event_builders = {
 from_to_types = {
     TransferEventType: ["_from", "_to"],
     TrustlineRequestEventType: ["_creditor", "_debtor"],
+    TrustlineRequestCancelEventType: ["_initiator", "_counterparty"],
     TrustlineUpdateEventType: ["_creditor", "_debtor"],
     BalanceUpdateEventType: ["_from", "_to"],
 }
@@ -95,5 +101,6 @@ from_to_types = {
 standard_event_types = [
     TransferEventType,
     TrustlineRequestEventType,
+    TrustlineRequestCancelEventType,
     TrustlineUpdateEventType,
 ]
