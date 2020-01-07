@@ -86,7 +86,7 @@ def test_number_of_get_events(currency_network_with_events, accounts):
                 TrustlineRequestEventType, user_address=accounts[0]
             )
         )
-        == 3
+        == 5
     )
     assert (
         len(
@@ -135,7 +135,7 @@ def test_get_transfer_event(currency_network_with_events, accounts, test_extra_d
 
 def test_number_of_get_all_events(currency_network_with_events, accounts):
     currency_network = currency_network_with_events
-    assert len(currency_network.get_all_network_events(user_address=accounts[0])) == 7
+    assert len(currency_network.get_all_network_events(user_address=accounts[0])) == 11
 
 
 def test_listen_on_balance_update(currency_network, accounts):

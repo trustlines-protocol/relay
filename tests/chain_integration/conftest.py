@@ -104,6 +104,10 @@ class CurrencyNetworkProxy(currency_network_proxy.CurrencyNetworkProxy):
             ).transact({"from": from_})
         self._web3.eth.waitForTransactionReceipt(txid)
 
+    def cancel_trustline_update(self, from_, to):
+        txid = self._proxy.functions.cancelTrustlineUpdate(to).transact({"from": from_})
+        self._web3.eth.waitForTransactionReceipt(txid)
+
     def update_trustline_with_accept(
         self,
         from_,
@@ -132,6 +136,48 @@ class CurrencyNetworkProxy(currency_network_proxy.CurrencyNetworkProxy):
             interest_rate_given,
             is_frozen,
         )
+
+    def update_trustline_and_cancel(
+        self,
+        from_,
+        to,
+        creditline_given,
+        creditline_received,
+        interest_rate_given=None,
+        interest_rate_received=None,
+        is_frozen=False,
+    ):
+        self.update_trustline(
+            from_,
+            to,
+            creditline_given,
+            creditline_received,
+            interest_rate_given,
+            interest_rate_received,
+            is_frozen,
+        )
+        self.cancel_trustline_update(from_, to)
+
+    def update_trustline_and_reject(
+        self,
+        from_,
+        to,
+        creditline_given,
+        creditline_received,
+        interest_rate_given=None,
+        interest_rate_received=None,
+        is_frozen=False,
+    ):
+        self.update_trustline(
+            from_,
+            to,
+            creditline_given,
+            creditline_received,
+            interest_rate_given,
+            interest_rate_received,
+            is_frozen,
+        )
+        self.cancel_trustline_update(to, from_)
 
     def transfer(self, from_, value, max_fee, path, extra_data=b""):
         txid = self._proxy.functions.transfer(
@@ -284,6 +330,8 @@ def currency_network_with_events(currency_network, accounts, test_extra_data):
     )
     currency_network.update_trustline_with_accept(accounts[0], accounts[2], 25, 50)
     currency_network.update_trustline_with_accept(accounts[0], accounts[4], 25, 50)
+    currency_network.update_trustline_and_cancel(accounts[0], accounts[3], 25, 50)
+    currency_network.update_trustline_and_reject(accounts[0], accounts[5], 25, 50)
 
     return currency_network
 
