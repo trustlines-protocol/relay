@@ -14,8 +14,6 @@ from relay.blockchain.currency_network_events import (
 from relay.blockchain.events import TLNetworkEvent
 from relay.events import AccountEvent, Event, MessageEvent
 
-from .client_token_db import ClientTokenDB
-
 logger = logging.getLogger("pushservice")
 
 
@@ -141,37 +139,3 @@ def _build_notification(event: Event) -> messaging.Notification:
             )
 
     return notification
-
-
-class FirebasePushService:
-    """Sends push notifications to firebase. Sending is done based on ethereum addresses"""
-
-    def __init__(
-        self,
-        client_token_db: ClientTokenDB,
-        firebaseRawPushService: FirebaseRawPushService,
-    ) -> None:
-        """
-        Args:
-            client_token_db: Database to map ethereum address to client token
-            firebaseRawPushService: Initialized firebase service to send push notifications
-        """
-        self._firebaseRawPushService = firebaseRawPushService
-        self._client_token_db = client_token_db
-
-    def send_event(self, user_address: str, event: Event) -> None:
-        """
-        Sends an event to a user. The client to push the notification to is taken from the database
-        """
-        # Iterate over copy list, because we might delete from this list
-        for client_token in list(self._client_token_db.get_client_tokens(user_address)):
-            try:
-                logger.debug(
-                    f"Sending pushnotification of {event.type} to {user_address} with client token {client_token}"
-                )
-                self._firebaseRawPushService.send_event(client_token, event)
-            except InvalidClientTokenException:
-                logger.debug(
-                    f"Removing invalid token {client_token} for {user_address}"
-                )
-                self._client_token_db.delete_client_token(user_address, client_token)
