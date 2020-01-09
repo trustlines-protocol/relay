@@ -2,6 +2,7 @@ import json
 import logging
 from typing import Optional
 
+import cachetools
 import firebase_admin
 from firebase_admin import credentials, messaging
 
@@ -38,6 +39,30 @@ class MessageNotSentException(PushServiceException):
     pass
 
 
+def dedup_message_id(client_token, message):
+    """generate a message id used for deduplicating push notifications
+
+    returns None when the message should be sent anyway, otherwise it
+    returns a tuple of the client_token, the message title, the
+    message body and the transaction_id. This tuple should be used to
+    deduplicate messages, i.e. we should not send messages twice for
+    the same tuple.
+    """
+    if message is None or message.notification is None:
+        return None
+    event_data = json.loads(message.data["event"])
+    transaction_id = event_data.get("transactionId")
+    if not transaction_id:
+        return None
+
+    return (
+        client_token,
+        message.notification.title,
+        message.notification.body,
+        transaction_id,
+    )
+
+
 class FirebaseRawPushService:
     """Sends push notifications to firebase. Sending is done based on raw client tokens"""
 
@@ -49,12 +74,19 @@ class FirebaseRawPushService:
         """
         cred = credentials.Certificate(path_to_keyfile)
         self._app = firebase_admin.initialize_app(cred)
+        self.cache = cachetools.TTLCache(100_000, ttl=3600)
 
     def send_event(self, client_token, event: Event):
         message = _build_event_message(client_token, event)
         if message is not None:
+            msgid = dedup_message_id(client_token, message)
+            if msgid is not None and msgid in self.cache:
+                logger.debug("not sending duplicate message for event %s", event)
+                return
             try:
                 messaging.send(message, app=self._app)
+                if msgid is not None:
+                    self.cache[msgid] = True
             except messaging.ApiCallError as e:
                 # Check if error code is because token is invalid
                 # see https://firebase.google.com/docs/cloud-messaging/admin/errors

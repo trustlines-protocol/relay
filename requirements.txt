@@ -22,6 +22,7 @@ wrapt
 attrs
 click
 toml
+cachetools
 
 # --- development dependencies, i.e. dependencies not needed for running tl-relay
 black
