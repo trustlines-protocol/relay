@@ -373,7 +373,7 @@ class TrustlinesRelay:
             )
         return events
 
-    def get_trustline_network_events(
+    def get_trustline_events(
         self,
         network_address: str,
         user_address: str,

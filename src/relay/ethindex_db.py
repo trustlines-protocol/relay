@@ -242,6 +242,7 @@ class EthindexDB:
         counterparty_address: str,
         event_name: str = None,
         from_block: int = 0,
+        timeout: float = None,
     ):
         if event_name is None:
             query = EventsQuery(
@@ -286,12 +287,13 @@ class EthindexDB:
         events = self._run_events_query(query)
 
         logger.debug(
-            "get_trustline_events(%s, %s, %s, %s, %s) -> %s rows",
+            "get_trustline_events(%s, %s, %s, %s, %s, %s) -> %s rows",
             contract_address,
             user_address,
             counterparty_address,
             event_name,
             from_block,
+            timeout,
             len(events),
         )
 
