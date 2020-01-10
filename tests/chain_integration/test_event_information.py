@@ -9,11 +9,16 @@ from relay.blockchain.events_informations import (
     "years, interests", [([0, 1], [0, 2]), ([1, 4, 2, 3], [1, 9, 8, 19])]
 )
 def test_get_interests_for_trustline(
-    currency_network_with_trustlines, web3, chain, accounts, years, interests
+    currency_network_with_trustlines_and_interests,
+    web3,
+    chain,
+    accounts,
+    years,
+    interests,
 ):
     """Sending 10 with a time difference of x years where the interest rate is 10%
     """
-    currency_network = currency_network_with_trustlines
+    currency_network = currency_network_with_trustlines_and_interests
     currency_network.transfer(accounts[1], 10, 1000, [accounts[1], accounts[2]])
 
     path = [accounts[0], accounts[1], accounts[2], accounts[3]]

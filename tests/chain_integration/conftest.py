@@ -73,11 +73,16 @@ def taker(accounts):
 
 class CurrencyNetworkProxy(currency_network_proxy.CurrencyNetworkProxy):
     def setup_trustlines(self, trustlines):
-        for (A, B, clAB, clBA, intAB, intBA) in trustlines:
+        for (A, B, clAB, clBA) in trustlines:
             txid = self._proxy.functions.setAccount(
-                A, B, clAB, clBA, intAB, intBA, False, 0, 0
+                A, B, clAB, clBA, 0, 0, False, 0, 0
             ).transact()
             self._web3.eth.waitForTransactionReceipt(txid)
+
+    def setup_trustlines_with_interests_with_updates(self, trustlines_with_interests):
+        # uses `update_trustline` instead of `setAccount` so that events are emitted when setting up trustlines
+        for (A, B, clAB, clBA, intAB, intBA) in trustlines_with_interests:
+            self.update_trustline_with_accept(A, B, clAB, clBA, intAB, intBA)
 
     def update_trustline(
         self,
@@ -204,6 +209,17 @@ class CurrencyNetworkProxy(currency_network_proxy.CurrencyNetworkProxy):
 @pytest.fixture()
 def trustlines(accounts):
     return [
+        (accounts[0], accounts[1], 100, 150),
+        (accounts[1], accounts[2], 200, 250),
+        (accounts[2], accounts[3], 300, 350),
+        (accounts[3], accounts[4], 400, 450),
+        (accounts[0], accounts[4], 500, 550),
+    ]  # (A, B, clAB, clBA)
+
+
+@pytest.fixture()
+def trustlines_with_interests(accounts):
+    return [
         (accounts[0], accounts[1], 100, 150, 1000, 1000),
         (accounts[1], accounts[2], 200, 250, 1000, 1000),
         (accounts[2], accounts[3], 300, 350, 1000, 1000),
@@ -318,6 +334,20 @@ def currency_network_with_trustlines(
         web3, currency_network_abi, testnetwork2_address
     )
     currency_network.setup_trustlines(trustlines)
+
+    return currency_network
+
+
+@pytest.fixture()
+def currency_network_with_trustlines_and_interests(
+    web3, currency_network_abi, testnetwork2_address, trustlines_with_interests
+):
+    currency_network = CurrencyNetworkProxy(
+        web3, currency_network_abi, testnetwork2_address
+    )
+    currency_network.setup_trustlines_with_interests_with_updates(
+        trustlines_with_interests
+    )
 
     return currency_network
 
