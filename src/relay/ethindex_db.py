@@ -235,6 +235,73 @@ class EthindexDB:
                 raise ValueError("Expected a TLNetworkEvent")
         return events
 
+    def get_trustline_events(
+        self,
+        contract_address: str,
+        user_address: str,
+        counterparty_address: str,
+        event_name: str = None,
+        from_block: int = 0,
+    ):
+        if event_name is None:
+            query = EventsQuery(
+                """blockNumber>=%s
+                   AND address=%s
+                   AND ((args->>'{_from}'=%s AND args->>'{_to}'=%s) OR (args->>'{_from}'=%s AND args->>'{_to}'=%s))
+                """.format(
+                    _from=self.from_to_types[event_name][0],
+                    _to=self.from_to_types[event_name][1],
+                ),
+                (
+                    from_block,
+                    event_name,
+                    contract_address,
+                    user_address,
+                    counterparty_address,
+                    counterparty_address,
+                    user_address,
+                ),
+            )
+        else:
+            query = EventsQuery(
+                """blockNumber>=%s
+                   AND eventName=%s
+                   AND address=%s
+                   AND ((args->>'{_from}'=%s AND args->>'{_to}'=%s) OR (args->>'{_from}'=%s AND args->>'{_to}'=%s))
+                """.format(
+                    _from=self.from_to_types[event_name][0],
+                    _to=self.from_to_types[event_name][1],
+                ),
+                (
+                    from_block,
+                    event_name,
+                    contract_address,
+                    user_address,
+                    counterparty_address,
+                    counterparty_address,
+                    user_address,
+                ),
+            )
+
+        events = self._run_events_query(query)
+
+        logger.debug(
+            "get_trustline_events(%s, %s, %s, %s, %s) -> %s rows",
+            contract_address,
+            user_address,
+            counterparty_address,
+            event_name,
+            from_block,
+            len(events),
+        )
+
+        for event in events:
+            if isinstance(event, TLNetworkEvent):
+                event.user = user_address
+            else:
+                raise ValueError("Expected a TLNetworkEvent")
+        return events
+
     def get_all_unw_eth_events(
         self, user_address: str = None, from_block: int = 0, timeout: float = None
     ) -> List[BlockchainEvent]:
