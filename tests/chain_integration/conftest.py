@@ -73,9 +73,9 @@ def taker(accounts):
 
 class CurrencyNetworkProxy(currency_network_proxy.CurrencyNetworkProxy):
     def setup_trustlines(self, trustlines):
-        for (A, B, clAB, clBA) in trustlines:
+        for (A, B, clAB, clBA, intAB, intBA) in trustlines:
             txid = self._proxy.functions.setAccount(
-                A, B, clAB, clBA, 0, 0, False, 0, 0
+                A, B, clAB, clBA, intAB, intBA, False, 0, 0
             ).transact()
             self._web3.eth.waitForTransactionReceipt(txid)
 
@@ -204,11 +204,11 @@ class CurrencyNetworkProxy(currency_network_proxy.CurrencyNetworkProxy):
 @pytest.fixture()
 def trustlines(accounts):
     return [
-        (accounts[0], accounts[1], 100, 150),
-        (accounts[1], accounts[2], 200, 250),
-        (accounts[2], accounts[3], 300, 350),
-        (accounts[3], accounts[4], 400, 450),
-        (accounts[0], accounts[4], 500, 550),
+        (accounts[0], accounts[1], 100, 150, 1000, 1000),
+        (accounts[1], accounts[2], 200, 250, 1000, 1000),
+        (accounts[2], accounts[3], 300, 350, 1000, 1000),
+        (accounts[3], accounts[4], 400, 450, 1000, 1000),
+        (accounts[0], accounts[4], 500, 550, 1000, 1000),
     ]  # (A, B, clAB, clBA)
 
 

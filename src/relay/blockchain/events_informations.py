@@ -1,24 +1,26 @@
 from typing import List
 
-from relay.network_graph.interests import calculate_interests
-
-from .blockchain.currency_network_events import (
+from relay.blockchain.currency_network_events import (
     BalanceUpdateEvent,
-    TrustlineUpdateEventType,
+    BalanceUpdateEventType,
 )
-from .relay import TrustlinesRelay
+from relay.network_graph.interests import calculate_interests
 
 DIRECTION_SENT = "sent"
 DIRECTION_RECEIVED = "received"
 
 
 def get_list_of_paid_interests_for_trustline(
-    currency_network_address, user, counterparty
+    events_proxy, currency_network_address, user, counterparty
 ):
-    """Get all balance changes of a trustline because of interests"""
-    balance_update_events = TrustlinesRelay.get_trustline_network_events(
-        currency_network_address, user, counterparty, type=TrustlineUpdateEventType
+    """Get all balance changes of a trustline because of interests and the time at which it occurred"""
+    # TODO: find the interests rates instead of hard coding
+    interest_rate = 1000
+
+    balance_update_events = events_proxy.get_trustline_events(
+        currency_network_address, user, counterparty, event_name=BalanceUpdateEventType
     )
+    print(balance_update_events)
 
     timestamps = [
         balance_update_event.timestamp for balance_update_event in balance_update_events
@@ -27,7 +29,7 @@ def get_list_of_paid_interests_for_trustline(
     balances = get_sorted_balances_from_update_events(balance_update_events)
 
     return [
-        (calculate_interests(balance, post_time - pre_time), post_time)
+        (calculate_interests(balance, interest_rate, post_time - pre_time), post_time)
         for (balance, pre_time, post_time) in zip(
             balances[:-1], timestamps[:-1], timestamps[1:]
         )
