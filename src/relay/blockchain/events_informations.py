@@ -74,7 +74,6 @@ def get_interests_rates_of_trustline_for_user_before_timestamp(
     events_proxy, currency_network_address, user, counterparty, balance, timestamp
 ):
     """Get the interest rate that would be used to apply interests at a certain timestamp"""
-    # TODO: this is probably false as the interest rate does not depend on direction but on balance sign
     trustline_update_events = events_proxy.get_trustline_events(
         currency_network_address,
         user,

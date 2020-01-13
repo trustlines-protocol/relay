@@ -250,7 +250,7 @@ class CurrencyNetworkProxy(Proxy):
         contract_address: str,
         user_address: str,
         counterparty_address: str,
-        type: str = None,
+        type: str,
         from_block: int = 0,
         timeout: float = None,
     ):
