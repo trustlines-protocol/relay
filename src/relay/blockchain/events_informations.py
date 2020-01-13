@@ -32,9 +32,14 @@ def get_list_of_paid_interests_for_trustline(
     balances = get_sorted_balances_from_update_events(balance_update_events)
     interest_rates = [
         get_interests_rates_of_trustline_for_user_before_timestamp(
-            events_proxy, currency_network_address, user, counterparty, timestamp
+            events_proxy,
+            currency_network_address,
+            user,
+            counterparty,
+            balance,
+            timestamp,
         )
-        for timestamp in timestamps[1:]
+        for (balance, timestamp) in zip(balances[:-1], timestamps[1:])
     ]
 
     return [
@@ -66,16 +71,16 @@ def get_sorted_balances_from_update_events(
 
 
 def get_interests_rates_of_trustline_for_user_before_timestamp(
-    events_proxy, currency_network_address, user, counterparty, timestamp
+    events_proxy, currency_network_address, user, counterparty, balance, timestamp
 ):
     """Get the interest rate that would be used to apply interests at a certain timestamp"""
+    # TODO: this is probably false as the interest rate does not depend on direction but on balance sign
     trustline_update_events = events_proxy.get_trustline_events(
         currency_network_address,
         user,
         counterparty,
         event_name=TrustlineUpdateEventType,
     )
-    print(sorted_events(trustline_update_events, reversed=True))
 
     most_recent_event_before_timestamp = None
     for event in sorted_events(trustline_update_events, reversed=True):
@@ -86,9 +91,15 @@ def get_interests_rates_of_trustline_for_user_before_timestamp(
         RuntimeError("No trustline update event found before given timestamp")
 
     if most_recent_event_before_timestamp.direction == DIRECTION_SENT:
-        return most_recent_event_before_timestamp.interest_rate_given
+        if balance >= 0:
+            return most_recent_event_before_timestamp.interest_rate_given
+        else:
+            return most_recent_event_before_timestamp.interest_rate_received
     elif most_recent_event_before_timestamp.direction == DIRECTION_RECEIVED:
-        return most_recent_event_before_timestamp.interest_rate_received
+        if balance >= 0:
+            return most_recent_event_before_timestamp.interest_rate_received
+        else:
+            return most_recent_event_before_timestamp.interest_rate_given
     else:
         RuntimeError("Unexpected trustline update event")
 
