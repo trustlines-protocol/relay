@@ -32,8 +32,8 @@ def test_get_interests_for_trustline(
         currency_network.transfer(accounts[0], 9, 1000, path, b"")
 
     list_of_interests = [
-        interests_timestamps[0]
-        for interests_timestamps in get_list_of_paid_interests_for_trustline(
+        accrued_interests.value
+        for accrued_interests in get_list_of_paid_interests_for_trustline(
             currency_network, currency_network, accounts[2], accounts[1]
         )
     ]

@@ -1,4 +1,5 @@
 import math
+from collections import namedtuple
 from typing import List
 
 from relay.blockchain.currency_network_events import (
@@ -8,13 +9,15 @@ from relay.blockchain.currency_network_events import (
 )
 from relay.network_graph.interests import calculate_interests
 
+InterestAccrued = namedtuple("InterestAccrued", ["value", "interest_rate", "timestamp"])
+
 DIRECTION_SENT = "sent"
 DIRECTION_RECEIVED = "received"
 
 
 def get_list_of_paid_interests_for_trustline(
     events_proxy, currency_network_address, user, counterparty
-):
+) -> List[InterestAccrued]:
     """Get all balance changes of a trustline because of interests and the time at which it occurred.
     Assumes the trustline exists"""
 
@@ -35,7 +38,11 @@ def get_list_of_paid_interests_for_trustline(
     ]
 
     return [
-        (calculate_interests(balance, interest_rates, post_time - pre_time), post_time)
+        InterestAccrued(
+            calculate_interests(balance, interest_rates, post_time - pre_time),
+            interest_rates,
+            post_time,
+        )
         for (balance, interest_rates, pre_time, post_time) in zip(
             balances[:-1], interest_rates, timestamps[:-1], timestamps[1:]
         )
