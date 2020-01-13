@@ -68,6 +68,7 @@ def get_sorted_balances_from_update_events(
 def get_interests_rates_of_trustline_for_user_before_timestamp(
     events_proxy, currency_network_address, user, counterparty, timestamp
 ):
+    """Get the interest rate that would be used to apply interests at a certain timestamp"""
     trustline_update_events = events_proxy.get_trustline_events(
         currency_network_address,
         user,
@@ -99,3 +100,24 @@ def sorted_events(events, reversed=False):
         return event.blocknumber
 
     return sorted(events, key=key, reverse=reversed)
+
+
+def get_list_of_paid_interests_for_trustline_in_between_timestamps(
+    events_proxy, currency_network_address, user, counterparty, start_time, end_time
+):
+    all_accrued_interests = get_list_of_paid_interests_for_trustline(
+        events_proxy, currency_network_address, user, counterparty
+    )
+    return filter_list_of_accrued_interests_for_time_window(
+        all_accrued_interests, start_time, end_time
+    )
+
+
+def filter_list_of_accrued_interests_for_time_window(
+    accrued_interests: List[InterestAccrued], start_time, end_time
+):
+    filtered_list = []
+    for interest in accrued_interests:
+        if interest.timestamp <= end_time and interest.timestamp >= start_time:
+            filtered_list.append(interest)
+    return filtered_list
