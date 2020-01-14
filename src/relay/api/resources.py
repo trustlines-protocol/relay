@@ -20,6 +20,9 @@ from relay.blockchain.delegate import (
     InvalidMetaTransactionException,
     UnknownIdentityFactoryException,
 )
+from relay.blockchain.events_informations import (
+    get_list_of_paid_interests_for_trustline_in_between_timestamps,
+)
 from relay.blockchain.unw_eth_proxy import UnwEthProxy
 from relay.concurrency_utils import TimeoutException
 from relay.network_graph.payment_path import FeePayer, PaymentPath
@@ -27,6 +30,7 @@ from relay.relay import TrustlinesRelay
 from relay.utils import get_version, sha3
 
 from .schemas import (
+    AccruedInterestListSchema,
     AggregatedAccountSummarySchema,
     AnyEventSchema,
     CurrencyNetworkEventSchema,
@@ -124,8 +128,8 @@ class ContactList(Resource):
 
     def get(self, network_address: str, user_address: str):
         abort_if_unknown_network(self.trustlines, network_address)
-        return self.trustlines.currency_network_graphs[network_address].get_friends(
-            user_address
+        return self.trustlines.get_friends_of_user_in_network(
+            network_address, user_address
         )
 
 
@@ -312,6 +316,85 @@ class EventsNetwork(Resource):
                 from_block,
             )
             abort(504, TIMEOUT_MESSAGE)
+
+
+class UserAccruedInterestList(Resource):
+    def __init__(self, trustlines: TrustlinesRelay) -> None:
+        self.trustlines = trustlines
+
+    args = {
+        "startTime": fields.Int(required=False, missing=0),
+        "endTime": fields.Int(required=False, missing=None),
+    }
+
+    @use_args(args)
+    @dump_result_with_schema(AccruedInterestListSchema(many=True))
+    def get(self, network_address: str, user_address, args):
+        abort_if_unknown_network(self.trustlines, network_address)
+        start_time = args["startTime"]
+        end_time = args["endTime"]
+        if not end_time:
+            end_time = int(time.time())
+
+        event_selector = self.trustlines.get_event_selector_for_currency_network(
+            network_address
+        )
+
+        accrued_interest_list = []
+
+        for friend in self.trustlines.get_friends_of_user_in_network(
+            network_address, user_address
+        ):
+            accrued_interest_list.append(
+                {
+                    "accrued_interests": get_list_of_paid_interests_for_trustline_in_between_timestamps(
+                        event_selector,
+                        network_address,
+                        user_address,
+                        friend,
+                        start_time,
+                        end_time,
+                    ),
+                    "user": user_address,
+                    "counterparty": friend,
+                }
+            )
+        return accrued_interest_list
+
+
+class TrustlineAccruedInterestList(Resource):
+    def __init__(self, trustlines: TrustlinesRelay) -> None:
+        self.trustlines = trustlines
+
+    args = {
+        "startTime": fields.Int(required=False, missing=0),
+        "endTime": fields.Int(required=False, missing=None),
+    }
+
+    @use_args(args)
+    @dump_result_with_schema(AccruedInterestListSchema())
+    def get(self, network_address: str, user_address, counterparty_address, args):
+        abort_if_unknown_network(self.trustlines, network_address)
+        start_time = args["startTime"]
+        end_time = args["endTime"]
+        if not end_time:
+            end_time = int(time.time())
+
+        event_selector = self.trustlines.get_event_selector_for_currency_network(
+            network_address
+        )
+        return {
+            "accrued_interests": get_list_of_paid_interests_for_trustline_in_between_timestamps(
+                event_selector,
+                network_address,
+                user_address,
+                counterparty_address,
+                start_time,
+                end_time,
+            ),
+            "user": user_address,
+            "counterparty": counterparty_address,
+        }
 
 
 class TransactionInfos(Resource):

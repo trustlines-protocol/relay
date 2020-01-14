@@ -192,6 +192,9 @@ class TrustlinesRelay:
     def get_users_of_network(self, network_address: str):
         return self.currency_network_graphs[network_address].users
 
+    def get_friends_of_user_in_network(self, network_address: str, user_address: str):
+        return self.currency_network_graphs[network_address].get_friends(user_address)
+
     def deploy_identity(self, factory_address, implementation_address, signature):
         return self.delegate.deploy_identity(
             factory_address, implementation_address, signature
