@@ -24,6 +24,12 @@ def get_list_of_paid_interests_for_trustline(
     balance_update_events = events_proxy.get_trustline_events(
         currency_network_address, user, counterparty, event_name=BalanceUpdateEventType
     )
+    trustline_update_events = events_proxy.get_trustline_events(
+        currency_network_address,
+        user,
+        counterparty,
+        event_name=TrustlineUpdateEventType,
+    )
 
     timestamps = [
         balance_update_event.timestamp for balance_update_event in balance_update_events
@@ -32,12 +38,7 @@ def get_list_of_paid_interests_for_trustline(
     balances = get_sorted_balances_from_update_events(balance_update_events)
     interest_rates = [
         get_interests_rates_of_trustline_for_user_before_timestamp(
-            events_proxy,
-            currency_network_address,
-            user,
-            counterparty,
-            balance,
-            timestamp,
+            trustline_update_events, balance, timestamp
         )
         for (balance, timestamp) in zip(balances[:-1], timestamps[1:])
     ]
@@ -65,21 +66,15 @@ def get_sorted_balances_from_update_events(
         elif balance_update_event.direction == DIRECTION_RECEIVED:
             return -balance_update_event.value
         else:
-            RuntimeError("Unexpected balance update event")
+            raise RuntimeError("Unexpected balance update event")
 
     return [balance_viewed_from_user(event) for event in balance_update_events]
 
 
 def get_interests_rates_of_trustline_for_user_before_timestamp(
-    events_proxy, currency_network_address, user, counterparty, balance, timestamp
+    trustline_update_events, balance, timestamp
 ):
     """Get the interest rate that would be used to apply interests at a certain timestamp"""
-    trustline_update_events = events_proxy.get_trustline_events(
-        currency_network_address,
-        user,
-        counterparty,
-        event_name=TrustlineUpdateEventType,
-    )
 
     most_recent_event_before_timestamp = None
     for event in sorted_events(trustline_update_events, reversed=True):
@@ -87,7 +82,7 @@ def get_interests_rates_of_trustline_for_user_before_timestamp(
             most_recent_event_before_timestamp = event
             break
     if most_recent_event_before_timestamp is None:
-        RuntimeError("No trustline update event found before given timestamp")
+        raise RuntimeError("No trustline update event found before given timestamp")
 
     if most_recent_event_before_timestamp.direction == DIRECTION_SENT:
         if balance >= 0:
@@ -100,7 +95,7 @@ def get_interests_rates_of_trustline_for_user_before_timestamp(
         else:
             return most_recent_event_before_timestamp.interest_rate_given
     else:
-        RuntimeError("Unexpected trustline update event")
+        raise RuntimeError("Unexpected trustline update event")
 
 
 def sorted_events(events, reversed=False):
