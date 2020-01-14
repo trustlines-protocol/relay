@@ -1,8 +1,17 @@
 ==========
 Change Log
 ==========
-`0.11.0`_ (unreleased)
+`0.11.0`_ (2020-01-15)
 -------------------------------
+- Update contracts to 1.0.0
+- Update docs and handling of events for TrustlineUpdateCancel
+- Update transfer related function signatures/events
+- Remove unused outstanding fees fields
+- Make delegation fees configurable via config.toml
+- Add endpoint to query for fees of a meta-tx
+- Add function for delegate to calculate fees for a meta-tx
+- Prevent asking for a path in a frozen currency network
+
 `0.10.0`_ (2019-11-05)
 -------------------------------
 - Add make logging configurable via the TOML configuration file
