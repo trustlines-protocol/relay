@@ -4,6 +4,7 @@ import json
 import logging
 import os
 import sys
+import time
 from collections import defaultdict
 from copy import deepcopy
 from typing import Dict, Iterable, List, Optional, Union
@@ -37,6 +38,9 @@ from .blockchain import (
 from .blockchain.currency_network_proxy import CurrencyNetworkProxy
 from .blockchain.delegate import Delegate, DelegationFees
 from .blockchain.events import BlockchainEvent
+from .blockchain.events_informations import (
+    get_list_of_paid_interests_for_trustline_in_between_timestamps,
+)
 from .blockchain.exchange_proxy import ExchangeProxy
 from .blockchain.node import Node
 from .blockchain.proxy import sorted_events
@@ -194,6 +198,26 @@ class TrustlinesRelay:
 
     def get_friends_of_user_in_network(self, network_address: str, user_address: str):
         return self.currency_network_graphs[network_address].get_friends(user_address)
+
+    def get_list_of_accrued_interests_for_trustline(
+        self,
+        network_address: str,
+        user_address: str,
+        counterparty_address: str,
+        start_time: int = 0,
+        end_time: int = None,
+    ):
+        if not end_time:
+            end_time = int(time.time())
+        event_selector = self.get_event_selector_for_currency_network(network_address)
+        return get_list_of_paid_interests_for_trustline_in_between_timestamps(
+            event_selector,
+            network_address,
+            user_address,
+            counterparty_address,
+            start_time,
+            end_time,
+        )
 
     def deploy_identity(self, factory_address, implementation_address, signature):
         return self.delegate.deploy_identity(

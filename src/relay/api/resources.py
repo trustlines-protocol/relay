@@ -20,9 +20,6 @@ from relay.blockchain.delegate import (
     InvalidMetaTransactionException,
     UnknownIdentityFactoryException,
 )
-from relay.blockchain.events_informations import (
-    get_list_of_paid_interests_for_trustline_in_between_timestamps,
-)
 from relay.blockchain.unw_eth_proxy import UnwEthProxy
 from relay.concurrency_utils import TimeoutException
 from relay.network_graph.payment_path import FeePayer, PaymentPath
@@ -333,12 +330,6 @@ class UserAccruedInterestList(Resource):
         abort_if_unknown_network(self.trustlines, network_address)
         start_time = args["startTime"]
         end_time = args["endTime"]
-        if not end_time:
-            end_time = int(time.time())
-
-        event_selector = self.trustlines.get_event_selector_for_currency_network(
-            network_address
-        )
 
         accrued_interest_list = []
 
@@ -347,13 +338,8 @@ class UserAccruedInterestList(Resource):
         ):
             accrued_interest_list.append(
                 {
-                    "accrued_interests": get_list_of_paid_interests_for_trustline_in_between_timestamps(
-                        event_selector,
-                        network_address,
-                        user_address,
-                        friend,
-                        start_time,
-                        end_time,
+                    "accrued_interests": self.trustlines.get_list_of_accrued_interests_for_trustline(
+                        network_address, user_address, friend, start_time, end_time
                     ),
                     "user": user_address,
                     "counterparty": friend,
@@ -377,21 +363,12 @@ class TrustlineAccruedInterestList(Resource):
         abort_if_unknown_network(self.trustlines, network_address)
         start_time = args["startTime"]
         end_time = args["endTime"]
-        if not end_time:
-            end_time = int(time.time())
 
-        event_selector = self.trustlines.get_event_selector_for_currency_network(
-            network_address
+        accrued_interests = self.trustlines.get_list_of_accrued_interests_for_trustline(
+            network_address, user_address, counterparty_address, start_time, end_time
         )
         return {
-            "accrued_interests": get_list_of_paid_interests_for_trustline_in_between_timestamps(
-                event_selector,
-                network_address,
-                user_address,
-                counterparty_address,
-                start_time,
-                end_time,
-            ),
+            "accrued_interests": accrued_interests,
             "user": user_address,
             "counterparty": counterparty_address,
         }
