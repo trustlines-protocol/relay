@@ -373,6 +373,25 @@ class TrustlinesRelay:
             )
         return events
 
+    def get_trustline_events(
+        self,
+        network_address: str,
+        user_address: str,
+        counterparty_address: str,
+        type: str = None,
+        from_block: int = 0,
+    ):
+        proxy = self.get_event_selector_for_currency_network(network_address)
+
+        events = proxy.get_trustline_events(
+            network_address,
+            user_address,
+            counterparty_address,
+            type,
+            from_block=from_block,
+        )
+        return events
+
     def get_network_events(
         self, network_address: str, type: str = None, from_block: int = 0
     ) -> List[BlockchainEvent]:

@@ -2,6 +2,7 @@ import gevent
 
 from relay.blockchain.currency_network_events import (
     TransferEventType,
+    TrustlineRequestCancelEventType,
     TrustlineRequestEventType,
     TrustlineUpdateEventType,
 )
@@ -136,6 +137,66 @@ def test_get_transfer_event(currency_network_with_events, accounts, test_extra_d
 def test_number_of_get_all_events(currency_network_with_events, accounts):
     currency_network = currency_network_with_events
     assert len(currency_network.get_all_network_events(user_address=accounts[0])) == 11
+
+
+def test_number_of_get_trustline_events(currency_network_with_events, accounts):
+    currency_network = currency_network_with_events
+    assert (
+        len(
+            currency_network.get_trustline_events(
+                currency_network.address,
+                accounts[0],
+                accounts[1],
+                TrustlineRequestEventType,
+            )
+        )
+        == 1
+    )
+    assert (
+        len(
+            currency_network.get_trustline_events(
+                currency_network.address,
+                accounts[0],
+                accounts[1],
+                TrustlineUpdateEventType,
+            )
+        )
+        == 1
+    )
+    assert (
+        len(
+            currency_network.get_trustline_events(
+                currency_network.address,
+                accounts[0],
+                accounts[3],
+                TrustlineRequestCancelEventType,
+            )
+        )
+        == 1
+    )
+    assert (
+        len(
+            currency_network.get_trustline_events(
+                currency_network.address, accounts[0], accounts[1]
+            )
+        )
+        == 3
+    )
+
+
+def test_get_trustline_events(currency_network_with_events, accounts):
+    currency_network = currency_network_with_events
+    user = accounts[0]
+    counter_party = accounts[1]
+    creditline_update_events = currency_network.get_trustline_events(
+        currency_network.address, user, counter_party, TrustlineUpdateEventType
+    )
+    assert len(creditline_update_events) == 1
+
+    update_event = creditline_update_events[0]
+    assert update_event.from_ == user
+    assert update_event.to == counter_party
+    assert update_event.direction == "sent"
 
 
 def test_listen_on_balance_update(currency_network, accounts):

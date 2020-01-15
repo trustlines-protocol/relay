@@ -185,7 +185,6 @@ class CurrencyNetworkProxy(Proxy):
             ]
             events = concurrency_utils.joinall(queries, timeout=timeout)
         else:
-
             filter1 = {from_to_types[event_name][0]: user_address}
             filter2 = {from_to_types[event_name][1]: user_address}
 
@@ -213,6 +212,97 @@ class CurrencyNetworkProxy(Proxy):
                 type,
                 user_address=user_address,
                 from_block=from_block,
+            )
+            for type in self.standard_event_types
+        ]
+        results = concurrency_utils.joinall(queries, timeout=timeout)
+        return sorted_events(list(itertools.chain.from_iterable(results)))
+
+    def get_trustline_events(
+        self,
+        contract_address: str,
+        user_address: str,
+        counterparty_address: str,
+        event_name: str = None,
+        from_block: int = 0,
+        timeout: float = None,
+    ):
+        if event_name is None:
+            return self.get_all_trustline_events(
+                contract_address,
+                user_address,
+                counterparty_address,
+                from_block,
+                timeout,
+            )
+        else:
+            return self.get_trustline_events_of_type(
+                contract_address,
+                user_address,
+                counterparty_address,
+                event_name,
+                from_block,
+                timeout,
+            )
+
+    def get_trustline_events_of_type(
+        self,
+        contract_address: str,
+        user_address: str,
+        counterparty_address: str,
+        type: str,
+        from_block: int = 0,
+        timeout: float = None,
+    ):
+        logger.debug(
+            "get_trustline_events: event_name=%s user_address=%s counter_party_address=%s from_block=%s",
+            type,
+            user_address,
+            counterparty_address,
+            from_block,
+        )
+        filter1 = {
+            from_to_types[type][0]: user_address,
+            from_to_types[type][1]: counterparty_address,
+        }
+        filter2 = {
+            from_to_types[type][0]: counterparty_address,
+            from_to_types[type][1]: user_address,
+        }
+
+        queries = [
+            functools.partial(self.get_events, type, filter1, from_block),
+            functools.partial(self.get_events, type, filter2, from_block),
+        ]
+        results = concurrency_utils.joinall(queries, timeout=timeout)
+
+        events = list(itertools.chain.from_iterable(results))
+
+        for event in events:
+            if isinstance(event, CurrencyNetworkEvent):
+                event.user = user_address
+            else:
+                raise ValueError("Expected a CurrencyNetworkEvent")
+
+        return sorted_events(events)
+
+    def get_all_trustline_events(
+        self,
+        contract_address: str,
+        user_address: str,
+        counterparty_address: str,
+        from_block: int = 0,
+        timeout: float = None,
+    ) -> List[BlockchainEvent]:
+        queries = [
+            functools.partial(
+                self.get_trustline_events_of_type,
+                contract_address=contract_address,
+                user_address=user_address,
+                counterparty_address=counterparty_address,
+                type=type,
+                from_block=from_block,
+                timeout=timeout,
             )
             for type in self.standard_event_types
         ]
