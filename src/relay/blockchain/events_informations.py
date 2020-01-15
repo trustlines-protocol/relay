@@ -37,6 +37,12 @@ def get_list_of_paid_interests_for_trustline(
         event_name=TrustlineUpdateEventType,
     )
 
+    return get_accrued_interests_from_events(
+        balance_update_events, trustline_update_events
+    )
+
+
+def get_accrued_interests_from_events(balance_update_events, trustline_update_events):
     accrued_interests = []
     for (pre_balance_event, post_balance_event) in toolz.itertoolz.sliding_window(
         2, balance_update_events
@@ -72,7 +78,7 @@ def get_interests_rates_of_trustline_for_user_before_timestamp(
     """Get the interest rate that would be used to apply interests at a certain timestamp"""
 
     most_recent_event_before_timestamp = None
-    for event in sorted_events(trustline_update_events, reversed=True):
+    for event in sorted_events(trustline_update_events, reverse=True):
         if event.timestamp < timestamp:
             most_recent_event_before_timestamp = event
             break
@@ -93,13 +99,13 @@ def get_interests_rates_of_trustline_for_user_before_timestamp(
         raise RuntimeError("Unexpected trustline update event")
 
 
-def sorted_events(events, reversed=False):
+def sorted_events(events, reverse=False):
     def key(event):
         if event.blocknumber is None:
             return math.inf
         return event.blocknumber
 
-    return sorted(events, key=key, reverse=reversed)
+    return sorted(events, key=key, reverse=reverse)
 
 
 def get_list_of_paid_interests_for_trustline_in_between_timestamps(
