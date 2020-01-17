@@ -326,7 +326,7 @@ class UserAccruedInterestList(Resource):
 
     @use_args(args)
     @dump_result_with_schema(AccruedInterestListSchema(many=True))
-    def get(self, network_address: str, user_address, args):
+    def get(self, args, network_address: str, user_address):
         abort_if_unknown_network(self.trustlines, network_address)
         start_time = args["startTime"]
         end_time = args["endTime"]
@@ -338,7 +338,7 @@ class UserAccruedInterestList(Resource):
         ):
             accrued_interest_list.append(
                 {
-                    "accrued_interests": self.trustlines.get_list_of_accrued_interests_for_trustline(
+                    "accruedInterests": self.trustlines.get_list_of_accrued_interests_for_trustline(
                         network_address, user_address, friend, start_time, end_time
                     ),
                     "user": user_address,
@@ -359,7 +359,7 @@ class TrustlineAccruedInterestList(Resource):
 
     @use_args(args)
     @dump_result_with_schema(AccruedInterestListSchema())
-    def get(self, network_address: str, user_address, counterparty_address, args):
+    def get(self, args, network_address: str, user_address, counterparty_address):
         abort_if_unknown_network(self.trustlines, network_address)
         start_time = args["startTime"]
         end_time = args["endTime"]
@@ -368,7 +368,7 @@ class TrustlineAccruedInterestList(Resource):
             network_address, user_address, counterparty_address, start_time, end_time
         )
         return {
-            "accrued_interests": accrued_interests,
+            "accruedInterests": accrued_interests,
             "user": user_address,
             "counterparty": counterparty_address,
         }
