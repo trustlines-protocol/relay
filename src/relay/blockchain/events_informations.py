@@ -24,8 +24,7 @@ class InterestAccrued:
 def get_list_of_paid_interests_for_trustline(
     events_proxy, currency_network_address, user, counterparty
 ) -> List[InterestAccrued]:
-    """Get all balance changes of a trustline because of interests and the time at which it occurred.
-    Assumes the trustline exists"""
+    """Get all balance changes of a trustline because of interests and the time at which it occurred."""
 
     balance_update_events = events_proxy.get_trustline_events(
         currency_network_address, user, counterparty, event_name=BalanceUpdateEventType

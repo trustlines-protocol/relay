@@ -28,12 +28,14 @@ https://relay0.testnet.trustlines.network/api/v1
 - [Users list in currency network](#users-list-in-currency-network)
 - [User details in currency network](#user-details-in-currency-network)
 - [Trustlines of user in currency network](#trustlines-of-user-in-currency-network)
-- [Trustline between users in currency network](#trustline-details-of-user-in-currency-network)
+- [Trustline between users in currency network](#trustline-between-users-in-currency-network)
 - [Spendable amount and path to any user in currency network](#spendable-amount-and-path-to-any-user-in-currency-network)
 - [Transfer path in currency network](#transfer-path-in-currency-network)
 - [Closing trustline path in currency network](#closing-trustline-path-in-currency-network)
 - [All events in currency network](#all-events-in-currency-network)
 - [Events of a user in currency network](#events-of-a-user-in-currency-network)
+- [Accrued interests of user](#accrued-interests-of-user)
+- [Accrued interests of trustline](#accrued-interests-of-trustline)
 ### User context
 - [Events of user in all currency networks](#events-of-user-in-all-currency-networks)
 - [Transaction infos for user](#transaction-infos-for-user)
@@ -260,7 +262,7 @@ GET /networks/:networkAddress/users/:userAddressA/trustlines/:userAddressB
 ```
 curl https://relay0.testnet.trustlines.network/api/v1/networks/0xC0B33D88C704455075a0724AA167a286da778DDE/users/0xcbF1153F6e5AC01D363d432e24112e8aA56c55ce/trustlines/0x7Ec3543702FA8F2C7b2bD84C034aAc36C263cA8b
 ```
-### Response
+#### Response
 |Attribute|Type|Description|
 |---------|----|-----------|
 |counterParty|string|Address of trustline counterparty|
@@ -274,7 +276,7 @@ curl https://relay0.testnet.trustlines.network/api/v1/networks/0xC0B33D88C704455
 |interestRateReceived|string|Interest Rate received from counterparty|
 |isFrozen|bool|Whether the trustline is forzen|
 |id|string|Identifier of trustline|
-### Example Response
+#### Example Response
 ```json
 {
     "id": "0xe4332c0bc15bf97933ce54c93af772bb13fad2c4c44e2516eb62d4f6c041e9ab",
@@ -509,7 +511,7 @@ Following additional attributes for `Transfer` events:
 		"from": "0xcbF1153F6e5AC01D363d432e24112e8aA56c55ce",
 		"to": "0x7Ff66eb1A824FF9D1bB7e234a2d3B7A3b0345320",
 		"status": "confirmed",
-		"transactionId": "0xb141aa3baec4e7151d8bd6ecab46d26b1add131e50bcc517c956a7ac979815cd",
+		"transactionId": "0xb141aa3baec4e7151d8bd6ecab46d26b1add131e50bcc517c956a7ac979815cd"
 	},
 	{
 		"networkAddress": "0xC0B33D88C704455075a0724AA167a286da778DDE",
@@ -615,7 +617,7 @@ Following additional attributes for `Transfer` events:
 		"from": "0xcbF1153F6e5AC01D363d432e24112e8aA56c55ce",
 		"to": "0x7Ff66eb1A824FF9D1bB7e234a2d3B7A3b0345320",
 		"status": "confirmed",
-		"transactionId": "0xb141aa3baec4e7151d8bd6ecab46d26b1add131e50bcc517c956a7ac979815cd",
+		"transactionId": "0xb141aa3baec4e7151d8bd6ecab46d26b1add131e50bcc517c956a7ac979815cd"
 	},
 	{
 		"networkAddress": "0xC0B33D88C704455075a0724AA167a286da778DDE",
@@ -645,6 +647,102 @@ Following additional attributes for `Transfer` events:
 		"extraData": "0x1234"
 	}
 ]
+```
+
+---
+
+### Accrued interests of user
+Returns a list of all accrued interests for user.
+#### Request
+```
+GET /networks/:network/users/:user/interests?startTime=:timestamp&endTime=:timestamp
+```
+#### Example Request
+```
+curl https://relay0.testnet.trustlines.network/api/v1/networks/0xC0B33D88C704455075a0724AA167a286da778DDE/users/0xcbF1153F6e5AC01D363d432e24112e8aA56c55ce/interests?startTime=1579000000&endTime=1579008836
+```
+#### URL Parameters
+| Name     | Type                      | Required | Description                                       |
+|----------|---------------------------|----------|---------------------------------------------------|
+| network  | string prefixed with "0x" | YES      | Address of currency network                       |
+| user     | string prefixed with "0x" | YES      | Address of concerned user                         |
+| startTime| integer                   | NO       | Start of time window to get list for (default: 0) |
+| endTime  | integer                   | NO       | End of time window to get list for (default: now) |
+#### Response
+The response is a list of objects with the following elements:
+
+| Attribute        | Type    | JSON Type | Description               |
+| ---------------- | ------- | --------- | ------------------------- |
+| accruedInterests | string  | array     | list of accrued interests |
+| user             | address | string    | Address of user           |
+| counterparty     | address | string    | Address of counterparty   |
+
+The `accuredInterests` is a list with the following elements:
+
+| Attribute    | Type       | JSON Type | Description                              |
+| ------------ | ---------- | --------- | ---------------------------------------- |
+| value        | BigInteger | string    | signed interest accrued viewed from user |
+| interestRate | integer    | integer   | interest rate for this accrued interest  |
+| timestamp    | integer    | integer   | timestamp of accrued interest            |
+#### Example Response
+```json
+[
+  {
+    "accruedInterests": [{"value": 123, "interestRate":  1000, "timestamp": 1579000000}, {"value": 456, "interestRate":  2000, "timestamp": 1579001000}],
+    "user": "0xcbF1153F6e5AC01D363d432e24112e8aA56c55ce",
+    "counterparty": "0x7Ff66eb1A824FF9D1bB7e234a2d3B7A3b0345320"
+  },
+  {
+    "accruedInterests": [{"value": 123, "interestRate":  1000, "timestamp": 1579000000}, {"value": 456, "interestRate":  2000, "timestamp": 1579001000}],
+    "user": "0xcbF1153F6e5AC01D363d432e24112e8aA56c55ce",
+    "counterparty": "0xC0B33D88C704455075a0724AA167a286da778DDE"
+  }
+]
+```
+
+---
+
+### Accrued interests of trustline
+Returns a list of all accrued interests for a trustline in between user and counterparty as seen by user.
+#### Request
+```
+GET /networks/:network/users/:user/interests/:counterparty?startTime=:timestamp&endTime=:timestamp
+```
+#### Example Request
+```
+curl https://relay0.testnet.trustlines.network/api/v1/networks/0xC0B33D88C704455075a0724AA167a286da778DDE/users/0xcbF1153F6e5AC01D363d432e24112e8aA56c55ce/interests/0x7Ff66eb1A824FF9D1bB7e234a2d3B7A3b0345320?startTime=1579000000&endTime=1579008836
+```
+#### URL Parameters
+| Name         | Type                      | Required | Description                                       |
+|--------------|---------------------------|----------|---------------------------------------------------|
+| network      | string prefixed with "0x" | YES      | Address of currency network                       |
+| user         | string prefixed with "0x" | YES      | Address of concerned user                         |
+| counterparty | string prefixed with "0x" | YES      | Address of concerned counterparty                 |
+| startTime    | integer                   | NO       | Start of time window to get list for (default: 0) |
+| endTime      | integer                   | NO       | End of time window to get list for (default: now) |
+#### Response
+The response is a an objects with the following elements:
+
+| Attribute        | Type    | JSON Type | Description               |
+| ---------------- | ------- | --------- | ------------------------- |
+| accruedInterests | string  | array     | list of accrued interests |
+| user             | address | string    | Address of user           |
+| counterparty     | address | string    | Address of counterparty   |
+
+The `accuredInterests` is a list with the following elements:
+
+| Attribute    | Type       | JSON Type | Description                              |
+| ------------ | ---------- | --------- | ---------------------------------------- |
+| value        | BigInteger | string    | signed interest accrued viewed from user |
+| interestRate | integer    | integer   | interest rate for this accrued interest  |
+| timestamp    | integer    | integer   | timestamp of accrued interest            |
+#### Example Response
+```json
+{
+    "accruedInterests": [{"value": 123, "interestRate":  1000, "timestamp": 1579000000}, {"value": 456, "interestRate":  2000, "timestamp": 1579001000}],
+    "user": "0xcbF1153F6e5AC01D363d432e24112e8aA56c55ce",
+    "counterparty": "0x7Ff66eb1A824FF9D1bB7e234a2d3B7A3b0345320"
+}
 ```
 
 ---
@@ -720,7 +818,7 @@ Following additional attributes for `Transfer` events:
 		"from": "0xcbF1153F6e5AC01D363d432e24112e8aA56c55ce",
 		"to": "0x7Ff66eb1A824FF9D1bB7e234a2d3B7A3b0345320",
 		"status": "confirmed",
-		"transactionId": "0xb141aa3baec4e7151d8bd6ecab46d26b1add131e50bcc517c956a7ac979815cd",
+		"transactionId": "0xb141aa3baec4e7151d8bd6ecab46d26b1add131e50bcc517c956a7ac979815cd"
 	},
 	{
 		"networkAddress": "0xC0B33D88C704455075a0724AA167a286da778DDE",

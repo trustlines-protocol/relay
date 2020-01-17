@@ -41,8 +41,10 @@ from .resources import (
     RequestEther,
     TransactionInfos,
     Trustline,
+    TrustlineAccruedInterestList,
     TrustlineList,
     User,
+    UserAccruedInterestList,
     UserEvents,
     UserEventsNetwork,
     UserList,
@@ -82,6 +84,14 @@ def ApiApp(trustlines):
     add_resource(Network, "/networks/<address:network_address>")
     add_resource(UserList, "/networks/<address:network_address>/users")
     add_resource(EventsNetwork, "/networks/<address:network_address>/events")
+    add_resource(
+        UserAccruedInterestList,
+        "/networks/<address:network_address>/users/<address:user_address>/interests",
+    )
+    add_resource(
+        TrustlineAccruedInterestList,
+        "/networks/<address:network_address>/users/<address:user_address>/interests/<address:counterparty_address>",
+    )
     add_resource(
         User, "/networks/<address:network_address>/users/<address:user_address>"
     )

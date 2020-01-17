@@ -220,3 +220,21 @@ class PaymentPathSchema(Schema):
     path = fields.List(Address(), required=True)
     value = BigInteger()
     feePayer = FeePayerField(required=True, attribute="fee_payer")
+
+
+class AccruedInterestSchema(Schema):
+    class Meta:
+        strict = True
+
+    value = BigInteger()
+    interestRate = fields.Int(attribute="interest_rate")
+    timestamp = fields.Integer()
+
+
+class AccruedInterestListSchema(Schema):
+    class Meta:
+        strict = True
+
+    accruedInterests = fields.Nested(AccruedInterestSchema, many=True)
+    user = Address()
+    counterparty = Address()
