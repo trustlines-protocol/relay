@@ -145,6 +145,7 @@ def _get_extended_account_summary(
     account_summary.counterParty = b_address
     account_summary.address = b_address
     account_summary.id = _id(network_address, a_address, b_address)
+    account_summary.currencyNetwork = network_address
     return account_summary
 
 
@@ -182,6 +183,28 @@ class TrustlineList(Resource):
             )
             for friend_address in friends
         ]
+
+
+class UserTrustlines(Resource):
+    def __init__(self, trustlines: TrustlinesRelay) -> None:
+        self.trustlines = trustlines
+
+    @dump_result_with_schema(TrustlineSchema(many=True))
+    def get(self, user_address: str):
+        timestamp = int(time.time())
+        trustline_list = []
+        for network_address, graph in self.trustlines.currency_network_graphs.items():
+            for friend_address in graph.get_friends(user_address):
+                trustline_list.append(
+                    _get_extended_account_summary(
+                        graph,
+                        network_address,
+                        user_address,
+                        friend_address,
+                        timestamp=timestamp,
+                    )
+                )
+        return trustline_list
 
 
 class MaxCapacityPath(Resource):
