@@ -1,6 +1,10 @@
 ==========
 Change Log
 ==========
+`0.11.1`_ (2020-01-17)
+-------------------------------
+- Do not send push notifications twice
+
 `0.11.0`_ (2020-01-15)
 -------------------------------
 - Update contracts to 1.0.0
@@ -26,15 +30,18 @@ Change Log
 * Change identities endpoint to deploy identity contracts as proxies to an implementation contract. Reduces the gas cost of deployment
 * Change the arguments of identities endpoint (BREAKING)
 * Increase debug output for push notifications
+
 `0.8.1`_ (2019-10-03)
 -------------------------------
 * Fix a bug in the push notification service that was introduced by the marshmallow upgrade in 0.7.0
+
 `0.8.0`_ (2019-10-01)
 -------------------------------
 * Upgrade metatransactions to use fees (BREAKING)
 * Add version ReST endpoint
 * Fix an encoding problem in the ReST api
 * Fix a problem that could lead to a deadlock in the push notification database
+
 `0.7.0`_ (2019-09-02)
 -------------------------------
 * Update marshmallow and other related dependencies
@@ -122,4 +129,5 @@ Change Log
 .. _0.8.1: https://github.com/trustlines-protocol/relay/compare/0.8.0...0.8.1
 .. _0.9.0: https://github.com/trustlines-protocol/relay/compare/0.8.1...0.9.0
 .. _0.10.0: https://github.com/trustlines-protocol/relay/compare/0.9.0...0.10.0
-.. _0.11.0: https://github.com/trustlines-protocol/relay/compare/0.10.0...master
+.. _0.11.0: https://github.com/trustlines-protocol/relay/compare/0.10.0...0.11.0
+.. _0.11.1: https://github.com/trustlines-protocol/relay/compare/0.11.0...0.11.1
