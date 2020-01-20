@@ -1,6 +1,10 @@
 ==========
 Change Log
 ==========
+`0.11.2`_ (2020-01-20)
+-------------------------------
+- Add endpoint to get list of interests for trustline or user
+
 `0.11.1`_ (2020-01-17)
 -------------------------------
 - Do not send push notifications twice
@@ -131,3 +135,4 @@ Change Log
 .. _0.10.0: https://github.com/trustlines-protocol/relay/compare/0.9.0...0.10.0
 .. _0.11.0: https://github.com/trustlines-protocol/relay/compare/0.10.0...0.11.0
 .. _0.11.1: https://github.com/trustlines-protocol/relay/compare/0.11.0...0.11.1
+.. _0.11.2: https://github.com/trustlines-protocol/relay/compare/0.11.1...0.11.2
