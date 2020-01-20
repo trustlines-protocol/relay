@@ -15,25 +15,27 @@ services:
 
 
   tlbc:
-    image: trustlines/tlbc-testnet
-    command: "--role observer"
-    volumes:
-      - blockchain-data:/data
-      - tlbc-config:/config/custom
-      - enode-dir:/config/network
-    deploy:
-      replicas: 1
-      restart_policy:
-        condition: any
-    expose:
-      - "8545"
-    ports:
-      - "30300:30300"
-      - "30300:30300/udp"
+    image: trustlines/tlbc-testnet:release
+    restart: always
+    stop_grace_period: 3m
+    labels:
+      com.centurylinklabs.watchtower.enable: "true"
     networks:
       - backend
-    restart: unless-stopped
-
+    ports:
+      - 8545:8545
+      - 30300:30300
+      - 30300:30300/udp
+    volumes:
+      - tlbc-data:/data
+      - tlbc-config:/config
+      - tlbc-network:/config/network
+      - tlbc-shared:/shared
+    command: >-
+      --role observer
+      -p
+      --no-warp
+      --jsonrpc-cors=all
 
   relay:
     image: trustlines/relay
@@ -43,6 +45,9 @@ services:
     volumes:
       - ./config.toml:/opt/relay/config.toml
       - ./addresses.json:/opt/relay/addresses.json
+      - ./keystore.json:/opt/relay/keystore.json
+      - ./keystore-password.txt:/opt/relay/keystore-password.txt
+
     # make relay server listen on port 5000. In a real scenario you will want to
     # put a proxy like nginx, apache or traefik in front of the relay server
     ports:
@@ -69,16 +74,19 @@ services:
     networks:
       - backend
     restart: unless-stopped
-    command: ["/opt/ethindex/bin/ethindex", "runsync", "--jsonrpc", "http://tlbc:8545"]
+    command: ["runsync", "--jsonrpc", "http://tlbc:8545"]
     volumes:
-      - ./addresses.json:/tmp/addresses.json
-      - ./contracts.json:/tmp/contracts.json
+      - ./addresses.json:/opt/ethindex/addresses.json
+      - ./contracts.json:/opt/ethindex/contracts.json
 
 
 volumes:
   blockchain-data:
-  tlbc-config:
   enode-dir:
   postgres-data:
+  tlbc-data:
+  tlbc-config:
+  tlbc-network:
+  tlbc-shared:
 networks:
   backend:
