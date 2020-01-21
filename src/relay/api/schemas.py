@@ -172,6 +172,7 @@ class TrustlineSchema(Schema):
     counterParty = Address()
     address = Address()
     id = Address()
+    currencyNetwork = Address()
 
 
 class TxInfosSchema(Schema):

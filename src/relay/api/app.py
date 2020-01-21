@@ -48,6 +48,7 @@ from .resources import (
     UserEvents,
     UserEventsNetwork,
     UserList,
+    UserTrustlines,
     Version,
 )
 from .streams.app import MessagingWebSocketRPCHandler, WebSocketRPCHandler
@@ -121,6 +122,7 @@ def ApiApp(trustlines):
     add_resource(UserEvents, "/users/<address:user_address>/events")
     add_resource(TransactionInfos, "/users/<address:user_address>/txinfos")
     add_resource(Balance, "/users/<address:user_address>/balance")
+    add_resource(UserTrustlines, "/users/<address:user_address>/trustlines")
 
     add_resource(Block, "/blocknumber")
     add_resource(Relay, "/relay")

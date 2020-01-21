@@ -40,6 +40,7 @@ https://relay0.testnet.trustlines.network/api/v1
 - [Events of user in all currency networks](#events-of-user-in-all-currency-networks)
 - [Transaction infos for user](#transaction-infos-for-user)
 - [Balance of user](#balance-of-user)
+- [All trustlines](#all-trustlines-of-user-in-all-currency-networks)
 ### Other
 - [Latest block number](#latest-block-number)
 - [Relay transaction](#relay-transaction)
@@ -215,6 +216,7 @@ curl https://relay0.testnet.trustlines.network/api/v1/networks/0xC0B33D88C704455
 | Attribute            | Type   | Description                                     |
 |----------------------|--------|-------------------------------------------------|
 | counterParty         | string | Address of trustline counterparty               |
+| currencyNetwork      | string | Address of currency network                     |
 | user                 | string | Address of trustline user                       |
 | balance              | string | Balance of trustline from point of view of user |
 | given                | string | Creditline given to counterparty                |
@@ -232,6 +234,7 @@ curl https://relay0.testnet.trustlines.network/api/v1/networks/0xC0B33D88C704455
     "id": "0xe4332c0bc15bf97933ce54c93af772bb13fad2c4c44e2516eb62d4f6c041e9ab",
     "leftReceived": "19848",
     "counterParty": "0xB5A3ad8d5A23e5DDD8b8917F709b01396e4d55e4",
+    "currencyNetwork": "0xC0B33D88C704455075a0724AA167a286da778DDE",
     "balance": "-152",
     "given": "10000",
     "leftGiven": "10152",
@@ -906,6 +909,74 @@ curl https://relay0.testnet.trustlines.network/api/v1/users/0xcbF1153F6e5AC01D36
   "balance": "2377634165348042492",
   "nonce": 58
 }
+```
+
+---
+
+### All Trustlines of user in all currency networks
+Returns a list of trustlines a user has in any currency network.
+#### Request
+```
+GET /users/:userAddress/trustlines
+```
+#### URL Parameters
+| Name           | Type   | Required | Description                 |
+|----------------|--------|----------|-----------------------------|
+| userAddress    | string | YES      | Address of user             |
+#### Example Request
+```
+curl https://relay0.testnet.trustlines.network/api/v1/users/0xE56d3f8096c765f29A88f54873a3D177a6c632D0/trustlines
+```
+#### Response
+| Attribute            | Type   | Description                                     |
+|----------------------|--------|-------------------------------------------------|
+| counterParty         | string | Address of trustline counterparty               |
+| currencyNetwork      | string | Address of currency network                     |
+| user                 | string | Address of trustline user                       |
+| balance              | string | Balance of trustline from point of view of user |
+| given                | string | Creditline given to counterparty                |
+| received             | string | Creditline received by counterparty             |
+| leftGiven            | string | given - balance                                 |
+| leftReceived         | string | received + balance                              |
+| interestRateGiven    | string | Interest Rate given to counterparty             |
+| interestRateReceived | string | Interest Rate received from counterparty        |
+| isFrozen             | bool   | Whether the trustlines is frozen                |
+| id                   | string | Identifier of trustline                         |
+#### Example Response
+```json
+[
+    {
+        "address": "0xc773E89134957DD5d8eefA1700D147B3eAEEEFC5",
+        "balance": "0",
+        "counterParty": "0xc773E89134957DD5d8eefA1700D147B3eAEEEFC5",
+        "currencyNetwork": "0xC637Db818131Ea67d19Ea1C9c28559e08b536f6E",
+        "given": "0",
+        "id": "0x1d4e46b52805a7440fd41653d7923cbe7c813f3f36776c26df6023bfae94fa4c",
+        "interestRateGiven": "0",
+        "interestRateReceived": "0",
+        "isFrozen": false,
+        "leftGiven": "0",
+        "leftReceived": "0",
+        "received": "0",
+        "user": "0xE56d3f8096c765f29A88f54873a3D177a6c632D0"
+    },
+    {
+        "address": "0x851c66B2fa4641a7411C6F62e5e905096512772C",
+        "balance": "0",
+        "counterParty": "0x851c66B2fa4641a7411C6F62e5e905096512772C",
+        "currencyNetwork": "0x03cADF60A8f0eB5B17c5452fe0941Fb8FCc2F984",
+        "given": "20",
+        "id": "0x8194d0f524ed5b2056a1f2f432f6445a3c24c03e3a9c9191137c2b2109bb4a2b",
+        "interestRateGiven": "0",
+        "interestRateReceived": "0",
+        "isFrozen": false,
+        "leftGiven": "20",
+        "leftReceived": "20",
+        "received": "20",
+        "user": "0xE56d3f8096c765f29A88f54873a3D177a6c632D0"
+    }
+]
+
 ```
 
 ---
