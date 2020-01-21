@@ -64,7 +64,7 @@ curl https://relay0.testnet.trustlines.network/api/v1/networks
 ```
 #### Response
 | Attribute    | Type    | JSON Type                               | Description                          |
-|--------------+---------+-----------------------------------------+--------------------------------------|
+|--------------|---------|-----------------------------------------|--------------------------------------|
 | name         | string  | string                                  | Full name of the currency network    |
 | abbreviation | string  | string                                  | Abbreviated name of currency network |
 | address      | address | string - hex-encoded prefixed with "0x" | Contract address of currency network |
@@ -102,7 +102,7 @@ curl https://relay0.testnet.trustlines.network/api/v1/networks/0xC0B33D88C704455
 ```
 #### Response
 | Attribute                | Type       | JSON Type                               | Description                                             |
-|--------------------------+------------+-----------------------------------------+---------------------------------------------------------|
+|--------------------------|------------|-----------------------------------------|---------------------------------------------------------|
 | abbreviation             | string     | string                                  | Abbreviated name of currency network                    |
 | address                  | address    | string - hex-encoded prefixed with "0x" | Contract address of currency network                    |
 | decimals                 | int        | number                                  | Decimals specified in currency network                  |
@@ -139,7 +139,7 @@ GET /networks/:networkAddress/users
 ```
 #### URL Parameters
 | Name           | Type   | Required | Description                 |
-|----------------+--------+----------+-----------------------------|
+|----------------|--------|----------|-----------------------------|
 | networkAddress | string | YES      | Address of currency network |
 #### Example Request
 ```
@@ -204,7 +204,7 @@ GET /networks/:networkAddress/users/:userAddress/trustlines
 ```
 #### URL Parameters
 | Name           | Type   | Required | Description                 |
-|----------------+--------+----------+-----------------------------|
+|----------------|--------|----------|-----------------------------|
 | networkAddress | string | YES      | Address of currency network |
 | userAddress    | string | YES      | Address of user             |
 #### Example Request
@@ -213,7 +213,7 @@ curl https://relay0.testnet.trustlines.network/api/v1/networks/0xC0B33D88C704455
 ```
 #### Response
 | Attribute            | Type   | Description                                     |
-|----------------------+--------+-------------------------------------------------|
+|----------------------|--------|-------------------------------------------------|
 | counterParty         | string | Address of trustline counterparty               |
 | user                 | string | Address of trustline user                       |
 | balance              | string | Balance of trustline from point of view of user |
@@ -254,7 +254,7 @@ GET /networks/:networkAddress/users/:userAddressA/trustlines/:userAddressB
 ```
 #### URL Parameters
 | Name           | Type   | Required | Description                 |
-|----------------+--------+----------+-----------------------------|
+|----------------|--------|----------|-----------------------------|
 | networkAddress | string | YES      | Address of currency network |
 | userAddressA   | string | YES      | Address of user A           |
 | userAddressB   | string | YES      | Address of user B           |
@@ -264,7 +264,7 @@ curl https://relay0.testnet.trustlines.network/api/v1/networks/0xC0B33D88C704455
 ```
 #### Response
 | Attribute            | Type   | Description                                         |
-|----------------------+--------+-----------------------------------------------------|
+|----------------------|--------|-----------------------------------------------------|
 | counterParty         | string | Address of trustline counterparty                   |
 | user                 | string | Address of trustline user                           |
 | balance              | string | Balance of trustline from point of view of user (A) |
@@ -303,11 +303,11 @@ POST /networks/:network_address/max-capacity-path-info
 ```
 #### URL Parameters
 | Name           | Type   | Required | Description                 |
-|----------------+--------+----------+-----------------------------|
+|----------------|--------|----------|-----------------------------|
 | networkAddress | string | YES      | Address of currency network |
 #### Data Parameters
 | Name    | Type   | Required | Description                           |
-|---------+--------+----------+---------------------------------------|
+|---------|--------|----------|---------------------------------------|
 | from    | string | YES      | Address of user who sends transfer    |
 | to      | string | YES      | Address of user who receives transfer |
 | maxHops | string | NO       | Upper bound for hops in transfer path |
@@ -345,11 +345,11 @@ POST /networks/:networkAddress/path-info
 ```
 #### URL Parameters
 | Name           | Type   | Required | Description                 |
-|----------------+--------+----------+-----------------------------|
+|----------------|--------|----------|-----------------------------|
 | networkAddress | string | YES      | Address of currency network |
 #### Data Parameters
 | Name     | Type   | Required | Description                           |
-|----------+--------+----------+---------------------------------------|
+|----------|--------|----------|---------------------------------------|
 | from     | string | YES      | Address of user who sends transfer    |
 | to       | string | YES      | Address of user who receives transfer |
 | value    | string | YES      | Transfer amount in smallest unit      |
@@ -365,7 +365,7 @@ curl --header "Content-Type: application/json" \
 ```
 #### Response
 | Attribute | Type     | Description                         |
-|-----------+----------+-------------------------------------|
+|-----------|----------|-------------------------------------|
 | path      | string[] | Addresses of users on transfer path |
 | value     | int      | Transfer amount in smallest unit    |
 | feePayer  | string   | Either `sender` or `receiver`       |
@@ -447,7 +447,7 @@ GET /networks/:networkAddress/events?type=:type&fromBlock=:fromBlock
 ```
 #### URL Parameters
 | Name      | Type   | Required | Description                                                                               |
-|-----------+--------+----------+-------------------------------------------------------------------------------------------|
+|-----------|--------|----------|-------------------------------------------------------------------------------------------|
 | network   | string | YES      | Address of currency network                                                               |
 | type      | string | NO       | Either `TrustlineUpdate`, `TrustlineUpdateRequest`, `TrustlineUpdateCancel` or `Transfer` |
 | fromBlock | int    | NO       | Start of block range                                                                      |
@@ -457,7 +457,7 @@ curl https://relay0.testnet.trustlines.network/api/v1/networks/0xC0B33D88C704455
 ```
 #### Response
 | Attribute      | Type   | Description                                                                               |
-|----------------+--------+-------------------------------------------------------------------------------------------|
+|----------------|--------|-------------------------------------------------------------------------------------------|
 | networkAddress | string | Address of currency network                                                               |
 | blockNumber    | string | Number of block                                                                           |
 | timestamp      | int    | UNIX timestamp                                                                            |
@@ -557,14 +557,14 @@ curl https://relay0.testnet.trustlines.network/api/v1/networks/0xC0B33D88C704455
 ```
 #### URL Parameters
 | Name      | Type   | Required | Description                                                                               |
-|-----------+--------+----------+-------------------------------------------------------------------------------------------|
+|-----------|--------|----------|-------------------------------------------------------------------------------------------|
 | network   | string | YES      | Address of currency network                                                               |
 | user      | string | YES      | Address of user                                                                           |
 | type      | string | NO       | Either `TrustlineUpdate`, `TrustlineUpdateRequest`, `TrustlineUpdateCancel` or `Transfer` |
 | fromBlock | int    | NO       | Start of block range                                                                      |
 #### Response
 | Attribute      | Type   | Description                                                                               |
-|----------------+--------+-------------------------------------------------------------------------------------------|
+|----------------|--------|-------------------------------------------------------------------------------------------|
 | networkAddress | string | Address of currency network                                                               |
 | blockNumber    | string | Number of block                                                                           |
 | timestamp      | int    | UNIX timestamp                                                                            |
@@ -577,7 +577,7 @@ curl https://relay0.testnet.trustlines.network/api/v1/networks/0xC0B33D88C704455
 Following additional attributes for `TrustlineUpdate` and `TrustlineUpdateRequest` events:
 
 | Attribute            | Type   | Description                                         |
-|----------------------+--------+-----------------------------------------------------|
+|----------------------|--------|-----------------------------------------------------|
 | given                | string | Proposed or accepted amount `from -> to`            |
 | received             | string | Proposed or accepted amount `to -> from`            |
 | interestRateGiven    | string | Proposed or accepted rate of interests `from -> to` |
@@ -765,7 +765,7 @@ curl https://relay0.testnet.trustlines.network/api/v1/users/0xcbF1153F6e5AC01D36
 |fromBlock|int|NO|Start of block range|
 #### Response
 | Attribute      | Type   | Description                                                                               |
-|----------------+--------+-------------------------------------------------------------------------------------------|
+|----------------|--------|-------------------------------------------------------------------------------------------|
 | networkAddress | string | Address of currency network                                                               |
 | blockNumber    | string | Number of block                                                                           |
 | timestamp      | int    | UNIX timestamp                                                                            |
@@ -891,11 +891,11 @@ curl https://relay0.testnet.trustlines.network/api/v1/users/0xcbF1153F6e5AC01D36
 ```
 #### URL Parameters
 | Name        | Type   | Required | Description     |
-|-------------+--------+----------+-----------------|
+|-------------|--------|----------|-----------------|
 | userAddress | string | YES      | Address of user |
 #### Response
 | Attribute | Type   | Description                             |
-|-----------+--------+-----------------------------------------|
+|-----------|--------|-----------------------------------------|
 | gasPrice  | string | Gas price                               |
 | balance   | string | Balance of user in wei                  |
 | nonce     | int    | Nonce needed for creating a transaction |
@@ -970,7 +970,7 @@ POST /meta-transaction-fees
 The MetaTransaction object must have the following fields:
 
 | Name      | Type       | JSON Type                               | Description                                                        |
-|-----------+------------+-----------------------------------------+--------------------------------------------------------------------|
+|-----------|------------|-----------------------------------------|--------------------------------------------------------------------|
 | from      | address    | string - hex-encoded prefixed with "0x" | address of identity contract                                       |
 | to        | address    | string - hex-encoded prefixed with "0x" | the address on which the call of the meta transaction is happening |
 | value     | BigInteger | string                                  | the amount of wei to be sent along from 'from' to 'to'             |
@@ -987,10 +987,10 @@ curl --header "Content-Type: application/json" \
 ```
 
 #### Response
-|Attribute|Type|Description|
-|---------|----|-----------|
-|delegationFees|string|Fees to be paid for the meta transaction|
-|currencyNetworkOfFees|string|the currency network used to pay the fees of the meta transaction|
+| Attribute             | Type   | Description                                                       |
+|-----------------------|--------|-------------------------------------------------------------------|
+| delegationFees        | string | Fees to be paid for the meta transaction                          |
+| currencyNetworkOfFees | string | the currency network used to pay the fees of the meta transaction |
 
 #### Example Response
 ```json
@@ -1023,7 +1023,7 @@ POST /relay-meta-transaction
 The MetaTransaction object must have the following fields:
 
 | Name                  | Type       | JSON Type                               | Description                                                        |
-|-----------------------+------------+-----------------------------------------+--------------------------------------------------------------------|
+|-----------------------|------------|-----------------------------------------|--------------------------------------------------------------------|
 | to                    | address    | string - hex-encoded prefixed with "0x" | the address on which the call of the meta transaction is happening |
 | from                  | address    | string - hex-encoded prefixed with "0x" | address of identity contract                                       |
 | value                 | BigInteger | string                                  | the amount of wei to be sent along from 'from' to 'to'             |
@@ -1056,7 +1056,7 @@ POST /identities
 ```
 #### Data Parameters
 | Name         | Type    | JSON Type                               | Required | Description            |
-|--------------+---------+-----------------------------------------+----------+------------------------|
+|--------------|---------|-----------------------------------------|----------|------------------------|
 | ownerAddress | address | string - hex-encoded prefixed with "0x" | YES      | MetaTransaction object |
 
 
