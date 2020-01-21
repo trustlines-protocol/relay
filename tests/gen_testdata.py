@@ -15,6 +15,7 @@ import sys
 import click
 import eth_utils
 import tldeploy.core
+from deploy_tools.deploy import wait_for_successful_transaction_receipt
 from web3 import Web3
 
 
@@ -155,20 +156,20 @@ class Transfer(TestDataGenerator):
         ).transact()
 
         for a, b, balance in zip(addresses, addresses[1:], balances_before):
-            self.contract.functions.setAccount(
+            txid = self.contract.functions.setAccount(
                 a, b, 100_000_000, 100_000_000, 0, 0, False, 0, balance
             ).transact()
 
+        # we only wait for the last transaction to speed things up
+        wait_for_successful_transaction_receipt(self.contract.web3, txid)
+
         assert fees_paid_by in ("sender", "receiver")
         if fees_paid_by == "sender":
-            self.contract.functions.testTransferSenderPays(
-                addresses[0], addresses[-1], value, value, addresses[1:]
-            ).transact()
+            fn = self.contract.functions.testTransferSenderPays
         elif fees_paid_by == "receiver":
-            self.contract.functions.testTransferReceiverPays(
-                addresses[0], addresses[-1], value, value, addresses[1:]
-            ).transact()
-
+            fn = self.contract.functions.testTransferReceiverPays
+        txid = fn(value, value, addresses).transact()
+        wait_for_successful_transaction_receipt(self.contract.web3, txid)
         balances = [
             self.contract.functions.getAccount(a, b).call()[-1]
             for a, b in zip(addresses, addresses[1:])
@@ -215,6 +216,7 @@ or cd into the tests directory."""
             decimals=4,
             fee_divisor=100,
             currency_network_contract_name="TestCurrencyNetwork",
+            expiration_time=2_000_000_000,
         )
 
     name2cls = {cls.name(): cls for cls in (CalculateFee, ImbalanceGenerated, Transfer)}
