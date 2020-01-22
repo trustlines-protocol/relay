@@ -28,7 +28,7 @@ def delegate_address(web3):
 @pytest.fixture(scope="session")
 def delegate(web3, delegate_address, contracts, proxy_factory, currency_network):
     identity_contract_abi = contracts["Identity"]["abi"]
-    delegation_fees_value = 0
+    base_fee = 0
     return Delegate(
         web3,
         delegate_address,
@@ -36,7 +36,7 @@ def delegate(web3, delegate_address, contracts, proxy_factory, currency_network)
         [proxy_factory.address],
         delegation_fees=[
             DelegationFees(
-                value=delegation_fees_value, currency_network=currency_network.address
+                base_fee=base_fee, currency_network_of_fees=currency_network.address
             )
         ],
     )
@@ -47,7 +47,7 @@ def delegate_with_one_fees(
     web3, delegate_address, contracts, proxy_factory, currency_network
 ):
     identity_contract_abi = contracts["Identity"]["abi"]
-    delegation_fees_value = 1
+    base_fee = 1
     return Delegate(
         web3,
         delegate_address,
@@ -55,7 +55,7 @@ def delegate_with_one_fees(
         [proxy_factory.address],
         delegation_fees=[
             DelegationFees(
-                value=delegation_fees_value, currency_network=currency_network.address
+                base_fee=base_fee, currency_network_of_fees=currency_network.address
             )
         ],
     )
@@ -296,8 +296,8 @@ def test_meta_transaction_fees_valid(
     )[0]
     meta_transaction_with_fees = attr.evolve(
         signed_meta_transaction,
-        fees=delegation_fees.value,
-        currency_network_of_fees=delegation_fees.currency_network,
+        base_fee=delegation_fees.base_fee,
+        currency_network_of_fees=delegation_fees.currency_network_of_fees,
     )
     signed_meta_transaction_with_fees = meta_transaction_with_fees.signed(owner_key)
     delegate_with_one_fees.validate_meta_transaction_fees(
@@ -317,12 +317,12 @@ def test_meta_transaction_fees_invalid_value(
     )[0]
 
     wrong_fees_value = 0
-    assert delegation_fees.value >= wrong_fees_value
+    assert delegation_fees.base_fee >= wrong_fees_value
 
     meta_transaction_with_fees = attr.evolve(
         signed_meta_transaction,
-        fees=wrong_fees_value,
-        currency_network_of_fees=delegation_fees.currency_network,
+        base_fee=wrong_fees_value,
+        currency_network_of_fees=delegation_fees.currency_network_of_fees,
     )
     signed_meta_transaction_with_fees = meta_transaction_with_fees.signed(owner_key)
 
@@ -344,11 +344,11 @@ def test_meta_transaction_fees_invalid_network(
     )[0]
 
     wrong_network = signed_meta_transaction.from_
-    assert delegation_fees.currency_network != wrong_network
+    assert delegation_fees.currency_network_of_fees != wrong_network
 
     meta_transaction_with_fees = attr.evolve(
         signed_meta_transaction,
-        fees=delegation_fees.value,
+        base_fee=delegation_fees.base_fee,
         currency_network_of_fees=wrong_network,
     )
     signed_meta_transaction_with_fees = meta_transaction_with_fees.signed(owner_key)

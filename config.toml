@@ -16,7 +16,8 @@ method = "rpc"
 gasPrice = 0
 
 [[relay.delegationFees]]
-# value = 0
+# baseFee = 0
+# gasPrice = 0
 # currencyNetwork = "0x000..."
 
 # Configure a sentry DSN to report errors to sentry

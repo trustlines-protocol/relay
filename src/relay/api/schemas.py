@@ -16,19 +16,27 @@ class MetaTransactionSchema(Schema):
         strict = True
 
     def _validate(self, data):
-        nonce = data["nonce"]
-        fees = data["fees"]
-        signature = data["signature"]
-        if not 0 <= nonce < 2 ** 256:
-            raise ValidationError(f"nonce={nonce} is out of bounds")
-        if not 0 <= fees < 2 ** 64:
-            raise ValidationError(f"delegationFees={fees} is out of bounds")
-        if len(signature) != 65 and signature != hexbytes.HexBytes(""):
-            raise ValidationError("signature must be 65 bytes")
-
         value = data["value"]
+        nonce = data["nonce"]
+        base_fee = data["base_fee"]
+        gas_price = data["gas_price"]
+        gas_limit = data["gas_limit"]
+        operation_type = data["operation_type"]
+        signature = data["signature"]
         if not 0 <= value < 2 ** 256:
             raise ValidationError(f"value={value} is out of bounds")
+        if not 0 <= nonce < 2 ** 256:
+            raise ValidationError(f"nonce={nonce} is out of bounds")
+        if not 0 <= base_fee < 2 ** 256:
+            raise ValidationError(f"baseFee={base_fee} is out of bounds")
+        if not 0 <= gas_price < 2 ** 256:
+            raise ValidationError(f"gas_price={gas_price} is out of bounds")
+        if not 0 <= gas_limit < 2 ** 256:
+            raise ValidationError(f"gas_limit={gas_limit} is out of bounds")
+        if not 0 <= operation_type <= 3:
+            raise ValidationError(f"operation_type={operation_type} is out of bounds")
+        if len(signature) != 65 and signature != hexbytes.HexBytes(""):
+            raise ValidationError("signature must be 65 bytes")
 
     @post_load
     def make_meta_transaction(self, data, partial, many):
@@ -39,9 +47,13 @@ class MetaTransactionSchema(Schema):
     to = Address(required=True)
     value = BigInteger(required=True)
     data = HexEncodedBytes(required=True)
-    delegationFees = BigInteger(missing=0, attribute="fees")
+    baseFee = BigInteger(missing=0, attribute="base_fee")
+    gasPrice = BigInteger(missing=0, attribute="gas_price")
+    gasLimit = BigInteger(missing=0, attribute="gas_limit")
     currencyNetworkOfFees = Address(missing=to, attribute="currency_network_of_fees")
     nonce = BigInteger(required=True)
+    timeLimit = fields.Integer(missing=0, attribute="time_limit")
+    operationType = fields.Integer(missing=0, attribute="operation_type")
     extraData = HexEncodedBytes(required=True, attribute="extra_data")
     signature = HexEncodedBytes(missing=hexbytes.HexBytes(""))
 
@@ -50,8 +62,9 @@ class MetaTransactionFeeSchema(Schema):
     class Meta:
         strict = True
 
-    delegationFees = BigInteger(required=True, attribute="value")
-    currencyNetworkOfFees = Address(required=True, attribute="currency_network")
+    baseFee = BigInteger(required=True, attribute="base_fee")
+    gasPrice = BigInteger(required=True, attribute="gas_price")
+    currencyNetworkOfFees = Address(required=True, attribute="currency_network_of_fees")
 
 
 class EventSchema(Schema):
