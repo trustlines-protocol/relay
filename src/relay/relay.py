@@ -285,7 +285,11 @@ class TrustlinesRelay:
         self.node = Node(self._web3, fixed_gas_price=self.fixed_gas_price)
 
         delegation_fees = [
-            DelegationFees(value=d["value"], currency_network=d["currencyNetwork"])
+            DelegationFees(
+                base_fee=d.get("baseFee", 0),
+                gas_price=d.get("gasPrice", 0),
+                currency_network_of_fees=d["currencyNetworkOfFees"],
+            )
             for d in self.config.get("delegationFees", [])
             if d
         ]
