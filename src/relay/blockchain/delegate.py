@@ -9,10 +9,13 @@ from tldeploy.identity import (
     deploy_proxied_identity,
 )
 
+ZERO_ADDRESS = "0x" + "0" * 40
+
 
 @attr.s
 class DelegationFees:
     currency_network_of_fees = attr.ib()
+    fee_recipient = attr.ib(default=ZERO_ADDRESS)
     base_fee = attr.ib(default=0)
     gas_price = attr.ib(default=0)
 

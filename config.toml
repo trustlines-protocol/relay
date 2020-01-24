@@ -18,6 +18,7 @@ gasPrice = 0
 [[relay.delegationFees]]
 # baseFee = 0
 # gasPrice = 0
+# feeRecipient = "0x000..."
 # currencyNetworkOfFees = "0x000..."
 
 # Configure a sentry DSN to report errors to sentry

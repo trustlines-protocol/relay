@@ -127,7 +127,6 @@ def signed_meta_transaction(identity, owner_key, accounts):
         value=123,
         data=(1234).to_bytes(10, byteorder="big"),
         nonce=1,
-        extra_data=(123456789).to_bytes(10, byteorder="big"),
     )
 
     return meta_transaction.signed(owner_key)

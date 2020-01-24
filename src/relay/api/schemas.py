@@ -10,6 +10,8 @@ from relay.network_graph.payment_path import PaymentPath
 
 from .fields import Address, BigInteger, FeePayerField, HexBytes, HexEncodedBytes
 
+ZERO_ADDRESS = "0x" + "0" * 40
+
 
 class MetaTransactionSchema(Schema):
     class Meta:
@@ -50,11 +52,11 @@ class MetaTransactionSchema(Schema):
     baseFee = BigInteger(missing=0, attribute="base_fee")
     gasPrice = BigInteger(missing=0, attribute="gas_price")
     gasLimit = BigInteger(missing=0, attribute="gas_limit")
+    feeRecipient = Address(missing=ZERO_ADDRESS, attribute="fee_recipient")
     currencyNetworkOfFees = Address(missing=to, attribute="currency_network_of_fees")
     nonce = BigInteger(required=True)
     timeLimit = fields.Integer(missing=0, attribute="time_limit")
     operationType = fields.Integer(missing=0, attribute="operation_type")
-    extraData = HexEncodedBytes(required=True, attribute="extra_data")
     signature = HexEncodedBytes(missing=hexbytes.HexBytes(""))
 
 
@@ -64,6 +66,7 @@ class MetaTransactionFeeSchema(Schema):
 
     baseFee = BigInteger(required=True, attribute="base_fee")
     gasPrice = BigInteger(required=True, attribute="gas_price")
+    feeRecipient = Address(required=True, attribute="fee_recipient")
     currencyNetworkOfFees = Address(required=True, attribute="currency_network_of_fees")
 
 
