@@ -9,6 +9,8 @@ from collections import defaultdict
 from copy import deepcopy
 from typing import Dict, Iterable, List, Optional, Union
 
+import eth_account
+import eth_keyfile
 import gevent
 import sqlalchemy
 from eth_utils import is_checksum_address, to_checksum_address
@@ -18,7 +20,7 @@ from tldeploy.identity import MetaTransaction
 from web3 import Web3
 
 import relay.concurrency_utils as concurrency_utils
-from relay import ethindex_db
+from relay import ethindex_db, signing_middleware
 from relay.pushservice.client import PushNotificationClient
 from relay.pushservice.client_token_db import (
     ClientTokenAlreadyExistsException,
@@ -237,11 +239,34 @@ class TrustlinesRelay:
             "nextNonce": self.delegate.calc_next_nonce(identity_address),
         }
 
-    def start(self):
-        self._load_gas_price_settings(self.config.get("gasPriceComputation", {}))
-        self._load_contracts()
-        self._load_orderbook()
-        self._start_push_service()
+    def _install_w3_middleware(self):
+        """install signing middleware if an account is configured"""
+        if "account" not in self.config:
+            logger.warn("no account configured")
+            return
+
+        keystore_path = self.config["account"]["keystore_path"]
+        keystore_password_path = self.config["account"]["keystore_password_path"]
+        with open(keystore_password_path, "r") as password_file:
+            password = password_file.readline().strip()
+
+        try:
+            private_key = eth_keyfile.extract_key_from_keyfile(
+                keystore_path, password.encode("utf-8")
+            )
+        except ValueError:
+            raise ValueError(
+                f"Could not decrypt keystore. Please make sure the password is correct."
+            )
+
+        account = eth_account.Account.from_key(private_key)
+        signing_middleware.install_signing_middleware(self._web3, account)
+        logger.info(
+            f"private key for address {account.address} loaded for signing transactions"
+        )
+
+    def _make_w3(self):
+        """create and set the w3 object as self._web3"""
         url = "{}://{}:{}".format(
             "https" if self.config["rpc"]["ssl"] else "http",
             self.config["rpc"]["host"],
@@ -249,6 +274,14 @@ class TrustlinesRelay:
         )
         logger.info("using web3 URL {}".format(url))
         self._web3 = Web3(Web3.HTTPProvider(url))
+
+    def start(self):
+        self._load_gas_price_settings(self.config.get("gasPriceComputation", {}))
+        self._load_contracts()
+        self._load_orderbook()
+        self._start_push_service()
+        self._make_w3()
+        self._install_w3_middleware()
         self.node = Node(self._web3, fixed_gas_price=self.fixed_gas_price)
 
         delegation_fees = [
@@ -259,7 +292,7 @@ class TrustlinesRelay:
 
         self.delegate = Delegate(
             self._web3,
-            self.node.address,
+            self._web3.eth.defaultAccount or self.node.address,
             self.contracts["Identity"]["abi"],
             self.known_identity_factories,
             delegation_fees=delegation_fees,
