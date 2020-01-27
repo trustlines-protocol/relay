@@ -1,15 +1,6 @@
-# Make external libs work with gevent, but still enable real threading
-from gevent import monkey  # isort:skip
-
-monkey.patch_all(thread=False)  # noqa: E702 isort:skip
-# Make postgresql usable with gevent
-import psycogreen.gevent  # isort:skip
-
-psycogreen.gevent.patch_psycopg()  # noqa: E702 isort:skip
 import json
 import logging
 import logging.config
-import os
 
 import click
 import toml
@@ -108,10 +99,6 @@ def _show_version(ctx, param, value):
 @click.pass_context
 def main(ctx, port, config, addresses, version):
     """run the relay server"""
-    logging.basicConfig(
-        format="%(asctime)s[%(levelname)s] %(name)s: %(message)s",
-        level=os.environ.get("LOGLEVEL", "INFO").upper(),
-    )
 
     # silence warnings from urllib3, see github issue 246
     logging.getLogger("urllib3.connectionpool").setLevel(logging.CRITICAL)
@@ -136,7 +123,3 @@ def main(ctx, port, config, addresses, version):
     http_server = WSGIServer(ipport, app, log=None, handler_class=WebSocketHandler)
     logger.info("Server is running on {}".format(ipport))
     http_server.serve_forever()
-
-
-if __name__ == "__main__":
-    main()
