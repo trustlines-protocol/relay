@@ -89,7 +89,6 @@ pycodestyle==2.5.0
 pycryptodome==3.8.2
 pyethash==0.1.27
 pyflakes==2.1.1
-pygraphviz==1.5
 pyparsing==2.4.2
 pysha3==1.0.2
 pytest==5.0.1

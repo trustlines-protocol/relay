@@ -10,7 +10,7 @@ Since the trustlines infrastructure components are implemented in python 3, you 
 
 ```
 sudo apt install build-essential python3-dev python3-venv pkg-config \
-     libssl-dev automake autoconf libtool libgraphviz-dev git libpq-dev
+     libssl-dev automake autoconf libtool git libpq-dev
 ```
 
 The installation instructions assume you create a dedicated user account and put
@@ -149,7 +149,7 @@ This program will run forever.
 
 Installation on Ubuntu
 
-    sudo apt install build-essential python3-dev libsecp256k1-dev python3-virtualenv virtualenv pkg-config libssl-dev automake autoconf libtool libgraphviz-dev git
+    sudo apt install build-essential python3-dev libsecp256k1-dev python3-virtualenv virtualenv pkg-config libssl-dev automake autoconf libtool git
 
 
 

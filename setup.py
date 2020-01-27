@@ -49,7 +49,6 @@ setup(
         "gevent",
         "web3>=4.7.1",
         "networkx>=2.0",
-        "pygraphviz",
         "trustlines-contracts-bin>=1.0.0,<1.1.0",
         "trustlines-contracts-deploy>=1.0.0,<1.1.0",
         "sqlalchemy",

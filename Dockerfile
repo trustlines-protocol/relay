@@ -12,8 +12,8 @@ FROM ubuntu:18.04 as builder
 ENV LANG C.UTF-8
 
 RUN apt-get update \
-    && apt-get install -y apt-utils libssl-dev curl graphviz libsecp256k1-dev \
-    python3 python3-distutils python3-dev python3-venv git build-essential libpq-dev libgraphviz-dev libsecp256k1-dev pkg-config \
+    && apt-get install -y apt-utils libssl-dev curl libsecp256k1-dev \
+    python3 python3-distutils python3-dev python3-venv git build-essential libpq-dev libsecp256k1-dev pkg-config \
     && rm -rf /var/lib/apt/lists/*
 
 RUN python3 -m venv /opt/relay
@@ -35,7 +35,7 @@ RUN /opt/relay/bin/pip install --disable-pip-version-check -c constraints.txt .
 FROM ubuntu:18.04 as runner
 ENV LANG C.UTF-8
 RUN apt-get update \
-    && apt-get install -y apt-utils libssl-dev curl graphviz \
+    && apt-get install -y apt-utils libssl-dev curl \
                           python3 libpq5 libsecp256k1-0 \
     && rm -rf /var/lib/apt/lists/* \
     && ln -s /opt/relay/bin/tl-relay /usr/local/bin/

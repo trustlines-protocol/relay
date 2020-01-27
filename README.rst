@@ -37,7 +37,7 @@ Please issue the following command to install the prerequisites on ubuntu 18.04:
 
     sudo apt install build-essential python3-dev libsecp256k1-dev \
     python3-virtualenv virtualenv pkg-config libssl-dev automake \
-    autoconf libtool libgraphviz-dev git libpq-dev
+    autoconf libtool git libpq-dev
 
 
 Setup
