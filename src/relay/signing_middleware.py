@@ -66,6 +66,8 @@ def make_prepare_signing_middleware(default_from_address):
 
 
 def install_signing_middleware(w3, account):
+    if w3.eth.defaultAccount:
+        raise RuntimeError("default account already set")
     w3.middleware_onion.add(construct_sign_and_send_raw_middleware(account))
     w3.eth.defaultAccount = account.address
     w3.middleware_onion.add(make_prepare_signing_middleware(account.address))
