@@ -1,6 +1,12 @@
 ==========
 Change Log
 ==========
+`0.11.3`_ (2020-01-29)
+-------------------------------
+- Make the relay server sign transactions
+- Add endpoint to list all trustlines for a given user
+- Enhance the log output
+
 `0.11.2`_ (2020-01-20)
 -------------------------------
 - Add endpoint to get list of interests for trustline or user
@@ -136,3 +142,4 @@ Change Log
 .. _0.11.0: https://github.com/trustlines-protocol/relay/compare/0.10.0...0.11.0
 .. _0.11.1: https://github.com/trustlines-protocol/relay/compare/0.11.0...0.11.1
 .. _0.11.2: https://github.com/trustlines-protocol/relay/compare/0.11.1...0.11.2
+.. _0.11.3: https://github.com/trustlines-protocol/relay/compare/0.11.2...0.11.3
