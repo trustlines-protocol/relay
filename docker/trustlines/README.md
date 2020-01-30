@@ -45,6 +45,26 @@ without starting any services with the following command:
 docker-compose up --no-start
 ```
 
+### Generate keys
+
+The relay server either needs a parity node with an unlocked account
+or it needs a key to sign transactions itself. We will use the latter
+method.
+
+Please generate a keystore file by running the following command. It
+will ask for a password.
+
+```
+docker run --rm -it -v $(pwd):/here --entrypoint /opt/relay/bin/deploy-tools trustlines/relay generate-keystore --keystore-path /here/keystore.json
+```
+
+We also need to store the password in clear text. Please create a file
+'keystore-password.txt' containing only the password on the first
+line.
+
+Of course you can also use an existing keyfile, but please do not
+reuse a keyfile from a validator node.
+
 ### Copy compiled contracts
 
 The relay server image containts the file 'contracts.json', which
@@ -68,33 +88,13 @@ docker-compose run --rm index createtables
 docker-compose run --rm index importabi
 ```
 
-### Generate keys
-
-The relay server either needs a parity node with an unlocked account
-or it needs a key to sign transactions itself. We will use the latter
-method.
-
-Please generate a keystore file by running the following command. It
-will ask for a password.
-
-```
-docker-compose run --rm --no-deps -v $(pwd):/here --entrypoint /opt/relay/bin/deploy-tools relay generate-keystore --keystore-path /here/keystore.json
-```
-
-We also need to store the password in clear text. Please create a file
-'keystore-password.txt' containing only the password on the first
-line.
-
-Of course you can also use an existing keyfile, but please do not
-reuse a keyfile from a validator node.
-
 After that you can start the system with `docker-compose up -d`,
 though you have to wait for the blockchain node to sync with the
 trustlines blockchain in order to have a fully functioning system.
 
-The account will have to pay for transactions. Please fund it with
-enough coins. You should be able to connect to the local node via
-metamask to do that.
+The account you've setup at the beginning will have to pay for
+transactions. Please fund it with enough coins. You should now be able
+to connect to the local node via metamask to do that.
 
 ### Test the installation
 
