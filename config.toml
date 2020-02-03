@@ -19,6 +19,11 @@ gasPrice = 0
 # value = 0
 # currencyNetwork = "0x000..."
 
+# Configure a sentry DSN to report errors to sentry
+# [relay.sentry]
+# dsn = "https://f3e...@sentry.io/..."
+
+
 # Configure logging
 [logging.root]
 level = "INFO"

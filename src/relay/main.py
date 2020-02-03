@@ -3,6 +3,7 @@ import logging
 import logging.config
 
 import click
+import sentry_sdk.integrations.flask
 import toml
 from gevent.pywsgi import WSGIServer
 from geventwebsocket.handler import WebSocketHandler
@@ -113,6 +114,12 @@ def main(ctx, port, config, addresses, version):
         else:
             config_dict = toml.load(config_file)
     configure_logging(config_dict)
+    sentry_dsn = config_dict["relay"].get("sentry", {}).get("dsn")
+    if sentry_dsn:
+        sentry_sdk.init(
+            dsn=sentry_dsn,
+            integrations=[sentry_sdk.integrations.flask.FlaskIntegration()],
+        )
 
     trustlines = TrustlinesRelay(
         config=config_dict["relay"], addresses_json_path=addresses

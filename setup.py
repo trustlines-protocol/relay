@@ -45,6 +45,7 @@ setup(
         "flask",
         "flask_restful",
         "flask_cors",
+        "sentry-sdk[flask]",
         "webargs",
         "gevent",
         "web3>=4.7.1",
