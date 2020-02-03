@@ -45,6 +45,8 @@ class MetaTransactionSchema(Schema):
         self._validate(data)
         return identity.MetaTransaction(**data)
 
+    chainId = fields.Integer(missing=0, attribute="chain_id")
+    versionNumber = fields.Integer(missing=0, attribute="version_number")
     from_ = Address(required=True, data_key="from")
     to = Address(required=True)
     value = BigInteger(required=True)

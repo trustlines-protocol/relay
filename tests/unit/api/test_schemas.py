@@ -13,6 +13,7 @@ from relay.network_graph.payment_path import FeePayer, PaymentPath
 a_valid_meta_transaction = identity.MetaTransaction(
     from_="0xF2E246BB76DF876Cef8b38ae84130F4F55De395b",
     to="0x51a240271AB8AB9f9a21C82d9a85396b704E164d",
+    chain_id=0,
     value=0,
     data=bytes.fromhex(
         "46432830000000000000000000000000000000000000000000000000000000000000000a"

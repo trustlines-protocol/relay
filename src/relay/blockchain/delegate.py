@@ -72,9 +72,11 @@ class Delegate:
         self, meta_transaction: MetaTransaction
     ) -> List[DelegationFees]:
         try:
-            valid = self.delegate.validate_nonce(
-                meta_transaction
-            ) and self.delegate.validate_time_limit(meta_transaction)
+            valid = (
+                self.delegate.validate_nonce(meta_transaction)
+                and self.delegate.validate_time_limit(meta_transaction)
+                and self.delegate.validate_chain_id(meta_transaction)
+            )
         except UnexpectedIdentityContractException as e:
             raise InvalidIdentityContractException(e)
 
