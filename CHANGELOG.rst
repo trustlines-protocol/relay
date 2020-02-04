@@ -1,6 +1,10 @@
 ==========
 Change Log
 ==========
+`0.11.4`_ (2020-02-04)
+-------------------------------
+- Report errors to sentry
+
 `0.11.3`_ (2020-01-29)
 -------------------------------
 - Make the relay server sign transactions
@@ -143,3 +147,4 @@ Change Log
 .. _0.11.1: https://github.com/trustlines-protocol/relay/compare/0.11.0...0.11.1
 .. _0.11.2: https://github.com/trustlines-protocol/relay/compare/0.11.1...0.11.2
 .. _0.11.3: https://github.com/trustlines-protocol/relay/compare/0.11.2...0.11.3
+.. _0.11.4: https://github.com/trustlines-protocol/relay/compare/0.11.3...0.11.4
