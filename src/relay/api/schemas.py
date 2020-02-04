@@ -2,13 +2,21 @@ import hexbytes
 from marshmallow import Schema, ValidationError, fields, post_load
 from marshmallow_oneofschema import OneOfSchema
 from tldeploy import identity
+from tldeploy.identity import MetaTransaction
 
 from relay.blockchain.currency_network_events import CurrencyNetworkEvent
 from relay.blockchain.exchange_events import ExchangeEvent
 from relay.blockchain.unw_eth_events import UnwEthEvent
 from relay.network_graph.payment_path import PaymentPath
 
-from .fields import Address, BigInteger, FeePayerField, HexBytes, HexEncodedBytes
+from .fields import (
+    Address,
+    BigInteger,
+    FeePayerField,
+    HexBytes,
+    HexEncodedBytes,
+    OperationTypeField,
+)
 
 ZERO_ADDRESS = "0x" + "0" * 40
 
@@ -23,7 +31,6 @@ class MetaTransactionSchema(Schema):
         base_fee = data["base_fee"]
         gas_price = data["gas_price"]
         gas_limit = data["gas_limit"]
-        operation_type = data["operation_type"]
         signature = data["signature"]
         if not 0 <= value < 2 ** 256:
             raise ValidationError(f"value={value} is out of bounds")
@@ -35,8 +42,6 @@ class MetaTransactionSchema(Schema):
             raise ValidationError(f"gas_price={gas_price} is out of bounds")
         if not 0 <= gas_limit < 2 ** 256:
             raise ValidationError(f"gas_limit={gas_limit} is out of bounds")
-        if not 0 <= operation_type <= 3:
-            raise ValidationError(f"operation_type={operation_type} is out of bounds")
         if len(signature) != 65 and signature != hexbytes.HexBytes(""):
             raise ValidationError("signature must be 65 bytes")
 
@@ -46,7 +51,7 @@ class MetaTransactionSchema(Schema):
         return identity.MetaTransaction(**data)
 
     chainId = fields.Integer(missing=0, attribute="chain_id")
-    versionNumber = fields.Integer(missing=0, attribute="version_number")
+    version = fields.Integer(missing=0, attribute="version")
     from_ = Address(required=True, data_key="from")
     to = Address(required=True)
     value = BigInteger(required=True)
@@ -58,7 +63,9 @@ class MetaTransactionSchema(Schema):
     currencyNetworkOfFees = Address(missing=to, attribute="currency_network_of_fees")
     nonce = BigInteger(required=True)
     timeLimit = fields.Integer(missing=0, attribute="time_limit")
-    operationType = fields.Integer(missing=0, attribute="operation_type")
+    operationType = OperationTypeField(
+        missing=MetaTransaction.OperationType.CALL, attribute="operation_type"
+    )
     signature = HexEncodedBytes(missing=hexbytes.HexBytes(""))
 
 

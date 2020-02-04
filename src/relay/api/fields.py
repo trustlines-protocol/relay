@@ -1,6 +1,7 @@
 import hexbytes
 from eth_utils import is_address, to_checksum_address
 from marshmallow import fields
+from tldeploy.identity import MetaTransaction
 from webargs import ValidationError
 
 from relay.network_graph.payment_path import FeePayer
@@ -93,4 +94,25 @@ class FeePayerField(fields.Field):
             raise ValidationError(
                 f"Could not parse attribute {attr}: {value} has to be one of "
                 f"{[fee_payer.value for fee_payer in FeePayer]}"
+            )
+
+
+class OperationTypeField(fields.Field):
+    def _serialize(self, value, attr, obj, **kwargs):
+
+        if isinstance(value, MetaTransaction.OperationType):
+            # serialises into the value of the OperationType enum
+            return value.value
+        else:
+            raise ValidationError("Value must be of type OperationType")
+
+    def _deserialize(self, value, attr, data, **kwargs):
+
+        # deserialize into the OperationType enum instance corresponding to the value
+        try:
+            return MetaTransaction.OperationType(value)
+        except ValueError:
+            raise ValidationError(
+                f"Could not parse attribute {attr}: {value} has to be one of "
+                f"{[operation_type.value for operation_type in MetaTransaction.OperationType]}"
             )
