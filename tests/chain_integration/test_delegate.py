@@ -120,8 +120,23 @@ def identity(identity_contract, owner_key):
 
 
 @pytest.fixture()
-def signed_meta_transaction(identity, owner_key, accounts):
-    meta_transaction = MetaTransaction(
+def chain_id(web3):
+    return int(web3.eth.chainId)
+
+
+@pytest.fixture()
+def build_meta_transaction(chain_id):
+    """Adds chain_id and build meta-tx from given args"""
+
+    def f(*args, **kwargs):
+        return MetaTransaction(*args, **kwargs, chain_id=chain_id)
+
+    return f
+
+
+@pytest.fixture()
+def signed_meta_transaction(identity, owner_key, accounts, build_meta_transaction):
+    meta_transaction = build_meta_transaction(
         from_=identity.address,
         to=accounts[2],
         value=123,
@@ -213,12 +228,14 @@ def test_deploy_identity(
     assert currency_network.get_balance(identity_contract_address, destination) == -100
 
 
-def test_next_nonce(delegate, identity_contract, accounts, owner_key):
+def test_next_nonce(
+    delegate, identity_contract, accounts, owner_key, build_meta_transaction
+):
 
     source = identity_contract.address
     destination = accounts[3]
 
-    meta_transaction = MetaTransaction(
+    meta_transaction = build_meta_transaction(
         from_=source, to=destination, value=123, nonce=delegate.calc_next_nonce(source)
     )
     signed_meta_transaction = meta_transaction.signed(owner_key)
@@ -227,7 +244,7 @@ def test_next_nonce(delegate, identity_contract, accounts, owner_key):
     delegate.send_signed_meta_transaction(signed_meta_transaction)
     assert delegate.calc_next_nonce(source) == 2
 
-    meta_transaction = MetaTransaction(
+    meta_transaction = build_meta_transaction(
         from_=source, to=destination, value=123, nonce=delegate.calc_next_nonce(source)
     )
     signed_meta_transaction = meta_transaction.signed(owner_key)
@@ -238,12 +255,12 @@ def test_next_nonce(delegate, identity_contract, accounts, owner_key):
 
 
 def test_delegated_transaction_invalid_signature(
-    identity, delegate, accounts, account_keys
+    identity, delegate, accounts, account_keys, build_meta_transaction
 ):
     to = accounts[2]
     value = 1000
 
-    meta_transaction = MetaTransaction(
+    meta_transaction = build_meta_transaction(
         from_=identity.address, to=to, value=value, nonce=0
     ).signed(account_keys[3])
 
@@ -269,15 +286,15 @@ def test_delegated_transaction_invalid_nonce(identity, delegate, accounts):
 
 
 def test_delegated_transaction_invalid_identity_contract(
-    delegate, accounts, account_keys
+    delegate, accounts, account_keys, build_meta_transaction
 ):
     from_ = accounts[1]
     to = accounts[2]
     value = 1000
 
-    meta_transaction = MetaTransaction(from_=from_, to=to, value=value, nonce=0).signed(
-        account_keys[3]
-    )
+    meta_transaction = build_meta_transaction(
+        from_=from_, to=to, value=value, nonce=0
+    ).signed(account_keys[3])
 
     with pytest.raises(InvalidIdentityContractException):
         delegate.send_signed_meta_transaction(meta_transaction)
