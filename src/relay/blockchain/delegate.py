@@ -1,6 +1,6 @@
-from collections import namedtuple
 from typing import List
 
+import attr
 from deploy_tools.deploy import TransactionFailed
 from tldeploy.identity import (
     Delegate as DelegateImplementation,
@@ -9,7 +9,15 @@ from tldeploy.identity import (
     deploy_proxied_identity,
 )
 
-DelegationFees = namedtuple("DelegationFees", ["value", "currency_network"])
+ZERO_ADDRESS = "0x" + "0" * 40
+
+
+@attr.s
+class DelegationFees:
+    currency_network_of_fees = attr.ib()
+    fee_recipient = attr.ib(default=ZERO_ADDRESS)
+    base_fee = attr.ib(default=0)
+    gas_price = attr.ib(default=0)
 
 
 class Delegate:
@@ -64,7 +72,11 @@ class Delegate:
         self, meta_transaction: MetaTransaction
     ) -> List[DelegationFees]:
         try:
-            valid = self.delegate.validate_nonce(meta_transaction)
+            valid = (
+                self.delegate.validate_nonce(meta_transaction)
+                and self.delegate.validate_time_limit(meta_transaction)
+                and self.delegate.validate_chain_id(meta_transaction)
+            )
         except UnexpectedIdentityContractException as e:
             raise InvalidIdentityContractException(e)
 
@@ -78,12 +90,13 @@ class Delegate:
         if not fees_estimations:
             return
         for fees_estimation in fees_estimations:
-            if fees_estimation.value == 0:
+            if fees_estimation.base_fee == 0 and fees_estimation.gas_price == 0:
                 return
             if (
-                fees_estimation.currency_network
+                fees_estimation.currency_network_of_fees
                 == meta_transaction.currency_network_of_fees
-                and fees_estimation.value <= meta_transaction.fees
+                and fees_estimation.base_fee <= meta_transaction.base_fee
+                and fees_estimation.gas_price <= meta_transaction.gas_price
             ):
                 return
 

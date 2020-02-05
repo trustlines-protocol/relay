@@ -28,7 +28,7 @@ def delegate_address(web3):
 @pytest.fixture(scope="session")
 def delegate(web3, delegate_address, contracts, proxy_factory, currency_network):
     identity_contract_abi = contracts["Identity"]["abi"]
-    delegation_fees_value = 0
+    base_fee = 0
     return Delegate(
         web3,
         delegate_address,
@@ -36,7 +36,7 @@ def delegate(web3, delegate_address, contracts, proxy_factory, currency_network)
         [proxy_factory.address],
         delegation_fees=[
             DelegationFees(
-                value=delegation_fees_value, currency_network=currency_network.address
+                base_fee=base_fee, currency_network_of_fees=currency_network.address
             )
         ],
     )
@@ -47,7 +47,7 @@ def delegate_with_one_fees(
     web3, delegate_address, contracts, proxy_factory, currency_network
 ):
     identity_contract_abi = contracts["Identity"]["abi"]
-    delegation_fees_value = 1
+    base_fee = 1
     return Delegate(
         web3,
         delegate_address,
@@ -55,7 +55,7 @@ def delegate_with_one_fees(
         [proxy_factory.address],
         delegation_fees=[
             DelegationFees(
-                value=delegation_fees_value, currency_network=currency_network.address
+                base_fee=base_fee, currency_network_of_fees=currency_network.address
             )
         ],
     )
@@ -120,14 +120,28 @@ def identity(identity_contract, owner_key):
 
 
 @pytest.fixture()
-def signed_meta_transaction(identity, owner_key, accounts):
-    meta_transaction = MetaTransaction(
+def chain_id(web3):
+    return int(web3.eth.chainId)
+
+
+@pytest.fixture()
+def build_meta_transaction(chain_id):
+    """Adds chain_id and build meta-tx from given args"""
+
+    def f(*args, **kwargs):
+        return MetaTransaction(*args, **kwargs, chain_id=chain_id)
+
+    return f
+
+
+@pytest.fixture()
+def signed_meta_transaction(identity, owner_key, accounts, build_meta_transaction):
+    meta_transaction = build_meta_transaction(
         from_=identity.address,
         to=accounts[2],
         value=123,
         data=(1234).to_bytes(10, byteorder="big"),
         nonce=1,
-        extra_data=(123456789).to_bytes(10, byteorder="big"),
     )
 
     return meta_transaction.signed(owner_key)
@@ -214,12 +228,14 @@ def test_deploy_identity(
     assert currency_network.get_balance(identity_contract_address, destination) == -100
 
 
-def test_next_nonce(delegate, identity_contract, accounts, owner_key):
+def test_next_nonce(
+    delegate, identity_contract, accounts, owner_key, build_meta_transaction
+):
 
     source = identity_contract.address
     destination = accounts[3]
 
-    meta_transaction = MetaTransaction(
+    meta_transaction = build_meta_transaction(
         from_=source, to=destination, value=123, nonce=delegate.calc_next_nonce(source)
     )
     signed_meta_transaction = meta_transaction.signed(owner_key)
@@ -228,7 +244,7 @@ def test_next_nonce(delegate, identity_contract, accounts, owner_key):
     delegate.send_signed_meta_transaction(signed_meta_transaction)
     assert delegate.calc_next_nonce(source) == 2
 
-    meta_transaction = MetaTransaction(
+    meta_transaction = build_meta_transaction(
         from_=source, to=destination, value=123, nonce=delegate.calc_next_nonce(source)
     )
     signed_meta_transaction = meta_transaction.signed(owner_key)
@@ -239,12 +255,12 @@ def test_next_nonce(delegate, identity_contract, accounts, owner_key):
 
 
 def test_delegated_transaction_invalid_signature(
-    identity, delegate, accounts, account_keys
+    identity, delegate, accounts, account_keys, build_meta_transaction
 ):
     to = accounts[2]
     value = 1000
 
-    meta_transaction = MetaTransaction(
+    meta_transaction = build_meta_transaction(
         from_=identity.address, to=to, value=value, nonce=0
     ).signed(account_keys[3])
 
@@ -270,15 +286,15 @@ def test_delegated_transaction_invalid_nonce(identity, delegate, accounts):
 
 
 def test_delegated_transaction_invalid_identity_contract(
-    delegate, accounts, account_keys
+    delegate, accounts, account_keys, build_meta_transaction
 ):
     from_ = accounts[1]
     to = accounts[2]
     value = 1000
 
-    meta_transaction = MetaTransaction(from_=from_, to=to, value=value, nonce=0).signed(
-        account_keys[3]
-    )
+    meta_transaction = build_meta_transaction(
+        from_=from_, to=to, value=value, nonce=0
+    ).signed(account_keys[3])
 
     with pytest.raises(InvalidIdentityContractException):
         delegate.send_signed_meta_transaction(meta_transaction)
@@ -296,8 +312,8 @@ def test_meta_transaction_fees_valid(
     )[0]
     meta_transaction_with_fees = attr.evolve(
         signed_meta_transaction,
-        fees=delegation_fees.value,
-        currency_network_of_fees=delegation_fees.currency_network,
+        base_fee=delegation_fees.base_fee,
+        currency_network_of_fees=delegation_fees.currency_network_of_fees,
     )
     signed_meta_transaction_with_fees = meta_transaction_with_fees.signed(owner_key)
     delegate_with_one_fees.validate_meta_transaction_fees(
@@ -317,12 +333,12 @@ def test_meta_transaction_fees_invalid_value(
     )[0]
 
     wrong_fees_value = 0
-    assert delegation_fees.value >= wrong_fees_value
+    assert delegation_fees.base_fee >= wrong_fees_value
 
     meta_transaction_with_fees = attr.evolve(
         signed_meta_transaction,
-        fees=wrong_fees_value,
-        currency_network_of_fees=delegation_fees.currency_network,
+        base_fee=wrong_fees_value,
+        currency_network_of_fees=delegation_fees.currency_network_of_fees,
     )
     signed_meta_transaction_with_fees = meta_transaction_with_fees.signed(owner_key)
 
@@ -344,11 +360,11 @@ def test_meta_transaction_fees_invalid_network(
     )[0]
 
     wrong_network = signed_meta_transaction.from_
-    assert delegation_fees.currency_network != wrong_network
+    assert delegation_fees.currency_network_of_fees != wrong_network
 
     meta_transaction_with_fees = attr.evolve(
         signed_meta_transaction,
-        fees=delegation_fees.value,
+        base_fee=delegation_fees.base_fee,
         currency_network_of_fees=wrong_network,
     )
     signed_meta_transaction_with_fees = meta_transaction_with_fees.signed(owner_key)

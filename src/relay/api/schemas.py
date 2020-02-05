@@ -2,13 +2,23 @@ import hexbytes
 from marshmallow import Schema, ValidationError, fields, post_load
 from marshmallow_oneofschema import OneOfSchema
 from tldeploy import identity
+from tldeploy.identity import MetaTransaction
 
 from relay.blockchain.currency_network_events import CurrencyNetworkEvent
 from relay.blockchain.exchange_events import ExchangeEvent
 from relay.blockchain.unw_eth_events import UnwEthEvent
 from relay.network_graph.payment_path import PaymentPath
 
-from .fields import Address, BigInteger, FeePayerField, HexBytes, HexEncodedBytes
+from .fields import (
+    Address,
+    BigInteger,
+    FeePayerField,
+    HexBytes,
+    HexEncodedBytes,
+    OperationTypeField,
+)
+
+ZERO_ADDRESS = "0x" + "0" * 40
 
 
 class MetaTransactionSchema(Schema):
@@ -16,33 +26,46 @@ class MetaTransactionSchema(Schema):
         strict = True
 
     def _validate(self, data):
-        nonce = data["nonce"]
-        fees = data["fees"]
-        signature = data["signature"]
-        if not 0 <= nonce < 2 ** 256:
-            raise ValidationError(f"nonce={nonce} is out of bounds")
-        if not 0 <= fees < 2 ** 64:
-            raise ValidationError(f"delegationFees={fees} is out of bounds")
-        if len(signature) != 65 and signature != hexbytes.HexBytes(""):
-            raise ValidationError("signature must be 65 bytes")
-
         value = data["value"]
+        nonce = data["nonce"]
+        base_fee = data["base_fee"]
+        gas_price = data["gas_price"]
+        gas_limit = data["gas_limit"]
+        signature = data["signature"]
         if not 0 <= value < 2 ** 256:
             raise ValidationError(f"value={value} is out of bounds")
+        if not 0 <= nonce < 2 ** 256:
+            raise ValidationError(f"nonce={nonce} is out of bounds")
+        if not 0 <= base_fee < 2 ** 256:
+            raise ValidationError(f"baseFee={base_fee} is out of bounds")
+        if not 0 <= gas_price < 2 ** 256:
+            raise ValidationError(f"gas_price={gas_price} is out of bounds")
+        if not 0 <= gas_limit < 2 ** 256:
+            raise ValidationError(f"gas_limit={gas_limit} is out of bounds")
+        if len(signature) != 65 and signature != hexbytes.HexBytes(""):
+            raise ValidationError("signature must be 65 bytes")
 
     @post_load
     def make_meta_transaction(self, data, partial, many):
         self._validate(data)
         return identity.MetaTransaction(**data)
 
+    chainId = fields.Integer(missing=0, attribute="chain_id")
+    version = fields.Integer(missing=0, attribute="version")
     from_ = Address(required=True, data_key="from")
     to = Address(required=True)
     value = BigInteger(required=True)
     data = HexEncodedBytes(required=True)
-    delegationFees = BigInteger(missing=0, attribute="fees")
+    baseFee = BigInteger(missing=0, attribute="base_fee")
+    gasPrice = BigInteger(missing=0, attribute="gas_price")
+    gasLimit = BigInteger(missing=0, attribute="gas_limit")
+    feeRecipient = Address(missing=ZERO_ADDRESS, attribute="fee_recipient")
     currencyNetworkOfFees = Address(missing=to, attribute="currency_network_of_fees")
     nonce = BigInteger(required=True)
-    extraData = HexEncodedBytes(required=True, attribute="extra_data")
+    timeLimit = fields.Integer(missing=0, attribute="time_limit")
+    operationType = OperationTypeField(
+        missing=MetaTransaction.OperationType.CALL, attribute="operation_type"
+    )
     signature = HexEncodedBytes(missing=hexbytes.HexBytes(""))
 
 
@@ -50,8 +73,10 @@ class MetaTransactionFeeSchema(Schema):
     class Meta:
         strict = True
 
-    delegationFees = BigInteger(required=True, attribute="value")
-    currencyNetworkOfFees = Address(required=True, attribute="currency_network")
+    baseFee = BigInteger(required=True, attribute="base_fee")
+    gasPrice = BigInteger(required=True, attribute="gas_price")
+    feeRecipient = Address(required=True, attribute="fee_recipient")
+    currencyNetworkOfFees = Address(required=True, attribute="currency_network_of_fees")
 
 
 class EventSchema(Schema):

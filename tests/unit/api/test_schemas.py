@@ -13,12 +13,12 @@ from relay.network_graph.payment_path import FeePayer, PaymentPath
 a_valid_meta_transaction = identity.MetaTransaction(
     from_="0xF2E246BB76DF876Cef8b38ae84130F4F55De395b",
     to="0x51a240271AB8AB9f9a21C82d9a85396b704E164d",
+    chain_id=0,
     value=0,
     data=bytes.fromhex(
         "46432830000000000000000000000000000000000000000000000000000000000000000a"
     ),
     nonce=1,
-    extra_data=b"",
     signature=bytes.fromhex(
         "6d2fe56ef6648cb3f0398966ad3b05d891cde786d8074bdac15bcb92ebfa722248"
         "9b8eb6ed87165feeede19b031bb69e12036a5fa13b3a46ad0c2c19d051ea9101"
@@ -31,7 +31,6 @@ def gen_meta_transactions():
     return [
         mt,
         attr.evolve(mt, data=b""),
-        attr.evolve(mt, extra_data=b"foo"),
         attr.evolve(mt, nonce=0),
         attr.evolve(mt, value=1234),
         attr.evolve(mt, nonce=2 ** 256 - 1),
@@ -81,7 +80,7 @@ def test_load_meta_transaction_invalid_values(values):
         dict(nonce="1"),
         dict(data="0x00"),
         dict(data="0xff"),
-        dict(extraData="0x00"),
+        dict(feeRecipient="0x" + "1" * 40),
         dict(nonce=str(2 ** 256 - 1)),
         dict(value="1"),
         dict(value=str(2 ** 256 - 1)),

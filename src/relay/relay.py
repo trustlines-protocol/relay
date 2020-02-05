@@ -285,11 +285,16 @@ class TrustlinesRelay:
         self.node = Node(self._web3, fixed_gas_price=self.fixed_gas_price)
 
         delegation_fees = [
-            DelegationFees(value=d["value"], currency_network=d["currencyNetwork"])
+            DelegationFees(
+                fee_recipient=d.get("feeRecipient", self.node.address),
+                base_fee=d.get("baseFee", 0),
+                gas_price=d.get("gasPrice", 0),
+                currency_network_of_fees=d["currencyNetworkOfFees"],
+            )
             for d in self.config.get("delegationFees", [])
             if d
         ]
-
+        logger.info(f"Started relay with delegation fees: {delegation_fees}")
         self.delegate = Delegate(
             self._web3,
             self._web3.eth.defaultAccount or self.node.address,
