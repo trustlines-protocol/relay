@@ -15,9 +15,13 @@ from relay.api import fields as custom_fields
 from relay.blockchain.currency_network_proxy import CurrencyNetworkProxy
 from relay.blockchain.delegate import (
     IdentityDeploymentFailedException,
+    InvalidChainId,
     InvalidDelegationFeesException,
     InvalidIdentityContractException,
     InvalidMetaTransactionException,
+    InvalidNonceHashPair,
+    InvalidSignature,
+    InvalidTimeLimit,
     UnknownIdentityFactoryException,
 )
 from relay.blockchain.unw_eth_proxy import UnwEthProxy
@@ -71,6 +75,52 @@ def dump_result_with_schema(schema):
         return schema.dump(wrapped(*args, **kwargs))
 
     return dump_result
+
+
+def handle_meta_transaction_exceptions(function_to_call):
+    def handle_exceptions(meta_transaction):
+        try:
+            return function_to_call(meta_transaction)
+        except InvalidDelegationFeesException:
+            abort(
+                400,
+                f"Invalid delegation fees: fees too low or not supported currency network of fees",
+            )
+        except InvalidTimeLimit:
+            abort(400, f"Invalid time limit for meta-tx: {meta_transaction.time_limit}")
+        except identity.ValidateTimeLimitNotFound:
+            abort(
+                400,
+                f"The function to validate the time limit was not found in the contract",
+            )
+        except InvalidChainId:
+            abort(400, f"Invalid chain id for meta-tx: {meta_transaction.chain_id}")
+        except InvalidNonceHashPair:
+            abort(
+                400,
+                f"Invalid (nonce, hash) pair for meta-tx: ({meta_transaction.nonce}, {meta_transaction.hash})",
+            )
+        except identity.ValidateNonceNotFound:
+            abort(
+                400,
+                f"The function to validate the nonce and hash was not found in the contract",
+            )
+        except InvalidSignature:
+            abort(400, f"Invalid signature for meta-tx: {meta_transaction.signature}")
+        except identity.ValidateSignatureNotFound:
+            abort(
+                400,
+                f"The function to validate the signature was not found in the contract",
+            )
+        except InvalidMetaTransactionException:
+            abort(400, f"The meta-transaction is invalid")
+        except InvalidIdentityContractException as exception:
+            abort(
+                400,
+                f"This meta transaction belongs to an invalid or unknown identity contract: {exception}",
+            )
+
+    return handle_exceptions
 
 
 class Version(Resource):
@@ -434,19 +484,10 @@ class RelayMetaTransaction(Resource):
     def post(self, args):
         meta_transaction: identity.MetaTransaction = args["metaTransaction"]
         try:
-            return self.trustlines.delegate_meta_transaction(meta_transaction).hex()
-        except InvalidDelegationFeesException:
-            abort(
-                400,
-                f"Invalid delegation fees: fees too low or not supported currency network of fees",
+            relay_meta_tx = handle_meta_transaction_exceptions(
+                self.trustlines.delegate_meta_transaction
             )
-        except InvalidMetaTransactionException:
-            abort(400, "The meta-transaction is invalid")
-        except InvalidIdentityContractException:
-            abort(
-                400,
-                "This meta transaction belongs to an invalid or unknown identity contract",
-            )
+            return relay_meta_tx(meta_transaction).hex()
         except ValueError:
             abort(409, "There was an error while relaying this meta-transaction")
 
@@ -465,15 +506,10 @@ class MetaTransactionFees(Resource):
     @dump_result_with_schema(MetaTransactionFeeSchema(many=True))
     def post(self, args):
         meta_transaction: identity.MetaTransaction = args["metaTransaction"]
-        try:
-            return self.trustlines.meta_transaction_fees(meta_transaction)
-        except InvalidMetaTransactionException:
-            abort(400, "The meta-transaction is invalid")
-        except InvalidIdentityContractException:
-            abort(
-                400,
-                "This meta transaction belongs to an invalid or unknown identity contract",
-            )
+        get_meta_tx_fees = handle_meta_transaction_exceptions(
+            self.trustlines.meta_transaction_fees
+        )
+        return get_meta_tx_fees(meta_transaction)
 
 
 class Balance(Resource):

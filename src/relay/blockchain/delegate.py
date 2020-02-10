@@ -38,16 +38,10 @@ class Delegate:
         self.delegation_fees = delegation_fees
 
     def send_signed_meta_transaction(self, signed_meta_transaction: MetaTransaction):
+        self.raise_on_invalid_signed_meta_transaction(signed_meta_transaction)
         self.validate_meta_transaction_fees(signed_meta_transaction)
-        try:
-            valid = self.delegate.validate_meta_transaction(signed_meta_transaction)
-        except UnexpectedIdentityContractException as e:
-            raise InvalidIdentityContractException(e)
 
-        if valid:
-            return self.delegate.send_signed_meta_transaction(signed_meta_transaction)
-        else:
-            raise InvalidMetaTransactionException
+        return self.delegate.send_signed_meta_transaction(signed_meta_transaction)
 
     def deploy_identity(self, factory_address, implementation_address, signature):
         if factory_address not in self.known_factories:
@@ -71,22 +65,18 @@ class Delegate:
     def calculate_fees_for_meta_transaction(
         self, meta_transaction: MetaTransaction
     ) -> List[DelegationFees]:
-        try:
-            valid = (
-                self.delegate.validate_nonce(meta_transaction)
-                and self.delegate.validate_time_limit(meta_transaction)
-                and self.delegate.validate_chain_id(meta_transaction)
-            )
-        except UnexpectedIdentityContractException as e:
-            raise InvalidIdentityContractException(e)
+        self.raise_on_invalid_meta_transaction(meta_transaction)
+        return self._calculate_fees_for_meta_transaction(meta_transaction)
 
-        if valid:
-            return self.delegation_fees
-        else:
-            raise InvalidMetaTransactionException
+    def _calculate_fees_for_meta_transaction(
+        self, meta_transaction: MetaTransaction
+    ) -> List[DelegationFees]:
+        """This function should use the information of a meta-transaction
+        to evaluate the fees the delegate would want to receive to pay for it"""
+        return self.delegation_fees
 
     def validate_meta_transaction_fees(self, meta_transaction: MetaTransaction):
-        fees_estimations = self.calculate_fees_for_meta_transaction(meta_transaction)
+        fees_estimations = self._calculate_fees_for_meta_transaction(meta_transaction)
         if not fees_estimations:
             return
         for fees_estimation in fees_estimations:
@@ -102,12 +92,43 @@ class Delegate:
 
         raise InvalidDelegationFeesException()
 
+    def raise_on_invalid_meta_transaction(self, meta_transaction: MetaTransaction):
+        if not self.delegate.validate_time_limit(meta_transaction):
+            raise InvalidTimeLimit
+        if not self.delegate.validate_chain_id(meta_transaction):
+            raise InvalidChainId
+        if not self.delegate.validate_nonce(meta_transaction):
+            raise InvalidNonceHashPair
+
+    def raise_on_invalid_signed_meta_transaction(
+        self, signed_meta_transaction: MetaTransaction
+    ):
+        self.raise_on_invalid_meta_transaction(signed_meta_transaction)
+        if not self.delegate.validate_signature(signed_meta_transaction):
+            raise InvalidSignature
+
 
 class InvalidIdentityContractException(Exception):
     pass
 
 
 class InvalidMetaTransactionException(Exception):
+    pass
+
+
+class InvalidTimeLimit(InvalidMetaTransactionException):
+    pass
+
+
+class InvalidChainId(InvalidMetaTransactionException):
+    pass
+
+
+class InvalidNonceHashPair(InvalidMetaTransactionException):
+    pass
+
+
+class InvalidSignature(InvalidMetaTransactionException):
     pass
 
 
