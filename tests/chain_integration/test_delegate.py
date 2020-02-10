@@ -1,7 +1,7 @@
 #! pytest
 import attr
 import pytest
-from hexbytes import HexBytes
+from eth_utils import to_checksum_address
 from tldeploy.identity import (
     Identity,
     MetaTransaction,
@@ -170,7 +170,7 @@ def test_delegate_meta_transaction(delegate, identity, web3, signed_meta_transac
     tx = web3.eth.getTransaction(tx_hash)
 
     assert tx["from"] == web3.eth.coinbase
-    assert HexBytes(tx["to"]) == identity.address
+    assert to_checksum_address(tx["to"]) == identity.address
 
 
 def test_delegated_transaction_trustlines_flow(
