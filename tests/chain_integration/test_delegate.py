@@ -5,6 +5,7 @@ from eth_utils import to_checksum_address
 from tldeploy.identity import (
     Identity,
     MetaTransaction,
+    UnexpectedIdentityContractException,
     deploy_identity_implementation,
     deploy_identity_proxy_factory,
     deploy_proxied_identity,
@@ -15,7 +16,6 @@ from relay.blockchain.delegate import (
     Delegate,
     DelegationFees,
     InvalidDelegationFeesException,
-    InvalidIdentityContractException,
     InvalidMetaTransactionException,
 )
 
@@ -296,7 +296,7 @@ def test_delegated_transaction_invalid_identity_contract(
         from_=from_, to=to, value=value, nonce=0
     ).signed(account_keys[3])
 
-    with pytest.raises(InvalidIdentityContractException):
+    with pytest.raises(UnexpectedIdentityContractException):
         delegate.send_signed_meta_transaction(meta_transaction)
 
 
