@@ -226,6 +226,9 @@ class TrustlinesRelay:
             factory_address, implementation_address, signature
         )
 
+    def is_identity_deployed(self, address):
+        return self.delegate.is_identity_deployed(address)
+
     def delegate_meta_transaction(self, meta_transaction: MetaTransaction):
         return self.delegate.send_signed_meta_transaction(meta_transaction)
 

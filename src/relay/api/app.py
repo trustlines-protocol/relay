@@ -30,6 +30,7 @@ from .resources import (
     Factories,
     GraphDump,
     GraphImage,
+    IdentityDeployementInfo,
     IdentityInfos,
     MaxCapacityPath,
     MetaTransactionFees,
@@ -137,6 +138,9 @@ def ApiApp(trustlines):
     if trustlines.enable_deploy_identity:
         add_resource(DeployIdentity, "/identities")
 
+    add_resource(
+        IdentityDeployementInfo, "/identities/<address:identity_address>/deployment"
+    )
     add_resource(IdentityInfos, "/identities/<address:identity_address>")
     add_resource(Factories, "/factories")
     add_resource(OrderBook, "/exchange/orderbook")

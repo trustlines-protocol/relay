@@ -531,6 +531,14 @@ class DeployIdentity(Resource):
         return self.trustlines.get_identity_info(identity_contract_address)
 
 
+class IdentityDeployementInfo(Resource):
+    def __init__(self, trustlines: TrustlinesRelay) -> None:
+        self.trustlines = trustlines
+
+    def get(self, identity_address: str):
+        return self.trustlines.is_identity_deployed(identity_address)
+
+
 class IdentityInfos(Resource):
     def __init__(self, trustlines: TrustlinesRelay) -> None:
         self.trustlines = trustlines

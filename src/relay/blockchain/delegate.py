@@ -62,6 +62,9 @@ class Delegate:
         except TransactionFailed:
             raise IdentityDeploymentFailedException
 
+    def is_identity_deployed(self, address):
+        return self._web3.eth.getCode(address) != b""
+
     def calc_next_nonce(self, identity_address: str):
         try:
             return self.delegate.get_next_nonce(identity_address)

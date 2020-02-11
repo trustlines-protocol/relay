@@ -1172,6 +1172,30 @@ curl https://relay0.testnet.trustlines.network/api/v1/factories
 ["0x43950642C8685ED8e3Fb89a5C5aeCb12862A87fd"]
 ```
 
+### Get identity deployment information
+#### Request
+```
+GET /identities/:identity/deployment
+```
+#### URL Parameters
+
+| Name     | Type                      | Required | Description                                               |
+|----------|---------------------------|----------|-----------------------------------------------------------|
+| identity | string prefixed with "0x" | YES      | the address of the potentially deployed identity contract |
+
+#### Example Request
+```bash
+curl https://relay0.testnet.trustlines.network/api/v1/identities/0x2AbCc1389258Dc187DB787E33FD2B99d53695DE3/deployment
+```
+
+#### Response
+`bool`: whether the given address corresponds to a deployed contract
+
+#### Example Response
+```json
+true
+```
+
 ### Get identity information
 #### Request
 ```
