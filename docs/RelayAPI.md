@@ -1040,38 +1040,48 @@ POST /meta-transaction-fees
 
 The MetaTransaction object must have the following fields:
 
-| Name      | Type       | JSON Type                               | Description                                                        |
-|-----------|------------|-----------------------------------------|--------------------------------------------------------------------|
-| from      | address    | string - hex-encoded prefixed with "0x" | address of identity contract                                       |
-| to        | address    | string - hex-encoded prefixed with "0x" | the address on which the call of the meta transaction is happening |
-| value     | BigInteger | string                                  | the amount of wei to be sent along from 'from' to 'to'             |
-| data      | bytes      | string - hex-encoded prefixed with "0x" | the data object encoding the function call including arguments     |
-| nonce     | int        | number                                  | nonce used for replay protection                                   |
-| extraData | bytes      | string - hex-encoded prefixed with "0x" | bytes extra data for backwards compatibility                       |
+| Name                  | Type       | JSON Type                               | Description                                                        |
+|-----------------------|------------|-----------------------------------------|--------------------------------------------------------------------|
+| to                    | address    | string - hex-encoded prefixed with "0x" | the address on which the call of the meta transaction is happening |
+| from                  | address    | string - hex-encoded prefixed with "0x" | address of identity contract                                       |
+| chainId               | int        | number                                  | chain id of the target blockchain of the meta transaction          |
+| version               | int        | number                                  | version of the identity contract for the meta transaction          |
+| value                 | BigInteger | string                                  | the amount of wei to be sent along from 'from' to 'to'             |
+| data                  | bytes      | string - hex-encoded prefixed with "0x" | the data object encoding the function call including arguments     |
+| gasLimit              | BigInteger | string                                  | the limit on gas used by meta transaction and paid by user         |
+| nonce                 | int        | number                                  | nonce used for replay protection                                   |
+| timeLimit             | int        | number                                  | time limit after which meta transaction is invalid; 0 means unlimited |
+| operationType         | int        | number                                  | type of applied operation: 0 CALL, 1 DELEGATECALL, 2 CREATE, 3 CREATE2 |
 
 #### Example Request
 ```bash
 curl --header "Content-Type: application/json" \
   --request POST \
-  --data '{"metaTransaction": {"from": "0xF2E246BB76DF876Cef8b38ae84130F4F55De395b", "to": "0x51a240271AB8AB9f9a21C82d9a85396b704E164d", "value": "0", "data": "0x46432830000000000000000000000000000000000000000000000000000000000000000a", "delegationFees": 1, "currencyNetworkOfFees": "0x51a240271AB8AB9f9a21C82d9a85396b704E164d", "nonce": "1", "extraData": "0x", signature": "0x6d2fe56ef6648cb3f0398966ad3b05d891cde786d8074bdac15bcb92ebfa7222489b8eb6ed87165feeede19b031bb69e12036a5fa13b3a46ad0c2c19d051ea9101"}}' \
+  --data '{"metaTransaction": {"from": "0xF2E246BB76DF876Cef8b38ae84130F4F55De395b", "to": "0x51a240271AB8AB9f9a21C82d9a85396b704E164d", "chainId": 61, "version": 1, "value": "0", "data": "0x46432830000000000000000000000000000000000000000000000000000000000000000a", "gasLimit": 0, "nonce": "1", "timeLimit": 0, "operationType": 0, signature": "0x6d2fe56ef6648cb3f0398966ad3b05d891cde786d8074bdac15bcb92ebfa7222489b8eb6ed87165feeede19b031bb69e12036a5fa13b3a46ad0c2c19d051ea9101"}}' \
   https://relay0.testnet.trustlines.network/api/v1/meta-transaction-fees
 ```
 
 #### Response
 | Attribute             | Type   | Description                                                       |
 |-----------------------|--------|-------------------------------------------------------------------|
-| delegationFees        | string | Fees to be paid for the meta transaction                          |
+| baseFee               | string | flat fees paid by the user                                        |
+| gasePrice             | string | fee per gas used by the meta transaction to be paid by the user   |
+| feeRecipient          | string | address of the recipient of the fees                              |
 | currencyNetworkOfFees | string | the currency network used to pay the fees of the meta transaction |
 
 #### Example Response
 ```json
 [
     {
-      "delegationFees": "1",
+      "baseFee": "123",
+      "gasPrice": "0",
+      "feeRecipient": "0xF2E246BB76DF876Cef8b38ae84130F4F55De395b",
       "currencyNetworkOfFees": "0x51a240271AB8AB9f9a21C82d9a85396b704E164d"
     },
     {
-      "delegationFees": "23",
+      "baseFee": "0",
+      "gasPrice": "45",
+      "feeRecipient": "0xF2E246BB76DF876Cef8b38ae84130F4F55De395b",
       "currencyNetworkOfFees": "0xcbF1153F6e5AC01D363d432e24112e8aA56c55ce"
     }
 ]
@@ -1097,19 +1107,25 @@ The MetaTransaction object must have the following fields:
 |-----------------------|------------|-----------------------------------------|--------------------------------------------------------------------|
 | to                    | address    | string - hex-encoded prefixed with "0x" | the address on which the call of the meta transaction is happening |
 | from                  | address    | string - hex-encoded prefixed with "0x" | address of identity contract                                       |
+| chainId               | int        | number                                  | chain id of the target blockchain of the meta transaction          |
+| version               | int        | number                                  | version of the identity contract for the meta transaction          |
 | value                 | BigInteger | string                                  | the amount of wei to be sent along from 'from' to 'to'             |
 | data                  | bytes      | string - hex-encoded prefixed with "0x" | the data object encoding the function call including arguments     |
-| delegationFees        | BigInteger | string                                  | the fees the delegate will receive for the meta transaction        |
+| baseFee               | BigInteger | string                                  | the base fees the delegate will receive for the meta transaction   |
+| gasPrice              | BigInteger | string                                  | the gas price to be paid to the delegate by user                   |
+| gasLimit              | BigInteger | string                                  | the limit on gas used by meta transaction and paid by user         |
+| feeRecipient          | address    | string - hex-encoded prefixed with "0x" | the address to which fees will be paid (0 means msg.sender)        |
 | currencyNetworkOfFees | address    | string - hex-encoded prefixed with "0x" | the currency network used to pay the fees of the meta transaction  |
 | nonce                 | int        | number                                  | nonce used for replay protection                                   |
-| extraData             | bytes      | string - hex-encoded prefixed with "0x" | bytes extra data for backwards compatibility                       |
+| timeLimit             | int        | number                                  | time limit after which meta transaction is invalid; 0 means unlimited |
+| operationType         | int        | number                                  | type of applied operation: 0 CALL, 1 DELEGATECALL, 2 CREATE, 3 CREATE2 |
 | signature             | bytes      | string - hex-encoded prefixed with "0x" | 65 bytes containing concatenated. v,r,s of the signature           |
 
 #### Example Request
 ```bash
 curl --header "Content-Type: application/json" \
   --request POST \
-  --data '{"metaTransaction": {"value": "0", "to": "0x51a240271AB8AB9f9a21C82d9a85396b704E164d", "nonce": "1", "data": "0x46432830000000000000000000000000000000000000000000000000000000000000000a", "from": "0xF2E246BB76DF876Cef8b38ae84130F4F55De395b", "signature": "0x6d2fe56ef6648cb3f0398966ad3b05d891cde786d8074bdac15bcb92ebfa7222489b8eb6ed87165feeede19b031bb69e12036a5fa13b3a46ad0c2c19d051ea9101", "extraData": "0x"}}' \
+  --data '{"metaTransaction": {"from": "0xF2E246BB76DF876Cef8b38ae84130F4F55De395b", "to": "0x51a240271AB8AB9f9a21C82d9a85396b704E164d", "chainId": 61, "version": 1, "value": "0", "data": "0x46432830000000000000000000000000000000000000000000000000000000000000000a", "baseFee": "123", gasPrice: "0", gasLimit: "0", feeRecipient: "0x51a240271AB8AB9f9a21C82d9a85396b704E164d", "currencyNetworkOfFees": "0x51a240271AB8AB9f9a21C82d9a85396b704E164d", nonce": "1", "timeLimit": 0, operationType: 0, signature": "0x6d2fe56ef6648cb3f0398966ad3b05d891cde786d8074bdac15bcb92ebfa7222489b8eb6ed87165feeede19b031bb69e12036a5fa13b3a46ad0c2c19d051ea9101"}}' \
   https://relay0.testnet.trustlines.network/api/v1/relay-meta-transaction
 ```
 #### Response
