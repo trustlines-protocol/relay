@@ -84,10 +84,6 @@ class Node:
         return self._web3.eth.blockNumber
 
     def balance(self, address):
-        wei = self._web3.eth.getBalance(address)
-        return str(self._web3.fromWei(wei, "ether"))
-
-    def balance_wei(self, address: str) -> int:
         return self._web3.eth.getBalance(address)
 
     def send_ether(self, address):
