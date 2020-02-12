@@ -88,10 +88,11 @@ createdb trustlinesdb
 ```
 
 The rest of this tutorial assumes that the user running the relay and
-py-eth-index related commands has a working postgresql environment configured.
-All programs consider the PG environment variables and will read ~/.pgpass for
-information about passwords. The [py-eth-index section](#py-eth-index) describes
-how to create the trustlines specific tables.
+py-eth-index related commands has a working postgresql environment
+configured.  All programs consider the `PG*` environment variables
+(like `PGHOST`, `PGUSER`, ...) and will read `~/.pgpass` for
+information about passwords. The [py-eth-index section](#py-eth-index)
+describes how to create the trustlines specific tables.
 
 ### Py-eth-index
 The [py-eth-index repository](https://github.com/trustlines-protocol/py-eth-index)
@@ -199,13 +200,15 @@ The relay server needs access to the parity node and the PostgreSQL database.
 
 #### Signing Transactions
 
-The relay server needs to sign transactions. Therefore he can use a Parity node
-with an unlocked account that signs the transactions for him. This is what the
-relay does by default. Alternatively the relay can sign transactions locally
-itself with a configured key. For this approach add the following section
-to the configuration of the relay and adjust the values. The key is expected to
-be encrypted in a keystore file. To unlock the key, a password file in clear
-text must be provided as well.
+The relay server needs to sign transactions. The default behaviour is
+to rely on a Parity node with an unlocked account, that signs
+transactions.
+
+Alternatively the relay can sign transactions locally itself with a
+configured key. For this approach add the following section to the
+configuration file and adjust the values. The key is expected to be
+encrypted in a keystore file. To unlock the key, a password file in
+clear text must be provided as well.
 
 ```toml
 [relay.account]
