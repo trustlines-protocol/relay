@@ -856,7 +856,7 @@ Following additional attributes for `Transfer` events:
 ---
 
 ### Balance of user
-Returns the balance in ether of the given address.
+Returns the balance in wei of the given address.
 #### Request
 ```
 GET /users/:userAddress/balance
@@ -872,11 +872,11 @@ curl https://relay0.testnet.trustlines.network/api/v1/users/0xcbF1153F6e5AC01D36
 #### Response
 | Attribute | Type   | JSON Type | Description            |
 | --------- | ------ | --------- | ---------------------- |
-| balance   | string | string    | Balance of user in eth |
+| balance   | string | string    | Balance of user in wei |
 #### Example Response
 ```json
 {
-  "balance": "2.377634165348042492"
+  "balance": "2377634165348042492"
 }
 ```
 
