@@ -31,10 +31,17 @@ We need to do some initial setup and configuration for the system to work. You
 need to provide the `addresses.json` file, which should be put in the directory
 alongside the `docker-compose.yml` file.
 
-This directory contains working example files for contracts already
-deployed on the laika blockchain. If you deploy your own contracts,
-please adapt `addresses.json` accordingly.
+You can find some prepared files for each network in the `config/` directory at
+the root of this repository. E.g. if you want to connect to the Trustlines
+Blockchain and index all the currency networks registered by the Trustlines
+foundation, you can copy it like that:
 
+```sh
+$ cp ../../config/addresses_tlbc.json ./addresses.json
+```
+
+This also includes the references to the identity related contracts. If you
+deploy your own currency networks, please adapt `addresses.json` accordingly.
 
 
 ### Fetch docker image

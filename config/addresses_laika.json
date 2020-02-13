@@ -1,0 +1,9 @@
+{
+ "networks": [
+  "0x18cCddaBc5C958E4BAefD03cE2d9Ff397eFBc263",
+  "0xEe10359af0bd60E9dbb74007a2c71207Bf2fbD2e",
+  "0x8b7072886F672117aF1763DF784bd5c9B2bbee4b"
+ ],
+ "identityImplementation": "0x8BEe92893D3ec62e5B3EBBe4e536A60Fd9AFc9D7",
+ "identityProxyFactory": "0x8D2720877Fa796E3C3B91BB91ad6CfcC07Ea249E"
+}

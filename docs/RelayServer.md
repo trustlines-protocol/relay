@@ -37,17 +37,10 @@ The tool will return the addresses of the deployed contracts. You need to provid
 }
 ```
 
-For the already deployed contracts on the trustlines blockchain use this file:
-```
-{
-  "networks":
-  [
-    "0x9750bdB86B32DCaeFEAea4f29857D52C8d848860",
-    "0xe4D3cEB3d59B6Fa4a39C8D9525c84C79057C1e29",
-    "0xd75C9C8a79D6a85d4923b7C16BAb144cC9BB48e4"
-  ]
-}
-```
+The directory called `config/` contains already prepared files for the different
+networks of the foundation. Those include a list of addresses for the registered
+currency networks. You can copy one of those files and adopt it to your needs,
+in case you want to add custom deployed networks.
 
 We assume from now on that the contracts have already been deployed
 and that the `addresses.json` file has been copied to the user's home directory.
