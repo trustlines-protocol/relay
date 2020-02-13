@@ -1,6 +1,11 @@
 ==========
 Change Log
 ==========
+`pending`_ (2020-02-13)
+-------------------------------
+- Update endpoint for getting balance to return wei instead of eth (BREAKING)
+- Update meta-transaction schema to match new features in the contracts. (BREAKING) New fields: chainId, version, baseFee, gasPrice, gasLimit, feeRecipient, timeLimit, operationType. Fields removed: delegationFees, extraData
+
 `0.11.4`_ (2020-02-04)
 -------------------------------
 - Report errors to sentry
