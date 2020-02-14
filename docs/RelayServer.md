@@ -9,8 +9,7 @@ If you are low on time, you may jump to the description of the [docker-compose b
 Since the trustlines infrastructure components are implemented in python 3, you need to install relevant dependencies. You will need at least python 3.6.
 
 ```
-sudo apt install build-essential python3-dev python3-venv pkg-config \
-     libssl-dev automake autoconf libtool git libpq-dev
+sudo apt install build-essential python3-dev python3-venv pkg-config git libpq-dev
 ```
 
 The installation instructions assume you create a dedicated user account and put
@@ -21,6 +20,7 @@ files directly into the user's home directory. Else, adapt the paths to your nee
 You need to run our modified parity node, which provides the JSONRPC API to the relay
 server and the indexer. The documentation on how to run it can be found on the
 [github page](https://github.com/trustlines-protocol/blockchain)
+
 ### Contracts
 The [trustlines-contracts
 repository](https://github.com/trustlines-protocol/contracts) contains the
@@ -32,8 +32,6 @@ The tool will return the addresses of the deployed contracts. You need to provid
 {
   "networks":
   [<list of currency network addresses>],
-  "unwEth": <address of unw_eth_contract>,
-  "exchange": <address of exchange>
 }
 ```
 
@@ -94,6 +92,23 @@ configured.  All programs consider the `PG*` environment variables
 information about passwords. The [py-eth-index section](#py-eth-index)
 describes how to create the trustlines specific tables.
 
+### Creating a virtualenv
+
+Run the following command to create a virtualenv:
+```
+mkdir -p ~/opt
+python3 -mvenv ~/opt/trustlines-system
+~/opt/trustlines-system/bin/pip install -U pip wheel setuptools
+```
+
+And activate the virtualenv with
+```
+source ~/opt/trustlines-system/bin/activate
+```
+
+This will add ~/opt/trustlines-system/bin to `PATH`. The following
+steps assumes an acticated virtualenv.
+
 ### Py-eth-index
 The [py-eth-index repository](https://github.com/trustlines-protocol/py-eth-index)
 contains a helper program that synchronizes the relevant information from the
@@ -106,29 +121,26 @@ Clone the git repository:
 cd ~
 git clone https://github.com/trustlines-protocol/py-eth-index
 ```
-Let’s create a virtualenv for this repository:
-```
-python3 -m venv ~/opt/py-eth-index; ~/opt/py-eth-index/bin/pip install -U pip
-```
-and install py-eth-index
+
+And install py-eth-index
 ```
 cd ~/py-eth-index
-~/opt/py-eth-index/bin/pip install -c constraints.txt -r requirements.txt
-~/opt/py-eth-index/bin/pip install -c constraints.txt .
+pip install -c constraints.txt .
 ```
+
 #### Initializing the database
 After the database has been created, it must be initialized. This can be done with the following command:
+```
+ethindex createtables
+```
 
-```
-~/opt/py-eth-index/bin/ethindex createtables
-```
 #### Importing the ABIs
 We need to import the ABIs from the trustline-contracts. Trustlines-contracts is
 installed as a dependency of the relay server. Please run the following only
 after you have installed the relay server.
 
 ```
-cp ~/opt/relay/trustlines-contracts/build/contracts.json ~
+cp ~/opt/trustlines-system/trustlines-contracts/build/contracts.json ~
 ~/opt/py-eth-index/bin/ethindex importabi
 ```
 
@@ -137,35 +149,20 @@ The following command will start importing all relevant events into the postgres
 database:
 
 ```
-~/opt/py-eth-index/bin/ethindex runsync
+ethindex runsync
 ```
 This program will run forever.
 
 
 ### Relay server
-#### Prerequisites for the installation
-
--  Python 3.6 or up
--  pip
-
-Installation on Ubuntu
-
-    sudo apt install build-essential python3-dev libsecp256k1-dev python3-virtualenv virtualenv pkg-config libssl-dev automake autoconf libtool git
-
-
-
-
 #### Installation of the relay server
 
-Clone the git repository, create a virtualenv and install into
-that.
+Clone the git repository and install it:
 ```
 cd ~
 git clone https://github.com/trustlines-protocol/relay
-python3 -m venv ~/opt/relay; ~/opt/relay/bin/pip install -U pip
-cd ~/relay;
-~/opt/relay/bin/pip install -c constraints.txt -r requirements.txt
-~/opt/relay/bin/pip install -c constraints.txt .
+cd ~/relay
+pip install -c constraints.txt .
 ```
 
 #### Running the relay server
@@ -184,14 +181,13 @@ so we need to start it where those files have been copied to:
 
 ```
 cd ~
-~/opt/relay/bin/tl-relay
+tl-relay
 ```
 
 However, this behaviour can be changed, you can check the options with:
 
 ```
-cd ~
-~/opt/relay/bin/tl-relay --help
+tl-relay --help
 ```
 
 The relay server needs access to the parity node and the PostgreSQL database.
