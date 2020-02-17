@@ -61,9 +61,7 @@ class TokenNotFoundException(Exception):
 
 
 class TrustlinesRelay:
-    def __init__(self, config=None, addresses_json_path="addresses.json"):
-        if config is None:
-            config = {}
+    def __init__(self, config, addresses_json_path="addresses.json"):
         self.config = config
         self.addresses_json_path = addresses_json_path
         self.currency_network_proxies: Dict[str, CurrencyNetworkProxy] = {}
@@ -87,7 +85,10 @@ class TrustlinesRelay:
 
     @property
     def exchange_addresses(self) -> Iterable[str]:
-        return self.orderbook.exchange_addresses
+        if self.orderbook is not None:
+            return self.orderbook.exchange_addresses
+        else:
+            return []
 
     @property
     def unw_eth_addresses(self) -> Iterable[str]:
@@ -99,19 +100,19 @@ class TrustlinesRelay:
 
     @property
     def enable_ether_faucet(self) -> bool:
-        return self.config.get("enableEtherFaucet", False)
+        return self.config["faucet"]["enable"]
 
     @property
     def enable_relay_meta_transaction(self) -> bool:
-        return self.config.get("enableRelayMetaTransaction", False)
+        return self.config["delegate"]["enable"]
 
     @property
     def enable_deploy_identity(self) -> bool:
-        return self.config.get("enableDeployIdentity", False)
+        return self.config["delegate"]["enable_deploy_identity"]
 
     @property
     def event_query_timeout(self) -> int:
-        return self.config.get("eventQueryTimeout", 20)
+        return self.config["trustline_index"]["event_query_timeout"]
 
     @property
     def use_eth_index(self) -> bool:
@@ -242,7 +243,7 @@ class TrustlinesRelay:
     def _install_w3_middleware(self):
         """install signing middleware if an account is configured"""
         if "account" not in self.config:
-            logger.warn("no account configured")
+            logger.warning("No account configured")
             return
 
         keystore_path = self.config["account"]["keystore_path"]
@@ -267,34 +268,27 @@ class TrustlinesRelay:
 
     def _make_w3(self):
         """create and set the w3 object as self._web3"""
+        rpc_config = self.config["node_rpc"]
         url = "{}://{}:{}".format(
-            "https" if self.config["rpc"]["ssl"] else "http",
-            self.config["rpc"]["host"],
-            self.config["rpc"]["port"],
+            "https" if rpc_config["use_ssl"] else "http",
+            rpc_config["host"],
+            rpc_config["port"],
         )
         logger.info("using web3 URL {}".format(url))
         self._web3 = Web3(Web3.HTTPProvider(url))
 
-    def start(self):
-        self._load_gas_price_settings(self.config.get("gasPriceComputation", {}))
-        self._load_contracts()
-        self._load_orderbook()
-        self._start_push_service()
-        self._make_w3()
-        self._install_w3_middleware()
-        self.node = Node(self._web3, fixed_gas_price=self.fixed_gas_price)
-
+    def _start_delegate(self):
         delegation_fees = [
             DelegationFees(
-                fee_recipient=d.get("feeRecipient", self.node.address),
-                base_fee=d.get("baseFee", 0),
-                gas_price=d.get("gasPrice", 0),
-                currency_network_of_fees=d["currencyNetworkOfFees"],
+                fee_recipient=d.get("fee_recipient", self.node.address),
+                base_fee=d["base_fee"],
+                gas_price=d["gas_price"],
+                currency_network_of_fees=d["currency_network"],
             )
-            for d in self.config.get("delegationFees", [])
+            for d in self.config["delegate"]["fees"]
             if d
         ]
-        logger.info(f"Started relay with delegation fees: {delegation_fees}")
+        logger.info(f"Started delegate with delegation fees: {delegation_fees}")
         self.delegate = Delegate(
             self._web3,
             self._web3.eth.defaultAccount or self.node.address,
@@ -302,6 +296,20 @@ class TrustlinesRelay:
             self.known_identity_factories,
             delegation_fees=delegation_fees,
         )
+
+    def start(self):
+        self._load_gas_price_settings(self.config["relay"]["gas_price_computation"])
+        self._load_contracts()
+        if self.config["exchange"]["enable"]:
+            self._load_orderbook()
+        if self.config["push_notification"]["enable"]:
+            self._start_push_service()
+        self._make_w3()
+        self._install_w3_middleware()
+        self.node = Node(self._web3, fixed_gas_price=self.fixed_gas_price)
+        if self.config["delegate"]["enable"]:
+            self._start_delegate()
+        # For now always start listening, until we properly have separated the concerns
         self._start_listen_on_new_addresses()
 
     def new_network(self, address: str) -> None:
@@ -325,15 +333,18 @@ class TrustlinesRelay:
         assert is_checksum_address(address)
         if address not in self.exchange_addresses:
             logger.info("New Exchange contract: {}".format(address))
-            self.orderbook.add_exchange(
-                ExchangeProxy(
-                    self._web3,
-                    self.contracts["Exchange"]["abi"],
-                    self.contracts["Token"]["abi"],
-                    address,
-                    self,
+            if self.orderbook is not None:
+                self.orderbook.add_exchange(
+                    ExchangeProxy(
+                        self._web3,
+                        self.contracts["Exchange"]["abi"],
+                        self.contracts["Token"]["abi"],
+                        address,
+                        self,
+                    )
                 )
-            )
+            else:
+                raise ValueError("Exchange address given but no orderbook loaded")
 
     def new_unw_eth(self, address: str) -> None:
         assert is_checksum_address(address)
@@ -663,13 +674,15 @@ class TrustlinesRelay:
         return sorted_events(list(itertools.chain.from_iterable(results)))
 
     def _load_gas_price_settings(self, gas_price_settings: Dict):
-        method = gas_price_settings.get("method", "rpc")
+        method = gas_price_settings["method"]
         methods = ["fixed", "rpc"]
         if method not in methods:
             raise ValueError(
                 f"Given gasprice computation method: {method} must be on of {methods}"
             )
+
         if method == "fixed":
+            logger.info(f"Set gasprice method to {method}")
             fixed_gas_price = gas_price_settings.get("gasPrice", 0)
             if not isinstance(fixed_gas_price, int) or fixed_gas_price < 0:
                 raise ValueError(
@@ -684,6 +697,7 @@ class TrustlinesRelay:
             self.contracts = json.load(data_file)
 
     def _load_orderbook(self):
+        logger.info("Start exchange orderbook")
         self.orderbook = OrderBookGreenlet()
         self.orderbook.connect_db(engine=create_engine())
         self.orderbook.start()
@@ -698,7 +712,7 @@ class TrustlinesRelay:
                 except json.decoder.JSONDecodeError as e:
                     logger.error("Could not read addresses.json:" + str(e))
             else:
-                logger.warning("addresses.json file is empty")
+                logger.warning(f"{self.addresses_json_path} file is empty")
         network_addresses = addresses.get("networks", [])
         for address in network_addresses:
             self.new_network(to_checksum_address(address))
@@ -720,7 +734,8 @@ class TrustlinesRelay:
         graph = self.currency_network_graphs[address]
         proxy = self.currency_network_proxies[address]
         proxy.start_listen_on_full_sync(
-            _create_on_full_sync(graph), self.config.get("syncInterval", 300)
+            _create_on_full_sync(graph),
+            self.config["trustline_index"]["full_sync_interval"],
         )
         proxy.start_listen_on_balance(self._process_balance_update)
         proxy.start_listen_on_trustline(self._process_trustline_update)
@@ -732,6 +747,8 @@ class TrustlinesRelay:
         proxy.start_listen_on_network_freeze(self._process_network_freeze)
 
     def _start_listen_on_new_addresses(self):
+        logger.info("Start trustlines networks index")
+
         def listen():
             while True:
                 try:
@@ -740,19 +757,17 @@ class TrustlinesRelay:
                     logger.critical(
                         "Error while loading addresses", exc_info=sys.exc_info()
                     )
-                sleep(self.config.get("updateNetworksInterval", 120))
+                sleep(self.config["relay"]["update_indexed_networks_interval"])
 
         gevent.Greenlet.spawn(listen)
 
     def _start_push_service(self):
-        path = self.config.get("firebase", {}).get("credentialsPath", None)
-        if path is not None:
-            self._firebase_raw_push_service = FirebaseRawPushService(path)
-            self._client_token_db = ClientTokenDB(engine=create_engine())
-            logger.info("Firebase pushservice started")
-            self._start_pushnotifications_for_registered_users()
-        else:
-            logger.info("No firebase credentials in config, pushservice disabled")
+        logger.info("Start pushnotification service")
+        path = self.config["push_notification"]["firebase_credentials_path"]
+        self._firebase_raw_push_service = FirebaseRawPushService(path)
+        self._client_token_db = ClientTokenDB(engine=create_engine())
+        logger.info("Firebase pushservice started")
+        self._start_pushnotifications_for_registered_users()
 
     def _start_pushnotifications_for_registered_users(self):
         number_of_new_listeners = 0
