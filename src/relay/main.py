@@ -1,13 +1,14 @@
-import json
 import logging
 import logging.config
+import sys
 
 import click
 import sentry_sdk.integrations.flask
-import toml
 from gevent.pywsgi import WSGIServer
 from geventwebsocket.handler import WebSocketHandler
 
+from relay.api.app import ApiType
+from relay.config.config import ValidationError, load_config, validation_error_string
 from relay.relay import TrustlinesRelay
 from relay.utils import get_version
 
@@ -65,7 +66,7 @@ def configure_logging(config):
 
 
 def _show_version(ctx, param, value):
-    """handle --version argumemt
+    """handle --version argument
 
     we need this function, because otherwise click may check that the default
     --config or --addresses arguments are really files and they may not
@@ -76,7 +77,7 @@ def _show_version(ctx, param, value):
 
 
 @click.command()
-@click.option("--port", default=5000, show_default=True, help="port to listen on")
+@click.option("--port", default=None, help="port to listen on [default: 5000]")
 @click.option(
     "--config",
     default="config.toml",
@@ -86,9 +87,8 @@ def _show_version(ctx, param, value):
 )
 @click.option(
     "--addresses",
-    default="addresses.json",
+    default=None,
     help="path to addresses json file",
-    show_default=True,
     type=click.Path(exists=True, dir_okay=False),
 )
 @click.option(
@@ -98,7 +98,7 @@ def _show_version(ctx, param, value):
     callback=_show_version,
 )
 @click.pass_context
-def main(ctx, port, config, addresses, version):
+def main(ctx, port: int, config: str, addresses: str, version) -> None:
     """run the relay server"""
 
     # silence warnings from urllib3, see github issue 246
@@ -106,27 +106,50 @@ def main(ctx, port, config, addresses, version):
 
     logger.info("Starting relay server version %s", get_version())
 
-    # we still handle the json file for now. This will be removed
-    # soon. But it's nice to see the end2end tests succeed.
-    with open(config) as config_file:
-        if config.lower().endswith(".json"):
-            config_dict = {"relay": json.load(config_file)}
-        else:
-            config_dict = toml.load(config_file)
+    try:
+        config_dict = load_config(config)
+    except ValidationError as error:
+        logger.error("Validation error in config: " + validation_error_string(error))
+        sys.exit(1)
     configure_logging(config_dict)
-    sentry_dsn = config_dict["relay"].get("sentry", {}).get("dsn")
-    if sentry_dsn:
+    sentry_config = config_dict.get("sentry", None)
+    if sentry_config is not None:
         sentry_sdk.init(
-            dsn=sentry_dsn,
+            dsn=sentry_config["dsn"],
             integrations=[sentry_sdk.integrations.flask.FlaskIntegration()],
         )
 
-    trustlines = TrustlinesRelay(
-        config=config_dict["relay"], addresses_json_path=addresses
-    )
+    if addresses is None:
+        addresses = config_dict["relay"]["addresses_filepath"]
+    trustlines = TrustlinesRelay(config=config_dict, addresses_json_path=addresses)
     trustlines.start()
-    ipport = ("", port)
-    app = ApiApp(trustlines)
+
+    rest_config = config_dict["rest"]
+    if port is None:
+        port = rest_config["port"]
+    host = rest_config["host"]
+    ipport = (host, port)
+    app = ApiApp(trustlines, enabled_apis=select_enabled_apis(config_dict))
     http_server = WSGIServer(ipport, app, log=None, handler_class=WebSocketHandler)
     logger.info("Server is running on {}".format(ipport))
     http_server.serve_forever()
+
+
+def select_enabled_apis(config_dict):
+    enabled_apis = []
+
+    feature_to_apis = {
+        "faucet": [ApiType.FAUCET],
+        "delegate": [ApiType.DELEGATE],
+        "trustline_index": [ApiType.STATUS, ApiType.PATHFINDING],
+        "messaging": [ApiType.MESSAGING],
+        "exchange": [ApiType.EXCHANGE],
+        "tx_relay": [ApiType.RELAY],
+        "push_notification": [ApiType.PUSH_NOTIFICATION],
+    }
+
+    for config_key, apis in feature_to_apis.items():
+        if config_dict[config_key]["enable"]:
+            enabled_apis.extend(apis)
+
+    return enabled_apis

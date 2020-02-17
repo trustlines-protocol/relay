@@ -211,7 +211,7 @@ encrypted in a keystore file. To unlock the key, a password file in
 clear text must be provided as well.
 
 ```toml
-[relay.account]
+[account]
 keystore_path = "keystore.json"
 keystore_password_path = "keystore-password.txt"
 ```

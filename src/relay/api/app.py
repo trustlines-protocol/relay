@@ -1,3 +1,5 @@
+from enum import Enum, auto
+
 from eth_utils import is_address, is_checksum_address, to_checksum_address
 from flask import Blueprint, Flask, jsonify
 from flask_cors import CORS
@@ -55,6 +57,17 @@ from .streams.app import MessagingWebSocketRPCHandler, WebSocketRPCHandler
 from .tokens.resources import EventsToken, TokenAddresses, TokenBalance, UserEventsToken
 
 
+class ApiType(Enum):
+    FAUCET = auto()
+    DELEGATE = auto()
+    PATHFINDING = auto()
+    STATUS = auto()
+    EXCHANGE = auto()
+    RELAY = auto()
+    MESSAGING = auto()
+    PUSH_NOTIFICATION = auto()
+
+
 class AddressConverter(BaseConverter):
     def to_python(self, value):
         if not is_address(value):
@@ -67,7 +80,7 @@ class AddressConverter(BaseConverter):
         return
 
 
-def ApiApp(trustlines):
+def ApiApp(trustlines, *, enabled_apis):
     app = Flask(__name__)
     app.register_error_handler(Exception, handle_error)
     sockets = Sockets(app)
@@ -80,117 +93,128 @@ def ApiApp(trustlines):
     def add_resource(resource, url):
         api.add_resource(resource, url, resource_class_args=[trustlines])
 
+    # Always enabled
     api.add_resource(Version, "/version")
-    add_resource(NetworkList, "/networks")
-    add_resource(Network, "/networks/<address:network_address>")
-    add_resource(UserList, "/networks/<address:network_address>/users")
-    add_resource(EventsNetwork, "/networks/<address:network_address>/events")
-    add_resource(
-        UserAccruedInterestList,
-        "/networks/<address:network_address>/users/<address:user_address>/interests",
-    )
-    add_resource(
-        TrustlineAccruedInterestList,
-        "/networks/<address:network_address>/users/<address:user_address>/interests/<address:counterparty_address>",
-    )
-    add_resource(
-        User, "/networks/<address:network_address>/users/<address:user_address>"
-    )
-    add_resource(
-        ContactList,
-        "/networks/<address:network_address>/users/<address:user_address>/contacts",
-    )
-    add_resource(
-        TrustlineList,
-        "/networks/<address:network_address>/users/<address:user_address>/trustlines",
-    )
-    add_resource(
-        Trustline,
-        "/networks/<address:network_address>/users/<address:a_address>/trustlines/<address:b_address>",
-    )
-    add_resource(
-        MaxCapacityPath, "/networks/<address:network_address>/max-capacity-path-info"
-    )
-    add_resource(
-        UserEventsNetwork,
-        "/networks/<address:network_address>/users/<address:user_address>/events",
-    )
-    add_resource(Path, "/networks/<address:network_address>/path-info")
-    add_resource(
-        CloseTrustline, "/networks/<address:network_address>/close-trustline-path-info"
-    )
-    add_resource(UserEvents, "/users/<address:user_address>/events")
-    add_resource(TransactionInfos, "/users/<address:user_address>/txinfos")
-    add_resource(Balance, "/users/<address:user_address>/balance")
-    add_resource(UserTrustlines, "/users/<address:user_address>/trustlines")
-
     add_resource(Block, "/blocknumber")
-    add_resource(Relay, "/relay")
 
-    if trustlines.enable_relay_meta_transaction:
+    if ApiType.STATUS in enabled_apis:
+        add_resource(NetworkList, "/networks")
+        add_resource(Network, "/networks/<address:network_address>")
+        add_resource(UserList, "/networks/<address:network_address>/users")
+        add_resource(EventsNetwork, "/networks/<address:network_address>/events")
+        add_resource(
+            UserAccruedInterestList,
+            "/networks/<address:network_address>/users/<address:user_address>/interests",
+        )
+        add_resource(
+            TrustlineAccruedInterestList,
+            "/networks/<address:network_address>/users/<address:user_address>/"
+            "interests/<address:counterparty_address>",
+        )
+        add_resource(
+            User, "/networks/<address:network_address>/users/<address:user_address>"
+        )
+        add_resource(
+            ContactList,
+            "/networks/<address:network_address>/users/<address:user_address>/contacts",
+        )
+        add_resource(
+            TrustlineList,
+            "/networks/<address:network_address>/users/<address:user_address>/trustlines",
+        )
+        add_resource(
+            Trustline,
+            "/networks/<address:network_address>/users/<address:a_address>/trustlines/<address:b_address>",
+        )
+        add_resource(
+            UserEventsNetwork,
+            "/networks/<address:network_address>/users/<address:user_address>/events",
+        )
+        add_resource(UserEvents, "/users/<address:user_address>/events")
+        add_resource(TransactionInfos, "/users/<address:user_address>/txinfos")
+        add_resource(Balance, "/users/<address:user_address>/balance")
+        add_resource(UserTrustlines, "/users/<address:user_address>/trustlines")
+
+        api_bp.add_url_rule(
+            "/networks/<address:network_address>/image",
+            view_func=GraphImage.as_view("image", trustlines),
+        )
+        api_bp.add_url_rule(
+            "/networks/<address:network_address>/dump",
+            view_func=GraphDump.as_view("dump", trustlines),
+        )
+
+        sockets_bp.add_url_rule(
+            "/events", "stream", view_func=WebSocketRPCHandler(trustlines)
+        )
+
+    if ApiType.PATHFINDING in enabled_apis:
+        add_resource(
+            MaxCapacityPath,
+            "/networks/<address:network_address>/max-capacity-path-info",
+        )
+        add_resource(Path, "/networks/<address:network_address>/path-info")
+        add_resource(
+            CloseTrustline,
+            "/networks/<address:network_address>/close-trustline-path-info",
+        )
+
+    if ApiType.RELAY in enabled_apis:
+        add_resource(Relay, "/relay")
+
+    if ApiType.DELEGATE in enabled_apis:
         add_resource(RelayMetaTransaction, "/relay-meta-transaction")
         add_resource(MetaTransactionFees, "/meta-transaction-fees")
+        add_resource(IdentityInfos, "/identities/<address:identity_address>")
+        add_resource(Factories, "/factories")
+        if trustlines.enable_deploy_identity:
+            add_resource(DeployIdentity, "/identities")
 
-    if trustlines.enable_ether_faucet:
+    if ApiType.FAUCET in enabled_apis:
         add_resource(RequestEther, "/request-ether")
 
-    if trustlines.enable_deploy_identity:
-        add_resource(DeployIdentity, "/identities")
+    if ApiType.EXCHANGE in enabled_apis:
+        add_resource(OrderBook, "/exchange/orderbook")
+        add_resource(Orders, "/exchange/orders")
+        add_resource(OrderSubmission, "/exchange/order")
+        add_resource(ExchangeAddresses, "/exchange/exchanges")
+        add_resource(UnwEthAddresses, "/exchange/eth")
+        add_resource(OrderDetail, "/exchange/order/<string:order_hash>")
+        add_resource(
+            UserEventsExchange,
+            "/exchange/<address:exchange_address>/users/<address:user_address>/events",
+        )
+        add_resource(
+            UserEventsAllExchanges, "/exchange/users/<address:user_address>/events"
+        )
+        add_resource(EventsExchange, "/exchange/<address:exchange_address>/events")
 
-    add_resource(IdentityInfos, "/identities/<address:identity_address>")
-    add_resource(Factories, "/factories")
-    add_resource(OrderBook, "/exchange/orderbook")
-    add_resource(Orders, "/exchange/orders")
-    add_resource(OrderSubmission, "/exchange/order")
-    add_resource(ExchangeAddresses, "/exchange/exchanges")
-    add_resource(UnwEthAddresses, "/exchange/eth")
-    add_resource(OrderDetail, "/exchange/order/<string:order_hash>")
-    add_resource(
-        UserEventsExchange,
-        "/exchange/<address:exchange_address>/users/<address:user_address>/events",
-    )
-    add_resource(
-        UserEventsAllExchanges, "/exchange/users/<address:user_address>/events"
-    )
-    add_resource(EventsExchange, "/exchange/<address:exchange_address>/events")
+        add_resource(TokenAddresses, "/tokens")
+        add_resource(EventsToken, "/tokens/<address:token_address>/events")
+        add_resource(
+            TokenBalance,
+            "/tokens/<address:token_address>/users/<address:user_address>/balance",
+        )
+        add_resource(
+            UserEventsToken,
+            "/tokens/<address:token_address>/users/<address:user_address>/events",
+        )
 
-    add_resource(TokenAddresses, "/tokens")
-    add_resource(EventsToken, "/tokens/<address:token_address>/events")
-    add_resource(
-        TokenBalance,
-        "/tokens/<address:token_address>/users/<address:user_address>/balance",
-    )
-    add_resource(
-        UserEventsToken,
-        "/tokens/<address:token_address>/users/<address:user_address>/events",
-    )
+    if ApiType.MESSAGING in enabled_apis:
+        add_resource(PostMessage, "/messages/<address:user_address>")
+        sockets_bp.add_url_rule(
+            "/messages", "stream", view_func=MessagingWebSocketRPCHandler(trustlines)
+        )
 
-    add_resource(PostMessage, "/messages/<address:user_address>")
-
-    add_resource(
-        AddClientToken,
-        "/pushnotifications/<address:user_address>/token/<string:client_token>",
-    )
-    add_resource(
-        DeleteClientToken,
-        "/pushnotifications/<address:user_address>/token/<string:client_token>",
-    )
-
-    api_bp.add_url_rule(
-        "/networks/<address:network_address>/image",
-        view_func=GraphImage.as_view("image", trustlines),
-    )
-    api_bp.add_url_rule(
-        "/networks/<address:network_address>/dump",
-        view_func=GraphDump.as_view("dump", trustlines),
-    )
-
-    sockets_bp.add_url_rule(
-        "/events", "stream", view_func=WebSocketRPCHandler(trustlines)
-    )
-    sockets_bp.add_url_rule(
-        "/messages", "stream", view_func=MessagingWebSocketRPCHandler(trustlines)
-    )
+    if ApiType.PUSH_NOTIFICATION in enabled_apis:
+        add_resource(
+            AddClientToken,
+            "/pushnotifications/<address:user_address>/token/<string:client_token>",
+        )
+        add_resource(
+            DeleteClientToken,
+            "/pushnotifications/<address:user_address>/token/<string:client_token>",
+        )
 
     app.url_map.converters["address"] = AddressConverter
     app.register_blueprint(api_bp)

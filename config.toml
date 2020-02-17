@@ -1,37 +1,58 @@
 [relay]
-syncInterval = 300
-updateNetworksInterval = 120
-eventQueryTimeout = 20
-enableEtherFaucet = false
-enableRelayMetaTransaction = false
-enableDeployIdentity = false
+addresses_filepath = "addresses.json"
+update_indexed_networks_interval = 120
 
-[relay.rpc]
-host = "localhost"
-port = 8545
-ssl = false
-
-[relay.gasPriceComputation]
+[relay.gas_price_computation]
 method = "rpc"
-gasPrice = 0
+gas_price = 0
 
-[[relay.delegationFees]]
-# baseFee = 0
-# gasPrice = 0
-# feeRecipient = "0x000..."
-# currencyNetworkOfFees = "0x000..."
+[trustline_index]
+enable = true
+full_sync_interval = 300
+event_query_timeout = 20
 
-# Configure a sentry DSN to report errors to sentry
-# [relay.sentry]
-# dsn = "https://f3e...@sentry.io/..."
+[tx_relay]
+enable = true
 
+[exchange]
+enable = true
 
-# Configure logging
-[logging.root]
-level = "INFO"
+[node_rpc]
+port = 8545
+host = "localhost"
+use_ssl = false
 
-[logging.loggers."api.resources"]
-level = "DEBUG"
+[faucet]
+enable = false
 
-[logging.loggers.node]
-level = "DEBUG"
+[push_notification]
+enable = false
+firebase_credentials_path = "firebaseAccountKey.json"
+
+[rest]
+port = 5000
+host = ""
+
+[messaging]
+enable = true
+
+[delegate]
+enable = true
+enable_deploy_identity = true
+fees = []
+
+# [account]
+# keystore_path = "path-to-keystor"
+# keystore_password_path = "path-to-password"
+
+# [sentry]
+# dsn = "..."
+
+# [logging]
+# level = "INFO"
+
+# [logging.loggers."api.resources"]
+# level = "DEBUG"
+
+# [logging.loggers.node]
+# level = "DEBUG"
