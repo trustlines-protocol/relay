@@ -175,3 +175,17 @@ def test_close_client(subject):
     assert len(client.subscriptions) == 0
     assert subscription1.closed
     assert subscription2.closed
+
+
+def test_not_reading_client_does_not_mark_as_read(messaging_subject, client):
+    # A silent client should not mark messages as read
+    messaging_subject.subscribe(client, silent=True)
+    assert messaging_subject.publish(event=MessageEvent("test2", timestamp=0)) == 0
+    missed_messages = messaging_subject.get_missed_messages()
+    assert len(missed_messages) == 1
+
+    # A normal client should mark messages as read
+    messaging_subject.subscribe(client, silent=False)
+    assert messaging_subject.publish(event=MessageEvent("test2", timestamp=0)) == 1
+    missed_messages = messaging_subject.get_missed_messages()
+    assert len(missed_messages) == 0

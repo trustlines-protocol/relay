@@ -406,7 +406,8 @@ class TrustlinesRelay:
         )
         client = PushNotificationClient(self._firebase_raw_push_service, client_token)
         self.subjects[user_address].subscribe(client)
-        self.messaging[user_address].subscribe(client)
+        # Silent: Do not mark notifications as read, so that we can query them later
+        self.messaging[user_address].subscribe(client, silent=True)
 
     def _stop_pushnotifications(self, user_address: str, client_token: str) -> None:
         success = False
