@@ -46,6 +46,7 @@ https://relay0.testnet.trustlines.network/api/v1
 - [Relay transaction](#relay-transaction)
 - [Relay meta transaction](#relay-meta-transaction)
 - [Fees for meta transaction](#fees-for-meta-transaction)
+- [Status of meta transaction](#status-of-meta-transaction)
 - [Deploy identity contract](#deploy-identity-contract)
 - [Get authorized identity factories](#get-authorized-identity-factories)
 - [Get identity information](#get-identity-information)
@@ -1022,6 +1023,33 @@ curl --header "Content-Type: application/json" \
 #### Example Response
 ```json
 "<tx hash>"
+```
+
+---
+
+### Status of transaction
+Get the status of a transaction from a transaction hash.
+
+#### Request
+```
+GET /transactions/:transactionHash/status
+```
+
+#### Example Request
+```bash
+curl https://relay0.testnet.trustlines.network/api/v1/transactions/0x51a240271AB8AB9f9a21C82d9a85396b704E164d/status
+```
+
+#### Response
+| Attribute             | Type   | Description                                                       |
+|-----------------------|--------|-------------------------------------------------------------------|
+| status                | string | one of success, failure, pending, or not found                    |
+
+#### Example Response
+```json
+{
+  "status": "success"
+}
 ```
 
 ---
