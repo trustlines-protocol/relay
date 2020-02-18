@@ -259,6 +259,9 @@ class TrustlinesRelay:
     def delegate_meta_transaction(self, meta_transaction: MetaTransaction):
         return self.delegate.send_signed_meta_transaction(meta_transaction)
 
+    def get_meta_transaction_status(self, identity_address, hash):
+        return self.delegate.get_meta_transaction_status(identity_address, hash)
+
     def meta_transaction_fees(self, meta_transaction: MetaTransaction):
         return self.delegate.calculate_fees_for_meta_transaction(meta_transaction)
 
