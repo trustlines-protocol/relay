@@ -151,6 +151,9 @@ class Delegate:
         else:
             raise RuntimeError(f"Unexpected rpc gas price value: {raw_value}")
 
+    def get_meta_transaction_status(self, identity_address, hash):
+        return self.delegate.get_meta_transaction_status(identity_address, hash)
+
 
 class InvalidIdentityContractException(Exception):
     pass

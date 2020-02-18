@@ -39,6 +39,7 @@ from .schemas import (
     IdentityInfosSchema,
     MetaTransactionFeeSchema,
     MetaTransactionSchema,
+    MetaTransactionStatusSchema,
     PaymentPathSchema,
     TrustlineSchema,
     TxInfosSchema,
@@ -490,6 +491,19 @@ class RelayMetaTransaction(Resource):
             return relay_meta_tx(meta_transaction).hex()
         except ValueError:
             abort(409, "There was an error while relaying this meta-transaction")
+
+
+class Status(Resource):
+    def __init__(self, trustlines: TrustlinesRelay) -> None:
+        self.trustlines = trustlines
+
+    @dump_result_with_schema(MetaTransactionStatusSchema())
+    def get(self, identity_address: str, meta_transaction_hash):
+        return {
+            "status": self.trustlines.get_meta_transaction_status(
+                identity_address, meta_transaction_hash
+            )
+        }
 
 
 class MetaTransactionFees(Resource):

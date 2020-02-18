@@ -15,6 +15,7 @@ from .fields import (
     FeePayerField,
     HexBytes,
     HexEncodedBytes,
+    MetaTransactionStatusField,
     OperationTypeField,
 )
 
@@ -77,6 +78,13 @@ class MetaTransactionFeeSchema(Schema):
     gasPrice = BigInteger(required=True, attribute="gas_price")
     feeRecipient = Address(required=True, attribute="fee_recipient")
     currencyNetworkOfFees = Address(required=True, attribute="currency_network_of_fees")
+
+
+class MetaTransactionStatusSchema(Schema):
+    class Meta:
+        strict = True
+
+    status = MetaTransactionStatusField(required=True)
 
 
 class EventSchema(Schema):

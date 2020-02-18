@@ -41,6 +41,7 @@ from .resources import (
     Relay,
     RelayMetaTransaction,
     RequestEther,
+    Status,
     TransactionInfos,
     Trustline,
     TrustlineAccruedInterestList,
@@ -164,6 +165,10 @@ def ApiApp(trustlines, *, enabled_apis):
 
     if ApiType.DELEGATE in enabled_apis:
         add_resource(RelayMetaTransaction, "/relay-meta-transaction")
+        add_resource(
+            Status,
+            "/identities/<address:identity_address>/meta-transactions/<string:meta_transaction_hash>/status",
+        )
         add_resource(MetaTransactionFees, "/meta-transaction-fees")
         add_resource(IdentityInfos, "/identities/<address:identity_address>")
         add_resource(Factories, "/factories")
