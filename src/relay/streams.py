@@ -84,7 +84,7 @@ class Subject(object):
 
         """
         logger.debug("New Subscription")
-        subscription = Subscription(client, self._create_id(), self)
+        subscription = Subscription(client, id=self._create_id(), subject=self)
         self.subscriptions.append(subscription)
         return subscription
 
@@ -111,7 +111,7 @@ class Subject(object):
 
 
 class Subscription:
-    def __init__(self, client: Client, id: str, subject: Subject) -> None:
+    def __init__(self, client: Client, *, id: str, subject: Subject) -> None:
         self.client = client
         self.id = id
         self.subject = subject
@@ -141,6 +141,23 @@ class MessagingSubject(Subject):
         super().__init__()
         self.events: List[MessageEvent] = []
 
+    def subscribe(self, client: Client, *, silent=False) -> "MessagingSubscription":
+        """
+        Subscribe to the topic to get notified about updates
+        Args:
+            client: the client that wants to subscribe
+            silent: whether this subscription should mark messages as read
+
+        Returns: The subscription. Can be used to cancel these updates
+
+        """
+        logger.debug("New MessagingSubscription")
+        subscription = MessagingSubscription(
+            client, id=self._create_id(), subject=self, silent=silent
+        )
+        self.subscriptions.append(subscription)
+        return subscription
+
     def get_missed_messages(self) -> Iterable[MessageEvent]:
         events = self.events
         self.events = []
@@ -150,7 +167,29 @@ class MessagingSubject(Subject):
         logger.debug("Publish Message")
         if not isinstance(event, MessageEvent):
             raise RuntimeError("Can only send MessageEvent over message subject")
-        result = super().publish(event)
-        if result == 0:
+        if self.subscriptions:
+            logger.debug(
+                "Sent message to {} subscribers".format(len(self.subscriptions))
+            )
+        read_by = 0
+        # The call to notify in the following code is allowed to unsubscribe
+        # the client. That means we need to copy the self.subscriptions list as
+        # it's being modified when unsubscribing.
+        for subscription in self.subscriptions[:]:
+            if isinstance(subscription, MessagingSubscription):
+                successfully = subscription.notify(event)
+                if successfully and not subscription.silent:
+                    read_by += 1
+            else:
+                raise RuntimeError("Unexpected Subscription")
+        if not read_by:
             self.events.append(event)
-        return result
+        return read_by
+
+
+class MessagingSubscription(Subscription):
+    def __init__(
+        self, client: Client, *, id: str, subject: Subject, silent=False
+    ) -> None:
+        super().__init__(client, id=id, subject=subject)
+        self.silent = silent
