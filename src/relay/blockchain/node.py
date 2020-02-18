@@ -2,12 +2,18 @@ import logging
 import os
 from collections import namedtuple
 
+from tldeploy.identity import MetaTransactionStatus
+from web3.exceptions import TransactionNotFound
+
 from relay.concurrency_utils import synchronized
 
 TxInfos = namedtuple("TxInfos", "balance, nonce, gas_price")
 
 
 logger = logging.getLogger("node")
+
+
+TransactionStatus = MetaTransactionStatus
 
 
 class Node:
@@ -100,3 +106,19 @@ class Node:
 
     def get_block_timestamp(self, block_number):
         return self._web3.eth.getBlock(block_number).timestamp
+
+    def get_transaction_status(self, hash):
+        try:
+            # This will only find mined transactions and not pending ones
+            status = self._web3.eth.getTransactionReceipt(hash)["status"]
+            if status:
+                return TransactionStatus.SUCCESS
+            else:
+                return TransactionStatus.FAILURE
+        except TransactionNotFound:
+            try:
+                # This will find pending transactions
+                self._web3.eth.getTransaction(hash)
+                return TransactionStatus.PENDING
+            except TransactionNotFound:
+                return TransactionStatus.NOT_FOUND

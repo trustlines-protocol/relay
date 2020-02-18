@@ -41,6 +41,7 @@ from .schemas import (
     MetaTransactionSchema,
     MetaTransactionStatusSchema,
     PaymentPathSchema,
+    TransactionStatusSchema,
     TrustlineSchema,
     TxInfosSchema,
     UserCurrencyNetworkEventSchema,
@@ -469,6 +470,19 @@ class Relay(Resource):
             return self.trustlines.node.relay_tx(args["rawTransaction"]).hex()
         except ValueError:  # should mean error in relaying the transaction
             abort(409, "There was an error while relaying this transaction")
+
+
+class TransactionStatus(Resource):
+    def __init__(self, trustlines: TrustlinesRelay) -> None:
+        self.trustlines = trustlines
+
+    @dump_result_with_schema(TransactionStatusSchema())
+    def get(self, transaction_hash):
+        return {
+            "status": self.trustlines.node.get_transaction_status(
+                transaction_hash
+            ).value
+        }
 
 
 class RelayMetaTransaction(Resource):

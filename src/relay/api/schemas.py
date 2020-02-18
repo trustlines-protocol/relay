@@ -80,6 +80,10 @@ class MetaTransactionStatusSchema(Schema):
     status = MetaTransactionStatusField(required=True)
 
 
+class TransactionStatusSchema(MetaTransactionStatusSchema):
+    pass
+
+
 class EventSchema(Schema):
 
     timestamp = fields.Integer()
