@@ -47,6 +47,6 @@
     "0xcb02a08a72Cb459fE41E987065fE1E2D7438E64E",
     "0x0FbD56e384826246dC795C1A1951c781184F8faa"
   ],
-  "identityImplementation": "",
-  "identityProxyFactory": ""
+  "identityImplementation": "0x8beec4Fa55Ab6908D05E6D8259D685fc6DD3619E",
+  "identityProxyFactory": "0x818a7A3fD0722cd21024c19F800666aFdD8Cc0Bb"
 }
