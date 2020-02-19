@@ -1089,6 +1089,33 @@ curl --header "Content-Type: application/json" \
 
 ---
 
+### Status of meta transaction
+Get the status of a meta transaction for an identity.
+
+#### Request
+```
+GET /identities/:identityAddress/meta-transactions/:metaTransactionHash/status
+```
+
+#### Example Request
+```bash
+curl https://relay0.testnet.trustlines.network/api/v1/identities/0xF2E246BB76DF876Cef8b38ae84130F4F55De395b/meta-transactions/0x51a240271AB8AB9f9a21C82d9a85396b704E164d/status
+```
+
+#### Response
+| Attribute             | Type   | Description                                                       |
+|-----------------------|--------|-------------------------------------------------------------------|
+| status                | string | one of success, failure, pending, or not found                    |
+
+#### Example Response
+```json
+{
+  "status": "success"
+}
+```
+
+---
+
 ### Relay meta transaction
 Relays a meta transaction to the blockchain.
 #### Request
