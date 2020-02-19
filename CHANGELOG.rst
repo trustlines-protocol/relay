@@ -1,10 +1,18 @@
 ==========
 Change Log
 ==========
-`pending`_ (2020-02-13)
+`pending`_ (-)
 -------------------------------
-- Update endpoint for getting balance to return wei instead of eth (BREAKING)
-- Update meta-transaction schema to match new features in the contracts. (BREAKING) New fields: chainId, version, baseFee, gasPrice, gasLimit, feeRecipient, timeLimit, operationType. Fields removed: delegationFees, extraData
+
+`0.12.0`_ (2020-02-19)
+-------------------------------
+- Add config to enable/disable features of the relay server
+- Change config schema, the old Schema does still work but is marked as deprecated and will be removed in future versions
+- Change: Push notification will not mark messages as read, so there are still available to be retrieved later
+- Change endpoint for getting balance to return wei instead of eth (BREAKING)
+- Change meta-transaction schema to match new features in the contracts. (BREAKING) New fields: chainId, version, baseFee, gasPrice, gasLimit, feeRecipient, timeLimit, operationType. Fields removed: delegationFees, extraData
+- Remove data content of push notification (BREAKING)
+- Improve error messages of meta transaction related endpoints
 
 `0.11.4`_ (2020-02-04)
 -------------------------------
@@ -153,3 +161,5 @@ Change Log
 .. _0.11.2: https://github.com/trustlines-protocol/relay/compare/0.11.1...0.11.2
 .. _0.11.3: https://github.com/trustlines-protocol/relay/compare/0.11.2...0.11.3
 .. _0.11.4: https://github.com/trustlines-protocol/relay/compare/0.11.3...0.11.4
+.. _0.12.0: https://github.com/trustlines-protocol/relay/compare/0.11.4...0.12.0
+.. _pending:: https://github.com/trustlines-protocol/relay/compare/0.12.0...master
