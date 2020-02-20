@@ -6,6 +6,8 @@ from marshmallow import (
     pre_load,
 )
 
+ZERO_ADDRESS = "0x" + "0" * 40
+
 
 class LoggingField(fields.Mapping):
     pass
@@ -28,7 +30,7 @@ class FeeSettingsSchema(Schema):
     base_fee = fields.Integer(missing=0)
     gas_price = fields.Integer(missing=0)
     fee_recipient = AddressField()
-    currency_network = AddressField(required=True)
+    currency_network = AddressField(missing=ZERO_ADDRESS)
 
 
 class GasPriceComputationSchema(Schema):
@@ -49,7 +51,17 @@ class TrustlineIndexSchema(Schema):
 class DelegateSchema(Schema):
     enable = fields.Boolean(missing=True)
     enable_deploy_identity = fields.Boolean(missing=True)
-    fees = fields.List(fields.Nested(FeeSettingsSchema()), missing=list)
+    fees = fields.Nested(FeeSettingsSchema(), many=True)
+
+    @pre_load
+    def load_defaults(self, data, **kwargs):
+        """Loads the missing Schemas that support all values missing"""
+        # Put exceptions here
+        needs_values = {"enable", "enable_deploy_identity"}
+        for field_name in self.fields.keys():
+            if field_name not in needs_values and field_name not in data:
+                data[field_name] = [{}]
+        return data
 
 
 class ExchangeSchema(Schema):

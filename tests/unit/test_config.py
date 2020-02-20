@@ -1,6 +1,7 @@
 import pathlib
 
 import pytest
+from eth_utils import is_address
 
 from relay.config.config import (
     _remove_empty_dicts,
@@ -47,6 +48,15 @@ def test_remove_empty_dicts(test_input, expected_output):
 def test_example_file_matches_default_config(example_config_filepath):
     """Test that the example config matches the default config"""
     assert load_config(example_config_filepath) == generate_default_config()
+
+
+def test_default_delegate_fees_config_is_valid():
+    """Test that the default value for delegation fee is valid"""
+    default_config = generate_default_config()
+    default_fee = default_config["delegate"]["fees"][0]
+    assert is_address(default_fee["currency_network"])
+    assert isinstance(default_fee["base_fee"], int)
+    assert isinstance(default_fee["gas_price"], int)
 
 
 def test_uncommented_default_config_is_valid(uncommented_example_config_filepath):
