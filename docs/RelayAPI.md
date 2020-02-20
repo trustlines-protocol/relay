@@ -461,6 +461,7 @@ curl https://relay0.testnet.trustlines.network/api/v1/networks/0xC0B33D88C704455
 #### Response
 | Attribute      | Type   | Description                                                                               |
 |----------------|--------|-------------------------------------------------------------------------------------------|
+| id             | string | Unique identifier of the event                                                            |
 | networkAddress | string | Address of currency network                                                               |
 | blockNumber    | string | Number of block                                                                           |
 | timestamp      | int    | UNIX timestamp                                                                            |
@@ -492,6 +493,7 @@ Following additional attributes for `Transfer` events:
 ```json
 [
 	{
+    "id": "02d68ca44b28a9b649e386101cbfc06cb49e845f",
 		"networkAddress": "0xC0B33D88C704455075a0724AA167a286da778DDE",
 		"blockNumber": 6997877,
 		"timestamp": 1524655432,
@@ -506,7 +508,8 @@ Following additional attributes for `Transfer` events:
 		"interestRateReceived": "1000",
         "isFrozen": false
 	},
-    {
+  {
+    "id": "d45f715b320616d69f6c6c339a71445f6aa7279c",
 		"networkAddress": "0xC0B33D88C704455075a0724AA167a286da778DDE",
 		"blockNumber": 6997877,
 		"timestamp": 1524655432,
@@ -517,6 +520,7 @@ Following additional attributes for `Transfer` events:
 		"transactionId": "0xb141aa3baec4e7151d8bd6ecab46d26b1add131e50bcc517c956a7ac979815cd"
 	},
 	{
+    "id": "078ce34b84d4097cdc4df6a07b9a1392691e5588",
 		"networkAddress": "0xC0B33D88C704455075a0724AA167a286da778DDE",
 		"blockNumber": 6997899,
 		"timestamp": 1524655600,
@@ -532,6 +536,7 @@ Following additional attributes for `Transfer` events:
         "isFrozen": false
 	},
 	{
+    "id": "f3bd2b674f8fcba6516b188a3c02296024b8c806",
 		"networkAddress": "0xC0B33D88C704455075a0724AA167a286da778DDE",
 		"blockNumber": 7011809,
 		"timestamp": 1524755036,
@@ -568,6 +573,7 @@ curl https://relay0.testnet.trustlines.network/api/v1/networks/0xC0B33D88C704455
 #### Response
 | Attribute      | Type   | Description                                                                               |
 |----------------|--------|-------------------------------------------------------------------------------------------|
+| id             | string | Unique identifier of the event                                                            |
 | networkAddress | string | Address of currency network                                                               |
 | blockNumber    | string | Number of block                                                                           |
 | timestamp      | int    | UNIX timestamp                                                                            |
@@ -598,6 +604,7 @@ Following additional attributes for `Transfer` events:
 ```json
 [
 	{
+    "id": "563debb3c84d92abeb88402835f3b37335ab1eea",
 		"networkAddress": "0xC0B33D88C704455075a0724AA167a286da778DDE",
 		"blockNumber": 6997877,
 		"timestamp": 1524655432,
@@ -612,7 +619,8 @@ Following additional attributes for `Transfer` events:
 		"interestRateReceived": "1000",
         "isFrozen": false
 	},
-    {
+  {
+    "id": "d23f94b640e946dd95c56396400101b0fd708e21",
 		"networkAddress": "0xC0B33D88C704455075a0724AA167a286da778DDE",
 		"blockNumber": 6997877,
 		"timestamp": 1524655432,
@@ -623,6 +631,7 @@ Following additional attributes for `Transfer` events:
 		"transactionId": "0xb141aa3baec4e7151d8bd6ecab46d26b1add131e50bcc517c956a7ac979815cd"
 	},
 	{
+    "id": "e33e2b34ba734f6b61f2046cc85e9d01d721a616",
 		"networkAddress": "0xC0B33D88C704455075a0724AA167a286da778DDE",
 		"blockNumber": 6997899,
 		"timestamp": 1524655600,
@@ -638,6 +647,7 @@ Following additional attributes for `Transfer` events:
         "isFrozen": false
 	},
 	{
+    "id": "0x05c91f6506e78b1ca2413df9985ca7d37d2da5fc076c0b55c5d9eb9fdd7513a6",
 		"networkAddress": "0xC0B33D88C704455075a0724AA167a286da778DDE",
 		"blockNumber": 7011809,
 		"timestamp": 1524755036,
