@@ -278,9 +278,10 @@ class TrustlinesRelay:
         self._web3 = Web3(Web3.HTTPProvider(url))
 
     def _start_delegate(self):
+        default_fee_recipient = self._web3.eth.defaultAccount or self.node.address
         delegation_fees = [
             DelegationFees(
-                fee_recipient=d.get("fee_recipient", self.node.address),
+                fee_recipient=d.get("fee_recipient", default_fee_recipient),
                 base_fee=d["base_fee"],
                 gas_price=d["gas_price"],
                 currency_network_of_fees=d["currency_network"],
@@ -291,7 +292,7 @@ class TrustlinesRelay:
         logger.info(f"Started delegate with delegation fees: {delegation_fees}")
         self.delegate = Delegate(
             self._web3,
-            self._web3.eth.defaultAccount or self.node.address,
+            default_fee_recipient,
             self.contracts["Identity"]["abi"],
             self.known_identity_factories,
             delegation_fees=delegation_fees,
