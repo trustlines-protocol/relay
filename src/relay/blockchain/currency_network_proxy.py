@@ -63,25 +63,23 @@ class CurrencyNetworkProxy(Proxy):
         self.interest_rate_decimals = 2
         self.is_frozen = self._proxy.functions.isNetworkFrozen().call()
 
-    @property
-    def users(self) -> List[str]:
+    def fetch_users(self) -> List[str]:
         return list(self._proxy.functions.getUsers().call())
 
-    @property
-    def num_users(self) -> int:
-        return len(self.users)
+    def fetch_num_users(self) -> int:
+        return len(self.fetch_users())
 
-    def friends(self, user_address: str) -> List[str]:
+    def fetch_friends(self, user_address: str) -> List[str]:
         return list(self._proxy.functions.getFriends(user_address).call())
 
-    def account(self, a_address: str, b_address: str):
+    def fetch_account(self, a_address: str, b_address: str):
         return self._proxy.functions.getAccount(a_address, b_address).call()
 
     def gen_graph_representation(self) -> List[Trustline]:
         """Returns the trustlines network as a dict address -> list of Friendships"""
         result = []
-        for user in self.users:
-            for friend in self.friends(user):
+        for user in self.fetch_users():
+            for friend in self.fetch_friends(user):
                 if user < friend:
                     (
                         creditline_ab,
@@ -91,7 +89,7 @@ class CurrencyNetworkProxy(Proxy):
                         is_frozen,
                         mtime,
                         balance_ab,
-                    ) = self.account(user, friend)
+                    ) = self.fetch_account(user, friend)
                     result.append(
                         Trustline(
                             user=user,

@@ -29,21 +29,21 @@ def test_address(currency_network, testnetwork1_address):
 
 
 def test_friends1(currency_network_with_trustlines, accounts):
-    assert set(currency_network_with_trustlines.friends(accounts[0])) == {
+    assert set(currency_network_with_trustlines.fetch_friends(accounts[0])) == {
         accounts[1],
         accounts[4],
     }
 
 
 def test_friends2(currency_network_with_trustlines, accounts):
-    assert set(currency_network_with_trustlines.friends(accounts[1])) == {
+    assert set(currency_network_with_trustlines.fetch_friends(accounts[1])) == {
         accounts[0],
         accounts[2],
     }
 
 
 def test_account1(currency_network_with_trustlines, accounts):
-    assert currency_network_with_trustlines.account(accounts[0], accounts[1]) == [
+    assert currency_network_with_trustlines.fetch_account(accounts[0], accounts[1]) == [
         100,
         150,
         0,
@@ -55,7 +55,7 @@ def test_account1(currency_network_with_trustlines, accounts):
 
 
 def test_account2(currency_network_with_trustlines, accounts):
-    assert currency_network_with_trustlines.account(accounts[2], accounts[3]) == [
+    assert currency_network_with_trustlines.fetch_account(accounts[2], accounts[3]) == [
         300,
         350,
         0,
@@ -67,7 +67,7 @@ def test_account2(currency_network_with_trustlines, accounts):
 
 
 def test_users(currency_network_with_trustlines, accounts):
-    assert currency_network_with_trustlines.users == accounts[0:5]
+    assert currency_network_with_trustlines.fetch_users() == accounts[0:5]
 
 
 def test_gen_graph_representation(currency_network_with_trustlines, accounts):
