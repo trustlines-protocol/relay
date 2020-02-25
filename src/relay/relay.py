@@ -7,7 +7,7 @@ import sys
 import time
 from collections import defaultdict
 from copy import deepcopy
-from typing import Dict, Iterable, List, Optional, Union
+from typing import Dict, Iterable, List, NamedTuple, Optional, Union
 
 import eth_account
 import eth_keyfile
@@ -58,6 +58,20 @@ logger = logging.getLogger("relay")
 
 class TokenNotFoundException(Exception):
     pass
+
+
+class NetworkInfo(NamedTuple):
+    address: str
+    name: str
+    symbol: str
+    decimals: int
+    num_users: int
+    capacity_imbalance_fee_divisor: int
+    default_interest_rate: int
+    custom_interests: bool
+    prevent_mediator_interests: bool
+    interest_rate_decimals: int
+    is_frozen: bool
 
 
 class TrustlinesRelay:
@@ -187,10 +201,24 @@ class TrustlinesRelay:
     def is_trusted_token(self, address: str) -> bool:
         return address in self.token_addresses or address in self.unw_eth_addresses
 
-    def get_network_info(self, network_address: str):
-        return self.currency_network_proxies[network_address]
+    def get_network_info(self, network_address: str) -> NetworkInfo:
+        proxy = self.currency_network_proxies[network_address]
+        graph = self.currency_network_graphs[network_address]
+        return NetworkInfo(
+            address=proxy.address,
+            name=proxy.name,
+            symbol=proxy.symbol,
+            decimals=proxy.decimals,
+            num_users=len(graph.users),
+            capacity_imbalance_fee_divisor=proxy.capacity_imbalance_fee_divisor,
+            default_interest_rate=proxy.default_interest_rate,
+            custom_interests=proxy.custom_interests,
+            prevent_mediator_interests=proxy.prevent_mediator_interests,
+            interest_rate_decimals=proxy.interest_rate_decimals,
+            is_frozen=proxy.is_frozen,
+        )
 
-    def get_network_infos(self):
+    def get_network_infos(self) -> List[NetworkInfo]:
         return [
             self.get_network_info(network_address)
             for network_address in self.network_addresses
