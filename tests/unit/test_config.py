@@ -18,6 +18,7 @@ def example_config_filepath():
 
 @pytest.fixture()
 def uncommented_example_config_filepath(example_config_filepath, tmp_path):
+    # Remove all comments starting with only one # to test of that config is correct
     d = tmp_path / "example.conf"
 
     with open(example_config_filepath) as file:

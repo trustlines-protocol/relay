@@ -30,6 +30,7 @@ from relay.pushservice.pushservice import (
     FirebaseRawPushService,
     InvalidClientTokenException,
 )
+from relay.web3provider import create_provider_from_config
 
 from .blockchain import (
     currency_network_events,
@@ -297,13 +298,7 @@ class TrustlinesRelay:
     def _make_w3(self):
         """create and set the w3 object as self._web3"""
         rpc_config = self.config["node_rpc"]
-        url = "{}://{}:{}".format(
-            "https" if rpc_config["use_ssl"] else "http",
-            rpc_config["host"],
-            rpc_config["port"],
-        )
-        logger.info("using web3 URL {}".format(url))
-        self._web3 = Web3(Web3.HTTPProvider(url))
+        self._web3 = Web3(create_provider_from_config(rpc_config))
 
     def _start_delegate(self):
         default_fee_recipient = self._web3.eth.defaultAccount or self.node.address

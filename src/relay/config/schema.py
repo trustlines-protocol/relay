@@ -2,6 +2,7 @@ from eth_utils import is_address, to_checksum_address
 from marshmallow import Schema, ValidationError, fields, pre_load, validates_schema
 
 from relay.blockchain.delegate import GasPriceMethod
+from relay.web3provider import ProviderType
 
 
 class LoggingField(fields.Mapping):
@@ -126,10 +127,52 @@ class RESTSchema(Schema):
     port = fields.Integer(missing=5000)
 
 
+class ProviderTypeField(fields.Field):
+    def _serialize(self, value, attr, obj, **kwargs):
+
+        if isinstance(value, ProviderType):
+            # serialises into the value of the enum
+            return value.value
+        else:
+            raise ValidationError("Value must be of type ProviderType")
+
+    def _deserialize(self, value, attr, data, **kwargs):
+
+        # deserialize into the enum instance corresponding to the value
+        try:
+            return ProviderType(value)
+        except ValueError:
+            raise ValidationError(
+                f"Could not parse attribute {attr}: {value} has to be one of "
+                f"{[possible_value.value for possible_value in ProviderType]}"
+            )
+
+
 class ChainNodeRPCSchema(Schema):
+    type = ProviderTypeField(missing=ProviderType.HTTP)
     host = fields.String(missing="localhost")
     port = fields.Integer(missing=8545)
     use_ssl = fields.Boolean(missing=False)
+    file_path = fields.String()
+    uri = fields.String()
+
+    @validates_schema(pass_original=True)
+    def validate_only_one_provider(self, in_data, original_data, **kwargs):
+        is_uri_set = "uri" in in_data
+        is_provider_type_given = "type" in original_data
+
+        provider_type = in_data["type"]
+
+        if is_uri_set and is_provider_type_given:
+            raise ValidationError("'uri' and 'type' can not be set at the same time")
+
+        is_file_path_set = "file_path" in in_data
+        if provider_type is ProviderType.IPC:
+            if not is_file_path_set:
+                raise ValidationError("ipc provider requires 'file_path' to be set")
+        else:
+            if is_file_path_set:
+                raise ValidationError("'file_path' can only be set with type ipc")
 
 
 class RelaySchema(Schema):
