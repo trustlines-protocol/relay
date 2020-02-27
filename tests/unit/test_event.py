@@ -1,4 +1,3 @@
-import hexbytes
 import pytest
 
 from relay.blockchain.currency_network_events import (
@@ -7,19 +6,11 @@ from relay.blockchain.currency_network_events import (
     TrustlineUpdateEvent,
     TrustlineUpdateEventType,
 )
-from relay.blockchain.events import BlockchainEvent
 
 
 @pytest.fixture()
 def web3_event():
-    return {
-        "blockNumber": 5,
-        "blockHash": "0xd74c3e8bdb19337987b987aee0fa48ed43f8f2318edfc84e3a8643e009592a68",
-        "transactionHash": "0x1234",
-        "address": "0x12345",
-        "event": "TestEvent",
-        "logIndex": 2,
-    }
+    return {"blockNumber": 5, "transactionHash": "0x1234", "address": "0x12345"}
 
 
 @pytest.fixture()
@@ -53,17 +44,6 @@ def web3_event_transfer(web3_event, test_extra_data):
         }
     )
     return web3_event
-
-
-def test_blockchain_event(web3_event):
-    event = BlockchainEvent(web3_event, 10, 123456)
-
-    assert event.blocknumber == 5
-    assert event.transaction_id == hexbytes.HexBytes("0x1234")
-    assert event.type == "TestEvent"
-    assert event.id == hexbytes.HexBytes(
-        "0x45cc770036e3baccdccae4a22fe6bf66f52d29e97a6f95798966d920bf6cc7ab"
-    )
 
 
 def test_trustline_update_event(web3_event_trustline_update):
