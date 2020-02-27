@@ -1,10 +1,7 @@
 from eth_utils import is_address, to_checksum_address
-from marshmallow import (
-    Schema,
-    ValidationError as MarshmallowValidationError,
-    fields,
-    pre_load,
-)
+from marshmallow import Schema, ValidationError, fields, pre_load, validates_schema
+
+from relay.blockchain.delegate import GasPriceMethod
 
 
 class LoggingField(fields.Mapping):
@@ -17,7 +14,7 @@ class AddressField(fields.Field):
 
     def _deserialize(self, value, attr, data, **kwargs):
         if not is_address(value):
-            raise MarshmallowValidationError(
+            raise ValidationError(
                 f"Could not parse attribute {attr}: Invalid address {value}"
             )
 
@@ -46,10 +43,65 @@ class TrustlineIndexSchema(Schema):
     event_query_timeout = fields.Integer(missing=20)
 
 
+class GasPriceMethodField(fields.Field):
+    def _serialize(self, value, attr, obj, **kwargs):
+
+        if isinstance(value, GasPriceMethod):
+            # serialises into the value of the enum
+            return value.value
+        else:
+            raise ValidationError("Value must be of type GasPriceMethod")
+
+    def _deserialize(self, value, attr, data, **kwargs):
+
+        # deserialize into the enum instance corresponding to the value
+        try:
+            return GasPriceMethod(value)
+        except ValueError:
+            raise ValidationError(
+                f"Could not parse attribute {attr}: {value} has to be one of "
+                f"{[gas_price_method.value for gas_price_method in GasPriceMethod]}"
+            )
+
+
 class DelegateSchema(Schema):
     enable = fields.Boolean(missing=True)
     enable_deploy_identity = fields.Boolean(missing=True)
     fees = fields.List(fields.Nested(FeeSettingsSchema()), missing=list)
+    gas_price_method = GasPriceMethodField(missing=GasPriceMethod.RPC)
+    gas_price = fields.Integer()
+    min_gas_price = fields.Integer()
+    max_gas_price = fields.Integer()
+    max_gas_limit = fields.Integer(missing=1_000_000)
+
+    @validates_schema
+    def validate_gas_price_method(self, in_data, **kwargs):
+        gas_price_method = in_data["gas_price_method"]
+        is_gas_price_given = "gas_price" in in_data
+        is_min_gas_price_given = "min_gas_price" in in_data
+        is_max_gas_price_given = "max_gas_price" in in_data
+
+        if gas_price_method is GasPriceMethod.FIXED:
+            if not is_gas_price_given:
+                raise ValidationError(
+                    "For gas price method: fixed, 'gas_price' must be set"
+                )
+        else:
+            if is_gas_price_given:
+                raise ValidationError(
+                    "'gas_price' can only be set for gas price method: fixed"
+                )
+
+        if gas_price_method is GasPriceMethod.BOUND:
+            if not is_min_gas_price_given or not is_max_gas_price_given:
+                raise ValidationError(
+                    "For gas price method: bound, 'min_gas_price' and 'max_gas_price' must be set"
+                )
+        else:
+            if is_min_gas_price_given or is_max_gas_price_given:
+                raise ValidationError(
+                    "'min_gas_price' and 'max_gas_price' can only be set for gas price method: bound"
+                )
 
 
 class ExchangeSchema(Schema):

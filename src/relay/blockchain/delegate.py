@@ -1,3 +1,4 @@
+from enum import Enum
 from typing import List
 
 import attr
@@ -10,6 +11,12 @@ from tldeploy.identity import (
 )
 
 ZERO_ADDRESS = "0x" + "0" * 40
+
+
+class GasPriceMethod(Enum):
+    RPC = "rpc"
+    FIXED = "fixed"
+    BOUND = "bound"
 
 
 @attr.s
@@ -28,6 +35,7 @@ class Delegate:
         identity_contract_abi,
         known_factories,
         delegation_fees,
+        config,
     ):
         self._web3 = web3
 
@@ -36,12 +44,22 @@ class Delegate:
         )
         self.known_factories = known_factories
         self.delegation_fees = delegation_fees
+        self.config = config
 
     def send_signed_meta_transaction(self, signed_meta_transaction: MetaTransaction):
         self.raise_on_invalid_signed_meta_transaction(signed_meta_transaction)
         self.validate_meta_transaction_fees(signed_meta_transaction)
 
-        return self.delegate.send_signed_meta_transaction(signed_meta_transaction)
+        transaction_options = {
+            "gas": self._calculate_gas_limit(meta_transaction=signed_meta_transaction),
+            "gasPrice": self._calculate_gas_price(
+                meta_transaction=signed_meta_transaction
+            ),
+        }
+
+        return self.delegate.send_signed_meta_transaction(
+            signed_meta_transaction, transaction_options=transaction_options
+        )
 
     def deploy_identity(self, factory_address, implementation_address, signature):
         if factory_address not in self.known_factories:
@@ -106,6 +124,32 @@ class Delegate:
         self.raise_on_invalid_meta_transaction(signed_meta_transaction)
         if not self.delegate.validate_signature(signed_meta_transaction):
             raise InvalidSignature
+
+    def _calculate_gas_price(self, meta_transaction: MetaTransaction):
+        method = self.config["gas_price_method"]
+        if method == GasPriceMethod.FIXED:
+            return self.config["gas_price"]
+        elif method == GasPriceMethod.BOUND:
+            return min(
+                max(self._fetch_rpc_gas_price(), self.config["min_gas_price"]),
+                self.config["max_gas_price"],
+            )
+        elif method == GasPriceMethod.RPC:
+            return self._fetch_rpc_gas_price()
+        else:
+            raise ValueError(f"Unknown method: {method}")
+
+    def _calculate_gas_limit(self, meta_transaction: MetaTransaction):
+        return self.config["max_gas_limit"]
+
+    def _fetch_rpc_gas_price(self) -> int:
+        raw_value = self._web3.manager.request_blocking("eth_gasPrice", [])
+        if isinstance(raw_value, int):
+            return raw_value
+        elif isinstance(raw_value, str):
+            return int(raw_value, 16)
+        else:
+            raise RuntimeError(f"Unexpected rpc gas price value: {raw_value}")
 
 
 class InvalidIdentityContractException(Exception):

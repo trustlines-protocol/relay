@@ -324,6 +324,7 @@ class TrustlinesRelay:
             self.contracts["Identity"]["abi"],
             self.known_identity_factories,
             delegation_fees=delegation_fees,
+            config=self.config["delegate"],
         )
 
     def start(self):
