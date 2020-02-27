@@ -1,6 +1,16 @@
 ==========
 Change Log
 ==========
+`unreleased`_
+-------------------------------
+
+`0.13.0`_ (2020-02-27)
+-------------------------------
+- Improve performance of `/networks` endpoint
+- Allow delegate to set a gas price strategy in config. Supported are rpc (ask node via rpc), fixed (use a fixed gas price and bound (ask node, but set min/max limits)
+- Allow to set connection method to node in config. Websockets and IPC were added to the already supported http method
+- Docker: Expose relay default rest port
+
 `0.12.1`_ (2020-02-23)
 -------------------------------
 - Fix delegate functionality with no unlocked account
@@ -163,4 +173,6 @@ Change Log
 .. _0.11.3: https://github.com/trustlines-protocol/relay/compare/0.11.2...0.11.3
 .. _0.11.4: https://github.com/trustlines-protocol/relay/compare/0.11.3...0.11.4
 .. _0.12.0: https://github.com/trustlines-protocol/relay/compare/0.11.4...0.12.0
-.. _pending:: https://github.com/trustlines-protocol/relay/compare/0.12.0...master
+.. _0.12.1: https://github.com/trustlines-protocol/relay/compare/0.12.0...0.12.1
+.. _0.13.0: https://github.com/trustlines-protocol/relay/compare/0.12.1...0.13.0
+.. _pending: https://github.com/trustlines-protocol/relay/compare/0.13.0...master
