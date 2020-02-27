@@ -1,28 +1,22 @@
 [relay]
-syncInterval = 300
-updateNetworksInterval = 120
-eventQueryTimeout = 20
-enableEtherFaucet = false
-enableRelayMetaTransaction = false
-enableDeployIdentity = false
+update_indexed_networks_interval = 120
 
-[relay.rpc]
+[relay.gas_price_computation]
+method = "rpc"
+gas_price = 0
+
+[trustline_index]
+full_sync_interval = 300
+event_query_timeout = 20
+
+[node_rpc]
 host = "tlbc"
 port = 8545
 ssl = false
 
-[relay.gasPriceComputation]
-method = "rpc"
-gasPrice = 0
-
-[[relay.delegationFees]]
-# value = 0
-# currencyNetwork = "0x000..."
-
-[relay.account]
+[account]
 keystore_path = "keystore.json"
 keystore_password_path = "keystore-password.txt"
-
 
 # Configure logging
 [logging.root]
