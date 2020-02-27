@@ -18,9 +18,13 @@ enable = true
 enable = true
 
 [node_rpc]
+## Possible values for connection type are ipc, http, websocket. Default: http
+## type = websocket
 port = 8545
 host = "localhost"
 use_ssl = false
+## or use an uri to automatically detect the correct provider. Example for ipc:
+# uri = "file:///path-to-file.ipc"
 
 [faucet]
 enable = false
