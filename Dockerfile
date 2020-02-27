@@ -44,4 +44,5 @@ RUN apt-get update \
 FROM runner
 COPY --from=builder /opt/relay /opt/relay
 WORKDIR /opt/relay
+EXPOSE 5000
 ENTRYPOINT ["tl-relay"]
