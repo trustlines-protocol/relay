@@ -74,14 +74,18 @@ reuse a keyfile from a validator node.
 
 ### Copy compiled contracts
 
-The relay server image containts the file 'contracts.json', which
-contains the compiled currency network contracts. We will need
-this file for the index service.
+The relay server image includes the `contracts.json` file, which contains the
+compiled currency network contracts. We will need this file for the index
+service.
 
 Please copy them to the current directory with:
+
 ```
 docker-compose run --rm --no-deps -v $(pwd):/here --entrypoint /bin/bash relay -c "cp /opt/relay/trustlines-contracts/build/contracts.json /here"
 ```
+
+Checkout [this documentation](../../docs/RelayAPI.md#get-contract-abis) to see
+alternative approaches how to retrieve the compiled contracts file.
 
 ### Setup initial database
 
