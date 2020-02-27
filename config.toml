@@ -40,6 +40,15 @@ enable = true
 enable = true
 enable_deploy_identity = true
 fees = []
+## Set the maximum allowed gas usage per delegated meta transaction
+max_gas_limit = 1_000_000
+## Supported gas price methods are rpc, fixed, bound
+## rpc: Ask node for gas price
+## fixed: Use fixed value 'gas_price'
+## bound:  Use gas price from node if in bounds ('min_gas_price', 'max_gas_price'), otherwise use bounds
+# gas_price_method = "fixed"
+# gas_price = 1_000_000_000
+
 
 # [account]
 # keystore_path = "path-to-keystor"

@@ -23,7 +23,7 @@ def uncommented_example_config_filepath(example_config_filepath, tmp_path):
     with open(example_config_filepath) as file:
         with open(d, "w") as output_file:
             for line in file.readlines():
-                output_file.writelines([line.replace("#", "")])
+                output_file.writelines([line.replace("# ", " ")])
 
     return str(d)
 

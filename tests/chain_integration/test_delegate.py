@@ -15,6 +15,7 @@ from web3 import Web3
 from relay.blockchain.delegate import (
     Delegate,
     DelegationFees,
+    GasPriceMethod,
     InvalidDelegationFeesException,
     InvalidMetaTransactionException,
 )
@@ -26,7 +27,18 @@ def delegate_address(web3):
 
 
 @pytest.fixture(scope="session")
-def delegate(web3, delegate_address, contracts, proxy_factory, currency_network):
+def delegate_config():
+    return {
+        "gas_price_method": GasPriceMethod.FIXED,
+        "gas_price": 2_000_000_000,
+        "max_gas_limit": 1_000_000,
+    }
+
+
+@pytest.fixture(scope="session")
+def delegate(
+    web3, delegate_address, contracts, proxy_factory, currency_network, delegate_config
+):
     identity_contract_abi = contracts["Identity"]["abi"]
     base_fee = 0
     return Delegate(
@@ -39,12 +51,13 @@ def delegate(web3, delegate_address, contracts, proxy_factory, currency_network)
                 base_fee=base_fee, currency_network_of_fees=currency_network.address
             )
         ],
+        config=delegate_config,
     )
 
 
 @pytest.fixture(scope="session")
 def delegate_with_one_fees(
-    web3, delegate_address, contracts, proxy_factory, currency_network
+    web3, delegate_address, contracts, proxy_factory, currency_network, delegate_config
 ):
     identity_contract_abi = contracts["Identity"]["abi"]
     base_fee = 1
@@ -58,6 +71,7 @@ def delegate_with_one_fees(
                 base_fee=base_fee, currency_network_of_fees=currency_network.address
             )
         ],
+        config=delegate_config,
     )
 
 
@@ -108,7 +122,7 @@ def identity_contract(
         signature_of_owner_on_implementation,
     )
     web3.eth.sendTransaction(
-        {"to": identity_contract.address, "from": owner, "value": 1000000}
+        {"to": identity_contract.address, "from": owner, "value": 1_000_000}
     )
 
     return identity_contract
@@ -373,3 +387,39 @@ def test_meta_transaction_fees_invalid_network(
         delegate_with_one_fees.validate_meta_transaction_fees(
             signed_meta_transaction_with_fees
         )
+
+
+@pytest.mark.parametrize(
+    "gas_price_config, gas_price",
+    [
+        (
+            {"gas_price_method": GasPriceMethod.FIXED, "gas_price": 2_000_000_000},
+            2_000_000_000,
+        ),
+        # Assumes the default gas price of the chain is 1
+        ({"gas_price_method": GasPriceMethod.RPC}, 1),
+        (
+            {
+                "gas_price_method": GasPriceMethod.BOUND,
+                "min_gas_price": 1_000_000_000,
+                "max_gas_price": 5_000_000_000,
+            },
+            1_000_000_000,
+        ),
+        (
+            {
+                "gas_price_method": GasPriceMethod.BOUND,
+                "min_gas_price": 0,
+                "max_gas_price": 0,
+            },
+            0,
+        ),
+    ],
+)
+def test_gas_pricing(delegate, delegate_config, gas_price_config, gas_price):
+    config = dict(**delegate_config)
+    config.update(gas_price_config)
+
+    delegate.config = config
+
+    assert delegate._calculate_gas_price(MetaTransaction()) == gas_price
