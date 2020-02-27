@@ -137,6 +137,12 @@ cp ~/opt/trustlines-system/trustlines-contracts/build/contracts.json ~
 ~/opt/py-eth-index/bin/ethindex importabi
 ```
 
+If you did not follow this document to install the relay but prefer an
+alternative approach (like via
+[docker-compose](../docker/trustlines/README.md)), checkout [this
+section](#get-contract-abis) about the different options to retrieve the
+`contracts.json` file.
+
 #### Importing events
 The following command will start importing all relevant events into the postgres
 database:
@@ -144,6 +150,7 @@ database:
 ```
 ethindex runsync
 ```
+
 This program will run forever.
 
 
@@ -204,3 +211,36 @@ clear text must be provided as well.
 keystore_path = "keystore.json"
 keystore_password_path = "keystore-password.txt"
 ```
+
+#### Get Contract ABIs
+
+The file with the compiled contracts (`contracts.json`) is bundled within
+multiple packages on different platforms. Please checkout that approach that
+fits the best for your setup from list below.
+
+##### PyPI
+
+```sh
+$ pip download trustlines-contracts-bin --dest /tmp && tar --extract --file /tmp/trustlines-contracts-bin*.tar.gz --no-anchored 'contracts.json' --strip-components 1
+```
+
+To download a specific version, add the version directly behind the package name
+separated with a `==` (e.g. `trustlines-contracts-bin==1.1.2`).
+
+##### NPM
+
+```sh
+$ curl -L $(npm view trustlines-contracts-abi dist.tarball) | tar --extract --gzip --no-anchored 'contracts.json' --strip-components 1
+```
+
+To download a specific version, add the version directly behind the package name
+separated with a `@` (e.g. `trustlines-contracts-abi@1.1.2`).
+
+##### DockerHub
+
+```sh
+$ docker run --rm --volume $(pwd):/here --entrypoint /bin/bash trustlines/relay -c "cp /opt/relay/trustlines-contracts/build/contracts.json /here"
+```
+
+To download a specific version in relation of the relay, add the wished image
+tag behind the image name (e.g. `trustlines/relay:0.12.1`).
