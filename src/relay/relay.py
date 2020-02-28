@@ -21,6 +21,7 @@ from web3 import Web3
 
 import relay.concurrency_utils as concurrency_utils
 from relay import ethindex_db, signing_middleware
+from relay.blockchain.proxy import LogFilterListener
 from relay.pushservice.client import PushNotificationClient
 from relay.pushservice.client_token_db import (
     ClientTokenAlreadyExistsException,
@@ -93,6 +94,7 @@ class TrustlinesRelay:
         self._client_token_db: Optional[ClientTokenDB] = None
         self.fixed_gas_price: Optional[int] = None
         self.known_identity_factories: List[str] = []
+        self._log_listener = None
 
     @property
     def network_addresses(self) -> Iterable[str]:
@@ -335,6 +337,7 @@ class TrustlinesRelay:
         self._make_w3()
         self._install_w3_middleware()
         self.node = Node(self._web3, fixed_gas_price=self.fixed_gas_price)
+        self._log_listener = LogFilterListener(self._web3)
         if self.config["delegate"]["enable"]:
             self._start_delegate()
         # For now always start listening, until we properly have separated the concerns
@@ -355,6 +358,7 @@ class TrustlinesRelay:
             custom_interests=currency_network_proxy.custom_interests,
             prevent_mediator_interests=currency_network_proxy.prevent_mediator_interests,
         )
+        self._log_listener.add_proxy(currency_network_proxy)
         self._start_listen_network(address)
 
     def new_exchange(self, address: str) -> None:
@@ -362,15 +366,14 @@ class TrustlinesRelay:
         if address not in self.exchange_addresses:
             logger.info("New Exchange contract: {}".format(address))
             if self.orderbook is not None:
-                self.orderbook.add_exchange(
-                    ExchangeProxy(
-                        self._web3,
-                        self.contracts["Exchange"]["abi"],
-                        self.contracts["Token"]["abi"],
-                        address,
-                        self,
-                    )
+                proxy = ExchangeProxy(
+                    self._web3,
+                    self.contracts["Exchange"]["abi"],
+                    self.contracts["Token"]["abi"],
+                    address,
+                    self,
                 )
+                self.orderbook.add_exchange(proxy)
             else:
                 raise ValueError("Exchange address given but no orderbook loaded")
 
@@ -378,17 +381,15 @@ class TrustlinesRelay:
         assert is_checksum_address(address)
         if address not in self.unw_eth_addresses:
             logger.info("New Unwrap ETH contract: {}".format(address))
-            self.unw_eth_proxies[address] = UnwEthProxy(
-                self._web3, self.contracts["UnwEth"]["abi"], address
-            )
+            proxy = UnwEthProxy(self._web3, self.contracts["UnwEth"]["abi"], address)
+            self.unw_eth_proxies[address] = proxy
 
     def new_token(self, address: str) -> None:
         assert is_checksum_address(address)
         if address not in self.token_addresses:
             logger.info("New Token contract: {}".format(address))
-            self.token_proxies[address] = TokenProxy(
-                self._web3, self.contracts["Token"]["abi"], address
-            )
+            proxy = TokenProxy(self._web3, self.contracts["Token"]["abi"], address)
+            self.token_proxies[address] = proxy
 
     def new_known_factory(self, address: str) -> None:
         assert is_checksum_address(address)
@@ -758,6 +759,8 @@ class TrustlinesRelay:
         else:
             self.new_known_factory(known_factories)
 
+        self._log_listener.start()
+
     def _start_listen_network(self, address):
         assert is_checksum_address(address)
         graph = self.currency_network_graphs[address]
@@ -766,14 +769,22 @@ class TrustlinesRelay:
             _create_on_full_sync(graph),
             self.config["trustline_index"]["full_sync_interval"],
         )
-        proxy.start_listen_on_balance(self._process_balance_update)
-        proxy.start_listen_on_trustline(self._process_trustline_update)
-        proxy.start_listen_on_transfer(self._process_transfer)
-        proxy.start_listen_on_trustline_request(self._process_trustline_request)
-        proxy.start_listen_on_trustline_request_cancel(
-            self._process_trustline_request_cancel
+        proxy.start_listen_on_balance(
+            self._process_balance_update, start_log_filter=False
         )
-        proxy.start_listen_on_network_freeze(self._process_network_freeze)
+        proxy.start_listen_on_trustline(
+            self._process_trustline_update, start_log_filter=False
+        )
+        proxy.start_listen_on_transfer(self._process_transfer, start_log_filter=False)
+        proxy.start_listen_on_trustline_request(
+            self._process_trustline_request, start_log_filter=False
+        )
+        proxy.start_listen_on_trustline_request_cancel(
+            self._process_trustline_request_cancel, start_log_filter=False
+        )
+        proxy.start_listen_on_network_freeze(
+            self._process_network_freeze, start_log_filter=False
+        )
 
     def _start_listen_on_new_addresses(self):
         logger.info("Start trustlines networks index")
@@ -788,7 +799,7 @@ class TrustlinesRelay:
                     )
                 sleep(self.config["relay"]["update_indexed_networks_interval"])
 
-        gevent.Greenlet.spawn(listen)
+        return gevent.Greenlet.spawn(listen)
 
     def _start_push_service(self):
         logger.info("Start pushnotification service")

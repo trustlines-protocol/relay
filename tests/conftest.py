@@ -1,9 +1,11 @@
+import gc
 import json
 import operator
 from collections import namedtuple
 from pathlib import Path
 from typing import Sequence
 
+import gevent
 import hexbytes
 import py
 import pytest
@@ -35,6 +37,20 @@ def pytest_collection_modifyitems(session, config, items):
 
 
 Account = namedtuple("Account", "address private_key")
+
+
+@pytest.fixture(autouse=False)
+def kill_remaining_greenlets():
+    """Set autouse=True to check if forgotten Greenlets are causing the issues"""
+    greenlets = [
+        obj
+        for obj in gc.get_objects()
+        if isinstance(obj, gevent.Greenlet) and not obj.dead
+    ]
+    if greenlets:
+        print("Warning: Had to kill greenlets")
+        gevent.killall(greenlets)
+        gevent.sleep(0.0001)
 
 
 @pytest.fixture(scope="session")

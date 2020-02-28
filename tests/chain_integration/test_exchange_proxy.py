@@ -227,7 +227,7 @@ def test_listen_on_fill(order_trustlines, exchange_proxy, testnetworks, maker, t
 
     order = order_trustlines
 
-    exchange_proxy.start_listen_on_fill(log)
+    greenlet = exchange_proxy.start_listen_on_fill(log)
     gevent.sleep(0.001)
 
     exchange_contract = testnetworks[1]
@@ -262,6 +262,8 @@ def test_listen_on_fill(order_trustlines, exchange_proxy, testnetworks, maker, t
     assert log1[1] == 50
     assert log1[2] == 100
 
+    greenlet.kill()
+
 
 def test_listen_on_cancel(order_token, exchange_proxy, testnetworks, maker, taker):
     logs = []
@@ -271,7 +273,7 @@ def test_listen_on_cancel(order_token, exchange_proxy, testnetworks, maker, take
 
     order = order_token
 
-    exchange_proxy.start_listen_on_cancel(log)
+    greenlet = exchange_proxy.start_listen_on_cancel(log)
     gevent.sleep(0.001)
 
     exchange_contract = testnetworks[1]
@@ -300,3 +302,5 @@ def test_listen_on_cancel(order_token, exchange_proxy, testnetworks, maker, take
     assert log1[0] == order.hash()
     assert log1[1] == 50
     assert log1[2] == 100
+
+    greenlet.kill()

@@ -5,6 +5,7 @@ import socket
 from typing import List, NamedTuple
 
 import gevent
+from gevent import Greenlet
 
 import relay.concurrency_utils as concurrency_utils
 
@@ -124,45 +125,67 @@ class CurrencyNetworkProxy(Proxy):
 
         gevent.Greenlet.spawn(sync)
 
-    def start_listen_on_balance(self, on_balance) -> None:
+    def start_listen_on_balance(self, on_balance, *, start_log_filter=True) -> Greenlet:
         def log(log_entry):
             on_balance(self._build_event(log_entry))
 
-        self.start_listen_on(BalanceUpdateEventType, log)
+        return self.start_listen_on(
+            BalanceUpdateEventType, log, start_log_filter=start_log_filter
+        )
 
-    def start_listen_on_trustline(self, on_trustline_change) -> None:
+    def start_listen_on_trustline(
+        self, on_trustline_change, *, start_log_filter=True
+    ) -> Greenlet:
         def log_trustline(log_entry):
             on_trustline_change(self._build_event(log_entry))
 
-        self.start_listen_on(TrustlineUpdateEventType, log_trustline)
+        return self.start_listen_on(
+            TrustlineUpdateEventType, log_trustline, start_log_filter=start_log_filter
+        )
 
-    def start_listen_on_trustline_request(self, on_trustline_request) -> None:
+    def start_listen_on_trustline_request(
+        self, on_trustline_request, *, start_log_filter=True
+    ) -> Greenlet:
         def log_trustline_request(log_entry):
             on_trustline_request(self._build_event(log_entry))
 
-        self.start_listen_on(TrustlineRequestEventType, log_trustline_request)
+        return self.start_listen_on(
+            TrustlineRequestEventType,
+            log_trustline_request,
+            start_log_filter=start_log_filter,
+        )
 
     def start_listen_on_trustline_request_cancel(
-        self, on_trustline_request_cancel
-    ) -> None:
+        self, on_trustline_request_cancel, *, start_log_filter=True
+    ) -> Greenlet:
         def log_trustline_request_cancel(log_entry):
             on_trustline_request_cancel(self._build_event(log_entry))
 
-        self.start_listen_on(
-            TrustlineRequestCancelEventType, log_trustline_request_cancel
+        return self.start_listen_on(
+            TrustlineRequestCancelEventType,
+            log_trustline_request_cancel,
+            start_log_filter=start_log_filter,
         )
 
-    def start_listen_on_transfer(self, on_transfer) -> None:
+    def start_listen_on_transfer(
+        self, on_transfer, *, start_log_filter=True
+    ) -> Greenlet:
         def log(log_entry):
             on_transfer(self._build_event(log_entry))
 
-        self.start_listen_on(TransferEventType, log)
+        return self.start_listen_on(
+            TransferEventType, log, start_log_filter=start_log_filter
+        )
 
-    def start_listen_on_network_freeze(self, on_network_freeze):
+    def start_listen_on_network_freeze(
+        self, on_network_freeze, *, start_log_filter=True
+    ):
         def log(log_entry):
             on_network_freeze(self._build_event(log_entry))
 
-        self.start_listen_on(NetworkFreezeEventType, log)
+        return self.start_listen_on(
+            NetworkFreezeEventType, log, start_log_filter=start_log_filter
+        )
 
     def get_network_events(
         self,
