@@ -64,11 +64,18 @@ class Delegate:
     def deploy_identity(self, factory_address, implementation_address, signature):
         if factory_address not in self.known_factories:
             raise UnknownIdentityFactoryException(factory_address)
+        transaction_options = {
+            "gasPrice": self._calculate_gas_price(meta_transaction=None)
+        }
         try:
             # when getting an address via contract.address, the address might not be a checksummed address
             return self._web3.toChecksumAddress(
                 deploy_proxied_identity(
-                    self._web3, factory_address, implementation_address, signature
+                    self._web3,
+                    factory_address,
+                    implementation_address,
+                    signature,
+                    transaction_options=transaction_options,
                 ).address
             )
         except TransactionFailed:
@@ -125,7 +132,7 @@ class Delegate:
         if not self.delegate.validate_signature(signed_meta_transaction):
             raise InvalidSignature
 
-    def _calculate_gas_price(self, meta_transaction: MetaTransaction):
+    def _calculate_gas_price(self, meta_transaction: MetaTransaction = None):
         method = self.config["gas_price_method"]
         if method == GasPriceMethod.FIXED:
             return self.config["gas_price"]
@@ -139,7 +146,7 @@ class Delegate:
         else:
             raise ValueError(f"Unknown method: {method}")
 
-    def _calculate_gas_limit(self, meta_transaction: MetaTransaction):
+    def _calculate_gas_limit(self, meta_transaction: MetaTransaction = None):
         return self.config["max_gas_limit"]
 
     def _fetch_rpc_gas_price(self) -> int:
