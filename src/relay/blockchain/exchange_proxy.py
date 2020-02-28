@@ -70,7 +70,7 @@ class ExchangeProxy(Proxy):
     def get_unavailable_amount(self, order: Order) -> int:
         return self._proxy.functions.getUnavailableTakerTokenAmount(order.hash()).call()
 
-    def start_listen_on_fill(self, f) -> None:
+    def start_listen_on_fill(self, f):
         def log(log_entry):
             f(
                 log_entry["args"]["orderHash"],
@@ -78,7 +78,7 @@ class ExchangeProxy(Proxy):
                 log_entry["args"]["filledTakerTokenAmount"],
             )
 
-        self.start_listen_on(LogFillEventType, log)
+        return self.start_listen_on(LogFillEventType, log)
 
     def start_listen_on_cancel(self, f) -> None:
         def log(log_entry):
@@ -88,7 +88,7 @@ class ExchangeProxy(Proxy):
                 log_entry["args"]["cancelledTakerTokenAmount"],
             )
 
-        self.start_listen_on(LogCancelEventType, log)
+        return self.start_listen_on(LogCancelEventType, log)
 
     def get_exchange_events(
         self,

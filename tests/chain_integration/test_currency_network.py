@@ -205,7 +205,7 @@ def test_listen_on_balance_update(currency_network, accounts):
     def f(event):
         events.append(event)
 
-    currency_network.start_listen_on_balance(f)
+    greenlet = currency_network.start_listen_on_balance(f)
     context_switch()
     currency_network.update_trustline_with_accept(accounts[0], accounts[1], 25, 50)
     currency_network.transfer(accounts[1], 10, 10, [accounts[1], accounts[0]])
@@ -216,6 +216,8 @@ def test_listen_on_balance_update(currency_network, accounts):
     assert events[0].to == accounts[0] or events[0].to == accounts[1]
     assert -12 < events[0].value < 12  # because there might be fees
 
+    greenlet.kill()
+
 
 def test_listen_on_transfer(currency_network, accounts):
     events = []
@@ -223,16 +225,19 @@ def test_listen_on_transfer(currency_network, accounts):
     def f(event):
         events.append(event)
 
-    currency_network.start_listen_on_transfer(f)
+    greenlet = currency_network.start_listen_on_transfer(f)
     context_switch()
     currency_network.update_trustline_with_accept(accounts[0], accounts[1], 25, 50)
     currency_network.transfer(accounts[1], 10, 10, [accounts[1], accounts[0]])
     gevent.sleep(1)
 
+    print(events)
     assert len(events) == 1
     assert events[0].from_ == accounts[1]
     assert events[0].to == accounts[0]
     assert events[0].value == 10
+
+    greenlet.kill()
 
 
 def test_listen_on_trustline_update(currency_network, accounts):
@@ -241,7 +246,7 @@ def test_listen_on_trustline_update(currency_network, accounts):
     def f(event):
         events.append(event)
 
-    currency_network.start_listen_on_trustline(f)
+    greenlet = currency_network.start_listen_on_trustline(f)
     context_switch()
     currency_network.update_trustline(accounts[0], accounts[1], 25, 50)
     currency_network.update_trustline(accounts[1], accounts[0], 50, 25)
@@ -254,6 +259,8 @@ def test_listen_on_trustline_update(currency_network, accounts):
     assert events[0].creditline_received == 50
     assert events[0].is_frozen is False
 
+    greenlet.kill()
+
 
 def test_listen_on_trustline_update_with_interests(currency_network, accounts):
     events = []
@@ -261,7 +268,7 @@ def test_listen_on_trustline_update_with_interests(currency_network, accounts):
     def f(event):
         events.append(event)
 
-    currency_network.start_listen_on_trustline(f)
+    greenlet = currency_network.start_listen_on_trustline(f)
     context_switch()
     currency_network.update_trustline(accounts[0], accounts[1], 25, 50, 2, 3)
     currency_network.update_trustline(accounts[1], accounts[0], 50, 25, 3, 2)
@@ -276,6 +283,8 @@ def test_listen_on_trustline_update_with_interests(currency_network, accounts):
     assert events[0].interest_rate_received == 3
     assert events[0].is_frozen is False
 
+    greenlet.kill()
+
 
 def test_listen_on_freeze_network(currency_network, chain, expiration_time):
     chain.time_travel(expiration_time)
@@ -286,10 +295,12 @@ def test_listen_on_freeze_network(currency_network, chain, expiration_time):
     def f(event):
         events.append(event)
 
-    currency_network.start_listen_on_network_freeze(f)
+    greenlet = currency_network.start_listen_on_network_freeze(f)
     context_switch()
     currency_network.freeze_network()
     gevent.sleep(1)
 
     assert len(events) == 1
     assert events[0].network_address == currency_network.address
+
+    greenlet.kill()
