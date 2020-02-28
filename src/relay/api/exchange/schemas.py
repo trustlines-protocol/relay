@@ -4,8 +4,6 @@ from ..fields import Address, BigInteger, HexBytes
 
 
 class SignatureSchema(Schema):
-    class Meta:
-        strict = True
 
     v = fields.Integer()
     r = HexBytes()
@@ -13,8 +11,6 @@ class SignatureSchema(Schema):
 
 
 class OrderSchema(Schema):
-    class Meta:
-        strict = True
 
     exchangeContractAddress = Address(attribute="exchange_address")
     maker = Address(attribute="maker_address")
