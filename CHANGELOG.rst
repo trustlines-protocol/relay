@@ -4,6 +4,10 @@ Change Log
 `unreleased`_
 -------------------------------
 
+`0.13.1`_ (2020-02-28)
+-------------------------------
+- Bugfix: Set delegate gas price also for identity deployments
+
 `0.13.0`_ (2020-02-27)
 -------------------------------
 - Improve performance of `/networks` endpoint
@@ -175,4 +179,5 @@ Change Log
 .. _0.12.0: https://github.com/trustlines-protocol/relay/compare/0.11.4...0.12.0
 .. _0.12.1: https://github.com/trustlines-protocol/relay/compare/0.12.0...0.12.1
 .. _0.13.0: https://github.com/trustlines-protocol/relay/compare/0.12.1...0.13.0
-.. _pending: https://github.com/trustlines-protocol/relay/compare/0.13.0...master
+.. _0.13.1: https://github.com/trustlines-protocol/relay/compare/0.13.0...0.13.1
+.. _pending: https://github.com/trustlines-protocol/relay/compare/0.13.1...master
