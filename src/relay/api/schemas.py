@@ -23,9 +23,6 @@ ZERO_ADDRESS = "0x" + "0" * 40
 
 
 class MetaTransactionSchema(Schema):
-    class Meta:
-        strict = True
-
     def _validate(self, data):
         value = data["value"]
         nonce = data["nonce"]
@@ -71,8 +68,6 @@ class MetaTransactionSchema(Schema):
 
 
 class MetaTransactionFeeSchema(Schema):
-    class Meta:
-        strict = True
 
     baseFee = BigInteger(required=True, attribute="base_fee")
     gasPrice = BigInteger(required=True, attribute="gas_price")
@@ -81,15 +76,11 @@ class MetaTransactionFeeSchema(Schema):
 
 
 class MetaTransactionStatusSchema(Schema):
-    class Meta:
-        strict = True
 
     status = MetaTransactionStatusField(required=True)
 
 
 class EventSchema(Schema):
-    class Meta:
-        strict = True
 
     timestamp = fields.Integer()
 
@@ -178,8 +169,6 @@ class AnyEventSchema(OneOfSchema):
 
 
 class AggregatedAccountSummarySchema(Schema):
-    class Meta:
-        strict = True
 
     leftGiven = BigInteger(attribute="creditline_left_given")
     leftReceived = BigInteger(attribute="creditline_left_received")
@@ -190,8 +179,6 @@ class AggregatedAccountSummarySchema(Schema):
 
 
 class TrustlineSchema(Schema):
-    class Meta:
-        strict = True
 
     leftGiven = BigInteger(attribute="creditline_left_given")
     leftReceived = BigInteger(attribute="creditline_left_received")
@@ -209,8 +196,6 @@ class TrustlineSchema(Schema):
 
 
 class TxInfosSchema(Schema):
-    class Meta:
-        strict = True
 
     balance = BigInteger()
     nonce = fields.Integer()
@@ -218,8 +203,6 @@ class TxInfosSchema(Schema):
 
 
 class IdentityInfosSchema(Schema):
-    class Meta:
-        strict = True
 
     balance = BigInteger()
     nextNonce = fields.Integer()
@@ -227,8 +210,6 @@ class IdentityInfosSchema(Schema):
 
 
 class CurrencyNetworkSchema(Schema):
-    class Meta:
-        strict = True
 
     abbreviation = fields.Str(attribute="symbol")
     name = fields.Str()
@@ -243,9 +224,6 @@ class CurrencyNetworkSchema(Schema):
 
 
 class PaymentPathSchema(Schema):
-    class Meta:
-        strict = True
-
     @post_load
     def make_payment_path(self, data, partial, many):
         return PaymentPath(**data)
@@ -257,8 +235,6 @@ class PaymentPathSchema(Schema):
 
 
 class AccruedInterestSchema(Schema):
-    class Meta:
-        strict = True
 
     value = BigInteger()
     interestRate = fields.Int(attribute="interest_rate")
@@ -266,8 +242,6 @@ class AccruedInterestSchema(Schema):
 
 
 class AccruedInterestListSchema(Schema):
-    class Meta:
-        strict = True
 
     accruedInterests = fields.Nested(AccruedInterestSchema, many=True)
     user = Address()

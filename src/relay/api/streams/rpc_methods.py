@@ -11,8 +11,6 @@ from .rpc_protocol import check_args
 
 
 class SubscribeSchema(Schema):
-    class Meta:
-        strict = True
 
     event = fields.String(required=True)
     user = Address(required=True)
@@ -28,8 +26,6 @@ def subscribe(trustlines: TrustlinesRelay, client: Client, event: str, user: str
 
 
 class MessagingSchema(Schema):
-    class Meta:
-        strict = True
 
     type = fields.String(required=True)
     user = Address(required=True)
