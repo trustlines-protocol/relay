@@ -1,7 +1,6 @@
 """provide access to the ethindex database"""
 
 import collections
-import itertools
 import logging
 from typing import Any, Dict, List
 
@@ -15,7 +14,6 @@ from relay.blockchain import (
     unw_eth_events,
 )
 from relay.blockchain.events import BlockchainEvent, TLNetworkEvent
-from relay.blockchain.proxy import sorted_events
 
 # proxy.get_all_events just asks for these network events. so we need the list
 # here.
@@ -38,12 +36,15 @@ class EventBuilder:
     pretty much the same logic like relay.blockchain.Proxy (or its
     subclasses). The handling for timestamps is different. We also don't ask
     web3 for the currentBlock. It's passed in from the caller.
-
-    So, this could be merged with the implementation in Proxy.
+    contract_types is a mapping from contract_address to type of the contract
+    to resolve naming collisions of events when used with different contract types.
     """
 
-    def __init__(self, _event_builders: Dict[str, Any]) -> None:
+    def __init__(
+        self, _event_builders: Dict[str, Any], contract_types: Dict[str, str] = None
+    ) -> None:
         self.event_builders = _event_builders
+        self.contract_types = contract_types
 
     def build_events(
         self, events: List[Any], current_blocknumber: int
@@ -57,7 +58,14 @@ class EventBuilder:
     def _build_event(self, event: Any, current_blocknumber: int) -> BlockchainEvent:
         event_type: str = event.get("event")
         timestamp: int = event.get("timestamp")
-        return self.event_builders[event_type](event, current_blocknumber, timestamp)
+        if self.contract_types is not None:
+            address: str = event.get("address")
+            contract_type = self.contract_types[address]
+        else:
+            contract_type = ""
+        return self.event_builders[contract_type + event_type](
+            event, current_blocknumber, timestamp
+        )
 
 
 # we need to 'select * from events' all the time, but we're using lower-case
@@ -93,13 +101,20 @@ class EthindexDB:
     """
 
     def __init__(
-        self, conn, standard_event_types, event_builders, from_to_types, address=None
+        self,
+        conn,
+        standard_event_types,
+        event_builders,
+        from_to_types,
+        address=None,
+        contract_types=None,
     ):
         self.conn = conn
         self.default_address = address
         self.standard_event_types = standard_event_types
-        self.event_builder = EventBuilder(event_builders)
+        self.event_builder = EventBuilder(event_builders, contract_types=contract_types)
         self.from_to_types = from_to_types
+        self.contract_types = contract_types
 
     @property
     def event_types(self):
@@ -337,27 +352,63 @@ class EthindexDB:
 
     def get_all_contract_events(
         self,
-        event_types: List[str],
+        event_types: List[str] = None,
         user_address: str = None,
         from_block: int = 0,
         timeout: float = None,
         contract_address: str = None,
     ) -> List[BlockchainEvent]:
-        # XXX The following code should be replaced with a proper SQL query.
-        # The reason it isn't already a SQL query, is that we need to
-        # dynamically create that query.
-        contract_address = self._get_addr(contract_address)
-        results = [
-            self.get_user_events(
-                event_type,
-                user_address=user_address,
-                from_block=from_block,
-                timeout=timeout,
-                contract_address=contract_address,
+        # This function only works properly for many contracts if self.contract_types is properly set
+        # TODO Refactor and move somewhere else
+        contract_address = contract_address or self.default_address
+
+        event_types = self._get_standard_event_types(event_types)
+        query_string = "blockNumber>=%s "
+        args: List[Any] = [from_block]
+
+        if event_types:
+            query_string += "AND eventName in %s "
+            args.append(tuple(event_types))
+
+        if contract_address:
+            query_string += "AND address=%s "
+            args.append(contract_address)
+        else:
+            query_string += "AND address in %s "
+            args.append(tuple(self.contract_types))
+
+        if user_address:
+            all_user_types = set()
+            for user_types in self.from_to_types.values():
+                for user_type in user_types:
+                    all_user_types.add(user_type)
+            user_where = " or ".join(
+                f"args->>'{user_type}'=%s" for user_type in all_user_types
             )
-            for event_type in event_types
-        ]
-        return sorted_events(list(itertools.chain.from_iterable(results)))
+            query_string += f"AND ({user_where})"
+            for _ in range(len(all_user_types)):
+                args.append(user_address)
+
+        query = EventsQuery(query_string, args)
+
+        events = self._run_events_query(query)
+
+        logger.debug(
+            "get_all_contract_events(%s, %s, %s, %s, %s) -> %s rows",
+            event_types,
+            user_address,
+            from_block,
+            timeout,
+            contract_address,
+            len(events),
+        )
+
+        for event in events:
+            if isinstance(event, TLNetworkEvent):
+                event.user = user_address
+            else:
+                raise ValueError("Expected a TLNetworkEvent")
+        return events
 
     def get_events(
         self,

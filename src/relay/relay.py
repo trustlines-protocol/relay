@@ -76,6 +76,35 @@ class NetworkInfo(NamedTuple):
     is_frozen: bool
 
 
+CURRENCY_CONTRACT_TYPE = "C"
+EXCHANGE_CONTRACT_TYPE = "E"
+TOKEN_CONTRACT_TYPE = "T"
+UNWETH_CONTRACT_TYPE = "U"
+
+all_standard_event_types = (
+    currency_network_events.standard_event_types
+    + exchange_events.standard_event_types
+    + unw_eth_events.standard_event_types
+    + token_events.standard_event_types
+)
+all_event_builders: Dict[str, BlockchainEvent] = {}
+all_from_to_types: Dict[str, List[str]] = {}
+for contract_type, contract in [
+    (CURRENCY_CONTRACT_TYPE, currency_network_events),
+    (EXCHANGE_CONTRACT_TYPE, exchange_events),
+    (UNWETH_CONTRACT_TYPE, unw_eth_events),
+    (TOKEN_CONTRACT_TYPE, token_events),
+]:
+    for key, value in contract.event_builders.items():  # type: ignore
+        key = contract_type + key
+        assert key not in all_event_builders
+        all_event_builders[key] = value
+    for key, value in contract.from_to_types.items():  # type: ignore
+        key = contract_type + key
+        assert key not in all_from_to_types
+        all_from_to_types[key] = value
+
+
 class TrustlinesRelay:
     def __init__(self, config, addresses_json_path="addresses.json"):
         self.config = config
@@ -520,20 +549,35 @@ class TrustlinesRelay:
         timeout: float = None,
     ) -> List[BlockchainEvent]:
         assert is_checksum_address(user_address)
-        network_event_queries = self._get_network_event_queries(
-            user_address, type, from_block
+        event_types: Optional[List[str]]
+        if type:
+            event_types = [type]
+        else:
+            event_types = None
+
+        contract_types: Dict[str, str] = {}
+        for address in self.network_addresses:
+            contract_types[address] = CURRENCY_CONTRACT_TYPE
+        for address in self.exchange_addresses:
+            contract_types[address] = EXCHANGE_CONTRACT_TYPE
+        for address in self.token_addresses:
+            contract_types[address] = TOKEN_CONTRACT_TYPE
+        for address in self.unw_eth_addresses:
+            contract_types[address] = UNWETH_CONTRACT_TYPE
+
+        ethindex = ethindex_db.EthindexDB(
+            ethindex_db.connect(""),
+            standard_event_types=all_standard_event_types,
+            event_builders=all_event_builders,
+            from_to_types=all_from_to_types,
+            contract_types=contract_types,
         )
-        unw_eth_event_queries = self._get_unw_eth_event_queries(
-            user_address, type, from_block
-        )
-        exchange_event_queries = self._get_exchange_event_queries(
-            user_address, type, from_block
-        )
-        results = concurrency_utils.joinall(
-            network_event_queries + unw_eth_event_queries + exchange_event_queries,
+        return ethindex.get_all_contract_events(
+            event_types,
+            user_address=user_address,
+            from_block=from_block,
             timeout=timeout,
         )
-        return sorted_events(list(itertools.chain.from_iterable(results)))
 
     def _get_network_event_queries(
         self, user_address: str, type: str = None, from_block: int = 0

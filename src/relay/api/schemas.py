@@ -6,6 +6,7 @@ from tldeploy.identity import MetaTransaction
 
 from relay.blockchain.currency_network_events import CurrencyNetworkEvent
 from relay.blockchain.exchange_events import ExchangeEvent
+from relay.blockchain.token_events import TokenEvent
 from relay.blockchain.unw_eth_events import UnwEthEvent
 from relay.network_graph.payment_path import PaymentPath
 
@@ -154,6 +155,7 @@ class AnyEventSchema(OneOfSchema):
         "CurrencyNetworkEvent": UserCurrencyNetworkEventSchema,
         "UnwEthEvent": UserTokenEventSchema,
         "ExchangeEvent": ExchangeEventSchema,
+        "TokenEventSchema": UserTokenEventSchema,
     }
 
     # To not override the 'type' field
@@ -166,6 +168,9 @@ class AnyEventSchema(OneOfSchema):
             return "UnwEthEvent"
         elif isinstance(obj, ExchangeEvent):
             return "ExchangeEvent"
+        elif isinstance(obj, TokenEvent):
+            return "TokenEventSchema"
+
         raise RuntimeError(f"Unknown object type: {obj.__class__.__name__}")
 
     def _dump(self, obj, *, update_fields=True, **kwargs):
