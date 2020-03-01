@@ -6,8 +6,10 @@ import pytest
 from hexbytes import HexBytes
 from marshmallow import ValidationError
 from tldeploy import identity
+from web3.datastructures import AttributeDict
 
 from relay.api import schemas
+from relay.blockchain.currency_network_events import TransferEvent
 from relay.network_graph.payment_path import FeePayer, PaymentPath
 
 a_valid_meta_transaction = identity.MetaTransaction(
@@ -23,6 +25,31 @@ a_valid_meta_transaction = identity.MetaTransaction(
         "6d2fe56ef6648cb3f0398966ad3b05d891cde786d8074bdac15bcb92ebfa722248"
         "9b8eb6ed87165feeede19b031bb69e12036a5fa13b3a46ad0c2c19d051ea9101"
     ),
+)
+
+
+web3_transfer_event = AttributeDict(
+    {
+        "args": AttributeDict(
+            {
+                "_from": "0xF2E246BB76DF876Cef8b38ae84130F4F55De395b",
+                "_to": "0x51a240271AB8AB9f9a21C82d9a85396b704E164d",
+                "_value": 10,
+                "_extraData": HexBytes("0x"),
+            }
+        ),
+        "event": "Transfer",
+        "logIndex": 0,
+        "transactionIndex": 0,
+        "transactionHash": HexBytes(
+            "0xfb95ccb6ab39e19821fb339dee33e7afe2545527725b61c64490a5613f8d11fa"
+        ),
+        "address": "0xF2E246BB76DF876Cef8b38ae84130F4F55De395b",
+        "blockHash": HexBytes(
+            "0xd74c3e8bdb19337987b987aee0fa48ed43f8f2318edfc84e3a8643e009592a68"
+        ),
+        "blockNumber": 3,
+    }
 )
 
 
@@ -115,3 +142,14 @@ def test_payment_path_roundtrip(payment_path):
     print("LOADED", loaded)
 
     assert loaded == payment_path
+
+
+def test_no_class_type_in_event():
+    event = TransferEvent(web3_transfer_event, 10, 1000)
+
+    dumped = schemas.AnyEventSchema().dump(event)
+
+    assert dumped.get(schemas.AnyEventSchema.type_field) is None
+    assert dumped["amount"] == str(event.value)
+    assert dumped["from"] == event.from_
+    assert dumped["extraData"] == event.extra_data.hex()
