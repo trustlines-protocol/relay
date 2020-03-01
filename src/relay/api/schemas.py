@@ -149,12 +149,14 @@ class UserExchangeEventSchema(ExchangeEventSchema):
 
 
 class AnyEventSchema(OneOfSchema):
+
     type_schemas = {
         "CurrencyNetworkEvent": UserCurrencyNetworkEventSchema,
         "UnwEthEvent": UserTokenEventSchema,
         "ExchangeEvent": ExchangeEventSchema,
     }
 
+    # To not override the 'type' field
     type_field = "__class__"
 
     def get_obj_type(self, obj):
@@ -164,8 +166,13 @@ class AnyEventSchema(OneOfSchema):
             return "UnwEthEvent"
         elif isinstance(obj, ExchangeEvent):
             return "ExchangeEvent"
-
         raise RuntimeError(f"Unknown object type: {obj.__class__.__name__}")
+
+    def _dump(self, obj, *, update_fields=True, **kwargs):
+        # Remove the type_field again. Sadly post hooks and exclude of marshmallow do not work
+        result = super()._dump(obj, update_fields=update_fields, **kwargs)
+        del result[self.type_field]
+        return result
 
 
 class AggregatedAccountSummarySchema(Schema):
