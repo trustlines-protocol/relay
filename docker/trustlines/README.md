@@ -48,8 +48,8 @@ deploy your own currency networks, please adapt `addresses.json` accordingly.
 Let's first build and fetch all of the images that we will need
 without starting any services with the following command:
 
-```
-docker-compose up --no-start
+```sh
+$ docker-compose up --no-start
 ```
 
 ### Generate keys
@@ -61,8 +61,8 @@ method.
 Please generate a keystore file by running the following command. It
 will ask for a password.
 
-```
-docker run --rm -it -v $(pwd):/here --entrypoint /opt/relay/bin/deploy-tools trustlines/relay generate-keystore --keystore-path /here/keystore.json
+```sh
+$ docker run --rm -it -v $(pwd):/here --entrypoint /opt/relay/bin/deploy-tools trustlines/relay generate-keystore --keystore-path /here/keystore.json
 ```
 
 We also need to store the password in clear text. Please create a file
@@ -80,8 +80,8 @@ service.
 
 Please copy them to the current directory with:
 
-```
-docker-compose run --rm --no-deps -v $(pwd):/here --entrypoint /bin/bash relay -c "cp /opt/relay/trustlines-contracts/build/contracts.json /here"
+```sh
+$ docker-compose run --rm --no-deps -v $(pwd):/here --entrypoint /bin/bash relay -c "cp /opt/relay/trustlines-contracts/build/contracts.json /here"
 ```
 
 Checkout [this documentation](../../docs/RelayAPI.md#get-contract-abis) to see
@@ -92,11 +92,11 @@ alternative approaches how to retrieve the compiled contracts file.
 We need to setup the database and import the ABIs for the index
 service by running the following commands:
 
-```
-docker-compose up -d db
-sleep 2
-docker-compose run --rm index createtables
-docker-compose run --rm index importabi
+```sh
+$ docker-compose up -d db
+$ sleep 2
+$ docker-compose run --rm index createtables
+$ docker-compose run --rm index importabi
 ```
 
 After that you can start the system with `docker-compose up -d`,
@@ -110,8 +110,9 @@ to connect to the local node via metamask to do that.
 ### Test the installation
 
 Please try to run the following command:
-```
-curl http://localhost:5000/api/v1/networks
+
+```sh
+$ curl http://localhost:5000/api/v1/networks
 ```
 
 It should print some information about the networks as JSON.
