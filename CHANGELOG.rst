@@ -4,13 +4,24 @@ Change Log
 `unreleased`_
 -------------------------------
 
+`0.14.0`_ (2020-03-02)
+-------------------------------
+- Add endpoint to ask for transaction status
+- Add endpoint to ask for meta-transaction status
+- Improve performance of log listener by reducing the number of registered log listeners in the blockchain node.
+  This should reduce cpu usage of the relay.
+- Improve performance of user-events endpoint (:code:`users/<>/events`). THis should reduce the number of connections to the
+  sql db and improve the response time.
+- Remove :code:`__class__` field in events. This field was not meant to be there.
+
+
 `0.13.1`_ (2020-02-28)
 -------------------------------
 - Bugfix: Set delegate gas price also for identity deployments
 
 `0.13.0`_ (2020-02-27)
 -------------------------------
-- Improve performance of `/networks` endpoint
+- Improve performance of :code:`/networks` endpoint
 - Allow delegate to set a gas price strategy in config. Supported are rpc (ask node via rpc), fixed (use a fixed gas price and bound (ask node, but set min/max limits)
 - Allow to set connection method to node in config. Websockets and IPC were added to the already supported http method
 - Docker: Expose relay default rest port
@@ -180,4 +191,5 @@ Change Log
 .. _0.12.1: https://github.com/trustlines-protocol/relay/compare/0.12.0...0.12.1
 .. _0.13.0: https://github.com/trustlines-protocol/relay/compare/0.12.1...0.13.0
 .. _0.13.1: https://github.com/trustlines-protocol/relay/compare/0.13.0...0.13.1
-.. _pending: https://github.com/trustlines-protocol/relay/compare/0.13.1...master
+.. _0.14.0: https://github.com/trustlines-protocol/relay/compare/0.13.1...0.14.0
+.. _unreleased: https://github.com/trustlines-protocol/relay/compare/0.14.0...master
