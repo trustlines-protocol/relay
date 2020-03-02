@@ -45,6 +45,7 @@ https://relay0.testnet.trustlines.network/api/v1
 - [Latest block number](#latest-block-number)
 - [Relay transaction](#relay-transaction)
 - [Relay meta transaction](#relay-meta-transaction)
+- [Status of transaction](#status-of-transaction)
 - [Fees for meta transaction](#fees-for-meta-transaction)
 - [Status of meta transaction](#status-of-meta-transaction)
 - [Deploy identity contract](#deploy-identity-contract)
