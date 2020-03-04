@@ -184,7 +184,7 @@ jobs:
           command: |
             echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USER" --password-stdin
       - run:
-          name: Upload tagged release
+          name: Upload tagged version
           command: |
             version=$(docker run --rm $LOCAL_IMAGE --version | tr '+' '_')
             echo "Tagging with $version"
@@ -195,6 +195,32 @@ jobs:
           command: |
             docker tag $LOCAL_IMAGE $DOCKER_REPO:latest
             docker push $DOCKER_REPO:latest
+
+  deploy-docker-image-release:
+    executor: ubuntu-builder
+    environment:
+      DOCKER_REPO: trustlines/relay
+      LOCAL_IMAGE: relay
+    working_directory: ~/repo
+    steps:
+      - setup_remote_docker
+      - attach_workspace:
+          at: "~"
+      - run:
+          name: Load docker image
+          command: |
+            docker load --input ~/images/$LOCAL_IMAGE.tar
+      - run:
+          name: Login to dockerhub
+          command: |
+            echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USER" --password-stdin
+      - run:
+          name: Upload tagged release
+          command: |
+            version=$(docker run --rm $LOCAL_IMAGE --version | tr '+' '_')
+            echo "Tagging version $version as release"
+            docker tag $LOCAL_IMAGE $DOCKER_REPO:release
+            docker push $DOCKER_REPO:release
 
   run-end2end-tests:
     executor: ubuntu-builder
@@ -340,6 +366,21 @@ workflows:
             <<: *tagged-filter
             branches:
               only: master
+          requires:
+            - run-flake8
+            - run-black
+            - pre-commit-checks
+            - run-pytest
+            - run-mypy
+            - install
+            - build-docker-image
+          context: docker-credentials
+
+      - deploy-docker-image-release:
+          filters:
+            <<: *tagged-filter
+            branches:
+              ignore: /.*/
           requires:
             - run-flake8
             - run-black
