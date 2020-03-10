@@ -18,6 +18,7 @@ from .fields import (
     HexEncodedBytes,
     MetaTransactionStatusField,
     OperationTypeField,
+    TransactionStatusField,
 )
 
 ZERO_ADDRESS = "0x" + "0" * 40
@@ -81,8 +82,9 @@ class MetaTransactionStatusSchema(Schema):
     status = MetaTransactionStatusField(required=True)
 
 
-class TransactionStatusSchema(MetaTransactionStatusSchema):
-    pass
+class TransactionStatusSchema(Schema):
+
+    status = TransactionStatusField(required=True)
 
 
 class EventSchema(Schema):

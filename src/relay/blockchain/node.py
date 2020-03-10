@@ -1,8 +1,8 @@
 import logging
 import os
 from collections import namedtuple
+from enum import Enum
 
-from tldeploy.identity import MetaTransactionStatus
 from web3.exceptions import TransactionNotFound
 
 from relay.concurrency_utils import synchronized
@@ -13,7 +13,11 @@ TxInfos = namedtuple("TxInfos", "balance, nonce, gas_price")
 logger = logging.getLogger("node")
 
 
-TransactionStatus = MetaTransactionStatus
+class TransactionStatus(Enum):
+    SUCCESS = "success"
+    FAILURE = "failure"
+    PENDING = "pending"
+    NOT_FOUND = "not found"
 
 
 class Node:

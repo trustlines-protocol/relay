@@ -163,7 +163,9 @@ def ApiApp(trustlines, *, enabled_apis):
 
     if ApiType.RELAY in enabled_apis:
         add_resource(Relay, "/relay")
-        add_resource(TransactionStatus, "transactions/<string:transaction_hash>/status")
+        add_resource(
+            TransactionStatus, "/transactions/<string:transaction_hash>/status"
+        )
 
     if ApiType.DELEGATE in enabled_apis:
         add_resource(RelayMetaTransaction, "/relay-meta-transaction")
