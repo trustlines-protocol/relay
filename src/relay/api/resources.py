@@ -478,11 +478,7 @@ class TransactionStatus(Resource):
 
     @dump_result_with_schema(TransactionStatusSchema())
     def get(self, transaction_hash):
-        return {
-            "status": self.trustlines.node.get_transaction_status(
-                transaction_hash
-            ).value
-        }
+        return {"status": self.trustlines.node.get_transaction_status(transaction_hash)}
 
 
 class RelayMetaTransaction(Resource):
