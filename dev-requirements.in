@@ -1,0 +1,15 @@
+-c constraints.in
+-c requirements.txt
+pip
+setuptools
+wheel
+pip-tools
+black
+flake8
+flake8-string-format
+pytest
+pytest-cov
+mypy
+contract-deploy-tools>=0.7.1
+tox
+pre-commit

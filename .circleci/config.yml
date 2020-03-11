@@ -21,7 +21,7 @@ commands:
           name: Create python venv
           command: |
             python3 -m venv venv
-            venv/bin/pip install -c constraints.txt pip wheel setuptools
+            venv/bin/pip install -c dev-requirements.txt pip wheel setuptools
 
   config-path:
     description: "set environment variables and change PATH"
@@ -38,24 +38,28 @@ jobs:
       - checkout
       - config-path
       - restore_cache:
-          key: venv-{{ checksum "constraints.txt" }}-{{ checksum "requirements.txt" }}
+          key: venv-{{ checksum "dev-requirements.txt" }}-{{ checksum "requirements.txt" }}
       - create-venv
-      - run:
-          name: Install codecov
-          command: |
-            pip install -c constraints.txt codecov
       - run:
           name: Install requirements
           command: |
-            pip install -c constraints.txt -r requirements.txt
+            pip install -r requirements.txt
+      - run:
+          name: Install dev-requirements
+          command: |
+            pip install -r dev-requirements.txt
+      - run:
+          name: Install codecov
+          command: |
+            pip install codecov==2.0.16
       - save_cache:
-          key: venv-{{ checksum "constraints.txt" }}-{{ checksum "requirements.txt" }}
+          key: venv-{{ checksum "dev-requirements.txt" }}-{{ checksum "requirements.txt" }}
           paths:
             - venv
       - run:
           name: Install package
           command: |
-            pip install -c constraints.txt -e .
+            pip install -e .
       - run:
           name: Verify installed packages have compatible dependencies
           command: |
@@ -259,11 +263,11 @@ jobs:
           name: Create python virtualenv
           command: |
             python3 -m venv venv
-            pip install -c constraints.txt pip wheel setuptools
+            pip install -c dev-requirements.txt pip wheel setuptools
       - run:
           name: Install pre-commit
           command: |
-            pip install -c constraints.txt pre-commit
+            pip install -c dev-requirements.txt pre-commit
       - run:
           name: Check for large files
           command: |

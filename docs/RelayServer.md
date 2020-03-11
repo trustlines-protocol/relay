@@ -162,7 +162,7 @@ Clone the git repository and install it:
 cd ~
 git clone https://github.com/trustlines-protocol/relay
 cd ~/relay
-pip install -c constraints.txt .
+pip install -r requirements.txt .
 ```
 
 #### Running the relay server

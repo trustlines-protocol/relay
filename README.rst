@@ -47,8 +47,7 @@ fresh virtualenv::
 
     git clone https://github.com/trustlines-protocol/relay.git
     cd relay
-    pip install -c constraints.txt -r requirements.txt
-    pip install -c constraints.txt -e .
+    pip install -r dev-requirements.txt -r requirements.txt -e .
 
 If you plan to make changes to the source code and open pull requests
 on github, please consider initializing the pre-commit hooks. The

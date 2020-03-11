@@ -19,18 +19,15 @@ RUN apt-get update \
 RUN python3 -m venv /opt/relay
 
 WORKDIR /relay
-COPY ./constraints.txt /relay/constraints.txt
-RUN /opt/relay/bin/pip install --disable-pip-version-check -c constraints.txt pip wheel setuptools
+COPY ./dev-requirements.txt /relay/dev-requirements.txt
+RUN /opt/relay/bin/pip install --disable-pip-version-check -c dev-requirements.txt pip wheel setuptools
 COPY ./requirements.txt /relay/requirements.txt
 
-# remove development dependencies from the end of the file
-RUN sed -i -e '/development dependencies/q' requirements.txt
-
-RUN /opt/relay/bin/pip install --disable-pip-version-check -c constraints.txt -r requirements.txt
+RUN /opt/relay/bin/pip install --disable-pip-version-check -r requirements.txt
 
 COPY . /relay
 
-RUN /opt/relay/bin/pip install --disable-pip-version-check -c constraints.txt .
+RUN /opt/relay/bin/pip install --disable-pip-version-check .
 
 FROM ubuntu:18.04 as runner
 ENV LANG C.UTF-8
