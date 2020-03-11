@@ -102,8 +102,7 @@ class Delegate:
 
     def validate_meta_transaction_fees(self, meta_transaction: MetaTransaction):
         fees_estimations = self._calculate_fees_for_meta_transaction(meta_transaction)
-        if not fees_estimations:
-            return
+
         for fees_estimation in fees_estimations:
             if fees_estimation.base_fee == 0 and fees_estimation.gas_price == 0:
                 return
