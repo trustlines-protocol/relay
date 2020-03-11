@@ -86,7 +86,8 @@ def handle_meta_transaction_exceptions(function_to_call):
         except InvalidDelegationFeesException:
             abort(
                 400,
-                f"Invalid delegation fees: fees too low or not supported currency network of fees",
+                f"Invalid delegation fees: fees too low, not supported currency network of fees, "
+                f"or invalid fee recipient",
             )
         except InvalidTimeLimit:
             abort(400, f"Invalid time limit for meta-tx: {meta_transaction.time_limit}")
