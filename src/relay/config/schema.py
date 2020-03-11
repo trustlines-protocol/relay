@@ -26,7 +26,23 @@ class FeeSettingsSchema(Schema):
     base_fee = fields.Integer(missing=0)
     gas_price = fields.Integer(missing=0)
     fee_recipient = AddressField()
-    currency_network = AddressField(required=True)
+    currency_network = AddressField(missing=None)
+
+    @validates_schema
+    def validate_currency_network(self, in_data, **kwargs):
+        base_fee = in_data["base_fee"]
+        gas_price = in_data["gas_price"]
+        currency_network = in_data["currency_network"]
+        if base_fee != 0 or gas_price != 0:
+            if not currency_network:
+                raise ValidationError(
+                    "A currency network has to be set for delegation fees when fees are not zero"
+                )
+        elif base_fee == 0 and gas_price == 0:
+            if currency_network:
+                raise ValidationError(
+                    "When delegation fees are set to 0, no currency network should be set"
+                )
 
 
 class GasPriceComputationSchema(Schema):

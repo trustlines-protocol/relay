@@ -43,6 +43,8 @@ enable = true
 [delegate]
 enable = true
 enable_deploy_identity = true
+## The list of accepted fees for delegating a meta-tx
+## example for accepting 0 fees: [{'base_fee'=0, 'gas_price'=0}] other keys are 'currency_network' and 'fee_recipient'
 fees = []
 ## Set the maximum allowed gas usage per delegated meta transaction
 max_gas_limit = 1_000_000
