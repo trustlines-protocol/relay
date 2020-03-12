@@ -815,9 +815,7 @@ class CurrencyNetworkGraph(object):
                 cost_accumulator=cost_accumulator,
             )
             path = [source] + path + [source]
-            cost_accumulator.ignore = (
-                None
-            )  # hackish, but otherwise the following compute_cost_for_path won't work
+            cost_accumulator.ignore = None  # hackish, but otherwise the following compute_cost_for_path won't work
             cost_accumulator.max_hops = (
                 math.inf
             )  # don't check max_hops, we know we're below

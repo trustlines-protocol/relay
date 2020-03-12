@@ -175,7 +175,7 @@ def test_update_balance(community_with_trustlines):
 
 
 def test_close_trustline_no_cost_exact_amount(
-    complex_community_with_trustlines_and_fees
+    complex_community_with_trustlines_and_fees,
 ):
     """A owes money to B and A wants to reduce that amount with the help of C"""
     complex_community_with_trustlines_and_fees.update_balance(
@@ -194,7 +194,7 @@ def test_close_trustline_no_cost_exact_amount(
 
 
 def test_close_trustline_not_enough_capacity(
-    complex_community_with_trustlines_and_fees
+    complex_community_with_trustlines_and_fees,
 ):
     """A owes money to B and A wants to reduce that amount with the help of C"""
     complex_community_with_trustlines_and_fees.update_balance(
@@ -213,7 +213,7 @@ def test_close_trustline_not_enough_capacity(
 
 
 def test_close_trustline_first_edge_insufficient_capacity(
-    complex_community_with_trustlines_and_fees
+    complex_community_with_trustlines_and_fees,
 ):
     """A owes money to B and A wants to reduce that amount with the help of C"""
     complex_community_with_trustlines_and_fees.update_balance(
@@ -230,7 +230,7 @@ def test_close_trustline_first_edge_insufficient_capacity(
 
 
 def test_close_trustline_last_edge_insufficient_capacity(
-    complex_community_with_trustlines_and_fees
+    complex_community_with_trustlines_and_fees,
 ):
     """A owes money to B and A wants to reduce that amount with the help of C"""
     complex_community_with_trustlines_and_fees.update_balance(
@@ -267,7 +267,10 @@ def test_capacity_is_maximum(
     destination,
 ):
     """Tests for some testdata that the maximum sendable amount is indeed the maximum """
-    sendable, max_path = complex_community_with_trustlines_and_fees_configurable_balances.find_maximum_capacity_path(
+    (
+        sendable,
+        max_path,
+    ) = complex_community_with_trustlines_and_fees_configurable_balances.find_maximum_capacity_path(
         source, destination
     )
     assert_maximum_path(
@@ -317,7 +320,7 @@ def test_capacity_path_multi_hops_negative_balance(complex_community_with_trustl
 
 
 def test_capacity_path_multi_hops_negative_balance_lowers_capacity(
-    complex_community_with_trustlines
+    complex_community_with_trustlines,
 ):
     """Tests whether lowering the balance lowers the capacity"""
     complex_community_with_trustlines.update_balance(A, C, -20000)
@@ -346,7 +349,10 @@ def test_capacity_path_single_hop_with_fees(complex_community_with_trustlines_an
     source = A
     destination = B
 
-    sendable, max_path = complex_community_with_trustlines_and_fees.find_maximum_capacity_path(
+    (
+        sendable,
+        max_path,
+    ) = complex_community_with_trustlines_and_fees.find_maximum_capacity_path(
         source, destination
     )
     assert max_path == [A, B]
@@ -358,7 +364,10 @@ def test_capacity_path_multi_hop_with_fees(complex_community_with_trustlines_and
     source = A
     destination = E
 
-    sendable, max_path = complex_community_with_trustlines_and_fees.find_maximum_capacity_path(
+    (
+        sendable,
+        max_path,
+    ) = complex_community_with_trustlines_and_fees.find_maximum_capacity_path(
         source, destination
     )
     assert max_path == [A, B, D, E]
@@ -366,7 +375,7 @@ def test_capacity_path_multi_hop_with_fees(complex_community_with_trustlines_and
 
 
 def test_capacity_path_multi_hop_with_fees_one_hop_no_fee(
-    complex_community_with_trustlines_and_fees
+    complex_community_with_trustlines_and_fees,
 ):
     """Test for getting the capacity if one of the hops has no fees"""
     complex_community_with_trustlines_and_fees.update_balance(
@@ -376,7 +385,10 @@ def test_capacity_path_multi_hop_with_fees_one_hop_no_fee(
     source = A
     destination = E
 
-    sendable, max_path = complex_community_with_trustlines_and_fees.find_maximum_capacity_path(
+    (
+        sendable,
+        max_path,
+    ) = complex_community_with_trustlines_and_fees.find_maximum_capacity_path(
         source, destination
     )
     assert max_path == [A, B, D, E]
@@ -384,7 +396,7 @@ def test_capacity_path_multi_hop_with_fees_one_hop_no_fee(
 
 
 def test_max_capacity_estimation_no_fees_on_one_path(
-    complex_community_with_trustlines_and_fees
+    complex_community_with_trustlines_and_fees,
 ):
     """Test that it does not return the wrong path only because the total capacity is bigger but
     it is not accounted for the fees"""
@@ -398,7 +410,10 @@ def test_max_capacity_estimation_no_fees_on_one_path(
     source = A
     destination = D
 
-    sendable, max_path = complex_community_with_trustlines_and_fees.find_maximum_capacity_path(
+    (
+        sendable,
+        max_path,
+    ) = complex_community_with_trustlines_and_fees.find_maximum_capacity_path(
         source, destination
     )
 
@@ -408,7 +423,7 @@ def test_max_capacity_estimation_no_fees_on_one_path(
 
 
 def test_max_capacity_estimation_different_length_paths(
-    community_with_trustlines_and_fees
+    community_with_trustlines_and_fees,
 ):
     """Test that a longer path is not chosen because the fees along the path make it too expensive"""
     community_with_trustlines_and_fees.update_trustline(A, E, 149, 149)
@@ -425,7 +440,7 @@ def test_max_capacity_estimation_different_length_paths(
 
 
 def test_capacity_path_single_hop_reducing_imbalance(
-    complex_community_with_trustlines_and_fees
+    complex_community_with_trustlines_and_fees,
 ):
     """Test whether a path with potential reduction of imbalance will show to provide more capacity and less fees
     this exposes the bug detailed in https://github.com/trustlines-protocol/mobileapp/issues/296"""
@@ -434,7 +449,10 @@ def test_capacity_path_single_hop_reducing_imbalance(
     source = A
     destination = B
 
-    sendable, max_path = complex_community_with_trustlines_and_fees.find_maximum_capacity_path(
+    (
+        sendable,
+        max_path,
+    ) = complex_community_with_trustlines_and_fees.find_maximum_capacity_path(
         source, destination
     )
 
@@ -442,7 +460,7 @@ def test_capacity_path_single_hop_reducing_imbalance(
 
 
 def test_max_capacity_estimation_long_path(
-    complex_community_with_trustlines_and_fees_10
+    complex_community_with_trustlines_and_fees_10,
 ):
     """Tests whether the estimation of the capacity still work for a long path with minimal capacity in middle"""
     complex_community_with_trustlines_and_fees_10.update_balance(A, C, -50000)
@@ -457,7 +475,10 @@ def test_max_capacity_estimation_long_path(
     source = A
     destination = H
 
-    sendable, max_path = complex_community_with_trustlines_and_fees_10.find_maximum_capacity_path(
+    (
+        sendable,
+        max_path,
+    ) = complex_community_with_trustlines_and_fees_10.find_maximum_capacity_path(
         source, destination
     )
 
@@ -468,7 +489,7 @@ def test_max_capacity_estimation_long_path(
 
 
 def test_max_capacity_estimation_long_path_offset_by_two(
-    complex_community_with_trustlines_and_fees_10
+    complex_community_with_trustlines_and_fees_10,
 ):
     """Tests whether the estimation of the capacity still work for a long path with minimal capacity in middle"""
     complex_community_with_trustlines_and_fees_10.update_balance(A, C, -50000)
@@ -483,7 +504,10 @@ def test_max_capacity_estimation_long_path_offset_by_two(
     source = A
     destination = H
 
-    sendable, max_path = complex_community_with_trustlines_and_fees_10.find_maximum_capacity_path(
+    (
+        sendable,
+        max_path,
+    ) = complex_community_with_trustlines_and_fees_10.find_maximum_capacity_path(
         source, destination
     )
     assert max_path == [A, B, D, E, F, G, H]
@@ -592,7 +616,10 @@ def test_valid_path_raises_no_value_error(complex_community_with_trustlines_and_
     complex_community_with_trustlines_and_fees.update_balance(C, D, 10000)
     complex_community_with_trustlines_and_fees.update_balance(D, E, 0)
     # should not raise ValueError
-    cost, path = complex_community_with_trustlines_and_fees.find_transfer_path_sender_pays_fees(
+    (
+        cost,
+        path,
+    ) = complex_community_with_trustlines_and_fees.find_transfer_path_sender_pays_fees(
         E, A, 10000
     )
 
@@ -881,7 +908,7 @@ def test_close_trustline_negative_balance(complex_community_with_trustlines_and_
 
 
 def test_close_trustline_with_cost_exact_amount(
-    complex_community_with_trustlines_and_fees
+    complex_community_with_trustlines_and_fees,
 ):
     """A owes money to B and A wants to close the trustline"""
     complex_community_with_trustlines_and_fees.update_balance(
@@ -921,7 +948,7 @@ def test_close_trustline_multi(complex_community_with_trustlines_and_fees):
 
 
 def test_update_to_closed_trustlines_remove_from_graph(
-    complex_community_with_trustlines_and_fees
+    complex_community_with_trustlines_and_fees,
 ):
     """Tests that an edge / node is removed from the graph
     when a trustline is estimated as closed after updating the credit limits"""
@@ -933,7 +960,7 @@ def test_update_to_closed_trustlines_remove_from_graph(
 
 
 def test_update_balance_to_closed_trustlines_remove_from_graph(
-    complex_community_with_trustlines_and_fees
+    complex_community_with_trustlines_and_fees,
 ):
     """Tests that an edge / node is removed from the graph
     when a trustline is estimated as closed after updating the balance"""
