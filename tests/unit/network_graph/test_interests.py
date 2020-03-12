@@ -121,7 +121,7 @@ def test_interests_calculation_negative_balance():
 
 
 def test_interests_calculation_from_A_balance_positive_relevant_interests(
-    basic_account
+    basic_account,
 ):
     basic_account.balance = 100  # B owes to A
     basic_account.interest_rate = 100  # interest given by A to B
@@ -129,7 +129,7 @@ def test_interests_calculation_from_A_balance_positive_relevant_interests(
 
 
 def test_interests_calculation_from_A_balance_negative_relevant_interests(
-    basic_account
+    basic_account,
 ):
     basic_account.balance = -100  # A owes to B
     basic_account.reverse_interest_rate = 100  # interest given by B to A
@@ -137,7 +137,7 @@ def test_interests_calculation_from_A_balance_negative_relevant_interests(
 
 
 def test_interests_calculation_from_A_balance_positive_irrelevant_interests(
-    basic_account
+    basic_account,
 ):
     basic_account.balance = 100  # B owes to A
     basic_account.reverse_interest_rate = 100  # interest given by B to A
@@ -145,7 +145,7 @@ def test_interests_calculation_from_A_balance_positive_irrelevant_interests(
 
 
 def test_interests_calculation_from_A_balance_negative_irrelevant_interests(
-    basic_account
+    basic_account,
 ):
     basic_account.balance = -100  # A owes to B
     basic_account.interest_rate = 100  # interest given by A to B
@@ -173,7 +173,7 @@ def test_interests_calculation_delta_time(basic_account):
     indirect=["configurable_community"],
 )
 def test_interests_path_from_A_balance_positive_relevant_interests(
-    configurable_community
+    configurable_community,
 ):
     # B owes to A
     # 1% interest given by A to B
@@ -197,7 +197,7 @@ def test_interests_path_from_A_balance_positive_relevant_interests(
     indirect=["configurable_community"],
 )
 def test_interests_path_from_A_balance_negative_relevant_interests(
-    configurable_community
+    configurable_community,
 ):
     # A owes to B
     # 1% interest given by B to A
@@ -221,7 +221,7 @@ def test_interests_path_from_A_balance_negative_relevant_interests(
     indirect=["configurable_community"],
 )
 def test_interests_path_from_A_balance_positive_irrelevant_interests(
-    configurable_community
+    configurable_community,
 ):
     # B owes to A
     # 1% interest given by B to A
@@ -245,7 +245,7 @@ def test_interests_path_from_A_balance_positive_irrelevant_interests(
     indirect=["configurable_community"],
 )
 def test_interests_path_from_A_balance_negative_irrelevant_interests(
-    configurable_community
+    configurable_community,
 ):
     # A owes to B
     # 1% interest given by A to B
@@ -269,7 +269,7 @@ def test_interests_path_from_A_balance_negative_irrelevant_interests(
     indirect=["configurable_community"],
 )
 def test_interests_path_from_B_balance_positive_relevant_interests(
-    configurable_community
+    configurable_community,
 ):
     # B owes to A
     # 1% interest given by A to B
@@ -293,7 +293,7 @@ def test_interests_path_from_B_balance_positive_relevant_interests(
     indirect=["configurable_community"],
 )
 def test_interests_path_from_B_balance_negative_relevant_interests(
-    configurable_community
+    configurable_community,
 ):
     # A owes to B
     # 1% interest given by B to A
@@ -317,7 +317,7 @@ def test_interests_path_from_B_balance_negative_relevant_interests(
     indirect=["configurable_community"],
 )
 def test_interests_path_from_B_balance_positive_irrelevant_interests(
-    configurable_community
+    configurable_community,
 ):
     # B owes to A
     # 1% interest given by B to A
@@ -341,7 +341,7 @@ def test_interests_path_from_B_balance_positive_irrelevant_interests(
     indirect=["configurable_community"],
 )
 def test_interests_path_from_B_balance_negative_irrelevant_interests(
-    configurable_community
+    configurable_community,
 ):
     # A owes to B
     # 1% interest given by A to B
