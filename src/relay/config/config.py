@@ -1,5 +1,5 @@
 import logging
-from typing import Dict, MutableMapping
+from typing import Dict, List, MutableMapping, Union
 
 import toml
 from marshmallow import ValidationError
@@ -32,9 +32,11 @@ def generate_default_config() -> MutableMapping:
 def validation_error_string(validation_error: ValidationError) -> str:
     """Creates a readable error message string from a validation error"""
     messages = validation_error.messages
-    error_list = []
 
-    def _validation_error_string(whole_key: str, messages: Dict):
+    def _validation_error_string(
+        whole_key: str, messages: Dict[str, Union[str, List[str], Dict]]
+    ):
+        error_list: List[str] = []
         for key, value in messages.items():
             key = f"{whole_key}.{key}"
             if isinstance(value, str):
@@ -44,8 +46,12 @@ def validation_error_string(validation_error: ValidationError) -> str:
                     error_list.append(f"{key}: {v}")
             else:
                 _validation_error_string(key, value)
+        return error_list
 
-    _validation_error_string("", messages)
+    if isinstance(messages, list):
+        error_list = messages
+    else:
+        error_list = _validation_error_string("", messages)
     return ", ".join(error_list)
 
 
