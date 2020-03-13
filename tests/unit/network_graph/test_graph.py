@@ -43,6 +43,15 @@ def balance_trustlines():
     return [Trustline(A, B, 20, 30, balance=10), Trustline(B, C, 200, 250, balance=-20)]
 
 
+@pytest.fixture()
+def address_not_used_in_graphs(complextrustlines, balance_trustlines):
+    unused_address = "0x00"
+
+    for trustline in complextrustlines + balance_trustlines:
+        assert unused_address != trustline.counter_party
+        assert unused_address != trustline.user
+
+
 @pytest.fixture
 def balances_community(balance_trustlines):
     community = CurrencyNetworkGraph()
@@ -244,6 +253,32 @@ def test_close_trustline_last_edge_insufficient_capacity(
         now, A, B
     )
     assert payment_path.path == []
+
+
+def test_close_trustline_source_not_in_graph(
+    balances_community, address_not_used_in_graphs
+):
+    """Test that we do not have an error when querying for a close path from an unknown address"""
+    now = int(time.time())
+    payment_path = balances_community.close_trustline_path_triangulation(
+        now, address_not_used_in_graphs, A
+    )
+    assert payment_path == PaymentPath(
+        fee=0, path=[], value=0, fee_payer=FeePayer.SENDER
+    )
+
+
+def test_close_trustline_target_not_in_graph(
+    balances_community, address_not_used_in_graphs
+):
+    """Test that we do not have an error when querying for a close path to an unknown address"""
+    now = int(time.time())
+    payment_path = balances_community.close_trustline_path_triangulation(
+        now, A, address_not_used_in_graphs
+    )
+    assert payment_path == PaymentPath(
+        fee=0, path=[], value=0, fee_payer=FeePayer.SENDER
+    )
 
 
 @pytest.mark.parametrize(
