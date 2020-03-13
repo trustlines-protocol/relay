@@ -765,6 +765,8 @@ class CurrencyNetworkGraph(object):
     def close_trustline_path_triangulation(
         self, timestamp, source, target, max_hops=None, max_fees=None
     ):
+        if not (self.graph.has_node(source) and self.graph.has_node(target)):
+            return PaymentPath(fee=0, path=[], value=0, fee_payer=FeePayer.SENDER)
 
         neighbors = {x[0] for x in self.graph.adj[source].items()} - {target}
         balance = self.get_balance_with_interests(source, target, timestamp)
