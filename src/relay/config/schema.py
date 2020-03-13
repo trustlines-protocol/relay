@@ -23,8 +23,8 @@ class AddressField(fields.Field):
 
 
 class FeeSettingsSchema(Schema):
-    base_fee = fields.Integer(missing=0)
-    gas_price = fields.Integer(missing=0)
+    base_fee = fields.Integer(required=True)
+    gas_price = fields.Integer(required=True)
     fee_recipient = AddressField()
     currency_network = AddressField(missing=None)
 
