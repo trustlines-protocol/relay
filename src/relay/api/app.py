@@ -37,6 +37,7 @@ from .resources import (
     MetaTransactionFees,
     Network,
     NetworkList,
+    NetworkTrustlinesList,
     Path,
     Relay,
     RelayMetaTransaction,
@@ -103,6 +104,9 @@ def ApiApp(trustlines, *, enabled_apis):
         add_resource(NetworkList, "/networks")
         add_resource(Network, "/networks/<address:network_address>")
         add_resource(UserList, "/networks/<address:network_address>/users")
+        add_resource(
+            NetworkTrustlinesList, "/networks/<address:network_address>/trustlines"
+        )
         add_resource(EventsNetwork, "/networks/<address:network_address>/events")
         add_resource(
             UserAccruedInterestList,
