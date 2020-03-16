@@ -259,6 +259,24 @@ class UserTrustlines(Resource):
         return trustline_list
 
 
+class NetworkTrustlinesList(Resource):
+    def __init__(self, trustlines: TrustlinesRelay) -> None:
+        self.trustlines = trustlines
+
+    @dump_result_with_schema(TrustlineSchema(many=True))
+    def get(self, network_address: str):
+        abort_if_unknown_network(self.trustlines, network_address)
+        timestamp = int(time.time())
+        graph = self.trustlines.currency_network_graphs[network_address]
+        all_trustlines = graph.get_trustlines_list()
+        return [
+            _get_extended_account_summary(
+                graph, network_address, a, b, timestamp=timestamp
+            )
+            for (a, b) in all_trustlines
+        ]
+
+
 class MaxCapacityPath(Resource):
     def __init__(self, trustlines: TrustlinesRelay) -> None:
         self.trustlines = trustlines

@@ -26,6 +26,7 @@ https://relay0.testnet.trustlines.network/api/v1
 - [Currency networks list](#currency-networks-list)
 - [Currency network details](#currency-network-details)
 - [Users list in currency network](#users-list-in-currency-network)
+- [Trustlines list in currency network](#trustlines-list-in-currency-network)
 - [User details in currency network](#user-details-in-currency-network)
 - [Trustlines of user in currency network](#trustlines-of-user-in-currency-network)
 - [Trustline between users in currency network](#trustline-between-users-in-currency-network)
@@ -156,6 +157,59 @@ curl https://relay0.testnet.trustlines.network/api/v1/networks/0xC0B33D88C704455
   "0xcbF1153F6e5AC01D363d432e24112e8aA56c55ce",
   "0x7Ff66eb1A824FF9D1bB7e234a2d3B7A3b0345320",
   "0x7Ec3543702FA8F2C7b2bD84C034aAc36C263cA8b"
+]
+```
+
+---
+
+### Trustlines list in currency network
+Returns a list of all trustlines in a currency network.
+#### Request
+```
+GET /networks/:networkAddress/trustlines
+```
+#### URL Parameters
+| Name           | Type   | Required | Description                 |
+|----------------|--------|----------|-----------------------------|
+| networkAddress | string | YES      | Address of currency network |
+#### Example Request
+```
+curl https://relay0.testnet.trustlines.network/api/v1/networks/0xC0B33D88C704455075a0724AA167a286da778DDE/trustlines
+```
+#### Response
+A list of trustlines with the following attributes:
+
+| Attribute            | Type   | Description                                     |
+|----------------------|--------|-------------------------------------------------|
+| counterParty         | string | Address of trustline counterparty               |
+| currencyNetwork      | string | Address of currency network                     |
+| user                 | string | Address of trustline user                       |
+| balance              | string | Balance of trustline from point of view of user |
+| given                | string | Creditline given to counterparty                |
+| received             | string | Creditline received by counterparty             |
+| leftGiven            | string | given - balance                                 |
+| leftReceived         | string | received + balance                              |
+| interestRateGiven    | string | Interest Rate given to counterparty             |
+| interestRateReceived | string | Interest Rate received from counterparty        |
+| isFrozen             | bool   | Whether the trustlines is frozen                |
+| id                   | string | Identifier of trustline                         |
+#### Example Response
+```json
+[
+  {
+    "id": "0xe4332c0bc15bf97933ce54c93af772bb13fad2c4c44e2516eb62d4f6c041e9ab",
+    "leftReceived": "19848",
+    "counterParty": "0xB5A3ad8d5A23e5DDD8b8917F709b01396e4d55e4",
+    "currencyNetwork": "0xC0B33D88C704455075a0724AA167a286da778DDE",
+    "balance": "-152",
+    "given": "10000",
+    "leftGiven": "10152",
+    "received": "20000",
+    "interestRateGiven": "1000",
+    "interestRateReceived": "2000",
+    "isFrozen": false,
+    "user": "0x04f9b217b334507c42Ad3b74BFf024c724aBB166"
+  }
 ]
 ```
 

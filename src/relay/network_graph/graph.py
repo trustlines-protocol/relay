@@ -694,6 +694,9 @@ class CurrencyNetworkGraph(object):
             )
         return output.getvalue()
 
+    def get_trustlines_list(self):
+        return self.graph.edges(data=False)
+
     def find_transfer_path_sender_pays_fees(
         self, source, target, value=None, max_hops=None, max_fees=None, timestamp=0
     ):
