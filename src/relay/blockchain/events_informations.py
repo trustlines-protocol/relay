@@ -1,3 +1,4 @@
+import logging
 import math
 from typing import List
 
@@ -6,9 +7,12 @@ import toolz
 
 from relay.blockchain.currency_network_events import (
     BalanceUpdateEventType,
+    TransferEventType,
     TrustlineUpdateEventType,
 )
 from relay.network_graph.interests import calculate_interests
+
+logger = logging.getLogger("event_info")
 
 DIRECTION_SENT = "sent"
 DIRECTION_RECEIVED = "received"
@@ -126,3 +130,87 @@ def filter_list_of_accrued_interests_for_time_window(
         if interest.timestamp <= end_time and interest.timestamp >= start_time:
             filtered_list.append(interest)
     return filtered_list
+
+
+def get_tranfer_details(events_proxy, tx_hash):
+
+    all_events = events_proxy.get_all_transaction_events(tx_hash)
+    logger.info("all_events")
+    logger.info(all_events)
+    transfer_events = get_all_transfer_events(all_events)
+    if len(transfer_events) == 0:
+        raise TransferNotFoundException(tx_hash)
+    if len(transfer_events) > 1:
+        raise MultipleTransferFoundException(tx_hash)
+    transfer_event = transfer_events[0]
+
+    transfer_path = get_transfer_path(all_events, transfer_event)
+    logger.info("transfer_path")
+    logger.info(transfer_path)
+    return transfer_path
+
+
+def get_all_transfer_events(all_events):
+    transfer_events = []
+    for event in all_events:
+        if event.type == TransferEventType:
+            transfer_events.append(event)
+    return transfer_events
+
+
+def get_transfer_path(all_events, transfer_event):
+    """Returns the transfer path of the given transfer without the sender"""
+    path_from_events = []
+    transfer_events = get_balance_update_events_for_transfer(all_events, transfer_event)
+    path_from_events.append(transfer_events[0].from_)
+    for event in transfer_events:
+        path_from_events.append(event.to)
+
+    return path_from_events
+
+
+def get_balance_update_events_for_transfer(all_events, transfer_event):
+    """Returns all balance update events in the correct order that belongs to the transfer event"""
+    log_index = transfer_event.log_index
+    sender = transfer_event.from_
+    receiver = transfer_event.to
+
+    balance_events = []
+    saw_sender_event = False
+    saw_receiver_event = False
+
+    # Search backwards for releated BalanceUpdate events
+    for i in range(log_index - 1, -1, -1):
+        for event in all_events:
+            if event.log_index == i:
+                assert (
+                    event.type == BalanceUpdateEventType
+                ), "Wrong event type for events before transfer event"
+                balance_events.append(event)
+                if event.to == receiver:
+                    saw_receiver_event = True
+                if event.from_ == sender:
+                    saw_sender_event = True
+                break
+        if saw_sender_event and saw_receiver_event:
+            break
+    else:
+        assert False, "Could not find all BalanceUpdate events"
+
+    if balance_events[0].from_ != sender:
+        # For the sender pays case, they are reverse
+        balance_events.reverse()
+
+    assert balance_events[0].from_ == sender
+    assert balance_events[-1].to == receiver
+    return balance_events
+
+
+class TransferNotFoundException(Exception):
+    def __init__(self, tx_hash):
+        self.tx_hash = tx_hash
+
+
+class MultipleTransferFoundException(Exception):
+    def __init__(self, tx_hash):
+        self.tx_hash = tx_hash

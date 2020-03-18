@@ -42,6 +42,7 @@ from .schemas import (
     MetaTransactionStatusSchema,
     PaymentPathSchema,
     TransactionStatusSchema,
+    TransferInformation,
     TrustlineSchema,
     TxInfosSchema,
     UserCurrencyNetworkEventSchema,
@@ -465,6 +466,15 @@ class TrustlineAccruedInterestList(Resource):
             "user": user_address,
             "counterparty": counterparty_address,
         }
+
+
+class TransferInformation(Resource):
+    def __init__(self, trustlines: TrustlinesRelay) -> None:
+        self.trustlines = trustlines
+
+    @dump_result_with_schema(TransferInformation())
+    def get(self, tx_hash: str):
+        return {"path": self.trustlines.get_transfer_information(tx_hash)}
 
 
 class TransactionInfos(Resource):

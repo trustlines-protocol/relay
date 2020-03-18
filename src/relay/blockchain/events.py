@@ -21,6 +21,7 @@ class BlockchainEvent(Event):
         else:
             self.transaction_id = transaction_id
         self.type = web3_event.get("event")
+        self.log_index = web3_event.get("logIndex")
 
     @property
     def status(self) -> str:

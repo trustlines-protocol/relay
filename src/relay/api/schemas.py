@@ -264,3 +264,8 @@ class AccruedInterestListSchema(Schema):
     accruedInterests = fields.Nested(AccruedInterestSchema, many=True)
     user = Address()
     counterparty = Address()
+
+
+class TransferInformation(Schema):
+
+    path = Address(many=True)

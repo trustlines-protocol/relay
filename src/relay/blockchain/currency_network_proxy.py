@@ -329,3 +329,18 @@ class CurrencyNetworkProxy(Proxy):
         ]
         results = concurrency_utils.joinall(queries, timeout=timeout)
         return sorted_events(list(itertools.chain.from_iterable(results)))
+
+    def get_all_transaction_events(self, tx_hash: str, from_block: int = 0):
+
+        filter = {"txHash": tx_hash}
+
+        events = self.get_all_events(filter, from_block)
+
+        logger.debug(
+            "get_all_transaction_events(%s, %s) -> %s rows",
+            tx_hash,
+            from_block,
+            len(events),
+        )
+
+        return events

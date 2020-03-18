@@ -44,6 +44,7 @@ from .blockchain.delegate import Delegate, DelegationFees
 from .blockchain.events import BlockchainEvent
 from .blockchain.events_informations import (
     get_list_of_paid_interests_for_trustline_in_between_timestamps,
+    get_tranfer_details,
 )
 from .blockchain.exchange_proxy import ExchangeProxy
 from .blockchain.node import Node
@@ -179,6 +180,20 @@ class TrustlinesRelay:
         else:
             return self.currency_network_proxies[network_address]
 
+    def get_event_selector_without_currency_network(self):
+        """Returns either a CurrencyNetworkProxy or a EthindexDB instance
+        This can be used to query events this can be used to query events where address is unknown
+        or via providing the missing address"""
+        if not self.use_eth_index:
+            return list(self.currency_network_proxies.values())[0]
+        return ethindex_db.EthindexDB(
+            ethindex_db.connect(""),
+            address=None,
+            standard_event_types=currency_network_events.standard_event_types,
+            event_builders=currency_network_events.event_builders,
+            from_to_types=currency_network_events.from_to_types,
+        )
+
     def get_event_selector_for_token(self, address):
         """return either a proxy or a EthindexDB instance
         This is being used from relay.api to query for events.
@@ -281,6 +296,10 @@ class TrustlinesRelay:
             start_time,
             end_time,
         )
+
+    def get_transfer_information(self, tx_hash):
+        event_selector = self.get_event_selector_without_currency_network()
+        return get_tranfer_details(event_selector, tx_hash)
 
     def deploy_identity(self, factory_address, implementation_address, signature):
         return self.delegate.deploy_identity(
@@ -986,3 +1005,7 @@ def create_engine():
             password=os.environ.get("PGPASSWORD", ""),
         )
     )
+
+
+class EthIndexNotUsedException(Exception):
+    pass
