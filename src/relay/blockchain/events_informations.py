@@ -25,6 +25,19 @@ class InterestAccrued:
     timestamp = attr.ib()
 
 
+@attr.s
+class FeesPaid:
+    sender = attr.ib()
+    receiver = attr.ib()
+    value = attr.ib()
+
+
+@attr.s
+class TransferInformation:
+    path = attr.ib()
+    fees_paid = attr.ib()
+
+
 def get_list_of_paid_interests_for_trustline(
     events_proxy, currency_network_address, user, counterparty
 ) -> List[InterestAccrued]:
@@ -132,11 +145,9 @@ def filter_list_of_accrued_interests_for_time_window(
     return filtered_list
 
 
-def get_tranfer_details(events_proxy, tx_hash):
+def get_transfer_details(events_proxy, tx_hash):
 
     all_events = events_proxy.get_all_transaction_events(tx_hash)
-    logger.info("all_events")
-    logger.info(all_events)
     transfer_events = get_all_transfer_events(all_events)
     if len(transfer_events) == 0:
         raise TransferNotFoundException(tx_hash)
@@ -144,10 +155,20 @@ def get_tranfer_details(events_proxy, tx_hash):
         raise MultipleTransferFoundException(tx_hash)
     transfer_event = transfer_events[0]
 
-    transfer_path = get_transfer_path(all_events, transfer_event)
-    logger.info("transfer_path")
-    logger.info(transfer_path)
-    return transfer_path
+    currency_network_address = transfer_event.network_address
+
+    sorted_balance_updates = get_balance_update_events_for_transfer(
+        all_events, transfer_event
+    )
+    delta_balances_along_path = get_delta_balances_of_transfer(
+        events_proxy, currency_network_address, sorted_balance_updates
+    )
+
+    transfer_path = get_transfer_path(sorted_balance_updates)
+
+    fees_paid = get_paid_fees_along_path(transfer_path, delta_balances_along_path)
+
+    return TransferInformation(path=transfer_path, fees_paid=fees_paid)
 
 
 def get_all_transfer_events(all_events):
@@ -158,12 +179,11 @@ def get_all_transfer_events(all_events):
     return transfer_events
 
 
-def get_transfer_path(all_events, transfer_event):
+def get_transfer_path(sorted_balance_updates):
     """Returns the transfer path of the given transfer without the sender"""
     path_from_events = []
-    transfer_events = get_balance_update_events_for_transfer(all_events, transfer_event)
-    path_from_events.append(transfer_events[0].from_)
-    for event in transfer_events:
+    path_from_events.append(sorted_balance_updates[0].from_)
+    for event in sorted_balance_updates:
         path_from_events.append(event.to)
 
     return path_from_events
@@ -204,6 +224,154 @@ def get_balance_update_events_for_transfer(all_events, transfer_event):
     assert balance_events[0].from_ == sender
     assert balance_events[-1].to == receiver
     return balance_events
+
+
+def get_paid_fees_along_path(transfer_path, delta_balances):
+    fees_values = delta_balances[1:-1]
+    fees_paid = []
+    for sender, receiver in zip(transfer_path[:-2], transfer_path[1:-1]):
+        fees_paid.append(FeesPaid(sender, receiver, fees_values[len(fees_paid)]))
+    return fees_paid
+
+
+def get_delta_balances_of_transfer(
+    events_proxy, currency_network_address, sorted_balance_updates
+):
+    """Returns the balance changes along the path because of a given transfer"""
+    post_balances = []
+    for event in sorted_balance_updates:
+        post_balances.append(event.value)
+
+    pre_balances = []
+    for event in sorted_balance_updates:
+        from_ = event.from_
+        to = event.to
+        pre_balance = get_previous_balance(
+            events_proxy, currency_network_address, from_, to, event
+        )
+        pre_balances.append(pre_balance)
+
+    interests = []
+    for event in sorted_balance_updates:
+        interest = get_interest_at(events_proxy, currency_network_address, event)
+        interests.append(interest)
+
+    # sender balance change
+    delta_balances = [post_balances[0] - pre_balances[0] - interests[0]]
+
+    # mediator balance changes
+    for i in range(len(sorted_balance_updates) - 1):
+        next_tl_balance_change = (
+            post_balances[i + 1] - pre_balances[i + 1] - interests[i + 1]
+        )
+        previous_tl_balance_change = post_balances[i] - pre_balances[i] - interests[i]
+        delta_balances.append(next_tl_balance_change - previous_tl_balance_change)
+
+    # receiver balance change
+    delta_balances.append(-(post_balances[-1] - pre_balances[-1] - interests[-1]))
+
+    return delta_balances
+
+
+def get_previous_balance(
+    events_proxy, currency_network_address, a, b, balance_update_event
+):
+    """Returns the balance before a given balance update event"""
+    balance_update_events = get_all_balance_update_events_for_trustline(
+        events_proxy, currency_network_address, a, b
+    )
+
+    # find the corresponding event
+    for i, event in enumerate(balance_update_events):
+        if event_id(balance_update_event) == event_id(event):
+            index = i
+            break
+    else:
+        raise RuntimeError("Could not find balance update")
+    index -= 1
+
+    if index < 0:
+        return 0
+
+    return get_all_balances_for_trustline(events_proxy, currency_network_address, a, b)[
+        index
+    ]
+
+
+def get_all_balance_update_events_for_trustline(
+    events_proxy, currency_network_address, a, b
+):
+    """Get all balance update events of a trustline in sorted order"""
+    return events_proxy.get_trustline_events(
+        event_name=BalanceUpdateEventType,
+        user_address=a,
+        counterparty_address=b,
+        contract_address=currency_network_address,
+    )
+
+
+def event_id(event):
+    return event.transaction_id, event.log_index  # , event["blockHash"]
+
+
+def get_all_balances_for_trustline(events_proxy, currency_network_address, a, b):
+    """Get all balances of a trustline in sorted order from the view of a"""
+    balance_update_events = get_all_balance_update_events_for_trustline(
+        events_proxy, currency_network_address, a, b
+    )
+
+    def balance(balance_update_event):
+        if balance_update_event.from_ == a and balance_update_event.to == b:
+            return balance_update_event.value
+        elif balance_update_event.from_ == b and balance_update_event.to == a:
+            return -balance_update_event.value
+        else:
+            RuntimeError("Unexpected balance update event")
+
+    return [balance(event) for event in balance_update_events]
+
+
+def get_interest_at(events_proxy, currency_network_address, balance_update_event):
+    """Returns the applied interests at a given balance update"""
+    from_ = balance_update_event.from_
+    to = balance_update_event.to
+    timestamp = balance_update_event.timestamp
+
+    accrued_interests = get_list_of_paid_interests_for_trustline(
+        events_proxy, currency_network_address, from_, to
+    )
+
+    for accrued_interest in accrued_interests:
+        if accrued_interest.timestamp == timestamp:
+            return accrued_interest.value
+    return 0
+
+
+def get_interests_for_trustline(events_proxy, currency_network_address, a, b):
+    """Get all balance changes of a trustline because of interests"""
+    balance_update_events = get_all_balance_update_events_for_trustline(
+        events_proxy, currency_network_address, a, b
+    )
+
+    timestamps = [
+        balance_update_event.timestamp for balance_update_event in balance_update_events
+    ]
+
+    balances = get_all_balances_for_trustline(
+        events_proxy, currency_network_address, a, b
+    )
+
+    return [
+        calculate_interests(balance, post_time - pre_time)
+        for (balance, pre_time, post_time) in zip(
+            balances[:-1], timestamps[:-1], timestamps[1:]
+        )
+    ]
+
+
+class EventsInformation:
+    def __init__(self, events_proxy):
+        self.events_proxy = events_proxy
 
 
 class TransferNotFoundException(Exception):

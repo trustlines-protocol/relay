@@ -6,6 +6,7 @@ from typing import List, NamedTuple
 
 import gevent
 from gevent import Greenlet
+from web3._utils.events import get_event_data
 
 import relay.concurrency_utils as concurrency_utils
 
@@ -331,10 +332,12 @@ class CurrencyNetworkProxy(Proxy):
         return sorted_events(list(itertools.chain.from_iterable(results)))
 
     def get_all_transaction_events(self, tx_hash: str, from_block: int = 0):
-
-        filter = {"txHash": tx_hash}
-
-        events = self.get_all_events(filter, from_block)
+        receipt = self._web3.eth.getTransactionReceipt(tx_hash)
+        events = []
+        for log in receipt["logs"]:
+            abi = self._get_abi_for_log(log)
+            rich_log = get_event_data(abi, log)
+            events.append(rich_log)
 
         logger.debug(
             "get_all_transaction_events(%s, %s) -> %s rows",
@@ -343,4 +346,4 @@ class CurrencyNetworkProxy(Proxy):
             len(events),
         )
 
-        return events
+        return sorted_events(self._build_events(events))

@@ -2,6 +2,7 @@ import pytest
 
 from relay.blockchain.events_informations import (
     get_list_of_paid_interests_for_trustline,
+    get_transfer_details,
 )
 
 
@@ -129,3 +130,61 @@ def test_get_interests_paid_for_trustline_negative_balance(
     assert list_of_interests == interests
     for accrued_interest in accrued_interests:
         assert accrued_interest.interest_rate == 2000
+
+
+@pytest.mark.parametrize(
+    "path, fee_payer",
+    [
+        ([0, 1], "sender"),
+        ([0, 1, 2, 3], "sender"),
+        ([3, 2, 1, 0], "sender"),
+        ([0, 1], "receiver"),
+        ([0, 1, 2, 3], "receiver"),
+        ([3, 2, 1, 0], "receiver"),
+    ],
+)
+def test_get_transfer_information_path(
+    currency_network_with_trustlines, accounts, path, fee_payer
+):
+    """
+    test that we can get the path of a sent transfer from the transfer event
+    """
+    network = currency_network_with_trustlines
+    account_path = [accounts[i] for i in path]
+    value = 100
+
+    if fee_payer == "sender":
+        tx_hash = network.transfer_on_path(value, account_path)
+    elif fee_payer == "receiver":
+        tx_hash = network.transfer_receiver_pays_on_path(value, account_path)
+    else:
+        assert False, "Invalid fee payer"
+
+    transfer_information = get_transfer_details(network, tx_hash)
+    assert transfer_information.path == account_path
+
+
+@pytest.mark.parametrize("fee_payer", ["sender", "receiver"])
+def test_get_transfer_information_fees_paid(
+    currency_network_with_trustlines, accounts, fee_payer
+):
+    """
+    test that we can get the path of a sent transfer from the transfer event
+    """
+    network = currency_network_with_trustlines
+    path = [accounts[i] for i in [0, 1, 2, 3, 4, 5, 6]]
+    value = 10
+
+    if fee_payer == "sender":
+        tx_hash = network.transfer_on_path(value, path)
+    elif fee_payer == "receiver":
+        tx_hash = network.transfer_receiver_pays_on_path(value, path)
+    else:
+        assert False, "Invalid fee payer"
+
+    transfer_information = get_transfer_details(network, tx_hash)
+    fees_paid = transfer_information.fees_paid
+    for i in range(len(fees_paid)):
+        assert fees_paid[i].sender == path[i]
+        assert fees_paid[i].receiver == path[i + 1]
+        assert fees_paid[i].value == 1

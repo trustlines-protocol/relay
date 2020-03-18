@@ -474,7 +474,7 @@ class TransferInformation(Resource):
 
     @dump_result_with_schema(TransferInformation())
     def get(self, tx_hash: str):
-        return {"path": self.trustlines.get_transfer_information(tx_hash)}
+        return {"path": self.trustlines.get_transfer_information(tx_hash).path}
 
 
 class TransactionInfos(Resource):

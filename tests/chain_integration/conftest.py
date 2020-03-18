@@ -190,6 +190,24 @@ class CurrencyNetworkProxy(currency_network_proxy.CurrencyNetworkProxy):
         ).transact({"from": from_})
         self._web3.eth.waitForTransactionReceipt(txid)
 
+    def transfer_on_path(self, value, path, max_fee=None, extra_data=b""):
+        if max_fee is None:
+            max_fee = value
+        tx_id = self._proxy.functions.transfer(
+            value, max_fee, path, extra_data
+        ).transact({"from": path[0]})
+        self._web3.eth.waitForTransactionReceipt(tx_id)
+        return tx_id
+
+    def transfer_receiver_pays_on_path(self, value, path, max_fee=None, extra_data=b""):
+        if max_fee is None:
+            max_fee = value
+        tx_id = self._proxy.functions.transferReceiverPays(
+            value, max_fee, path, extra_data
+        ).transact({"from": path[0]})
+        self._web3.eth.waitForTransactionReceipt(tx_id)
+        return tx_id
+
     def transfer_meta_transaction(self, value, max_fee, path, extra_data=b""):
 
         function_call = self._proxy.functions.transfer(value, max_fee, path, extra_data)
@@ -213,6 +231,8 @@ def trustlines(accounts):
         (accounts[1], accounts[2], 200, 250),
         (accounts[2], accounts[3], 300, 350),
         (accounts[3], accounts[4], 400, 450),
+        (accounts[4], accounts[5], 400, 450),
+        (accounts[5], accounts[6], 400, 450),
         (accounts[0], accounts[4], 500, 550),
     ]  # (A, B, clAB, clBA)
 
