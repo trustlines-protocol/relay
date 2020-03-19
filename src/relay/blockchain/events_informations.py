@@ -36,6 +36,9 @@ class FeesPaid:
 class TransferInformation:
     path = attr.ib()
     fees_paid = attr.ib()
+    value_sent = attr.ib()
+    value_received = attr.ib()
+    total_fees = attr.ib()
 
 
 class EventsInformationFetcher:
@@ -173,8 +176,17 @@ class EventsInformationFetcher:
         fees_paid = self.get_paid_fees_along_path(
             transfer_path, delta_balances_along_path
         )
+        value_sent = -delta_balances_along_path[0]
+        value_received = delta_balances_along_path[len(delta_balances_along_path) - 1]
+        total_fees = value_sent - value_received
 
-        return TransferInformation(path=transfer_path, fees_paid=fees_paid)
+        return TransferInformation(
+            path=transfer_path,
+            fees_paid=fees_paid,
+            value_sent=value_sent,
+            value_received=value_received,
+            total_fees=total_fees,
+        )
 
     def get_all_transfer_events(self, all_events):
         transfer_events = []

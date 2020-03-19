@@ -171,23 +171,18 @@ def test_get_transfer_information_path(
     assert transfer_information.path == account_path
 
 
-@pytest.mark.parametrize("fee_payer", ["sender", "receiver"])
-def test_get_transfer_information_fees_paid(
-    currency_network_with_trustlines, accounts, fee_payer
+def test_get_transfer_information_fees_sender_pays(
+    currency_network_with_trustlines, accounts
 ):
     """
     test that we can get the path of a sent transfer from the transfer event
     """
     network = currency_network_with_trustlines
     path = [accounts[i] for i in [0, 1, 2, 3, 4, 5, 6]]
+    number_of_mediators = len(path) - 2
     value = 10
 
-    if fee_payer == "sender":
-        tx_hash = network.transfer_on_path(value, path)
-    elif fee_payer == "receiver":
-        tx_hash = network.transfer_receiver_pays_on_path(value, path)
-    else:
-        assert False, "Invalid fee payer"
+    tx_hash = network.transfer_on_path(value, path)
 
     transfer_information = EventsInformationFetcher(network).get_transfer_details(
         tx_hash
@@ -197,3 +192,32 @@ def test_get_transfer_information_fees_paid(
         assert fees_paid[i].sender == path[i]
         assert fees_paid[i].receiver == path[i + 1]
         assert fees_paid[i].value == 1
+    assert transfer_information.value_sent == value + number_of_mediators
+    assert transfer_information.value_received == value
+    assert transfer_information.total_fees == number_of_mediators
+
+
+def test_get_transfer_information_fees_receiver_pays(
+    currency_network_with_trustlines, accounts
+):
+    """
+    test that we can get the path of a sent transfer from the transfer event
+    """
+    network = currency_network_with_trustlines
+    path = [accounts[i] for i in [0, 1, 2, 3, 4, 5, 6]]
+    number_of_mediators = len(path) - 2
+    value = 10
+
+    tx_hash = network.transfer_receiver_pays_on_path(value, path)
+
+    transfer_information = EventsInformationFetcher(network).get_transfer_details(
+        tx_hash
+    )
+    fees_paid = transfer_information.fees_paid
+    for i in range(len(fees_paid)):
+        assert fees_paid[i].sender == path[i]
+        assert fees_paid[i].receiver == path[i + 1]
+        assert fees_paid[i].value == 1
+    assert transfer_information.value_sent == value
+    assert transfer_information.value_received == value - number_of_mediators
+    assert transfer_information.total_fees == number_of_mediators

@@ -42,7 +42,7 @@ from .schemas import (
     MetaTransactionStatusSchema,
     PaymentPathSchema,
     TransactionStatusSchema,
-    TransferInformation,
+    TransferInformationSchema,
     TrustlineSchema,
     TxInfosSchema,
     UserCurrencyNetworkEventSchema,
@@ -472,9 +472,9 @@ class TransferInformation(Resource):
     def __init__(self, trustlines: TrustlinesRelay) -> None:
         self.trustlines = trustlines
 
-    @dump_result_with_schema(TransferInformation())
+    @dump_result_with_schema(TransferInformationSchema())
     def get(self, tx_hash: str):
-        return {"path": self.trustlines.get_transfer_information(tx_hash).path}
+        return self.trustlines.get_transfer_information(tx_hash)
 
 
 class TransactionInfos(Resource):

@@ -45,7 +45,7 @@ from .resources import (
     Status,
     TransactionInfos,
     TransactionStatus,
-    TransferInformation,
+    TransferInformationSchema,
     Trustline,
     TrustlineAccruedInterestList,
     TrustlineList,
@@ -118,7 +118,9 @@ def ApiApp(trustlines, *, enabled_apis):
             "/networks/<address:network_address>/users/<address:user_address>/"
             "interests/<address:counterparty_address>",
         )
-        add_resource(TransferInformation, "/transfers/<string:tx_hash>/information")
+        add_resource(
+            TransferInformationSchema, "/transfers/<string:tx_hash>/information"
+        )
         add_resource(
             User, "/networks/<address:network_address>/users/<address:user_address>"
         )
