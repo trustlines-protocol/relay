@@ -154,18 +154,18 @@ class EventsInformationFetcher:
 
     def get_transfer_details(self, tx_hash):
 
-        all_events = self.events_proxy.get_all_transaction_events(tx_hash)
-        transfer_events = self.get_all_transfer_events(all_events)
-        if len(transfer_events) == 0:
+        all_events_of_tx = self.events_proxy.get_all_transaction_events(tx_hash)
+        transfer_events_in_tx = self.get_all_transfer_events(all_events_of_tx)
+        if len(transfer_events_in_tx) == 0:
             raise TransferNotFoundException(tx_hash)
-        if len(transfer_events) > 1:
+        if len(transfer_events_in_tx) > 1:
             raise MultipleTransferFoundException(tx_hash)
-        transfer_event = transfer_events[0]
+        transfer_event = transfer_events_in_tx[0]
 
         currency_network_address = transfer_event.network_address
 
         sorted_balance_updates = self.get_balance_update_events_for_transfer(
-            all_events, transfer_event
+            all_events_of_tx, transfer_event
         )
         delta_balances_along_path = self.get_delta_balances_of_transfer(
             currency_network_address, sorted_balance_updates
@@ -307,9 +307,17 @@ class EventsInformationFetcher:
         if index < 0:
             return 0
 
-        return self.get_all_balances_for_trustline(currency_network_address, a, b)[
-            index
-        ]
+        return self.get_balance_from_update_event_viewed_from_a(
+            balance_update_events[index], a
+        )
+
+    def get_balance_from_update_event_viewed_from_a(self, balance_update_event, a):
+        if balance_update_event.from_ == a:
+            return balance_update_event.value
+        elif balance_update_event.to == a:
+            return -balance_update_event.value
+        else:
+            RuntimeError("Unexpected balance update event")
 
     def get_all_balance_update_events_for_trustline(
         self, currency_network_address, a, b
@@ -325,28 +333,13 @@ class EventsInformationFetcher:
     def event_id(self, event):
         return event.transaction_id, event.log_index  # , event["blockHash"]
 
-    def get_all_balances_for_trustline(self, currency_network_address, a, b):
-        """Get all balances of a trustline in sorted order from the view of a"""
-        balance_update_events = self.get_all_balance_update_events_for_trustline(
-            self.events_proxy, currency_network_address, a
-        )
-
-        def balance(balance_update_event):
-            if balance_update_event.from_ == a and balance_update_event.to == b:
-                return balance_update_event.value
-            elif balance_update_event.from_ == b and balance_update_event.to == a:
-                return -balance_update_event.value
-            else:
-                RuntimeError("Unexpected balance update event")
-
-        return [balance(event) for event in balance_update_events]
-
     def get_interest_at(self, currency_network_address, balance_update_event):
         """Returns the applied interests at a given balance update"""
         from_ = balance_update_event.from_
         to = balance_update_event.to
         timestamp = balance_update_event.timestamp
 
+        # TODO: this is not optimal, we fetch information we already got
         accrued_interests = self.get_list_of_paid_interests_for_trustline(
             currency_network_address, from_, to
         )
