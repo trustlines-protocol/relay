@@ -1,9 +1,6 @@
 import pytest
 
-from relay.blockchain.events_informations import (
-    get_list_of_paid_interests_for_trustline,
-    get_transfer_details,
-)
+from relay.blockchain.events_informations import EventsInformationFetcher
 
 
 def accrue_interests(currency_network, web3, chain, path, years):
@@ -36,8 +33,10 @@ def test_get_interests_received_for_trustline_positive_balance(
     path = [accounts[0], accounts[1], accounts[2], accounts[3]]
     accrue_interests(currency_network, web3, chain, path, years)
 
-    accrued_interests = get_list_of_paid_interests_for_trustline(
-        currency_network, currency_network, accounts[2], accounts[1]
+    accrued_interests = EventsInformationFetcher(
+        currency_network
+    ).get_list_of_paid_interests_for_trustline(
+        currency_network, accounts[2], accounts[1]
     )
 
     list_of_interests = [
@@ -64,8 +63,10 @@ def test_get_interests_received_for_trustline_negaive_balance(
     path = [accounts[3], accounts[2], accounts[1], accounts[0]]
     accrue_interests(currency_network, web3, chain, path, years)
 
-    accrued_interests = get_list_of_paid_interests_for_trustline(
-        currency_network, currency_network, accounts[1], accounts[2]
+    accrued_interests = EventsInformationFetcher(
+        currency_network
+    ).get_list_of_paid_interests_for_trustline(
+        currency_network, accounts[1], accounts[2]
     )
 
     list_of_interests = [
@@ -92,8 +93,10 @@ def test_get_interests_paid_for_trustline_positive_balance(
     path = [accounts[0], accounts[1], accounts[2], accounts[3]]
     accrue_interests(currency_network, web3, chain, path, years)
 
-    accrued_interests = get_list_of_paid_interests_for_trustline(
-        currency_network, currency_network, accounts[1], accounts[2]
+    accrued_interests = EventsInformationFetcher(
+        currency_network
+    ).get_list_of_paid_interests_for_trustline(
+        currency_network, accounts[1], accounts[2]
     )
 
     list_of_interests = [
@@ -120,8 +123,10 @@ def test_get_interests_paid_for_trustline_negative_balance(
     path = [accounts[3], accounts[2], accounts[1], accounts[0]]
     accrue_interests(currency_network, web3, chain, path, years)
 
-    accrued_interests = get_list_of_paid_interests_for_trustline(
-        currency_network, currency_network, accounts[2], accounts[1]
+    accrued_interests = EventsInformationFetcher(
+        currency_network
+    ).get_list_of_paid_interests_for_trustline(
+        currency_network, accounts[2], accounts[1]
     )
 
     list_of_interests = [
@@ -160,7 +165,9 @@ def test_get_transfer_information_path(
     else:
         assert False, "Invalid fee payer"
 
-    transfer_information = get_transfer_details(network, tx_hash)
+    transfer_information = EventsInformationFetcher(network).get_transfer_details(
+        tx_hash
+    )
     assert transfer_information.path == account_path
 
 
@@ -182,7 +189,9 @@ def test_get_transfer_information_fees_paid(
     else:
         assert False, "Invalid fee payer"
 
-    transfer_information = get_transfer_details(network, tx_hash)
+    transfer_information = EventsInformationFetcher(network).get_transfer_details(
+        tx_hash
+    )
     fees_paid = transfer_information.fees_paid
     for i in range(len(fees_paid)):
         assert fees_paid[i].sender == path[i]
