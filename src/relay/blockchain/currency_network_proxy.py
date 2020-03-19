@@ -23,7 +23,7 @@ from .currency_network_events import (
     standard_event_types,
 )
 from .events import BlockchainEvent
-from .proxy import Proxy, reconnect_interval, sorted_events
+from .proxy import AbiNotFoundException, Proxy, reconnect_interval, sorted_events
 
 
 class Trustline(NamedTuple):
@@ -331,16 +331,19 @@ class CurrencyNetworkProxy(Proxy):
         results = concurrency_utils.joinall(queries, timeout=timeout)
         return sorted_events(list(itertools.chain.from_iterable(results)))
 
-    def get_all_transaction_events(self, tx_hash: str, from_block: int = 0):
+    def get_all_known_abi_transaction_events(self, tx_hash: str, from_block: int = 0):
         receipt = self._web3.eth.getTransactionReceipt(tx_hash)
         events = []
         for log in receipt["logs"]:
-            abi = self._get_abi_for_log(log)
-            rich_log = get_event_data(abi, log)
-            events.append(rich_log)
+            try:
+                abi = self._get_abi_for_log(log)
+                rich_log = get_event_data(abi, log)
+                events.append(rich_log)
+            except AbiNotFoundException:
+                pass
 
         logger.debug(
-            "get_all_transaction_events(%s, %s) -> %s rows",
+            "get_all_known_abi_transaction_events(%s, %s) -> %s rows",
             tx_hash,
             from_block,
             len(events),

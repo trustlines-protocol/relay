@@ -209,7 +209,7 @@ class Proxy(object):
         topic = hexbytes.HexBytes(raw_event_log["topics"][0])
         event_abi = self._topic2event_abi.get(topic)
         if event_abi is None:
-            raise RuntimeError(
+            raise AbiNotFoundException(
                 f"Could not find event abi for log {raw_event_log} on contract {self.address}. "
                 "{topic} not in {self._topic2event_abi.keys()}"
             )
@@ -240,3 +240,7 @@ def sorted_events(events: List[BlockchainEvent]) -> List[BlockchainEvent]:
         return event.blocknumber
 
     return sorted(events, key=key)
+
+
+class AbiNotFoundException(Exception):
+    pass

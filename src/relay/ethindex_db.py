@@ -464,7 +464,7 @@ class EthindexDB:
 
         return events
 
-    def get_all_transaction_events(self, tx_hash: str, from_block: int = 0):
+    def get_all_known_abi_transaction_events(self, tx_hash: str, from_block: int = 0):
 
         query = EventsQuery(
             """blockNumber>=%s
@@ -476,7 +476,7 @@ class EthindexDB:
         events = self._run_events_query(query)
 
         logger.debug(
-            "get_all_transaction_events(%s, %s) -> %s rows",
+            "get_all_known_abi_transaction_events(%s, %s) -> %s rows",
             tx_hash,
             from_block,
             len(events),

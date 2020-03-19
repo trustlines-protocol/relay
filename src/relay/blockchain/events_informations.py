@@ -154,7 +154,9 @@ class EventsInformationFetcher:
 
     def get_transfer_details(self, tx_hash):
 
-        all_events_of_tx = self.events_proxy.get_all_transaction_events(tx_hash)
+        all_events_of_tx = self.events_proxy.get_all_known_abi_transaction_events(
+            tx_hash
+        )
         transfer_events_in_tx = self.get_all_transfer_events(all_events_of_tx)
         if len(transfer_events_in_tx) == 0:
             raise TransferNotFoundException(tx_hash)
