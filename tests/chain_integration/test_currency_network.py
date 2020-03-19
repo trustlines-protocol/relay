@@ -67,7 +67,7 @@ def test_account2(currency_network_with_trustlines, accounts):
 
 
 def test_users(currency_network_with_trustlines, accounts):
-    assert currency_network_with_trustlines.fetch_users() == accounts[0:5]
+    assert currency_network_with_trustlines.fetch_users() == accounts[0:7]
 
 
 def test_gen_graph_representation(currency_network_with_trustlines, accounts):
