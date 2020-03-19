@@ -269,13 +269,13 @@ class AccruedInterestListSchema(Schema):
 class PaidFeesSchema(Schema):
     sender = Address()
     receiver = Address()
-    value = fields.Int()
+    value = BigInteger()
 
 
 class TransferInformationSchema(Schema):
 
     path = Address(many=True)
     feesPaid = fields.Nested(PaidFeesSchema, many=True)
-    valueSent = fields.Int(attribute="value_sent")
-    valueReceived = fields.Int(attribute="value_received")
-    totalFees = fields.Int(attribute="total_fees")
+    valueSent = BigInteger(attribute="value_sent")
+    valueReceived = BigInteger(attribute="value_received")
+    totalFees = BigInteger(attribute="total_fees")

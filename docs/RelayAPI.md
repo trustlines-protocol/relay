@@ -37,6 +37,7 @@ https://relay0.testnet.trustlines.network/api/v1
 - [Events of a user in currency network](#events-of-a-user-in-currency-network)
 - [Accrued interests of user](#accrued-interests-of-user)
 - [Accrued interests of trustline](#accrued-interests-of-trustline)
+- [Information for transfer in transaction](#information-for-transfer-in-transaction)
 ### User context
 - [Events of user in all currency networks](#events-of-user-in-all-currency-networks)
 - [Transaction infos for user](#transaction-infos-for-user)
@@ -801,6 +802,51 @@ The `accuredInterests` is a list with the following elements:
     "accruedInterests": [{"value": 123, "interestRate":  1000, "timestamp": 1579000000}, {"value": 456, "interestRate":  2000, "timestamp": 1579001000}],
     "user": "0xcbF1153F6e5AC01D363d432e24112e8aA56c55ce",
     "counterparty": "0x7Ff66eb1A824FF9D1bB7e234a2d3B7A3b0345320"
+}
+```
+
+---
+
+### Information for transfer in transaction
+Returns information about a trustline transfer applied by transaction with given hash.
+#### Request
+```
+GET /transfers/:txHash/information
+```
+#### Example Request
+```
+curl https://relay0.testnet.trustlines.network/api/v1/transfers/0xC0B33D88C704455075a0724AA167a286da778DDE/information
+```
+#### URL Parameters
+| Name         | Type                      | Required | Description                                       |
+|--------------|---------------------------|----------|---------------------------------------------------|
+| txHash       | string prefixed with "0x" | YES      | Hash of the tx responsible for the transfer       |
+#### Response
+The response is a an objects with the following elements:
+
+| Attribute        | Type                | JSON Type            | Description                   |
+| ---------------- | ------------------- | -------------------- | ----------------------------- |
+| path             | list of addresses   | array of strings     | path used by the transfer     |
+| feesPaid         | list of fees        | array                | list of paid fees along path  |
+| valueSent        | BigInteger          | string               | value sent by sender          |
+| valueReceived    | BigInteger          | string               | valued received by receiver   |
+| totalFees        | BigInteger          | string               | total fees paid for transfer  |
+
+The `feesPaid` is a list with the following elements:
+
+| Attribute    | Type       | JSON Type | Description                                     |
+| ------------ | ---------- | --------- | ----------------------------------------------- |
+| sender       | address    | string    | the sender of the fee                           |
+| receiver     | address    | string    | the receiver of the fee                         |
+| value        | BigInteger | string    | value of the fee in between sender and receiver |
+#### Example Response
+```json
+{
+    "path": ["0xcbF1153F6e5AC01D363d432e24112e8aA56c55ce", "0x7Ec3543702FA8F2C7b2bD84C034aAc36C263cA8b", "0x7Ff66eb1A824FF9D1bB7e234a2d3B7A3b0345320"],
+    "feesPaid": [{"sender": "0xcbF1153F6e5AC01D363d432e24112e8aA56c55ce", "receiver": "0x7Ec3543702FA8F2C7b2bD84C034aAc36C263cA8b", "value": "1"}],
+    "valueSent": "100",
+    "valueReceived": "99",
+    "totalFees": "1"
 }
 ```
 
