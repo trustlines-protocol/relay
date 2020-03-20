@@ -146,6 +146,9 @@ class OrderBookGreenlet(OrderBook):
     def add_exchange(self, exchange_proxy: ExchangeProxy):
         super().add_exchange(exchange_proxy)
         if self.running:
+            assert (
+                exchange_proxy.address is not None
+            ), "Invalid exchange proxy with no address."
             self._start_listen_on_fill_or_cancel(exchange_proxy.address)
 
     def _start_listen_on_fill_or_cancel(self, exchange_address: str):
