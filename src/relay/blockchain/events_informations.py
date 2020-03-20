@@ -35,10 +35,11 @@ class FeesPaid:
 @attr.s
 class TransferInformation:
     path = attr.ib()
-    fees_paid = attr.ib()
+    currency_network = attr.ib()
     value_sent = attr.ib()
     value_received = attr.ib()
     total_fees = attr.ib()
+    fees_paid = attr.ib()
 
 
 class EventsInformationFetcher:
@@ -184,6 +185,7 @@ class EventsInformationFetcher:
 
         return TransferInformation(
             path=transfer_path,
+            currency_network=currency_network_address,
             fees_paid=fees_paid,
             value_sent=value_sent,
             value_received=value_received,

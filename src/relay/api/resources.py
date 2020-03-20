@@ -474,6 +474,7 @@ class TransferInformation(Resource):
 
     @dump_result_with_schema(TransferInformationSchema())
     def get(self, tx_hash: str):
+        logger.info(self.trustlines.get_transfer_information(tx_hash))
         return self.trustlines.get_transfer_information(tx_hash)
 
 
