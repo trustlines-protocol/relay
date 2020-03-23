@@ -826,29 +826,29 @@ The response is a an objects with the following elements:
 
 | Attribute        | Type                | JSON Type            | Description                                 |
 | ---------------- | ------------------- | -------------------- | ------------------------------------------- |
-| path             | list of addresses   | array of strings     | path used by the transfer                   |
 | currencyNetwork  | address             | string               | address of the currency network of transfer |
-| valueSent        | BigInteger          | string               | value sent by sender                        |
-| valueReceived    | BigInteger          | string               | valued received by receiver                 |
-| totalFees        | BigInteger          | string               | total fees paid for transfer                |
+| paymentPath      | payment path object | object               | payment path object                         |
 | feesPaid         | list of fees        | array                | list of paid fees along path                |
 
-The `feesPaid` is a list with the following elements:
+The `paymentPath` is an object with the following attributes:
 
-| Attribute    | Type       | JSON Type | Description                                     |
-| ------------ | ---------- | --------- | ----------------------------------------------- |
-| sender       | address    | string    | the sender of the fee                           |
-| receiver     | address    | string    | the receiver of the fee                         |
-| value        | BigInteger | string    | value of the fee in between sender and receiver |
+| Attribute    | Type              | JSON Type        | Description                                      |
+| ------------ | ----------------- | ---------------- | ------------------------------------------------ |
+| fees         | BigInteger        | string           | total network fees paid for the transfer         |
+| path         | list of addresses | array of strings | Path used for the transfer                       |
+| value        | BigInteger        | string           | value transferred                                |
+| feePayer     | string            | string           | who paid the fees, either `sender` or `receiver` |
 #### Example Response
 ```json
 {
-    "path": ["0xcbF1153F6e5AC01D363d432e24112e8aA56c55ce", "0x7Ec3543702FA8F2C7b2bD84C034aAc36C263cA8b", "0x7Ff66eb1A824FF9D1bB7e234a2d3B7A3b0345320"],
     "currencyNetwork": "0xC0B33D88C704455075a0724AA167a286da778DDE",
-    "feesPaid": [{"sender": "0xcbF1153F6e5AC01D363d432e24112e8aA56c55ce", "receiver": "0x7Ec3543702FA8F2C7b2bD84C034aAc36C263cA8b", "value": "1"}],
-    "valueSent": "100",
-    "valueReceived": "99",
-    "totalFees": "1"
+    "paymentPath": {
+        "fees": "1",
+        "path": ["0xcbF1153F6e5AC01D363d432e24112e8aA56c55ce", "0x7Ec3543702FA8F2C7b2bD84C034aAc36C263cA8b", "0x7Ff66eb1A824FF9D1bB7e234a2d3B7A3b0345320"],
+        "value": "100",
+        "feePayer": "sender"
+    },
+    "feesPaid": ["1"]
 }
 ```
 

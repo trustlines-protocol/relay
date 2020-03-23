@@ -11,6 +11,7 @@ from relay.blockchain.currency_network_events import (
     TrustlineUpdateEventType,
 )
 from relay.network_graph.interests import calculate_interests
+from relay.network_graph.payment_path import FeePayer, PaymentPath
 
 logger = logging.getLogger("event_info")
 
@@ -26,19 +27,9 @@ class InterestAccrued:
 
 
 @attr.s
-class FeesPaid:
-    sender = attr.ib()
-    receiver = attr.ib()
-    value = attr.ib()
-
-
-@attr.s
 class TransferInformation:
-    path = attr.ib()
     currency_network = attr.ib()
-    value_sent = attr.ib()
-    value_received = attr.ib()
-    total_fees = attr.ib()
+    payment_path = attr.ib()
     fees_paid = attr.ib()
 
 
@@ -176,20 +167,29 @@ class EventsInformationFetcher:
 
         transfer_path = self.get_transfer_path(sorted_balance_updates)
 
-        fees_paid = self.get_paid_fees_along_path(
-            transfer_path, delta_balances_along_path
-        )
+        fees_paid = delta_balances_along_path[1:-1]
         value_sent = -delta_balances_along_path[0]
-        value_received = delta_balances_along_path[len(delta_balances_along_path) - 1]
+        value_received = delta_balances_along_path[-1]
+        transfer_value = transfer_event.value
+
+        if transfer_value == value_sent:
+            fee_payer = FeePayer.RECEIVER
+        elif transfer_value == value_received:
+            fee_payer = FeePayer.SENDER
+        else:
+            raise RuntimeError("Transfer value differs from value sent and received.")
+
         total_fees = value_sent - value_received
 
         return TransferInformation(
-            path=transfer_path,
             currency_network=currency_network_address,
+            payment_path=PaymentPath(
+                fee=total_fees,
+                path=transfer_path,
+                value=transfer_value,
+                fee_payer=fee_payer,
+            ),
             fees_paid=fees_paid,
-            value_sent=value_sent,
-            value_received=value_received,
-            total_fees=total_fees,
         )
 
     def get_all_transfer_events(self, all_events):
@@ -243,13 +243,6 @@ class EventsInformationFetcher:
         assert balance_events[0].from_ == sender
         assert balance_events[-1].to == receiver
         return balance_events
-
-    def get_paid_fees_along_path(self, transfer_path, delta_balances):
-        fees_values = delta_balances[1:-1]
-        fees_paid = []
-        for sender, receiver in zip(transfer_path[:-2], transfer_path[1:-1]):
-            fees_paid.append(FeesPaid(sender, receiver, fees_values[len(fees_paid)]))
-        return fees_paid
 
     def get_delta_balances_of_transfer(
         self, currency_network_address, sorted_balance_updates

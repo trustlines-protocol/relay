@@ -1,6 +1,7 @@
 import pytest
 
 from relay.blockchain.events_informations import EventsInformationFetcher
+from relay.network_graph.payment_path import FeePayer
 
 
 def accrue_interests(currency_network, web3, chain, path, years):
@@ -168,11 +169,12 @@ def test_get_transfer_information_path(
     transfer_information = EventsInformationFetcher(network).get_transfer_details(
         tx_hash
     )
-    assert transfer_information.path == account_path
+    assert transfer_information.payment_path.path == account_path
 
 
-def test_get_transfer_information_fees_sender_pays(
-    currency_network_with_trustlines, accounts
+@pytest.mark.parametrize("fee_payer", [FeePayer.SENDER, FeePayer.RECEIVER])
+def test_get_transfer_information_values(
+    currency_network_with_trustlines, accounts, fee_payer
 ):
     """
     test that we can get the path of a sent transfer from the transfer event
@@ -182,42 +184,18 @@ def test_get_transfer_information_fees_sender_pays(
     number_of_mediators = len(path) - 2
     value = 10
 
-    tx_hash = network.transfer_on_path(value, path)
+    if fee_payer == FeePayer.SENDER:
+        tx_hash = network.transfer_on_path(value, path)
+    elif fee_payer == FeePayer.RECEIVER:
+        tx_hash = network.transfer_receiver_pays_on_path(value, path)
+    else:
+        assert False, "Invalid fee payer"
 
     transfer_information = EventsInformationFetcher(network).get_transfer_details(
         tx_hash
     )
-    fees_paid = transfer_information.fees_paid
-    for i in range(len(fees_paid)):
-        assert fees_paid[i].sender == path[i]
-        assert fees_paid[i].receiver == path[i + 1]
-        assert fees_paid[i].value == 1
-    assert transfer_information.value_sent == value + number_of_mediators
-    assert transfer_information.value_received == value
-    assert transfer_information.total_fees == number_of_mediators
-
-
-def test_get_transfer_information_fees_receiver_pays(
-    currency_network_with_trustlines, accounts
-):
-    """
-    test that we can get the path of a sent transfer from the transfer event
-    """
-    network = currency_network_with_trustlines
-    path = [accounts[i] for i in [0, 1, 2, 3, 4, 5, 6]]
-    number_of_mediators = len(path) - 2
-    value = 10
-
-    tx_hash = network.transfer_receiver_pays_on_path(value, path)
-
-    transfer_information = EventsInformationFetcher(network).get_transfer_details(
-        tx_hash
-    )
-    fees_paid = transfer_information.fees_paid
-    for i in range(len(fees_paid)):
-        assert fees_paid[i].sender == path[i]
-        assert fees_paid[i].receiver == path[i + 1]
-        assert fees_paid[i].value == 1
-    assert transfer_information.value_sent == value
-    assert transfer_information.value_received == value - number_of_mediators
-    assert transfer_information.total_fees == number_of_mediators
+    assert transfer_information.fees_paid == [1, 1, 1, 1, 1]
+    assert transfer_information.payment_path.value == value
+    assert transfer_information.payment_path.fee == number_of_mediators
+    assert transfer_information.payment_path.fee_payer == fee_payer
+    assert transfer_information.currency_network == network.address

@@ -24,6 +24,10 @@ from relay.blockchain.delegate import (
     InvalidTimeLimit,
     UnknownIdentityFactoryException,
 )
+from relay.blockchain.events_informations import (
+    MultipleTransferFoundException,
+    TransferNotFoundException,
+)
 from relay.blockchain.unw_eth_proxy import UnwEthProxy
 from relay.concurrency_utils import TimeoutException
 from relay.network_graph.payment_path import FeePayer, PaymentPath
@@ -474,8 +478,18 @@ class TransferInformation(Resource):
 
     @dump_result_with_schema(TransferInformationSchema())
     def get(self, tx_hash: str):
-        logger.info(self.trustlines.get_transfer_information(tx_hash))
-        return self.trustlines.get_transfer_information(tx_hash)
+        try:
+            return self.trustlines.get_transfer_information(tx_hash)
+        except TransferNotFoundException:
+            abort(
+                404,
+                f"No transfer found in transaction with transaction hash: {tx_hash}",
+            )
+        except MultipleTransferFoundException:
+            abort(
+                400,
+                f"Multiple transfer found in transaction, not handled yet: {tx_hash}",
+            )
 
 
 class TransactionInfos(Resource):

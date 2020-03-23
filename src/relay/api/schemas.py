@@ -274,9 +274,6 @@ class PaidFeesSchema(Schema):
 
 class TransferInformationSchema(Schema):
 
-    path = Address(many=True)
     currencyNetwork = Address(attribute="currency_network")
-    valueSent = BigInteger(attribute="value_sent")
-    valueReceived = BigInteger(attribute="value_received")
-    totalFees = BigInteger(attribute="total_fees")
-    feesPaid = fields.Nested(PaidFeesSchema, many=True, attribute="fees_paid")
+    paymentPath = fields.Nested(PaymentPathSchema, attribute="payment_path")
+    feesPaid = BigInteger(many=True, attribute="fees_paid")
