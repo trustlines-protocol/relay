@@ -811,11 +811,11 @@ The `accuredInterests` is a list with the following elements:
 Returns information about a trustline transfer applied by transaction with given hash.
 #### Request
 ```
-GET /transfers/:txHash/information
+GET /transfers/:txHash
 ```
 #### Example Request
 ```
-curl https://relay0.testnet.trustlines.network/api/v1/transfers/0xC0B33D88C704455075a0724AA167a286da778DDE/information
+curl https://relay0.testnet.trustlines.network/api/v1/transfers/0xC0B33D88C704455075a0724AA167a286da778DDE
 ```
 #### URL Parameters
 | Name         | Type                      | Required | Description                                       |

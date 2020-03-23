@@ -992,7 +992,3 @@ def create_engine():
             password=os.environ.get("PGPASSWORD", ""),
         )
     )
-
-
-class EthIndexNotUsedException(Exception):
-    pass
