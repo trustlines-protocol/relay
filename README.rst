@@ -60,6 +60,21 @@ when committing changes to the git repository ::
 After running those commands, the relay server is ready to run. Please
 run `tl-relay --help` to get an overview of available options.
 
+
+Dependencies
+~~~~~~~~~~~~
+To manage and pin the (sub)dependencies of the relay server we use
+`pip-tools <https://github.com/jazzband/pip-tools/>`__.
+We create two requirements files, one for the production environment (:code:`requirements.txt`) and one for the additional development
+requirements (:code:`dev-requirements.txt`). For the dev environment, you have to install both.
+The production dependencies are derived from the dependencies defined in :code:`setup.py`
+and constraint by :code:`constraints.in`. To add new dependencies, add them to :code:`setup.py` and then run :code:`./compile-requirements`.
+If wrong subdependencies create problems, you can restrict them with :code:`constraints.in`.
+The development requirements are derived from :code:`dev-requirements.in`. To add new development dependencies, add them to this file and then rerun
+:code:`./compile-requirements`.
+To upgrade the dependencies in the created requirement files, check out the available options for pip-tools and pass
+them to the compile script. To update all dependencies, run :code:`./compile-requirements.sh --upgrade`.
+
 Change log
 ----------
 
