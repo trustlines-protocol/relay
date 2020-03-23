@@ -389,6 +389,33 @@ def test_meta_transaction_fees_invalid_network(
         )
 
 
+def test_meta_transaction_fee_recipient_invalid(
+    delegate_with_one_fees, signed_meta_transaction, owner_key
+):
+    """
+    Check that an exception is raised when validating an meta_transaction with invalid fee recipient
+    """
+
+    delegation_fees = delegate_with_one_fees.calculate_fees_for_meta_transaction(
+        signed_meta_transaction
+    )[0]
+
+    wrong_recipient = signed_meta_transaction.from_
+    assert delegation_fees.fee_recipient != wrong_recipient
+
+    meta_transaction_with_fees = attr.evolve(
+        signed_meta_transaction,
+        base_fee=delegation_fees.base_fee,
+        currency_network_of_fees=delegation_fees.currency_network_of_fees,
+        fee_recipient=wrong_recipient,
+    )
+    signed_meta_transaction_with_fees = meta_transaction_with_fees.signed(owner_key)
+    with pytest.raises(InvalidDelegationFeesException):
+        delegate_with_one_fees.validate_meta_transaction_fees(
+            signed_meta_transaction_with_fees
+        )
+
+
 @pytest.mark.parametrize(
     "gas_price_config, gas_price",
     [

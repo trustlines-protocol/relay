@@ -29,6 +29,24 @@ def uncommented_example_config_filepath(example_config_filepath, tmp_path):
     return str(d)
 
 
+@pytest.fixture()
+def correct_fees_config_file(tmp_path):
+    folder = tmp_path / "subfolder"
+    folder.mkdir()
+    file_path = folder / "correct_config.toml"
+    file_path.write_text(
+        "\n".join(
+            (
+                "[delegate]",
+                "enable = true",
+                "enable_deploy_identity = true",
+                "fees=[{'base_fee'=0, 'gas_price'=0}]",
+            )
+        )
+    )
+    return file_path
+
+
 @pytest.mark.parametrize(
     "test_input, expected_output",
     [
@@ -53,3 +71,7 @@ def test_example_file_matches_default_config(example_config_filepath):
 def test_uncommented_default_config_is_valid(uncommented_example_config_filepath):
     """ Test that if you uncomment the not default fields, that the config is valid"""
     load_config(uncommented_example_config_filepath)
+
+
+def test_correct_fee_config_is_valid(correct_fees_config_file):
+    load_config(correct_fees_config_file)

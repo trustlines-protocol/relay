@@ -102,16 +102,20 @@ class Delegate:
 
     def validate_meta_transaction_fees(self, meta_transaction: MetaTransaction):
         fees_estimations = self._calculate_fees_for_meta_transaction(meta_transaction)
-        if not fees_estimations:
-            return
+
         for fees_estimation in fees_estimations:
             if fees_estimation.base_fee == 0 and fees_estimation.gas_price == 0:
                 return
+            # Deprecated: for now accept ZERO_ADDRESS as fee recipient. This will be removed in the future.
             if (
                 fees_estimation.currency_network_of_fees
                 == meta_transaction.currency_network_of_fees
                 and fees_estimation.base_fee <= meta_transaction.base_fee
                 and fees_estimation.gas_price <= meta_transaction.gas_price
+                and (
+                    fees_estimation.fee_recipient == meta_transaction.fee_recipient
+                    or meta_transaction.fee_recipient == ZERO_ADDRESS
+                )
             ):
                 return
 
