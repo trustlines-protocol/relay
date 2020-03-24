@@ -55,75 +55,9 @@ class EventsInformationFetcher:
             event_name=TrustlineUpdateEventType,
         )
 
-        return self.get_accrued_interests_from_events(
+        return get_accrued_interests_from_events(
             balance_update_events, trustline_update_events
         )
-
-    def get_accrued_interests_from_events(
-        self, balance_update_events, trustline_update_events
-    ):
-        accrued_interests = []
-        for (pre_balance_event, post_balance_event) in toolz.itertoolz.sliding_window(
-            2, balance_update_events
-        ):
-            balance = self.balance_viewed_from_user(pre_balance_event)
-            interest_rate = self.get_interests_rates_of_trustline_for_user_before_timestamp(
-                trustline_update_events, balance, post_balance_event.timestamp
-            )
-            interest_value = calculate_interests(
-                balance,
-                interest_rate,
-                post_balance_event.timestamp - pre_balance_event.timestamp,
-            )
-            accrued_interests.append(
-                InterestAccrued(
-                    interest_value, interest_rate, post_balance_event.timestamp
-                )
-            )
-
-        return accrued_interests
-
-    def balance_viewed_from_user(self, balance_update_event):
-        if balance_update_event.direction == DIRECTION_SENT:
-            return balance_update_event.value
-        elif balance_update_event.direction == DIRECTION_RECEIVED:
-            return -balance_update_event.value
-        else:
-            raise RuntimeError("Unexpected balance update event")
-
-    def get_interests_rates_of_trustline_for_user_before_timestamp(
-        self, trustline_update_events, balance, timestamp
-    ):
-        """Get the interest rate that would be used to apply interests at a certain timestamp"""
-
-        most_recent_event_before_timestamp = None
-        for event in self.sorted_events(trustline_update_events, reverse=True):
-            if event.timestamp < timestamp:
-                most_recent_event_before_timestamp = event
-                break
-        if most_recent_event_before_timestamp is None:
-            raise RuntimeError("No trustline update event found before given timestamp")
-
-        if most_recent_event_before_timestamp.direction == DIRECTION_SENT:
-            if balance >= 0:
-                return most_recent_event_before_timestamp.interest_rate_given
-            else:
-                return most_recent_event_before_timestamp.interest_rate_received
-        elif most_recent_event_before_timestamp.direction == DIRECTION_RECEIVED:
-            if balance >= 0:
-                return most_recent_event_before_timestamp.interest_rate_received
-            else:
-                return most_recent_event_before_timestamp.interest_rate_given
-        else:
-            raise RuntimeError("Unexpected trustline update event")
-
-    def sorted_events(self, events, reverse=False):
-        def key(event):
-            if event.blocknumber is None:
-                return math.inf
-            return event.blocknumber
-
-        return sorted(events, key=key, reverse=reverse)
 
     def get_list_of_paid_interests_for_trustline_in_between_timestamps(
         self, currency_network_address, user, counterparty, start_time, end_time
@@ -131,25 +65,14 @@ class EventsInformationFetcher:
         all_accrued_interests = self.get_list_of_paid_interests_for_trustline(
             currency_network_address, user, counterparty
         )
-        return self.filter_list_of_accrued_interests_for_time_window(
+        return filter_list_of_accrued_interests_for_time_window(
             all_accrued_interests, start_time, end_time
         )
 
-    def filter_list_of_accrued_interests_for_time_window(
-        self, accrued_interests: List[InterestAccrued], start_time, end_time
-    ):
-        filtered_list = []
-        for interest in accrued_interests:
-            if interest.timestamp <= end_time and interest.timestamp >= start_time:
-                filtered_list.append(interest)
-        return filtered_list
-
     def get_transfer_details(self, tx_hash):
 
-        all_events_of_tx = self.events_proxy.get_all_known_abi_transaction_events(
-            tx_hash
-        )
-        transfer_events_in_tx = self.get_all_transfer_events(all_events_of_tx)
+        all_events_of_tx = self.events_proxy.get_transaction_events(tx_hash)
+        transfer_events_in_tx = filter_events(all_events_of_tx, TransferEventType)
         if len(transfer_events_in_tx) == 0:
             raise TransferNotFoundException(tx_hash)
         if len(transfer_events_in_tx) > 1:
@@ -158,14 +81,14 @@ class EventsInformationFetcher:
 
         currency_network_address = transfer_event.network_address
 
-        sorted_balance_updates = self.get_balance_update_events_for_transfer(
+        sorted_balance_updates = get_balance_update_events_for_transfer(
             all_events_of_tx, transfer_event
         )
         delta_balances_along_path = self.get_delta_balances_of_transfer(
             currency_network_address, sorted_balance_updates
         )
 
-        transfer_path = self.get_transfer_path(sorted_balance_updates)
+        transfer_path = get_transfer_path(sorted_balance_updates)
 
         fees_paid = delta_balances_along_path[1:-1]
         value_sent = -delta_balances_along_path[0]
@@ -191,58 +114,6 @@ class EventsInformationFetcher:
             ),
             fees_paid=fees_paid,
         )
-
-    def get_all_transfer_events(self, all_events):
-        transfer_events = []
-        for event in all_events:
-            if event.type == TransferEventType:
-                transfer_events.append(event)
-        return transfer_events
-
-    def get_transfer_path(self, sorted_balance_updates):
-        """Returns the transfer path of the given transfer without the sender"""
-        path_from_events = []
-        path_from_events.append(sorted_balance_updates[0].from_)
-        for event in sorted_balance_updates:
-            path_from_events.append(event.to)
-
-        return path_from_events
-
-    def get_balance_update_events_for_transfer(self, all_events, transfer_event):
-        """Returns all balance update events in the correct order that belongs to the transfer event"""
-        log_index = transfer_event.log_index
-        sender = transfer_event.from_
-        receiver = transfer_event.to
-
-        balance_events = []
-        saw_sender_event = False
-        saw_receiver_event = False
-
-        # Search backwards for releated BalanceUpdate events
-        for i in range(log_index - 1, -1, -1):
-            for event in all_events:
-                if event.log_index == i:
-                    assert (
-                        event.type == BalanceUpdateEventType
-                    ), "Wrong event type for events before transfer event"
-                    balance_events.append(event)
-                    if event.to == receiver:
-                        saw_receiver_event = True
-                    if event.from_ == sender:
-                        saw_sender_event = True
-                    break
-            if saw_sender_event and saw_receiver_event:
-                break
-        else:
-            assert False, "Could not find all BalanceUpdate events"
-
-        if balance_events[0].from_ != sender:
-            # For the sender pays case, they are reverse
-            balance_events.reverse()
-
-        assert balance_events[0].from_ == sender
-        assert balance_events[-1].to == receiver
-        return balance_events
 
     def get_delta_balances_of_transfer(
         self, currency_network_address, sorted_balance_updates
@@ -294,7 +165,7 @@ class EventsInformationFetcher:
 
         # find the corresponding event
         for i, event in enumerate(balance_update_events):
-            if self.event_id(balance_update_event) == self.event_id(event):
+            if event_id(balance_update_event) == event_id(event):
                 index = i
                 break
         else:
@@ -304,17 +175,9 @@ class EventsInformationFetcher:
         if index < 0:
             return 0
 
-        return self.get_balance_from_update_event_viewed_from_a(
+        return get_balance_from_update_event_viewed_from_a(
             balance_update_events[index], a
         )
-
-    def get_balance_from_update_event_viewed_from_a(self, balance_update_event, a):
-        if balance_update_event.from_ == a:
-            return balance_update_event.value
-        elif balance_update_event.to == a:
-            return -balance_update_event.value
-        else:
-            RuntimeError("Unexpected balance update event")
 
     def get_all_balance_update_events_for_trustline(
         self, currency_network_address, a, b
@@ -326,9 +189,6 @@ class EventsInformationFetcher:
             counterparty_address=b,
             contract_address=currency_network_address,
         )
-
-    def event_id(self, event):
-        return event.transaction_id, event.log_index  # , event["blockHash"]
 
     def get_interest_at(self, currency_network_address, balance_update_event):
         """Returns the applied interests at a given balance update"""
@@ -345,6 +205,150 @@ class EventsInformationFetcher:
             if accrued_interest.timestamp == timestamp:
                 return accrued_interest.value
         return 0
+
+
+def balance_viewed_from_user(balance_update_event):
+    if balance_update_event.direction == DIRECTION_SENT:
+        return balance_update_event.value
+    elif balance_update_event.direction == DIRECTION_RECEIVED:
+        return -balance_update_event.value
+    else:
+        raise RuntimeError("Unexpected balance update event")
+
+
+def sorted_events(events, reverse=False):
+    def key(event):
+        if event.blocknumber is None:
+            return math.inf
+        return event.blocknumber
+
+    return sorted(events, key=key, reverse=reverse)
+
+
+def get_interests_rates_of_trustline_for_user_before_timestamp(
+    trustline_update_events, balance, timestamp
+):
+    """Get the interest rate that would be used to apply interests at a certain timestamp"""
+
+    most_recent_event_before_timestamp = None
+    for event in sorted_events(trustline_update_events, reverse=True):
+        if event.timestamp < timestamp:
+            most_recent_event_before_timestamp = event
+            break
+    if most_recent_event_before_timestamp is None:
+        raise RuntimeError("No trustline update event found before given timestamp")
+
+    if most_recent_event_before_timestamp.direction == DIRECTION_SENT:
+        if balance >= 0:
+            return most_recent_event_before_timestamp.interest_rate_given
+        else:
+            return most_recent_event_before_timestamp.interest_rate_received
+    elif most_recent_event_before_timestamp.direction == DIRECTION_RECEIVED:
+        if balance >= 0:
+            return most_recent_event_before_timestamp.interest_rate_received
+        else:
+            return most_recent_event_before_timestamp.interest_rate_given
+    else:
+        raise RuntimeError("Unexpected trustline update event")
+
+
+def get_accrued_interests_from_events(balance_update_events, trustline_update_events):
+    accrued_interests = []
+    for (pre_balance_event, post_balance_event) in toolz.itertoolz.sliding_window(
+        2, balance_update_events
+    ):
+        balance = balance_viewed_from_user(pre_balance_event)
+        interest_rate = get_interests_rates_of_trustline_for_user_before_timestamp(
+            trustline_update_events, balance, post_balance_event.timestamp
+        )
+        interest_value = calculate_interests(
+            balance,
+            interest_rate,
+            post_balance_event.timestamp - pre_balance_event.timestamp,
+        )
+        accrued_interests.append(
+            InterestAccrued(interest_value, interest_rate, post_balance_event.timestamp)
+        )
+
+    return accrued_interests
+
+
+def filter_list_of_accrued_interests_for_time_window(
+    accrued_interests: List[InterestAccrued], start_time, end_time
+):
+    filtered_list = []
+    for interest in accrued_interests:
+        if interest.timestamp <= end_time and interest.timestamp >= start_time:
+            filtered_list.append(interest)
+    return filtered_list
+
+
+def filter_events(all_events, event_type):
+    events = []
+    for event in all_events:
+        if event.type == event_type:
+            events.append(event)
+    return events
+
+
+def get_transfer_path(sorted_balance_updates):
+    """Returns the transfer path of the given transfer without the sender"""
+    path_from_events = []
+    path_from_events.append(sorted_balance_updates[0].from_)
+    for event in sorted_balance_updates:
+        path_from_events.append(event.to)
+
+    return path_from_events
+
+
+def get_balance_update_events_for_transfer(all_events, transfer_event):
+    """Returns all balance update events in the correct order that belongs to the transfer event"""
+    log_index = transfer_event.log_index
+    sender = transfer_event.from_
+    receiver = transfer_event.to
+
+    balance_events = []
+    saw_sender_event = False
+    saw_receiver_event = False
+
+    # Search backwards for releated BalanceUpdate events
+    for i in range(log_index - 1, -1, -1):
+        for event in all_events:
+            if event.log_index == i:
+                assert (
+                    event.type == BalanceUpdateEventType
+                ), "Wrong event type for events before transfer event"
+                balance_events.append(event)
+                if event.to == receiver:
+                    saw_receiver_event = True
+                if event.from_ == sender:
+                    saw_sender_event = True
+                break
+        if saw_sender_event and saw_receiver_event:
+            break
+    else:
+        assert False, "Could not find all BalanceUpdate events"
+
+    if balance_events[0].from_ != sender:
+        # For the sender pays case, they are reverse
+        balance_events.reverse()
+
+    assert balance_events[0].from_ == sender
+    assert balance_events[-1].to == receiver
+    return balance_events
+
+
+def get_balance_from_update_event_viewed_from_a(balance_update_event, a):
+    if balance_update_event.from_ == a:
+        return balance_update_event.value
+    elif balance_update_event.to == a:
+        return -balance_update_event.value
+    else:
+        RuntimeError("Unexpected balance update event")
+
+
+def event_id(event):
+    return event.transaction_id, event.log_index
 
 
 class TransferNotFoundException(Exception):

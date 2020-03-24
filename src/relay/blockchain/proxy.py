@@ -200,7 +200,7 @@ class Proxy(object):
         results = concurrency_utils.joinall(queries, timeout=timeout)
         return sorted_events(list(itertools.chain.from_iterable(results)))
 
-    def get_all_known_abi_transaction_events(self, tx_hash: str, from_block: int = 0):
+    def get_transaction_events(self, tx_hash: str, from_block: int = 0):
         receipt = self._web3.eth.getTransactionReceipt(tx_hash)
         events = []
         for log in receipt["logs"]:
@@ -212,7 +212,7 @@ class Proxy(object):
                 pass
 
         logger.debug(
-            "get_all_known_abi_transaction_events(%s, %s) -> %s rows",
+            "get_transaction_events(%s, %s) -> %s rows",
             tx_hash,
             from_block,
             len(events),
