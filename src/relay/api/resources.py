@@ -196,7 +196,6 @@ def _get_extended_account_summary(
     account_summary = graph.get_account_sum(a_address, b_address, timestamp=timestamp)
     account_summary.user = a_address
     account_summary.counterParty = b_address
-    account_summary.address = b_address
     account_summary.id = _id(network_address, a_address, b_address)
     account_summary.currencyNetwork = network_address
     return account_summary
