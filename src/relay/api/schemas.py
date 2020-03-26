@@ -264,3 +264,19 @@ class AccruedInterestListSchema(Schema):
     accruedInterests = fields.Nested(AccruedInterestSchema, many=True)
     user = Address()
     counterparty = Address()
+
+
+class PaidFeesSchema(Schema):
+    sender = Address()
+    receiver = Address()
+    value = BigInteger()
+
+
+class TransferInformationSchema(Schema):
+
+    currencyNetwork = Address(required=True, attribute="currency_network")
+    path = fields.List(Address(), required=True)
+    value = BigInteger(required=True)
+    feePayer = FeePayerField(required=True, attribute="fee_payer")
+    totalFees = BigInteger(required=True, attribute="total_fees")
+    feesPaid = fields.List(BigInteger(), required=True, attribute="fees_paid")

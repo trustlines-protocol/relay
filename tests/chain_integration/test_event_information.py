@@ -1,8 +1,7 @@
 import pytest
 
-from relay.blockchain.events_informations import (
-    get_list_of_paid_interests_for_trustline,
-)
+from relay.blockchain.events_informations import EventsInformationFetcher
+from relay.network_graph.payment_path import FeePayer
 
 
 def accrue_interests(currency_network, web3, chain, path, years):
@@ -35,8 +34,10 @@ def test_get_interests_received_for_trustline_positive_balance(
     path = [accounts[0], accounts[1], accounts[2], accounts[3]]
     accrue_interests(currency_network, web3, chain, path, years)
 
-    accrued_interests = get_list_of_paid_interests_for_trustline(
-        currency_network, currency_network, accounts[2], accounts[1]
+    accrued_interests = EventsInformationFetcher(
+        currency_network
+    ).get_list_of_paid_interests_for_trustline(
+        currency_network, accounts[2], accounts[1]
     )
 
     list_of_interests = [
@@ -63,8 +64,10 @@ def test_get_interests_received_for_trustline_negaive_balance(
     path = [accounts[3], accounts[2], accounts[1], accounts[0]]
     accrue_interests(currency_network, web3, chain, path, years)
 
-    accrued_interests = get_list_of_paid_interests_for_trustline(
-        currency_network, currency_network, accounts[1], accounts[2]
+    accrued_interests = EventsInformationFetcher(
+        currency_network
+    ).get_list_of_paid_interests_for_trustline(
+        currency_network, accounts[1], accounts[2]
     )
 
     list_of_interests = [
@@ -91,8 +94,10 @@ def test_get_interests_paid_for_trustline_positive_balance(
     path = [accounts[0], accounts[1], accounts[2], accounts[3]]
     accrue_interests(currency_network, web3, chain, path, years)
 
-    accrued_interests = get_list_of_paid_interests_for_trustline(
-        currency_network, currency_network, accounts[1], accounts[2]
+    accrued_interests = EventsInformationFetcher(
+        currency_network
+    ).get_list_of_paid_interests_for_trustline(
+        currency_network, accounts[1], accounts[2]
     )
 
     list_of_interests = [
@@ -119,8 +124,10 @@ def test_get_interests_paid_for_trustline_negative_balance(
     path = [accounts[3], accounts[2], accounts[1], accounts[0]]
     accrue_interests(currency_network, web3, chain, path, years)
 
-    accrued_interests = get_list_of_paid_interests_for_trustline(
-        currency_network, currency_network, accounts[2], accounts[1]
+    accrued_interests = EventsInformationFetcher(
+        currency_network
+    ).get_list_of_paid_interests_for_trustline(
+        currency_network, accounts[2], accounts[1]
     )
 
     list_of_interests = [
@@ -129,3 +136,66 @@ def test_get_interests_paid_for_trustline_negative_balance(
     assert list_of_interests == interests
     for accrued_interest in accrued_interests:
         assert accrued_interest.interest_rate == 2000
+
+
+@pytest.mark.parametrize(
+    "path, fee_payer",
+    [
+        ([0, 1], "sender"),
+        ([0, 1, 2, 3], "sender"),
+        ([3, 2, 1, 0], "sender"),
+        ([0, 1], "receiver"),
+        ([0, 1, 2, 3], "receiver"),
+        ([3, 2, 1, 0], "receiver"),
+    ],
+)
+def test_get_transfer_information_path(
+    currency_network_with_trustlines, accounts, path, fee_payer
+):
+    """
+    test that we can get the path of a sent transfer from the transfer event
+    """
+    network = currency_network_with_trustlines
+    account_path = [accounts[i] for i in path]
+    value = 100
+
+    if fee_payer == "sender":
+        tx_hash = network.transfer_on_path(value, account_path)
+    elif fee_payer == "receiver":
+        tx_hash = network.transfer_receiver_pays_on_path(value, account_path)
+    else:
+        assert False, "Invalid fee payer"
+
+    transfer_information = EventsInformationFetcher(network).get_transfer_details(
+        tx_hash
+    )
+    assert transfer_information.path == account_path
+
+
+@pytest.mark.parametrize("fee_payer", [FeePayer.SENDER, FeePayer.RECEIVER])
+def test_get_transfer_information_values(
+    currency_network_with_trustlines, accounts, fee_payer
+):
+    """
+    test that we can get the path of a sent transfer from the transfer event
+    """
+    network = currency_network_with_trustlines
+    path = [accounts[i] for i in [0, 1, 2, 3, 4, 5, 6]]
+    number_of_mediators = len(path) - 2
+    value = 10
+
+    if fee_payer == FeePayer.SENDER:
+        tx_hash = network.transfer_on_path(value, path)
+    elif fee_payer == FeePayer.RECEIVER:
+        tx_hash = network.transfer_receiver_pays_on_path(value, path)
+    else:
+        assert False, "Invalid fee payer"
+
+    transfer_information = EventsInformationFetcher(network).get_transfer_details(
+        tx_hash
+    )
+    assert transfer_information.fees_paid == [1, 1, 1, 1, 1]
+    assert transfer_information.value == value
+    assert transfer_information.total_fees == number_of_mediators
+    assert transfer_information.fee_payer == fee_payer
+    assert transfer_information.currency_network == network.address

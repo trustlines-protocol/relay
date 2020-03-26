@@ -55,6 +55,8 @@ class LogFilterListener:
 
     def add_proxy(self, proxy: "Proxy"):
         """Add a new proxy to listen for logs"""
+        if proxy.address is None:
+            raise NoAddressError("Tried to listen for logs of proxy with no address")
         self._proxies[proxy.address] = proxy
 
     def start(self):
@@ -130,7 +132,7 @@ class Proxy(object):
     event_builders: Mapping[str, Callable[[Any, int, int], BlockchainEvent]] = {}
     standard_event_types: List[str] = []
 
-    def __init__(self, web3, abi, address: str) -> None:
+    def __init__(self, web3, abi, address: str = None) -> None:
         self._web3 = web3
         self._proxy = web3.eth.contract(abi=abi, address=address)
         self.address = address
@@ -172,6 +174,8 @@ class Proxy(object):
     ) -> List[BlockchainEvent]:
         if event_name not in self.event_builders.keys():
             raise ValueError("Unknown eventname {}".format(event_name))
+        if self.address is None:
+            raise NoAddressError("Tried to get events from proxy with no address")
 
         if filter_ is None:
             filter_ = {}
@@ -196,6 +200,26 @@ class Proxy(object):
         results = concurrency_utils.joinall(queries, timeout=timeout)
         return sorted_events(list(itertools.chain.from_iterable(results)))
 
+    def get_transaction_events(self, tx_hash: str, from_block: int = 0):
+        receipt = self._web3.eth.getTransactionReceipt(tx_hash)
+        events = []
+        for log in receipt["logs"]:
+            try:
+                abi = self._get_abi_for_log(log)
+                rich_log = get_event_data(abi, log)
+                events.append(rich_log)
+            except AbiNotFoundException:
+                pass
+
+        logger.debug(
+            "get_transaction_events(%s, %s) -> %s rows",
+            tx_hash,
+            from_block,
+            len(events),
+        )
+
+        return self._build_events(events)
+
     def _build_events(self, events: List[Any]):
         current_blocknumber = self._web3.eth.blockNumber
         return [self._build_event(event, current_blocknumber) for event in events]
@@ -209,9 +233,9 @@ class Proxy(object):
         topic = hexbytes.HexBytes(raw_event_log["topics"][0])
         event_abi = self._topic2event_abi.get(topic)
         if event_abi is None:
-            raise RuntimeError(
+            raise AbiNotFoundException(
                 f"Could not find event abi for log {raw_event_log} on contract {self.address}. "
-                "{topic} not in {self._topic2event_abi.keys()}"
+                f"{topic} not in {self._topic2event_abi.keys()}"
             )
         return event_abi
 
@@ -240,3 +264,11 @@ def sorted_events(events: List[BlockchainEvent]) -> List[BlockchainEvent]:
         return event.blocknumber
 
     return sorted(events, key=key)
+
+
+class AbiNotFoundException(Exception):
+    pass
+
+
+class NoAddressError(Exception):
+    pass

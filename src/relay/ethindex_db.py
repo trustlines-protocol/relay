@@ -463,3 +463,23 @@ class EthindexDB:
         )
 
         return events
+
+    def get_transaction_events(self, tx_hash: str, from_block: int = 0):
+
+        query = EventsQuery(
+            """blockNumber>=%s
+               AND transactionHash=%s
+            """,
+            (from_block, tx_hash),
+        )
+
+        events = self._run_events_query(query)
+
+        logger.debug(
+            "get_transaction_events(%s, %s) -> %s rows",
+            tx_hash,
+            from_block,
+            len(events),
+        )
+
+        return events

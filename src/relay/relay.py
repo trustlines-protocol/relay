@@ -42,12 +42,10 @@ from .blockchain import (
 from .blockchain.currency_network_proxy import CurrencyNetworkProxy
 from .blockchain.delegate import Delegate, DelegationFees
 from .blockchain.events import BlockchainEvent
-from .blockchain.events_informations import (
-    get_list_of_paid_interests_for_trustline_in_between_timestamps,
-)
+from .blockchain.events_informations import EventsInformationFetcher
 from .blockchain.exchange_proxy import ExchangeProxy
 from .blockchain.node import Node
-from .blockchain.proxy import sorted_events
+from .blockchain.proxy import Proxy, sorted_events
 from .blockchain.token_proxy import TokenProxy
 from .blockchain.unw_eth_proxy import UnwEthProxy
 from .events import BalanceEvent, NetworkBalanceEvent
@@ -164,7 +162,7 @@ class TrustlinesRelay:
     def use_eth_index(self) -> bool:
         return os.environ.get("ETHINDEX", "1") == "1"
 
-    def get_event_selector_for_currency_network(self, network_address):
+    def get_event_selector_for_currency_network(self, network_address=None):
         """return either a CurrencyNetworkProxy or a EthindexDB instance
         This is being used from relay.api to query for events.
         """
@@ -177,6 +175,8 @@ class TrustlinesRelay:
                 from_to_types=currency_network_events.from_to_types,
             )
         else:
+            if network_address is None:
+                return Proxy(self._web3, abi=self.contracts["CurrencyNetwork"]["abi"])
             return self.currency_network_proxies[network_address]
 
     def get_event_selector_for_token(self, address):
@@ -236,6 +236,9 @@ class TrustlinesRelay:
     def get_network_info(self, network_address: str) -> NetworkInfo:
         proxy = self.currency_network_proxies[network_address]
         graph = self.currency_network_graphs[network_address]
+        assert (
+            proxy.address is not None
+        ), "Invalid currency network proxy with no address."
         return NetworkInfo(
             address=proxy.address,
             name=proxy.name,
@@ -273,14 +276,17 @@ class TrustlinesRelay:
         if not end_time:
             end_time = int(time.time())
         event_selector = self.get_event_selector_for_currency_network(network_address)
-        return get_list_of_paid_interests_for_trustline_in_between_timestamps(
-            event_selector,
-            network_address,
-            user_address,
-            counterparty_address,
-            start_time,
-            end_time,
+        return EventsInformationFetcher(
+            event_selector
+        ).get_list_of_paid_interests_for_trustline_in_between_timestamps(
+            network_address, user_address, counterparty_address, start_time, end_time
         )
+
+    def get_transfer_information(self, tx_hash):
+        fetcher = EventsInformationFetcher(
+            self.get_event_selector_for_currency_network()
+        )
+        return fetcher.get_transfer_details(tx_hash)
 
     def deploy_identity(self, factory_address, implementation_address, signature):
         return self.delegate.deploy_identity(
