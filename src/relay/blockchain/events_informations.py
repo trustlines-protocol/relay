@@ -120,21 +120,21 @@ class EventsInformationFetcher:
     ):
         """Returns the balance changes along the path because of a given transfer"""
         post_balances = []
-        for event in sorted_balance_updates:
-            post_balances.append(event.value)
+        for balance_update in sorted_balance_updates:
+            post_balances.append(balance_update.value)
 
         pre_balances = []
-        for event in sorted_balance_updates:
-            from_ = event.from_
-            to = event.to
+        for balance_update in sorted_balance_updates:
+            from_ = balance_update.from_
+            to = balance_update.to
             pre_balance = self.get_previous_balance(
-                currency_network_address, from_, to, event
+                currency_network_address, from_, to, balance_update
             )
             pre_balances.append(pre_balance)
 
         interests = []
-        for event in sorted_balance_updates:
-            interest = self.get_interest_at(currency_network_address, event)
+        for balance_update in sorted_balance_updates:
+            interest = self.get_interest_at(currency_network_address, balance_update)
             interests.append(interest)
 
         # sender balance change
@@ -217,12 +217,19 @@ def balance_viewed_from_user(balance_update_event):
 
 
 def sorted_events(events, reverse=False):
-    def key(event):
+    def log_index_key(event):
+        if event.log_index is None:
+            raise RuntimeError("No log index, events cannot be ordered truthfully.")
+        return event.log_index
+
+    def block_number_key(event):
         if event.blocknumber is None:
             return math.inf
         return event.blocknumber
 
-    return sorted(events, key=key, reverse=reverse)
+    return sorted(
+        events, key=lambda event: (block_number_key(event), log_index_key(event))
+    )
 
 
 def get_interests_rates_of_trustline_for_user_before_timestamp(
@@ -284,19 +291,16 @@ def filter_list_of_accrued_interests_for_time_window(
 
 
 def filter_events(all_events, event_type):
-    events = []
-    for event in all_events:
-        if event.type == event_type:
-            events.append(event)
-    return events
+    return [event for event in all_events if event.type == event_type]
 
 
 def get_transfer_path(sorted_balance_updates):
     """Returns the transfer path of the given transfer without the sender"""
     path_from_events = []
     path_from_events.append(sorted_balance_updates[0].from_)
-    for event in sorted_balance_updates:
-        path_from_events.append(event.to)
+    path_from_events.extend(
+        [balance_update.to for balance_update in sorted_balance_updates]
+    )
 
     return path_from_events
 

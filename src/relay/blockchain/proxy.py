@@ -218,7 +218,7 @@ class Proxy(object):
             len(events),
         )
 
-        return sorted_events(self._build_events(events))
+        return self._build_events(events)
 
     def _build_events(self, events: List[Any]):
         current_blocknumber = self._web3.eth.blockNumber
