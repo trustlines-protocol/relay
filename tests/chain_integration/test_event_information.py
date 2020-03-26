@@ -169,7 +169,7 @@ def test_get_transfer_information_path(
     transfer_information = EventsInformationFetcher(network).get_transfer_details(
         tx_hash
     )
-    assert transfer_information.payment_path.path == account_path
+    assert transfer_information.path == account_path
 
 
 @pytest.mark.parametrize("fee_payer", [FeePayer.SENDER, FeePayer.RECEIVER])
@@ -195,7 +195,7 @@ def test_get_transfer_information_values(
         tx_hash
     )
     assert transfer_information.fees_paid == [1, 1, 1, 1, 1]
-    assert transfer_information.payment_path.value == value
-    assert transfer_information.payment_path.fee == number_of_mediators
-    assert transfer_information.payment_path.fee_payer == fee_payer
+    assert transfer_information.value == value
+    assert transfer_information.total_fees == number_of_mediators
+    assert transfer_information.fee_payer == fee_payer
     assert transfer_information.currency_network == network.address

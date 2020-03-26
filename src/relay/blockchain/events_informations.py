@@ -11,7 +11,7 @@ from relay.blockchain.currency_network_events import (
     TrustlineUpdateEventType,
 )
 from relay.network_graph.interests import calculate_interests
-from relay.network_graph.payment_path import FeePayer, PaymentPath
+from relay.network_graph.payment_path import FeePayer
 
 logger = logging.getLogger("event_info")
 
@@ -29,7 +29,10 @@ class InterestAccrued:
 @attr.s
 class TransferInformation:
     currency_network = attr.ib()
-    payment_path = attr.ib()
+    path = attr.ib()
+    value = attr.ib()
+    fee_payer = attr.ib()
+    total_fees = attr.ib()
     fees_paid = attr.ib()
 
 
@@ -106,12 +109,10 @@ class EventsInformationFetcher:
 
         return TransferInformation(
             currency_network=currency_network_address,
-            payment_path=PaymentPath(
-                fee=total_fees,
-                path=transfer_path,
-                value=transfer_value,
-                fee_payer=fee_payer,
-            ),
+            path=transfer_path,
+            value=transfer_value,
+            fee_payer=fee_payer,
+            total_fees=total_fees,
             fees_paid=fees_paid,
         )
 
