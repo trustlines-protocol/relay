@@ -5,7 +5,7 @@ import math
 import socket
 import time
 from collections import defaultdict
-from typing import Any, Callable, Dict, List, Mapping, Optional, Set
+from typing import Any, Callable, Dict, List, Mapping, Optional, Set, Tuple
 
 import eth_utils
 import gevent
@@ -200,14 +200,17 @@ class Proxy(object):
         results = concurrency_utils.joinall(queries, timeout=timeout)
         return sorted_events(list(itertools.chain.from_iterable(results)))
 
-    def get_transaction_events(self, tx_hash: str, from_block: int = 0):
+    def get_transaction_events(
+        self, tx_hash: str, from_block: int = 0, event_types: Tuple = None
+    ):
         receipt = self._web3.eth.getTransactionReceipt(tx_hash)
         events = []
         for log in receipt["logs"]:
             try:
                 abi = self._get_abi_for_log(log)
                 rich_log = get_event_data(abi, log)
-                events.append(rich_log)
+                if event_types is None or rich_log["event"] in event_types:
+                    events.append(rich_log)
             except AbiNotFoundException:
                 pass
 
