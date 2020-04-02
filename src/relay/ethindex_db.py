@@ -2,7 +2,7 @@
 
 import collections
 import logging
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Tuple
 
 import psycopg2
 import psycopg2.extras
@@ -464,21 +464,26 @@ class EthindexDB:
 
         return events
 
-    def get_transaction_events(self, tx_hash: str, from_block: int = 0):
+    def get_transaction_events(
+        self, tx_hash: str, from_block: int = 0, event_types: Tuple = None
+    ):
+        event_types = self._get_standard_event_types(event_types)
 
         query = EventsQuery(
             """blockNumber>=%s
                AND transactionHash=%s
+               AND eventName in %s
             """,
-            (from_block, tx_hash),
+            (from_block, tx_hash, event_types),
         )
 
         events = self._run_events_query(query)
 
         logger.debug(
-            "get_transaction_events(%s, %s) -> %s rows",
+            "get_transaction_events(%s, %s, %s) -> %s rows",
             tx_hash,
             from_block,
+            event_types,
             len(events),
         )
 
