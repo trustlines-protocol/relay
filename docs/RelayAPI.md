@@ -808,21 +808,38 @@ The `accuredInterests` is a list with the following elements:
 ---
 
 ### Information for transfer in transaction
-Returns information about a trustline transfer applied by transaction with given hash.
+Returns information about all trustline transfer applied by transaction with given hash
+or identified by block hash and log index.
 #### Request
 ```
-GET /transfers/:txHash
+GET /transfers
 ```
+#### Data Parameters
+| Name            | Type   | Required | Description                                  |
+|-----------------|--------|----------|--------------------------------------------- |
+| transactionHash | string | No       | Hash of transaction responsible for transfer |
+| blockHash       | string | No       | Hash of block identifying transfer event     |
+| logIndex        | number | No       | Log index identifying transfer event         |
+
 #### Example Request
+To get transfer details via transaction hash:
+```bash
+curl --header "Content-Type: application/json" \
+  --request POST \
+  --data '{"transactionHash":"0x05c91f6506e78b1ca2413df9985ca7d37d2da5fc076c0b55c5d9eb9fdd7513a6"}' \
+https://relay0.testnet.trustlines.network/api/v1/transfers/
 ```
-curl https://relay0.testnet.trustlines.network/api/v1/transfers/0xC0B33D88C704455075a0724AA167a286da778DDE
+
+To get transfer details via transfer id:
+```bash
+curl --header "Content-Type: application/json" \
+  --request POST \
+  --data '{"blockHash":"0x05c91f6506e78b1ca2413df9985ca7d37d2da5fc076c0b55c5d9eb9fdd7513a6", "logIndex": 12}' \
+https://relay0.testnet.trustlines.network/api/v1/transfers/
 ```
-#### URL Parameters
-| Name         | Type                      | Required | Description                                       |
-|--------------|---------------------------|----------|---------------------------------------------------|
-| txHash       | string prefixed with "0x" | YES      | Hash of the tx responsible for the transfer       |
+
 #### Response
-The response is a an objects with the following elements:
+The response is a list of objects with the following elements:
 
 | Attribute        | Type                | JSON Type            | Description                                 |
 | ---------------- | ------------------- | -------------------- | ------------------------------------------- |
@@ -840,16 +857,18 @@ The `paymentPath` is an object with the following attributes:
 | feePayer     | string            | string           | who paid the fees, either `sender` or `receiver` |
 #### Example Response
 ```json
-{
-    "currencyNetwork": "0xC0B33D88C704455075a0724AA167a286da778DDE",
-    "paymentPath": {
-        "fees": "1",
-        "path": ["0xcbF1153F6e5AC01D363d432e24112e8aA56c55ce", "0x7Ec3543702FA8F2C7b2bD84C034aAc36C263cA8b", "0x7Ff66eb1A824FF9D1bB7e234a2d3B7A3b0345320"],
-        "value": "100",
-        "feePayer": "sender"
-    },
-    "feesPaid": ["1"]
-}
+[
+    {
+        "currencyNetwork": "0xC0B33D88C704455075a0724AA167a286da778DDE",
+        "paymentPath": {
+            "fees": "1",
+            "path": ["0xcbF1153F6e5AC01D363d432e24112e8aA56c55ce", "0x7Ec3543702FA8F2C7b2bD84C034aAc36C263cA8b", "0x7Ff66eb1A824FF9D1bB7e234a2d3B7A3b0345320"],
+            "value": "100",
+            "feePayer": "sender"
+        },
+        "feesPaid": ["1"]
+    }
+]
 ```
 
 ---

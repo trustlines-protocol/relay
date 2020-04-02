@@ -25,7 +25,7 @@ from relay.blockchain.delegate import (
     UnknownIdentityFactoryException,
 )
 from relay.blockchain.events_informations import (
-    MultipleTransferFoundException,
+    IdentifiedNotTransferException,
     TransferNotFoundException,
 )
 from relay.blockchain.unw_eth_proxy import UnwEthProxy
@@ -477,25 +477,65 @@ class TransferInformation(Resource):
         self.trustlines = trustlines
 
     args = {
+        "transactionHash": fields.Str(required=False, missing=None),
         "blockHash": fields.Str(required=False, missing=None),
         "logIndex": fields.Int(required=False, missing=None),
     }
 
-    @dump_result_with_schema(TransferInformationSchema())
-    def get(self, args, tx_hash: str):
-        if args["blockHash"] is not None and args["logIndex"] is not None:
-            pass
-        try:
-            return self.trustlines.get_transfer_information_for_tx_hash(tx_hash)
-        except TransferNotFoundException:
-            abort(
-                404,
-                f"No transfer found in transaction with transaction hash: {tx_hash}",
-            )
-        except MultipleTransferFoundException:
+    @use_args(args)
+    @dump_result_with_schema(TransferInformationSchema(many=True))
+    def get(self, args):
+        self.validate_input_args(args)
+
+        if args["transactionHash"]:
+            try:
+                return self.trustlines.get_transfer_information_for_tx_hash(
+                    args["transactionHash"]
+                )
+            except TransferNotFoundException as e:
+                abort(
+                    404,
+                    f"No transfer found in transaction with transaction hash: {e.tx_hash}",
+                )
+        elif args["blockHash"]:
+            try:
+                return self.trustlines.get_transfer_information_from_event_id(
+                    args["blockHash"], args["logIndex"]
+                )
+            except TransferNotFoundException as e:
+                abort(
+                    404,
+                    f"No transfer found in block {e.block_hash} with log index: {e.log_index}",
+                )
+            except IdentifiedNotTransferException as e:
+                abort(
+                    400,
+                    f"The event identified by block hash {e.block_hash} and log index {e.log_index} is not a Transfer",
+                )
+
+    def validate_input_args(self, args):
+        if args["transactionHash"]:
+            if args["blockHash"] or args["logIndex"]:
+                abort(
+                    400,
+                    f"Cannot get transfer information using transaction hash and log index or block hash.",
+                )
+        elif args["blockHash"]:
+            if not args["logIndex"]:
+                abort(
+                    400,
+                    f"Cannot get transfer information using block hash if log index not provided.",
+                )
+        elif args["logIndex"]:
+            if not args["blockHash"]:
+                abort(
+                    400,
+                    f"Cannot get transfer information using log index if block hash not provided.",
+                )
+        else:
             abort(
                 400,
-                f"Multiple transfer found in transaction, not handled yet: {tx_hash}",
+                "Either transaction hash or block hash and log index need to be provided.",
             )
 
 

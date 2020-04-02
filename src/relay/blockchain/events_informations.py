@@ -81,14 +81,20 @@ class EventsInformationFetcher:
         events_with_given_log_index = filter_events_with_index(
             all_events_of_tx, log_index
         )
-        assert len(events_with_given_log_index) != 0, "No events with given log index."
+        if len(events_with_given_log_index) == 0:
+            raise TransferNotFoundException(block_hash=block_hash, log_index=log_index)
         assert (
             len(events_with_given_log_index) == 1
         ), "Multiple events with given log index."
 
         transfer_event = events_with_given_log_index[0]
 
-        return self.get_transfer_details(all_events_of_tx, transfer_event)
+        if transfer_event.type != TransferEventType:
+            raise IdentifiedNotTransferException(
+                block_hash=block_hash, log_index=log_index
+            )
+
+        return [self.get_transfer_details(all_events_of_tx, transfer_event)]
 
     def get_transfer_details_for_tx(self, tx_hash):
 
@@ -99,14 +105,15 @@ class EventsInformationFetcher:
             all_events_of_tx, TransferEventType
         )
         if len(transfer_events_in_tx) == 0:
-            raise TransferNotFoundException(tx_hash)
-        if len(transfer_events_in_tx) > 1:
-            raise MultipleTransferFoundException(tx_hash)
-        transfer_event = transfer_events_in_tx[0]
+            raise TransferNotFoundException(tx_hash=tx_hash)
 
-        return self.get_transfer_details(all_events_of_tx, transfer_event)
+        return [
+            self.get_transfer_details(all_events_of_tx, transfer_event)
+            for transfer_event in transfer_events_in_tx
+        ]
 
     def get_transfer_details(self, all_events, transfer_event):
+        """Use a transfer event and all events emitted in transfer transaction to get transfer details"""
 
         currency_network_address = transfer_event.network_address
 
@@ -387,10 +394,13 @@ def event_id(event):
 
 
 class TransferNotFoundException(Exception):
-    def __init__(self, tx_hash):
+    def __init__(self, *, block_hash=None, log_index=None, tx_hash=None):
+        self.block_hash = block_hash
+        self.log_index = log_index
         self.tx_hash = tx_hash
 
 
-class MultipleTransferFoundException(Exception):
-    def __init__(self, tx_hash):
-        self.tx_hash = tx_hash
+class IdentifiedNotTransferException(Exception):
+    def __init__(self, *, block_hash=None, log_index=None):
+        self.block_hash = block_hash
+        self.log_index = log_index

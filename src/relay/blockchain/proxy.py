@@ -237,9 +237,7 @@ class Proxy(object):
                 identified_log = log
                 break
         if identified_log is None:
-            raise ValueError(
-                f"No event found in block {block_hash} with log index {log_index}"
-            )
+            return []
 
         transaction_events = []
         for log in block_logs:

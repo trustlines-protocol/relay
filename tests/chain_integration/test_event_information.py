@@ -181,11 +181,13 @@ def test_get_transfer_information_path(
             network
         ).get_transfer_details_for_id(
             transfer_event["blockHash"], transfer_event["logIndex"]
-        )
+        )[
+            0
+        ]
     else:
         transfer_information = EventsInformationFetcher(
             network
-        ).get_transfer_details_for_tx(tx_hash)
+        ).get_transfer_details_for_tx(tx_hash)[0]
 
     assert transfer_information.path == account_path
 
@@ -226,11 +228,13 @@ def test_get_transfer_information_values(
             network
         ).get_transfer_details_for_id(
             transfer_event["blockHash"], transfer_event["logIndex"]
-        )
+        )[
+            0
+        ]
     else:
         transfer_information = EventsInformationFetcher(
             network
-        ).get_transfer_details_for_tx(tx_hash)
+        ).get_transfer_details_for_tx(tx_hash)[0]
 
     assert transfer_information.fees_paid == [1, 1, 1, 1, 1]
     assert transfer_information.value == value

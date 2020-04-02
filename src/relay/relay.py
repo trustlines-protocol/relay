@@ -286,13 +286,13 @@ class TrustlinesRelay:
         fetcher = EventsInformationFetcher(
             self.get_event_selector_for_currency_network()
         )
-        return fetcher.get_transfer_details(tx_hash)
+        return fetcher.get_transfer_details_for_tx(tx_hash)
 
     def get_transfer_information_from_event_id(self, block_hash, log_index):
         fetcher = EventsInformationFetcher(
             self.get_event_selector_for_currency_network()
         )
-        return fetcher.get_transfer_details(block_hash)
+        return fetcher.get_transfer_details_for_id(block_hash, log_index)
 
     def deploy_identity(self, factory_address, implementation_address, signature):
         return self.delegate.deploy_identity(
