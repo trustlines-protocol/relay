@@ -11,15 +11,8 @@ class BlockchainEvent(Event):
         self._web3_event = web3_event
         self.blocknumber: Optional[int] = web3_event.get("blockNumber", None)
         self._current_blocknumber = current_blocknumber
-        # NOTE: The field transactionHash is of type HexBytes sind web3 v4. It can also be a hex string because
-        # the indexer currently can not save bytes in the database.
-        # See issue https://github.com/trustlines-protocol/py-eth-index/issues/16
-        self.transaction_id: hexbytes.HexBytes
-        transaction_id = web3_event.get("transactionHash")
-        if not isinstance(transaction_id, hexbytes.HexBytes):
-            self.transaction_id = hexbytes.HexBytes(web3_event.get("transactionHash"))
-        else:
-            self.transaction_id = transaction_id
+        self.transaction_hash = _field_to_hexbytes(web3_event.get("transactionHash"))
+        self.transaction_id = self.transaction_hash
         self.type = web3_event.get("event")
         self.log_index = web3_event.get("logIndex")
 
@@ -70,3 +63,13 @@ class TLNetworkEvent(BlockchainEvent):
             return self.to
         else:
             return self.from_
+
+
+def _field_to_hexbytes(field_value) -> hexbytes.HexBytes:
+    # NOTE: Some fields are of type HexBytes since web3 v4. It can also be a hex string because
+    # the indexer currently can not save bytes in the database.
+    # See issue https://github.com/trustlines-protocol/py-eth-index/issues/16
+    if not isinstance(field_value, hexbytes.HexBytes):
+        return hexbytes.HexBytes(field_value)
+    else:
+        return field_value

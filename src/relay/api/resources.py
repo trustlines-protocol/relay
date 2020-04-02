@@ -476,10 +476,17 @@ class TransferInformation(Resource):
     def __init__(self, trustlines: TrustlinesRelay) -> None:
         self.trustlines = trustlines
 
+    args = {
+        "blockHash": fields.Str(required=False, missing=None),
+        "logIndex": fields.Int(required=False, missing=None),
+    }
+
     @dump_result_with_schema(TransferInformationSchema())
-    def get(self, tx_hash: str):
+    def get(self, args, tx_hash: str):
+        if args["blockHash"] is not None and args["logIndex"] is not None:
+            pass
         try:
-            return self.trustlines.get_transfer_information(tx_hash)
+            return self.trustlines.get_transfer_information_for_tx_hash(tx_hash)
         except TransferNotFoundException:
             abort(
                 404,

@@ -223,6 +223,13 @@ class CurrencyNetworkProxy(currency_network_proxy.CurrencyNetworkProxy):
     def freeze_network(self):
         self._proxy.functions.freezeNetwork().transact()
 
+    def get_block_logs(self, block_hash):
+        # Mocks the function `get_block_logs` of proxy since eth-tester cannot get logs filtered by block_hash yet
+        block_number = self._web3.eth.getBlock(block_hash)["number"]
+        return self._web3.eth.getLogs(
+            {"fromBlock": block_number, "toBlock": block_number + 1}
+        )
+
 
 @pytest.fixture()
 def trustlines(accounts):

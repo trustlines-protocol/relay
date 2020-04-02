@@ -139,18 +139,24 @@ def test_get_interests_paid_for_trustline_negative_balance(
 
 
 @pytest.mark.parametrize(
-    "path, fee_payer",
+    "path, fee_payer, use_transfer_id",
     [
-        ([0, 1], "sender"),
-        ([0, 1, 2, 3], "sender"),
-        ([3, 2, 1, 0], "sender"),
-        ([0, 1], "receiver"),
-        ([0, 1, 2, 3], "receiver"),
-        ([3, 2, 1, 0], "receiver"),
+        ([0, 1], "sender", True),
+        ([0, 1, 2, 3], "sender", True),
+        ([3, 2, 1, 0], "sender", True),
+        ([0, 1], "receiver", True),
+        ([0, 1, 2, 3], "receiver", True),
+        ([3, 2, 1, 0], "receiver", True),
+        ([0, 1], "sender", False),
+        ([0, 1, 2, 3], "sender", False),
+        ([3, 2, 1, 0], "sender", False),
+        ([0, 1], "receiver", False),
+        ([0, 1, 2, 3], "receiver", False),
+        ([3, 2, 1, 0], "receiver", False),
     ],
 )
 def test_get_transfer_information_path(
-    currency_network_with_trustlines, accounts, path, fee_payer
+    currency_network_with_trustlines, web3, accounts, path, fee_payer, use_transfer_id
 ):
     """
     test that we can get the path of a sent transfer from the transfer event
@@ -158,6 +164,7 @@ def test_get_transfer_information_path(
     network = currency_network_with_trustlines
     account_path = [accounts[i] for i in path]
     value = 100
+    block_number = web3.eth.blockNumber
 
     if fee_payer == "sender":
         tx_hash = network.transfer_on_path(value, account_path)
@@ -166,15 +173,34 @@ def test_get_transfer_information_path(
     else:
         assert False, "Invalid fee payer"
 
-    transfer_information = EventsInformationFetcher(network).get_transfer_details(
-        tx_hash
-    )
+    if use_transfer_id:
+        transfer_event = network._proxy.events.Transfer().getLogs(
+            fromBlock=block_number
+        )[0]
+        transfer_information = EventsInformationFetcher(
+            network
+        ).get_transfer_details_for_id(
+            transfer_event["blockHash"], transfer_event["logIndex"]
+        )
+    else:
+        transfer_information = EventsInformationFetcher(
+            network
+        ).get_transfer_details_for_tx(tx_hash)
+
     assert transfer_information.path == account_path
 
 
-@pytest.mark.parametrize("fee_payer", [FeePayer.SENDER, FeePayer.RECEIVER])
+@pytest.mark.parametrize(
+    "fee_payer, use_transfer_id",
+    [
+        (FeePayer.SENDER, True),
+        (FeePayer.RECEIVER, True),
+        (FeePayer.SENDER, False),
+        (FeePayer.RECEIVER, False),
+    ],
+)
 def test_get_transfer_information_values(
-    currency_network_with_trustlines, accounts, fee_payer
+    currency_network_with_trustlines, web3, accounts, fee_payer, use_transfer_id
 ):
     """
     test that we can get the path of a sent transfer from the transfer event
@@ -183,6 +209,7 @@ def test_get_transfer_information_values(
     path = [accounts[i] for i in [0, 1, 2, 3, 4, 5, 6]]
     number_of_mediators = len(path) - 2
     value = 10
+    block_number = web3.eth.blockNumber
 
     if fee_payer == FeePayer.SENDER:
         tx_hash = network.transfer_on_path(value, path)
@@ -191,9 +218,20 @@ def test_get_transfer_information_values(
     else:
         assert False, "Invalid fee payer"
 
-    transfer_information = EventsInformationFetcher(network).get_transfer_details(
-        tx_hash
-    )
+    if use_transfer_id:
+        transfer_event = network._proxy.events.Transfer().getLogs(
+            fromBlock=block_number
+        )[0]
+        transfer_information = EventsInformationFetcher(
+            network
+        ).get_transfer_details_for_id(
+            transfer_event["blockHash"], transfer_event["logIndex"]
+        )
+    else:
+        transfer_information = EventsInformationFetcher(
+            network
+        ).get_transfer_details_for_tx(tx_hash)
+
     assert transfer_information.fees_paid == [1, 1, 1, 1, 1]
     assert transfer_information.value == value
     assert transfer_information.total_fees == number_of_mediators

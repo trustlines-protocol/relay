@@ -488,3 +488,39 @@ class EthindexDB:
         )
 
         return events
+
+    def get_transaction_events_from_id(
+        self, block_hash, log_index, event_types: Tuple = None
+    ):
+        # TODO: we get the identified event and all events of matched tx in two queries, it should be doable in one.
+
+        event_types = self._get_standard_event_types(event_types)
+
+        query = EventsQuery(
+            """blockHash=%s
+               AND logIndex=%s
+            """,
+            (block_hash, log_index),
+        )
+
+        identified_event = self._run_events_query(query)[0]
+
+        query = EventsQuery(
+            """blockHash=%s
+               AND transactionHash=%s
+               AND eventName in %s
+            """,
+            (block_hash, identified_event.transaction_hash.hex(), event_types),
+        )
+
+        transaction_events = self._run_events_query(query)
+
+        logger.debug(
+            "get_transaction_events_from_id(%s, %s, %s) -> %s rows",
+            block_hash,
+            log_index,
+            event_types,
+            len(transaction_events),
+        )
+
+        return transaction_events
