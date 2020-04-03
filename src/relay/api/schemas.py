@@ -101,6 +101,8 @@ class BlockchainEventSchema(EventSchema):
     type = fields.Str(default="event")
     transactionId = HexBytes(attribute="transaction_id")
     status = fields.Str()
+    transactionHash = HexBytes(attribute="transaction_hash")
+    logIndex = fields.Int(attribute="log_index")
 
 
 class CurrencyNetworkEventSchema(BlockchainEventSchema):
