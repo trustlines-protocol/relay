@@ -22,7 +22,7 @@ logger = logging.getLogger("proxy")
 
 
 queryBlock = "latest"
-updateBlock = "pending"
+updateBlock = "latest"
 
 reconnect_interval = 3  # 3s
 
