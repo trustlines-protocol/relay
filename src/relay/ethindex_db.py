@@ -2,7 +2,7 @@
 
 import collections
 import logging
-from typing import Any, Dict, List, Tuple
+from typing import Any, Dict, Iterable, List, Optional
 
 import psycopg2
 import psycopg2.extras
@@ -142,7 +142,9 @@ class EthindexDB:
         assert r, "no network address passed in and no default network address given"
         return r
 
-    def _get_standard_event_types(self, standard_event_types):
+    def _get_standard_event_types(
+        self, standard_event_types: Optional[Iterable[str]]
+    ) -> Iterable[str]:
         r = standard_event_types or self.standard_event_types
         assert r, "no standard event passed in and no default events given"
         return r
@@ -255,49 +257,34 @@ class EthindexDB:
         contract_address: str,
         user_address: str,
         counterparty_address: str,
-        event_name: str = None,
+        event_types: Iterable[str] = None,
         from_block: int = 0,
         timeout: float = None,
     ):
-        if event_name is None:
-            query = EventsQuery(
-                """blockNumber>=%s
-                   AND address=%s
-                   AND ((args->>'{_from}'=%s AND args->>'{_to}'=%s) OR (args->>'{_from}'=%s AND args->>'{_to}'=%s))
-                """.format(
-                    _from=self.from_to_types[event_name][0],
-                    _to=self.from_to_types[event_name][1],
-                ),
-                (
-                    from_block,
-                    event_name,
-                    contract_address,
-                    user_address,
-                    counterparty_address,
-                    counterparty_address,
-                    user_address,
-                ),
-            )
-        else:
-            query = EventsQuery(
-                """blockNumber>=%s
-                   AND eventName=%s
-                   AND address=%s
-                   AND ((args->>'{_from}'=%s AND args->>'{_to}'=%s) OR (args->>'{_from}'=%s AND args->>'{_to}'=%s))
-                """.format(
-                    _from=self.from_to_types[event_name][0],
-                    _to=self.from_to_types[event_name][1],
-                ),
-                (
-                    from_block,
-                    event_name,
-                    contract_address,
-                    user_address,
-                    counterparty_address,
-                    counterparty_address,
-                    user_address,
-                ),
-            )
+        event_types = self._get_standard_event_types(event_types)
+
+        all_event_fieldname_combination = set()
+        for from_, to in self.from_to_types.values():
+            all_event_fieldname_combination.add((from_, to))
+            all_event_fieldname_combination.add((to, from_))
+
+        member_filter_block = " OR ".join(
+            f"(args->>'{field_a}'=%s AND args->>'{field_b}'=%s)"
+            for field_a, field_b in all_event_fieldname_combination
+        )
+
+        args: List[Any] = [from_block, tuple(event_types), contract_address]
+        for _ in all_event_fieldname_combination:
+            args.extend((user_address, counterparty_address))
+
+        query = EventsQuery(
+            f"""blockNumber>=%s
+               AND eventName in %s
+               AND address=%s
+               AND ({member_filter_block})
+            """,
+            args,
+        )
 
         events = self._run_events_query(query)
 
@@ -306,7 +293,7 @@ class EthindexDB:
             contract_address,
             user_address,
             counterparty_address,
-            event_name,
+            event_types,
             from_block,
             timeout,
             len(events),
@@ -352,7 +339,7 @@ class EthindexDB:
 
     def get_all_contract_events(
         self,
-        event_types: List[str] = None,
+        event_types: Iterable[str] = None,
         user_address: str = None,
         from_block: int = 0,
         timeout: float = None,
@@ -465,7 +452,7 @@ class EthindexDB:
         return events
 
     def get_transaction_events(
-        self, tx_hash: str, from_block: int = 0, event_types: Tuple = None
+        self, tx_hash: str, from_block: int = 0, event_types: Iterable = None
     ):
         event_types = self._get_standard_event_types(event_types)
 
@@ -474,7 +461,7 @@ class EthindexDB:
                AND transactionHash=%s
                AND eventName in %s
             """,
-            (from_block, tx_hash, event_types),
+            (from_block, tx_hash, tuple(event_types)),
         )
 
         events = self._run_events_query(query)
@@ -490,7 +477,7 @@ class EthindexDB:
         return events
 
     def get_transaction_events_by_event_id(
-        self, block_hash, log_index, event_types: Tuple = None
+        self, block_hash, log_index, event_types: Iterable = None
     ):
         """Gets all events from a transaction
         where event_id is the id of one of the events within the transaction"""
@@ -517,7 +504,7 @@ class EthindexDB:
                AND transactionHash=%s
                AND eventName in %s
             """,
-            (block_hash, identified_event.transaction_hash.hex(), event_types),
+            (block_hash, identified_event.transaction_hash.hex(), tuple(event_types)),
         )
 
         transaction_events = self._run_events_query(query)

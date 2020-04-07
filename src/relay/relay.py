@@ -162,7 +162,9 @@ class TrustlinesRelay:
     def use_eth_index(self) -> bool:
         return os.environ.get("ETHINDEX", "1") == "1"
 
-    def get_event_selector_for_currency_network(self, network_address=None):
+    def get_event_selector_for_currency_network(
+        self, network_address: str
+    ) -> Union[ethindex_db.EthindexDB, CurrencyNetworkProxy]:
         """return either a CurrencyNetworkProxy or a EthindexDB instance
         This is being used from relay.api to query for events.
         """
@@ -175,9 +177,24 @@ class TrustlinesRelay:
                 from_to_types=currency_network_events.from_to_types,
             )
         else:
-            if network_address is None:
-                return Proxy(self._web3, abi=self.contracts["CurrencyNetwork"]["abi"])
             return self.currency_network_proxies[network_address]
+
+    def get_generic_event_selector_for_currency_networks(
+        self,
+    ) -> Union[ethindex_db.EthindexDB, Proxy]:
+        """return either a Proxy or a EthindexDB instance
+        This proxy/db is not bind to a specify currency network address
+        This is being used from relay.api to query for events.
+        """
+        if self.use_eth_index:
+            return ethindex_db.EthindexDB(
+                ethindex_db.connect(""),
+                standard_event_types=currency_network_events.standard_event_types,
+                event_builders=currency_network_events.event_builders,
+                from_to_types=currency_network_events.from_to_types,
+            )
+        else:
+            return Proxy(self._web3, abi=self.contracts["CurrencyNetwork"]["abi"])
 
     def get_event_selector_for_token(self, address):
         """return either a proxy or a EthindexDB instance
@@ -284,13 +301,13 @@ class TrustlinesRelay:
 
     def get_transfer_information_for_tx_hash(self, tx_hash):
         fetcher = EventsInformationFetcher(
-            self.get_event_selector_for_currency_network()
+            self.get_generic_event_selector_for_currency_networks()
         )
         return fetcher.get_transfer_details_for_tx(tx_hash)
 
     def get_transfer_information_from_event_id(self, block_hash, log_index):
         fetcher = EventsInformationFetcher(
-            self.get_event_selector_for_currency_network()
+            self.get_generic_event_selector_for_currency_networks()
         )
         return fetcher.get_transfer_details_for_id(block_hash, log_index)
 
@@ -528,13 +545,27 @@ class TrustlinesRelay:
         type: str = None,
         from_block: int = 0,
     ):
-        proxy = self.get_event_selector_for_currency_network(network_address)
+        if type is None:
+            event_types = None
+        else:
+            event_types = [type]
+        proxy: Union[ethindex_db.EthindexDB, CurrencyNetworkProxy]
+        if self.use_eth_index:
+            proxy = ethindex_db.EthindexDB(
+                ethindex_db.connect(""),
+                address=network_address,
+                standard_event_types=currency_network_events.trustline_event_types,
+                event_builders=currency_network_events.event_builders,
+                from_to_types=currency_network_events.from_to_types,
+            )
+        else:
+            proxy = self.currency_network_proxies[network_address]
 
         events = proxy.get_trustline_events(
             network_address,
             user_address,
             counterparty_address,
-            type,
+            event_types,
             from_block=from_block,
         )
         return events

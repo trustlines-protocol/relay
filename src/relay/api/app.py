@@ -9,6 +9,8 @@ from webargs.flaskparser import abort, parser
 from werkzeug.exceptions import HTTPException
 from werkzeug.routing import BaseConverter, ValidationError
 
+from relay.api.resources import TrustlineEvents
+
 from .exchange.resources import (
     EventsExchange,
     ExchangeAddresses,
@@ -133,6 +135,11 @@ def ApiApp(trustlines, *, enabled_apis):
         add_resource(
             Trustline,
             "/networks/<address:network_address>/users/<address:a_address>/trustlines/<address:b_address>",
+        )
+        add_resource(
+            TrustlineEvents,
+            "/networks/<address:network_address>/users/<address:user_address>"
+            "/trustlines/<address:counter_party_address>/events",
         )
         add_resource(
             UserEventsNetwork,
