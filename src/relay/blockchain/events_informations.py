@@ -73,7 +73,7 @@ class EventsInformationFetcher:
         )
 
     def get_transfer_details_for_id(self, block_hash, log_index):
-        all_events_of_tx = self.events_proxy.get_transaction_events_from_id(
+        all_events_of_tx = self.events_proxy.get_transaction_events_by_event_id(
             block_hash,
             log_index,
             event_types=(TransferEventType, BalanceUpdateEventType),

@@ -226,9 +226,11 @@ class Proxy(object):
     def get_block_logs(self, block_hash):
         return self._web3.eth.getLogs({"blockHash": block_hash})
 
-    def get_transaction_events_from_id(
+    def get_transaction_events_by_event_id(
         self, block_hash, log_index, event_types: Tuple = None
     ):
+        """Gets all all events from a transaction where event_id is the id of one of the events within the transaction
+        Only get events of which the abi is known."""
         block_logs = self.get_block_logs(block_hash)
 
         identified_log = None
@@ -251,7 +253,7 @@ class Proxy(object):
                     pass
 
         logger.debug(
-            "get_transaction_events_from_id(%s, %s) -> %s rows",
+            "get_transaction_events_by_event_id(%s, %s) -> %s rows",
             block_hash,
             log_index,
             len(transaction_events),

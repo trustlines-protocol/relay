@@ -46,6 +46,7 @@ from .schemas import (
     MetaTransactionStatusSchema,
     PaymentPathSchema,
     TransactionStatusSchema,
+    TransferIdentifierSchema,
     TransferInformationSchema,
     TrustlineSchema,
     TxInfosSchema,
@@ -476,31 +477,27 @@ class TransferInformation(Resource):
     def __init__(self, trustlines: TrustlinesRelay) -> None:
         self.trustlines = trustlines
 
-    args = {
-        "transactionHash": fields.Str(required=False, missing=None),
-        "blockHash": fields.Str(required=False, missing=None),
-        "logIndex": fields.Int(required=False, missing=None),
-    }
-
-    @use_args(args)
+    @use_args(TransferIdentifierSchema())
     @dump_result_with_schema(TransferInformationSchema(many=True))
     def get(self, args):
-        self.validate_input_args(args)
+        transaction_hash = args["transactionHash"]
+        block_hash = args["blockHash"]
+        log_index = args["logIndex"]
 
-        if args["transactionHash"]:
+        if transaction_hash:
             try:
                 return self.trustlines.get_transfer_information_for_tx_hash(
-                    args["transactionHash"]
+                    transaction_hash
                 )
             except TransferNotFoundException as e:
                 abort(
                     404,
                     f"No transfer found in transaction with transaction hash: {e.tx_hash}",
                 )
-        elif args["blockHash"]:
+        elif block_hash and log_index:
             try:
                 return self.trustlines.get_transfer_information_from_event_id(
-                    args["blockHash"], args["logIndex"]
+                    block_hash, log_index
                 )
             except TransferNotFoundException as e:
                 abort(
@@ -512,31 +509,8 @@ class TransferInformation(Resource):
                     400,
                     f"The event identified by block hash {e.block_hash} and log index {e.log_index} is not a Transfer",
                 )
-
-    def validate_input_args(self, args):
-        if args["transactionHash"]:
-            if args["blockHash"] or args["logIndex"]:
-                abort(
-                    400,
-                    f"Cannot get transfer information using transaction hash and log index or block hash.",
-                )
-        elif args["blockHash"]:
-            if not args["logIndex"]:
-                abort(
-                    400,
-                    f"Cannot get transfer information using block hash if log index not provided.",
-                )
-        elif args["logIndex"]:
-            if not args["blockHash"]:
-                abort(
-                    400,
-                    f"Cannot get transfer information using log index if block hash not provided.",
-                )
         else:
-            abort(
-                400,
-                "Either transaction hash or block hash and log index need to be provided.",
-            )
+            raise RuntimeError("Unhandled input parameters.")
 
 
 class TransactionInfos(Resource):
