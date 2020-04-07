@@ -2,7 +2,7 @@ import functools
 import itertools
 import logging
 import socket
-from typing import List, NamedTuple
+from typing import Iterable, List, NamedTuple
 
 import gevent
 from gevent import Greenlet
@@ -20,6 +20,7 @@ from .currency_network_events import (
     event_builders,
     from_to_types,
     standard_event_types,
+    trustline_event_types,
 )
 from .events import BlockchainEvent
 from .proxy import Proxy, reconnect_interval, sorted_events
@@ -46,6 +47,7 @@ class CurrencyNetworkProxy(Proxy):
     event_types = list(event_builders.keys())
 
     standard_event_types = standard_event_types
+    trustline_event_types = trustline_event_types
 
     def __init__(self, web3, abi, address: str) -> None:
         super().__init__(web3, abi, address)
@@ -239,33 +241,6 @@ class CurrencyNetworkProxy(Proxy):
         results = concurrency_utils.joinall(queries, timeout=timeout)
         return sorted_events(list(itertools.chain.from_iterable(results)))
 
-    def get_trustline_events(
-        self,
-        contract_address: str,
-        user_address: str,
-        counterparty_address: str,
-        event_name: str = None,
-        from_block: int = 0,
-        timeout: float = None,
-    ):
-        if event_name is None:
-            return self.get_all_trustline_events(
-                contract_address,
-                user_address,
-                counterparty_address,
-                from_block,
-                timeout,
-            )
-        else:
-            return self.get_trustline_events_of_type(
-                contract_address,
-                user_address,
-                counterparty_address,
-                event_name,
-                from_block,
-                timeout,
-            )
-
     def get_trustline_events_of_type(
         self,
         contract_address: str,
@@ -307,14 +282,16 @@ class CurrencyNetworkProxy(Proxy):
 
         return sorted_events(events)
 
-    def get_all_trustline_events(
+    def get_trustline_events(
         self,
         contract_address: str,
         user_address: str,
         counterparty_address: str,
+        event_types: Iterable[str] = None,
         from_block: int = 0,
         timeout: float = None,
     ) -> List[BlockchainEvent]:
+        event_types = event_types or self.trustline_event_types
         queries = [
             functools.partial(
                 self.get_trustline_events_of_type,
@@ -325,7 +302,7 @@ class CurrencyNetworkProxy(Proxy):
                 from_block=from_block,
                 timeout=timeout,
             )
-            for type in self.standard_event_types
+            for type in event_types
         ]
         results = concurrency_utils.joinall(queries, timeout=timeout)
         return sorted_events(list(itertools.chain.from_iterable(results)))

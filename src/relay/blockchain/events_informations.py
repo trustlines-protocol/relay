@@ -49,13 +49,13 @@ class EventsInformationFetcher:
             currency_network_address,
             user,
             counterparty,
-            event_name=BalanceUpdateEventType,
+            event_types=[BalanceUpdateEventType],
         )
         trustline_update_events = self.events_proxy.get_trustline_events(
             currency_network_address,
             user,
             counterparty,
-            event_name=TrustlineUpdateEventType,
+            event_types=[TrustlineUpdateEventType],
         )
 
         return get_accrued_interests_from_events(
@@ -218,7 +218,7 @@ class EventsInformationFetcher:
     ):
         """Get all balance update events of a trustline in sorted order"""
         return self.events_proxy.get_trustline_events(
-            event_name=BalanceUpdateEventType,
+            event_types=[BalanceUpdateEventType],
             user_address=a,
             counterparty_address=b,
             contract_address=currency_network_address,
@@ -353,7 +353,7 @@ def get_balance_update_events_for_transfer(all_events, transfer_event):
     saw_sender_event = False
     saw_receiver_event = False
 
-    # Search backwards for releated BalanceUpdate events
+    # Search backwards for related BalanceUpdate events
     for i in range(log_index - 1, -1, -1):
         for event in all_events:
             if event.log_index == i:

@@ -345,6 +345,47 @@ class UserEventsNetwork(Resource):
             abort(504, TIMEOUT_MESSAGE)
 
 
+class TrustlineEvents(Resource):
+    def __init__(self, trustlines: TrustlinesRelay) -> None:
+        self.trustlines = trustlines
+
+    args = {
+        "fromBlock": fields.Int(required=False, missing=0),
+        "type": fields.Str(
+            required=False,
+            validate=validate.OneOf(CurrencyNetworkProxy.trustline_event_types),
+            missing=None,
+        ),
+    }
+
+    @use_args(args)
+    @dump_result_with_schema(UserCurrencyNetworkEventSchema(many=True))
+    def get(
+        self, args, network_address: str, user_address: str, counter_party_address: str
+    ):
+        abort_if_unknown_network(self.trustlines, network_address)
+        from_block = args["fromBlock"]
+        type = args["type"]
+        try:
+            return self.trustlines.get_trustline_events(
+                network_address,
+                user_address,
+                counter_party_address,
+                type=type,
+                from_block=from_block,
+            )
+        except TimeoutException:
+            logger.warning(
+                "Trustline events: event_name=%s user_address=%s "
+                "counter_party_address=%s, from_block=%s. could not get events in time",
+                type,
+                user_address,
+                counter_party_address,
+                from_block,
+            )
+            abort(504, TIMEOUT_MESSAGE)
+
+
 class UserEvents(Resource):
     def __init__(self, trustlines: TrustlinesRelay) -> None:
         self.trustlines = trustlines

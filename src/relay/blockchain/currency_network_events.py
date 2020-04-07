@@ -104,3 +104,10 @@ standard_event_types = [
     TrustlineRequestCancelEventType,
     TrustlineUpdateEventType,
 ]
+
+trustline_event_types = [
+    TrustlineRequestEventType,
+    TrustlineRequestCancelEventType,
+    TrustlineUpdateEventType,
+    BalanceUpdateEventType,
+]

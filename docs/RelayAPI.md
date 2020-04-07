@@ -387,10 +387,10 @@ curl --header "Content-Type: application/json" \
 ```json
 {
     "capacity": "18",
-	"path": [
-    "0xcbF1153F6e5AC01D363d432e24112e8aA56c55ce",
-    "0xc257274276a4e539741ca11b590b9447b26a8051",
-    "0x7Ec3543702FA8F2C7b2bD84C034aAc36C263cA8b"
+    "path": [
+      "0xcbF1153F6e5AC01D363d432e24112e8aA56c55ce",
+      "0xc257274276a4e539741ca11b590b9447b26a8051",
+      "0x7Ec3543702FA8F2C7b2bD84C034aAc36C263cA8b"
   ]
 }
 ```
@@ -433,7 +433,7 @@ curl --header "Content-Type: application/json" \
 #### Example Response
 ```json
 {
-	"path": [
+  "path": [
     "0xcbF1153F6e5AC01D363d432e24112e8aA56c55ce",
     "0x7Ec3543702FA8F2C7b2bD84C034aAc36C263cA8b"
   ],
@@ -550,66 +550,66 @@ Following additional attributes for `Transfer` events:
 #### Example Response
 ```json
 [
-	{
-		"networkAddress": "0xC0B33D88C704455075a0724AA167a286da778DDE",
-		"blockNumber": 6997877,
-		"timestamp": 1524655432,
-		"type": "TrustlineUpdateRequest",
-		"from": "0xcbF1153F6e5AC01D363d432e24112e8aA56c55ce",
-		"to": "0x7Ff66eb1A824FF9D1bB7e234a2d3B7A3b0345320",
-		"status": "confirmed",
-		"transactionId": "0xb141aa3baec4e7151d8bd6ecab46d26b1add131e50bcc517c956a7ac979815cd",
-		"blockHash": "0x10d4e9acb58d42d433dbc5c995e9a258cd2bb7fe82fedf2ebab82e450d30c643",
-		"logIndex": 12,
-		"given": "20000",
-		"received": "20000",
-		"interestRateGiven": "1000",
-		"interestRateReceived": "1000",
-        "isFrozen": false
-	},
     {
-		"networkAddress": "0xC0B33D88C704455075a0724AA167a286da778DDE",
-		"blockNumber": 6997877,
-		"timestamp": 1524655432,
-		"type": "TrustlineUpdateCancel",
-		"from": "0xcbF1153F6e5AC01D363d432e24112e8aA56c55ce",
-		"to": "0x7Ff66eb1A824FF9D1bB7e234a2d3B7A3b0345320",
-		"status": "confirmed",
-		"transactionId": "0xb141aa3baec4e7151d8bd6ecab46d26b1add131e50bcc517c956a7ac979815cd",
-		"blockHash": "0x10d4e9acb58d42d433dbc5c995e9a258cd2bb7fe82fedf2ebab82e450d30c643",
-		"logIndex": 14
-	},
-	{
-		"networkAddress": "0xC0B33D88C704455075a0724AA167a286da778DDE",
-		"blockNumber": 6997899,
-		"timestamp": 1524655600,
-		"type": "TrustlineUpdate",
-		"from": "0xcbF1153F6e5AC01D363d432e24112e8aA56c55ce",
-		"to": "0x7Ec3543702FA8F2C7b2bD84C034aAc36C263cA8b",
-		"status": "confirmed",
-		"transactionId": "0x10d4e9acb58d42d433dbc5c995e9a258cd2bb7fe82fedf2ebab82e450d30c643",
-		"blockHash": "0x10d4e9acb58d42d433dbc5c995e9a258cd2bb7fe82fedf2ebab82e450d30c643",
-		"logIndex": 1,
-		"given": "10000",
-		"received": "10000",
-		"interestRateGiven": "1000",
-		"interestRateReceived": "1000",
+        "networkAddress": "0xC0B33D88C704455075a0724AA167a286da778DDE",
+        "blockNumber": 6997877,
+        "timestamp": 1524655432,
+        "type": "TrustlineUpdateRequest",
+        "from": "0xcbF1153F6e5AC01D363d432e24112e8aA56c55ce",
+        "to": "0x7Ff66eb1A824FF9D1bB7e234a2d3B7A3b0345320",
+        "status": "confirmed",
+        "transactionId": "0xb141aa3baec4e7151d8bd6ecab46d26b1add131e50bcc517c956a7ac979815cd",
+        "blockHash": "0x10d4e9acb58d42d433dbc5c995e9a258cd2bb7fe82fedf2ebab82e450d30c643",
+        "logIndex": 12,
+        "given": "20000",
+        "received": "20000",
+        "interestRateGiven": "1000",
+        "interestRateReceived": "1000",
         "isFrozen": false
-	},
-	{
-		"networkAddress": "0xC0B33D88C704455075a0724AA167a286da778DDE",
-		"blockNumber": 7011809,
-		"timestamp": 1524755036,
-		"type": "Transfer",
-		"from": "0xcbF1153F6e5AC01D363d432e24112e8aA56c55ce",
-		"to": "0x7Ec3543702FA8F2C7b2bD84C034aAc36C263cA8b",
-		"status": "confirmed",
-		"transactionId": "0x05c91f6506e78b1ca2413df9985ca7d37d2da5fc076c0b55c5d9eb9fdd7513a6",
-		"blockHash": "0xb141aa3baec4e7151d8bd6ecab46d26b1add131e50bcc517c956a7ac979815cd",
-		"logIndex": 2,
-		"amount": "100",
-		"extraData": "0x1234"
-	}
+    },
+    {
+        "networkAddress": "0xC0B33D88C704455075a0724AA167a286da778DDE",
+        "blockNumber": 6997877,
+        "timestamp": 1524655432,
+        "type": "TrustlineUpdateCancel",
+        "from": "0xcbF1153F6e5AC01D363d432e24112e8aA56c55ce",
+        "to": "0x7Ff66eb1A824FF9D1bB7e234a2d3B7A3b0345320",
+        "status": "confirmed",
+        "transactionId": "0xb141aa3baec4e7151d8bd6ecab46d26b1add131e50bcc517c956a7ac979815cd",
+        "blockHash": "0x10d4e9acb58d42d433dbc5c995e9a258cd2bb7fe82fedf2ebab82e450d30c643",
+        "logIndex": 14
+    },
+    {
+        "networkAddress": "0xC0B33D88C704455075a0724AA167a286da778DDE",
+        "blockNumber": 6997899,
+        "timestamp": 1524655600,
+        "type": "TrustlineUpdate",
+        "from": "0xcbF1153F6e5AC01D363d432e24112e8aA56c55ce",
+        "to": "0x7Ec3543702FA8F2C7b2bD84C034aAc36C263cA8b",
+        "status": "confirmed",
+        "transactionId": "0x10d4e9acb58d42d433dbc5c995e9a258cd2bb7fe82fedf2ebab82e450d30c643",
+        "blockHash": "0x10d4e9acb58d42d433dbc5c995e9a258cd2bb7fe82fedf2ebab82e450d30c643",
+        "logIndex": 1,
+        "given": "10000",
+        "received": "10000",
+        "interestRateGiven": "1000",
+        "interestRateReceived": "1000",
+        "isFrozen": false
+    },
+    {
+        "networkAddress": "0xC0B33D88C704455075a0724AA167a286da778DDE",
+        "blockNumber": 7011809,
+        "timestamp": 1524755036,
+        "type": "Transfer",
+        "from": "0xcbF1153F6e5AC01D363d432e24112e8aA56c55ce",
+        "to": "0x7Ec3543702FA8F2C7b2bD84C034aAc36C263cA8b",
+        "status": "confirmed",
+        "transactionId": "0x05c91f6506e78b1ca2413df9985ca7d37d2da5fc076c0b55c5d9eb9fdd7513a6",
+        "blockHash": "0xb141aa3baec4e7151d8bd6ecab46d26b1add131e50bcc517c956a7ac979815cd",
+        "logIndex": 2,
+        "amount": "100",
+        "extraData": "0x1234"
+    }
 ]
 ```
 
@@ -666,69 +666,181 @@ Following additional attributes for `Transfer` events:
 #### Example Response
 ```json
 [
-	{
-		"networkAddress": "0xC0B33D88C704455075a0724AA167a286da778DDE",
-		"blockNumber": 6997877,
-		"timestamp": 1524655432,
-		"type": "TrustlineUpdateRequest",
-		"from": "0xcbF1153F6e5AC01D363d432e24112e8aA56c55ce",
-		"to": "0x7Ff66eb1A824FF9D1bB7e234a2d3B7A3b0345320",
-		"status": "confirmed",
-		"transactionId": "0xb141aa3baec4e7151d8bd6ecab46d26b1add131e50bcc517c956a7ac979815cd",
-		"blockHash": "0x05c91f6506e78b1ca2413df9985ca7d37d2da5fc076c0b55c5d9eb9fdd7513a6",
-		"logIndex": 1,
-		"given": "20000",
-		"received": "20000",
-		"interestRateGiven": "1000",
-		"interestRateReceived": "1000",
-        "isFrozen": false
-	},
     {
-		"networkAddress": "0xC0B33D88C704455075a0724AA167a286da778DDE",
-		"blockNumber": 6997877,
-		"timestamp": 1524655432,
-		"type": "TrustlineUpdateCancel",
-		"from": "0xcbF1153F6e5AC01D363d432e24112e8aA56c55ce",
-		"to": "0x7Ff66eb1A824FF9D1bB7e234a2d3B7A3b0345320",
-		"status": "confirmed",
-		"transactionId": "0xb141aa3baec4e7151d8bd6ecab46d26b1add131e50bcc517c956a7ac979815cd",
+        "networkAddress": "0xC0B33D88C704455075a0724AA167a286da778DDE",
+        "blockNumber": 6997877,
+        "timestamp": 1524655432,
+        "type": "TrustlineUpdateRequest",
+        "from": "0xcbF1153F6e5AC01D363d432e24112e8aA56c55ce",
+        "to": "0x7Ff66eb1A824FF9D1bB7e234a2d3B7A3b0345320",
+        "status": "confirmed",
+        "transactionId": "0xb141aa3baec4e7151d8bd6ecab46d26b1add131e50bcc517c956a7ac979815cd",
         "blockHash": "0x05c91f6506e78b1ca2413df9985ca7d37d2da5fc076c0b55c5d9eb9fdd7513a6",
-		"logIndex": 2
-	},
-	{
-		"networkAddress": "0xC0B33D88C704455075a0724AA167a286da778DDE",
-		"blockNumber": 6997899,
-		"timestamp": 1524655600,
-		"type": "TrustlineUpdate",
-		"from": "0xcbF1153F6e5AC01D363d432e24112e8aA56c55ce",
-		"to": "0x7Ec3543702FA8F2C7b2bD84C034aAc36C263cA8b",
-		"status": "confirmed",
-		"transactionId": "0x10d4e9acb58d42d433dbc5c995e9a258cd2bb7fe82fedf2ebab82e450d30c643",
-		"blockHash": "0xb141aa3baec4e7151d8bd6ecab46d26b1add131e50bcc517c956a7ac979815cd",
-		"logIndex": 3,
-		"given": "10000",
-		"received": "10000",
-		"interestRateGiven": "1000",
-		"interestRateReceived": "1000",
+        "logIndex": 1,
+        "given": "20000",
+        "received": "20000",
+        "interestRateGiven": "1000",
+        "interestRateReceived": "1000",
         "isFrozen": false
-	},
-	{
-		"networkAddress": "0xC0B33D88C704455075a0724AA167a286da778DDE",
-		"blockNumber": 7011809,
-		"timestamp": 1524755036,
-		"type": "Transfer",
-		"from": "0xcbF1153F6e5AC01D363d432e24112e8aA56c55ce",
-		"to": "0x7Ec3543702FA8F2C7b2bD84C034aAc36C263cA8b",
-		"status": "confirmed",
-		"transactionId": "0x05c91f6506e78b1ca2413df9985ca7d37d2da5fc076c0b55c5d9eb9fdd7513a6",
-		"blockHash": "0x10d4e9acb58d42d433dbc5c995e9a258cd2bb7fe82fedf2ebab82e450d30c643",
-		"logIndex": 4,
-		"amount": "100",
-		"extraData": "0x1234"
-	}
+    },
+    {
+        "networkAddress": "0xC0B33D88C704455075a0724AA167a286da778DDE",
+        "blockNumber": 6997877,
+        "timestamp": 1524655432,
+        "type": "TrustlineUpdateCancel",
+        "from": "0xcbF1153F6e5AC01D363d432e24112e8aA56c55ce",
+        "to": "0x7Ff66eb1A824FF9D1bB7e234a2d3B7A3b0345320",
+        "status": "confirmed",
+        "transactionId": "0xb141aa3baec4e7151d8bd6ecab46d26b1add131e50bcc517c956a7ac979815cd",
+        "blockHash": "0x05c91f6506e78b1ca2413df9985ca7d37d2da5fc076c0b55c5d9eb9fdd7513a6",
+        "logIndex": 2
+    },
+    {
+        "networkAddress": "0xC0B33D88C704455075a0724AA167a286da778DDE",
+        "blockNumber": 6997899,
+        "timestamp": 1524655600,
+        "type": "TrustlineUpdate",
+        "from": "0xcbF1153F6e5AC01D363d432e24112e8aA56c55ce",
+        "to": "0x7Ec3543702FA8F2C7b2bD84C034aAc36C263cA8b",
+        "status": "confirmed",
+        "transactionId": "0x10d4e9acb58d42d433dbc5c995e9a258cd2bb7fe82fedf2ebab82e450d30c643",
+        "blockHash": "0xb141aa3baec4e7151d8bd6ecab46d26b1add131e50bcc517c956a7ac979815cd",
+        "logIndex": 3,
+        "given": "10000",
+        "received": "10000",
+        "interestRateGiven": "1000",
+        "interestRateReceived": "1000",
+        "isFrozen": false
+    },
+    {
+        "networkAddress": "0xC0B33D88C704455075a0724AA167a286da778DDE",
+        "blockNumber": 7011809,
+        "timestamp": 1524755036,
+        "type": "Transfer",
+        "from": "0xcbF1153F6e5AC01D363d432e24112e8aA56c55ce",
+        "to": "0x7Ec3543702FA8F2C7b2bD84C034aAc36C263cA8b",
+        "status": "confirmed",
+        "transactionId": "0x05c91f6506e78b1ca2413df9985ca7d37d2da5fc076c0b55c5d9eb9fdd7513a6",
+        "blockHash": "0x10d4e9acb58d42d433dbc5c995e9a258cd2bb7fe82fedf2ebab82e450d30c643",
+        "logIndex": 4,
+        "amount": "100",
+        "extraData": "0x1234"
+    }
 ]
 ```
 
+---
+
+### Events of a trustline in currency network
+Returns a list of event logs of a trustline in a currency network from the view of user.
+#### Request
+```
+GET /networks/:network/users/:user/trustlines/:counterParty/events?type=:type&fromBlock=:fromBlock
+```
+#### Example Request
+```
+curl https://relay0.testnet.trustlines.network/api/v1/networks/0xC0B33D88C704455075a0724AA167a286da778DDE/users/0xcbF1153F6e5AC01D363d432e24112e8aA56c55ce/trustlines/0x7Ec3543702FA8F2C7b2bD84C034aAc36C263cA8b/events?type=TrustlineUpdate&fromBlock=123456
+```
+#### URL Parameters
+| Name        | Type   | Required | Description                                                                                    |
+|-------------|--------|----------|------------------------------------------------------------------------------------------------|
+| network     | string | YES      | Address of currency network                                                                    |
+| user        | string | YES      | Address of user, one address of the trustline                                                  |
+| counterParty| string | YES      | Address of counterParty, other address of the trustline                                        |
+| type        | string | NO       | Either `TrustlineUpdate`, `TrustlineUpdateRequest`, `TrustlineUpdateCancel` or `BalanceUpdate` |
+| fromBlock   | int    | NO       | Start of block range                                                                           |
+#### Response
+| Attribute      | Type   | Description                                                                                    |
+|----------------|--------|------------------------------------------------------------------------------------------------|
+| networkAddress | string | Address of currency network                                                                    |
+| blockNumber    | string | Number of block                                                                                |
+| timestamp      | int    | UNIX timestamp                                                                                 |
+| type           | string | Either `TrustlineUpdate`, `TrustlineUpdateRequest`, `TrustlineUpdateCancel` or `BalanceUpdate` |
+| from           | string | Address of `from` user                                                                         |
+| to             | string | Address of `to` user                                                                           |
+| status         | string | `sent`, `pending` or `confirmed` depending on block height                                     |
+| transactionId  | string | Transaction hash                                                                               |
+
+Following additional attributes for `TrustlineUpdate` and `TrustlineUpdateRequest` events:
+
+| Attribute            | Type   | Description                                         |
+|----------------------|--------|-----------------------------------------------------|
+| given                | string | Proposed or accepted amount `from -> to`            |
+| received             | string | Proposed or accepted amount `to -> from`            |
+| interestRateGiven    | string | Proposed or accepted rate of interests `from -> to` |
+| interestRateReceived | string | Proposed or accepted rate of interests `to -> from` |
+| isFrozen             | bool   | Proposed or accepted frozen state                   |
+
+Following additional attributes for `BalanceUpdate`:
+
+| Attribute            | Type   | Description                                         |
+|----------------------|--------|-----------------------------------------------------|
+| amount               | string | New balance of trustline from view of `from`        |
+
+#### Example Response
+```json
+[
+    {
+        "networkAddress": "0xC0B33D88C704455075a0724AA167a286da778DDE",
+        "blockNumber": 6997877,
+        "timestamp": 1524655432,
+        "type": "TrustlineUpdateRequest",
+        "from": "0xcbF1153F6e5AC01D363d432e24112e8aA56c55ce",
+        "to": "0x7Ff66eb1A824FF9D1bB7e234a2d3B7A3b0345320",
+        "blockHash": "0x05c91f6506e78b1ca2413df9985ca7d37d2da5fc076c0b55c5d9eb9fdd7513a6",
+        "logIndex": 1,
+        "status": "confirmed",
+        "transactionId": "0xb141aa3baec4e7151d8bd6ecab46d26b1add131e50bcc517c956a7ac979815cd",
+        "given": "20000",
+        "received": "20000",
+        "interestRateGiven": "1000",
+        "interestRateReceived": "1000",
+        "isFrozen": false
+    },
+    {
+        "networkAddress": "0xC0B33D88C704455075a0724AA167a286da778DDE",
+        "blockNumber": 6997877,
+        "timestamp": 1524655432,
+        "type": "TrustlineUpdateCancel",
+        "from": "0xcbF1153F6e5AC01D363d432e24112e8aA56c55ce",
+        "to": "0x7Ff66eb1A824FF9D1bB7e234a2d3B7A3b0345320",
+        "status": "confirmed",
+        "transactionId": "0xb141aa3baec4e7151d8bd6ecab46d26b1add131e50bcc517c956a7ac979815cd"
+        "blockHash": "0x05c91f6506e78b1ca2413df9985ca7d37d2da5fc076c0b55c5d9eb9fdd7513a6",
+        "logIndex": 2
+    },
+    {
+        "networkAddress": "0xC0B33D88C704455075a0724AA167a286da778DDE",
+        "blockNumber": 6997899,
+        "timestamp": 1524655600,
+        "type": "TrustlineUpdate",
+        "from": "0xcbF1153F6e5AC01D363d432e24112e8aA56c55ce",
+        "to": "0x7Ec3543702FA8F2C7b2bD84C034aAc36C263cA8b",
+        "status": "confirmed",
+        "transactionId": "0x10d4e9acb58d42d433dbc5c995e9a258cd2bb7fe82fedf2ebab82e450d30c643",
+        "blockHash": "0xb141aa3baec4e7151d8bd6ecab46d26b1add131e50bcc517c956a7ac979815cd",
+        "logIndex": 3,
+        "given": "10000",
+        "received": "10000",
+        "interestRateGiven": "1000",
+        "interestRateReceived": "1000",
+        "isFrozen": false
+    },
+    {
+        "networkAddress": "0xC0B33D88C704455075a0724AA167a286da778DDE",
+        "blockNumber": 7011809,
+        "timestamp": 1524755036,
+        "type": "BalanceUpdate",
+        "from": "0xcbF1153F6e5AC01D363d432e24112e8aA56c55ce",
+        "to": "0x7Ec3543702FA8F2C7b2bD84C034aAc36C263cA8b",
+        "status": "confirmed",
+        "transactionId": "0x05c91f6506e78b1ca2413df9985ca7d37d2da5fc076c0b55c5d9eb9fdd7513a6",
+        "blockHash": "0x10d4e9acb58d42d433dbc5c995e9a258cd2bb7fe82fedf2ebab82e450d30c643",
+        "logIndex": 4,
+        "amount": "100"
+    }
+]
+```
 ---
 
 ### Accrued interests of user
@@ -942,66 +1054,66 @@ Following additional attributes for `Transfer` events:
 #### Example Response
 ```json
 [
-	{
-		"networkAddress": "0xC0B33D88C704455075a0724AA167a286da778DDE",
-		"blockNumber": 6997877,
-		"timestamp": 1524655432,
-		"type": "TrustlineUpdateRequest",
-		"from": "0xcbF1153F6e5AC01D363d432e24112e8aA56c55ce",
-		"to": "0x7Ff66eb1A824FF9D1bB7e234a2d3B7A3b0345320",
-		"status": "confirmed",
-		"transactionId": "0xb141aa3baec4e7151d8bd6ecab46d26b1add131e50bcc517c956a7ac979815cd",
-		"blockHash": "0x05c91f6506e78b1ca2413df9985ca7d37d2da5fc076c0b55c5d9eb9fdd7513a6",
-		"logIndex": 1,
-		"given": "20000",
-		"received": "20000",
-		"interestRateGiven": "1000",
-		"interestRateReceived": "1000",
-        "isFrozen": false
-	},
     {
-		"networkAddress": "0xC0B33D88C704455075a0724AA167a286da778DDE",
-		"blockNumber": 6997877,
-		"timestamp": 1524655432,
-		"type": "TrustlineUpdateCancel",
-		"from": "0xcbF1153F6e5AC01D363d432e24112e8aA56c55ce",
-		"to": "0x7Ff66eb1A824FF9D1bB7e234a2d3B7A3b0345320",
-		"status": "confirmed",
-		"transactionId": "0xb141aa3baec4e7151d8bd6ecab46d26b1add131e50bcc517c956a7ac979815cd",
-		"blockHash": "0x05c91f6506e78b1ca2413df9985ca7d37d2da5fc076c0b55c5d9eb9fdd7513a6",
-		"logIndex": 2
-	},
-	{
-		"networkAddress": "0xC0B33D88C704455075a0724AA167a286da778DDE",
-		"blockNumber": 6997899,
-		"timestamp": 1524655600,
-		"type": "TrustlineUpdate",
-		"from": "0xcbF1153F6e5AC01D363d432e24112e8aA56c55ce",
-		"to": "0x7Ec3543702FA8F2C7b2bD84C034aAc36C263cA8b",
-		"status": "confirmed",
-		"transactionId": "0x10d4e9acb58d42d433dbc5c995e9a258cd2bb7fe82fedf2ebab82e450d30c643",
-		"blockHash": "0xb141aa3baec4e7151d8bd6ecab46d26b1add131e50bcc517c956a7ac979815cd",
-		"logIndex": 3,
-		"given": "10000",
-		"received": "10000",
-		"interestRateGiven": "1000",
-		"interestRateReceived": "1000",
+        "networkAddress": "0xC0B33D88C704455075a0724AA167a286da778DDE",
+        "blockNumber": 6997877,
+        "timestamp": 1524655432,
+        "type": "TrustlineUpdateRequest",
+        "from": "0xcbF1153F6e5AC01D363d432e24112e8aA56c55ce",
+        "to": "0x7Ff66eb1A824FF9D1bB7e234a2d3B7A3b0345320",
+        "status": "confirmed",
+        "transactionId": "0xb141aa3baec4e7151d8bd6ecab46d26b1add131e50bcc517c956a7ac979815cd",
+        "blockHash": "0x05c91f6506e78b1ca2413df9985ca7d37d2da5fc076c0b55c5d9eb9fdd7513a6",
+        "logIndex": 1,
+        "given": "20000",
+        "received": "20000",
+        "interestRateGiven": "1000",
+        "interestRateReceived": "1000",
         "isFrozen": false
-	},
-	{
-		"networkAddress": "0xC0B33D88C704455075a0724AA167a286da778DDE",
-		"blockNumber": 7011809,
-		"timestamp": 1524755036,
-		"type": "Transfer",
-		"from": "0xcbF1153F6e5AC01D363d432e24112e8aA56c55ce",
-		"to": "0x7Ec3543702FA8F2C7b2bD84C034aAc36C263cA8b",
-		"status": "confirmed",
-		"transactionId": "0x05c91f6506e78b1ca2413df9985ca7d37d2da5fc076c0b55c5d9eb9fdd7513a6",
-		"blockHash": "0x10d4e9acb58d42d433dbc5c995e9a258cd2bb7fe82fedf2ebab82e450d30c643",
-		"logIndex": 4,
-		"amount": "100",
-		"extraData": "0x1234"
-	}
+    },
+    {
+        "networkAddress": "0xC0B33D88C704455075a0724AA167a286da778DDE",
+        "blockNumber": 6997877,
+        "timestamp": 1524655432,
+        "type": "TrustlineUpdateCancel",
+        "from": "0xcbF1153F6e5AC01D363d432e24112e8aA56c55ce",
+        "to": "0x7Ff66eb1A824FF9D1bB7e234a2d3B7A3b0345320",
+        "status": "confirmed",
+        "transactionId": "0xb141aa3baec4e7151d8bd6ecab46d26b1add131e50bcc517c956a7ac979815cd",
+        "blockHash": "0x05c91f6506e78b1ca2413df9985ca7d37d2da5fc076c0b55c5d9eb9fdd7513a6",
+        "logIndex": 2
+    },
+    {
+        "networkAddress": "0xC0B33D88C704455075a0724AA167a286da778DDE",
+        "blockNumber": 6997899,
+        "timestamp": 1524655600,
+        "type": "TrustlineUpdate",
+        "from": "0xcbF1153F6e5AC01D363d432e24112e8aA56c55ce",
+        "to": "0x7Ec3543702FA8F2C7b2bD84C034aAc36C263cA8b",
+        "status": "confirmed",
+        "transactionId": "0x10d4e9acb58d42d433dbc5c995e9a258cd2bb7fe82fedf2ebab82e450d30c643",
+        "blockHash": "0xb141aa3baec4e7151d8bd6ecab46d26b1add131e50bcc517c956a7ac979815cd",
+        "logIndex": 3,
+        "given": "10000",
+        "received": "10000",
+        "interestRateGiven": "1000",
+        "interestRateReceived": "1000",
+        "isFrozen": false
+    },
+    {
+        "networkAddress": "0xC0B33D88C704455075a0724AA167a286da778DDE",
+        "blockNumber": 7011809,
+        "timestamp": 1524755036,
+        "type": "Transfer",
+        "from": "0xcbF1153F6e5AC01D363d432e24112e8aA56c55ce",
+        "to": "0x7Ec3543702FA8F2C7b2bD84C034aAc36C263cA8b",
+        "status": "confirmed",
+        "transactionId": "0x05c91f6506e78b1ca2413df9985ca7d37d2da5fc076c0b55c5d9eb9fdd7513a6",
+        "blockHash": "0x10d4e9acb58d42d433dbc5c995e9a258cd2bb7fe82fedf2ebab82e450d30c643",
+        "logIndex": 4,
+        "amount": "100",
+        "extraData": "0x1234"
+    }
 ]
 ```
 
