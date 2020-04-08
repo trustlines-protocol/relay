@@ -811,8 +811,13 @@ The `accuredInterests` is a list with the following elements:
 Returns information about all trustline transfer applied by transaction with given hash
 or identified by block hash and log index.
 #### Request
+To get transfer details via transaction hash:
 ```
-GET /transfers
+GET /transfers?transactionHash=hash
+```
+To get transfer details via transfer id:
+```
+GET /transfers?blockHash=hash&logIndex=logindex
 ```
 #### Data Parameters
 | Name            | Type   | Required | Description                                  |
@@ -824,18 +829,12 @@ GET /transfers
 #### Example Request
 To get transfer details via transaction hash:
 ```bash
-curl --header "Content-Type: application/json" \
-  --request POST \
-  --data '{"transactionHash":"0x05c91f6506e78b1ca2413df9985ca7d37d2da5fc076c0b55c5d9eb9fdd7513a6"}' \
-https://relay0.testnet.trustlines.network/api/v1/transfers/
+curl https://relay0.testnet.trustlines.network/api/v1/transfers?transactionHash=0x05c91f6506e78b1ca2413df9985ca7d37d2da5fc076c0b55c5d9eb9fdd7513a6
 ```
 
 To get transfer details via transfer id:
 ```bash
-curl --header "Content-Type: application/json" \
-  --request POST \
-  --data '{"blockHash":"0x05c91f6506e78b1ca2413df9985ca7d37d2da5fc076c0b55c5d9eb9fdd7513a6", "logIndex": 12}' \
-https://relay0.testnet.trustlines.network/api/v1/transfers/
+curl https://relay0.testnet.trustlines.network/api/v1/transfers?blockHash=0x05c91f6506e78b1ca2413df9985ca7d37d2da5fc076c0b55c5d9eb9fdd7513a6&logIndex=12
 ```
 
 #### Response

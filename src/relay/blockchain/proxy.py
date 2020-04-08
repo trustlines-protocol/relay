@@ -229,7 +229,7 @@ class Proxy(object):
     def get_transaction_events_by_event_id(
         self, block_hash, log_index, event_types: Tuple = None
     ):
-        """Gets all all events from a transaction where event_id is the id of one of the events within the transaction
+        """Gets all events from a transaction where event_id is the id of one of the events within the transaction
         Only get events of which the abi is known."""
         block_logs = self.get_block_logs(block_hash)
 

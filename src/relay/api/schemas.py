@@ -288,22 +288,19 @@ class TransferIdentifierSchema(Schema):
         transaction_hash = data["transactionHash"]
         block_hash = data["blockHash"]
         log_index = data["logIndex"]
-        if transaction_hash:
-            if block_hash or log_index:
-                raise ValidationError(
-                    f"Cannot get transfer information using transaction hash and log index or block hash."
-                )
-        elif block_hash:
-            if not log_index:
-                raise ValidationError(
-                    f"Cannot get transfer information using block hash if log index not provided."
-                )
-        elif log_index:
-            if not block_hash:
-                raise ValidationError(
-                    f"Cannot get transfer information using log index if block hash not provided."
-                )
-        else:
+        if transaction_hash and (block_hash or log_index):
+            raise ValidationError(
+                f"Cannot get transfer information using transaction hash and log index or block hash."
+            )
+        elif block_hash and not log_index:
+            raise ValidationError(
+                f"Cannot get transfer information using block hash if log index not provided."
+            )
+        elif log_index and not block_hash:
+            raise ValidationError(
+                f"Cannot get transfer information using log index if block hash not provided."
+            )
+        elif not log_index and not block_hash and not transaction_hash:
             raise ValidationError(
                 "Either transaction hash or block hash and log index need to be provided."
             )
