@@ -25,7 +25,7 @@ from relay.blockchain.delegate import (
     UnknownIdentityFactoryException,
 )
 from relay.blockchain.events_informations import (
-    MultipleTransferFoundException,
+    IdentifiedNotTransferException,
     TransferNotFoundException,
 )
 from relay.blockchain.unw_eth_proxy import UnwEthProxy
@@ -46,6 +46,7 @@ from .schemas import (
     MetaTransactionStatusSchema,
     PaymentPathSchema,
     TransactionStatusSchema,
+    TransferIdentifierSchema,
     TransferInformationSchema,
     TrustlineSchema,
     TxInfosSchema,
@@ -476,20 +477,40 @@ class TransferInformation(Resource):
     def __init__(self, trustlines: TrustlinesRelay) -> None:
         self.trustlines = trustlines
 
-    @dump_result_with_schema(TransferInformationSchema())
-    def get(self, tx_hash: str):
-        try:
-            return self.trustlines.get_transfer_information(tx_hash)
-        except TransferNotFoundException:
-            abort(
-                404,
-                f"No transfer found in transaction with transaction hash: {tx_hash}",
-            )
-        except MultipleTransferFoundException:
-            abort(
-                400,
-                f"Multiple transfer found in transaction, not handled yet: {tx_hash}",
-            )
+    @use_args(TransferIdentifierSchema())
+    @dump_result_with_schema(TransferInformationSchema(many=True))
+    def get(self, args):
+        transaction_hash = args["transactionHash"]
+        block_hash = args["blockHash"]
+        log_index = args["logIndex"]
+
+        if transaction_hash:
+            try:
+                return self.trustlines.get_transfer_information_for_tx_hash(
+                    transaction_hash
+                )
+            except TransferNotFoundException as e:
+                abort(
+                    404,
+                    f"No transfer found in transaction with transaction hash: {e.tx_hash}",
+                )
+        elif block_hash and log_index:
+            try:
+                return self.trustlines.get_transfer_information_from_event_id(
+                    block_hash, log_index
+                )
+            except TransferNotFoundException as e:
+                abort(
+                    404,
+                    f"No transfer found in block {e.block_hash} with log index: {e.log_index}",
+                )
+            except IdentifiedNotTransferException as e:
+                abort(
+                    400,
+                    f"The event identified by block hash {e.block_hash} and log index {e.log_index} is not a Transfer",
+                )
+        else:
+            raise RuntimeError("Unhandled input parameters.")
 
 
 class TransactionInfos(Resource):

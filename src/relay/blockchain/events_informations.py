@@ -72,22 +72,53 @@ class EventsInformationFetcher:
             all_accrued_interests, start_time, end_time
         )
 
-    def get_transfer_details(self, tx_hash):
+    def get_transfer_details_for_id(self, block_hash, log_index):
+        all_events_of_tx = self.events_proxy.get_transaction_events_by_event_id(
+            block_hash,
+            log_index,
+            event_types=(TransferEventType, BalanceUpdateEventType),
+        )
+        events_with_given_log_index = filter_events_with_index(
+            all_events_of_tx, log_index
+        )
+        if len(events_with_given_log_index) == 0:
+            raise TransferNotFoundException(block_hash=block_hash, log_index=log_index)
+        assert (
+            len(events_with_given_log_index) == 1
+        ), "Multiple events with given log index."
+
+        transfer_event = events_with_given_log_index[0]
+
+        if transfer_event.type != TransferEventType:
+            raise IdentifiedNotTransferException(
+                block_hash=block_hash, log_index=log_index
+            )
+
+        return [self.get_transfer_details(all_events_of_tx, transfer_event)]
+
+    def get_transfer_details_for_tx(self, tx_hash):
 
         all_events_of_tx = self.events_proxy.get_transaction_events(
             tx_hash, event_types=(TransferEventType, BalanceUpdateEventType)
         )
-        transfer_events_in_tx = filter_events(all_events_of_tx, TransferEventType)
+        transfer_events_in_tx = filter_events_with_type(
+            all_events_of_tx, TransferEventType
+        )
         if len(transfer_events_in_tx) == 0:
-            raise TransferNotFoundException(tx_hash)
-        if len(transfer_events_in_tx) > 1:
-            raise MultipleTransferFoundException(tx_hash)
-        transfer_event = transfer_events_in_tx[0]
+            raise TransferNotFoundException(tx_hash=tx_hash)
+
+        return [
+            self.get_transfer_details(all_events_of_tx, transfer_event)
+            for transfer_event in transfer_events_in_tx
+        ]
+
+    def get_transfer_details(self, all_events, transfer_event):
+        """Use a transfer event and all events emitted in transfer transaction to get transfer details"""
 
         currency_network_address = transfer_event.network_address
 
         sorted_balance_updates = get_balance_update_events_for_transfer(
-            all_events_of_tx, transfer_event
+            all_events, transfer_event
         )
         delta_balances_along_path = self.get_delta_balances_of_transfer(
             currency_network_address, sorted_balance_updates
@@ -293,8 +324,12 @@ def filter_list_of_accrued_interests_for_time_window(
     return filtered_list
 
 
-def filter_events(all_events, event_type):
+def filter_events_with_type(all_events, event_type):
     return [event for event in all_events if event.type == event_type]
+
+
+def filter_events_with_index(all_events, log_index):
+    return [event for event in all_events if event.log_index == log_index]
 
 
 def get_transfer_path(sorted_balance_updates):
@@ -359,10 +394,13 @@ def event_id(event):
 
 
 class TransferNotFoundException(Exception):
-    def __init__(self, tx_hash):
+    def __init__(self, *, block_hash=None, log_index=None, tx_hash=None):
+        self.block_hash = block_hash
+        self.log_index = log_index
         self.tx_hash = tx_hash
 
 
-class MultipleTransferFoundException(Exception):
-    def __init__(self, tx_hash):
-        self.tx_hash = tx_hash
+class IdentifiedNotTransferException(Exception):
+    def __init__(self, *, block_hash=None, log_index=None):
+        self.block_hash = block_hash
+        self.log_index = log_index

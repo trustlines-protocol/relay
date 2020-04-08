@@ -223,6 +223,44 @@ class Proxy(object):
 
         return self._build_events(events)
 
+    def get_block_logs(self, block_hash):
+        return self._web3.eth.getLogs({"blockHash": block_hash})
+
+    def get_transaction_events_by_event_id(
+        self, block_hash, log_index, event_types: Tuple = None
+    ):
+        """Gets all events from a transaction where event_id is the id of one of the events within the transaction
+        Only get events of which the abi is known."""
+        block_logs = self.get_block_logs(block_hash)
+
+        identified_log = None
+        for log in block_logs:
+            if log["logIndex"] == log_index:
+                identified_log = log
+                break
+        if identified_log is None:
+            return []
+
+        transaction_events = []
+        for log in block_logs:
+            if log["transactionHash"] == identified_log["transactionHash"]:
+                try:
+                    abi = self._get_abi_for_log(log)
+                    rich_log = get_event_data(abi, log)
+                    if event_types is None or rich_log["event"] in event_types:
+                        transaction_events.append(rich_log)
+                except AbiNotFoundException:
+                    pass
+
+        logger.debug(
+            "get_transaction_events_by_event_id(%s, %s) -> %s rows",
+            block_hash,
+            log_index,
+            len(transaction_events),
+        )
+
+        return self._build_events(transaction_events)
+
     def _build_events(self, events: List[Any]):
         current_blocknumber = self._web3.eth.blockNumber
         return [self._build_event(event, current_blocknumber) for event in events]

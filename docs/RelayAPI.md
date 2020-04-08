@@ -526,6 +526,8 @@ curl https://relay0.testnet.trustlines.network/api/v1/networks/0xC0B33D88C704455
 | to             | string | Address of `to` user                                                                      |
 | status         | string | `sent`, `pending` or `confirmed` depending on block height                                |
 | transactionId  | string | Transaction hash                                                                          |
+| blockHash      | string | Hash of the block containing the event                                                    |
+| logIndex       | number | Log index of the event                                                                    |
 
 Following additional attributes for `TrustlineUpdate` and `TrustlineUpdateRequest` events:
 
@@ -557,6 +559,8 @@ Following additional attributes for `Transfer` events:
 		"to": "0x7Ff66eb1A824FF9D1bB7e234a2d3B7A3b0345320",
 		"status": "confirmed",
 		"transactionId": "0xb141aa3baec4e7151d8bd6ecab46d26b1add131e50bcc517c956a7ac979815cd",
+		"blockHash": "0x10d4e9acb58d42d433dbc5c995e9a258cd2bb7fe82fedf2ebab82e450d30c643",
+		"logIndex": 12,
 		"given": "20000",
 		"received": "20000",
 		"interestRateGiven": "1000",
@@ -571,7 +575,9 @@ Following additional attributes for `Transfer` events:
 		"from": "0xcbF1153F6e5AC01D363d432e24112e8aA56c55ce",
 		"to": "0x7Ff66eb1A824FF9D1bB7e234a2d3B7A3b0345320",
 		"status": "confirmed",
-		"transactionId": "0xb141aa3baec4e7151d8bd6ecab46d26b1add131e50bcc517c956a7ac979815cd"
+		"transactionId": "0xb141aa3baec4e7151d8bd6ecab46d26b1add131e50bcc517c956a7ac979815cd",
+		"blockHash": "0x10d4e9acb58d42d433dbc5c995e9a258cd2bb7fe82fedf2ebab82e450d30c643",
+		"logIndex": 14
 	},
 	{
 		"networkAddress": "0xC0B33D88C704455075a0724AA167a286da778DDE",
@@ -582,6 +588,8 @@ Following additional attributes for `Transfer` events:
 		"to": "0x7Ec3543702FA8F2C7b2bD84C034aAc36C263cA8b",
 		"status": "confirmed",
 		"transactionId": "0x10d4e9acb58d42d433dbc5c995e9a258cd2bb7fe82fedf2ebab82e450d30c643",
+		"blockHash": "0x10d4e9acb58d42d433dbc5c995e9a258cd2bb7fe82fedf2ebab82e450d30c643",
+		"logIndex": 1,
 		"given": "10000",
 		"received": "10000",
 		"interestRateGiven": "1000",
@@ -597,6 +605,8 @@ Following additional attributes for `Transfer` events:
 		"to": "0x7Ec3543702FA8F2C7b2bD84C034aAc36C263cA8b",
 		"status": "confirmed",
 		"transactionId": "0x05c91f6506e78b1ca2413df9985ca7d37d2da5fc076c0b55c5d9eb9fdd7513a6",
+		"blockHash": "0xb141aa3baec4e7151d8bd6ecab46d26b1add131e50bcc517c956a7ac979815cd",
+		"logIndex": 2,
 		"amount": "100",
 		"extraData": "0x1234"
 	}
@@ -633,6 +643,8 @@ curl https://relay0.testnet.trustlines.network/api/v1/networks/0xC0B33D88C704455
 | to             | string | Address of `to` user                                                                      |
 | status         | string | `sent`, `pending` or `confirmed` depending on block height                                |
 | transactionId  | string | Transaction hash                                                                          |
+| blockHash      | string | Hash of the block containing the event                                                    |
+| logIndex       | number | Log index of the event                                                                    |
 
 Following additional attributes for `TrustlineUpdate` and `TrustlineUpdateRequest` events:
 
@@ -663,6 +675,8 @@ Following additional attributes for `Transfer` events:
 		"to": "0x7Ff66eb1A824FF9D1bB7e234a2d3B7A3b0345320",
 		"status": "confirmed",
 		"transactionId": "0xb141aa3baec4e7151d8bd6ecab46d26b1add131e50bcc517c956a7ac979815cd",
+		"blockHash": "0x05c91f6506e78b1ca2413df9985ca7d37d2da5fc076c0b55c5d9eb9fdd7513a6",
+		"logIndex": 1,
 		"given": "20000",
 		"received": "20000",
 		"interestRateGiven": "1000",
@@ -677,7 +691,9 @@ Following additional attributes for `Transfer` events:
 		"from": "0xcbF1153F6e5AC01D363d432e24112e8aA56c55ce",
 		"to": "0x7Ff66eb1A824FF9D1bB7e234a2d3B7A3b0345320",
 		"status": "confirmed",
-		"transactionId": "0xb141aa3baec4e7151d8bd6ecab46d26b1add131e50bcc517c956a7ac979815cd"
+		"transactionId": "0xb141aa3baec4e7151d8bd6ecab46d26b1add131e50bcc517c956a7ac979815cd",
+        "blockHash": "0x05c91f6506e78b1ca2413df9985ca7d37d2da5fc076c0b55c5d9eb9fdd7513a6",
+		"logIndex": 2
 	},
 	{
 		"networkAddress": "0xC0B33D88C704455075a0724AA167a286da778DDE",
@@ -688,6 +704,8 @@ Following additional attributes for `Transfer` events:
 		"to": "0x7Ec3543702FA8F2C7b2bD84C034aAc36C263cA8b",
 		"status": "confirmed",
 		"transactionId": "0x10d4e9acb58d42d433dbc5c995e9a258cd2bb7fe82fedf2ebab82e450d30c643",
+		"blockHash": "0xb141aa3baec4e7151d8bd6ecab46d26b1add131e50bcc517c956a7ac979815cd",
+		"logIndex": 3,
 		"given": "10000",
 		"received": "10000",
 		"interestRateGiven": "1000",
@@ -703,6 +721,8 @@ Following additional attributes for `Transfer` events:
 		"to": "0x7Ec3543702FA8F2C7b2bD84C034aAc36C263cA8b",
 		"status": "confirmed",
 		"transactionId": "0x05c91f6506e78b1ca2413df9985ca7d37d2da5fc076c0b55c5d9eb9fdd7513a6",
+		"blockHash": "0x10d4e9acb58d42d433dbc5c995e9a258cd2bb7fe82fedf2ebab82e450d30c643",
+		"logIndex": 4,
 		"amount": "100",
 		"extraData": "0x1234"
 	}
@@ -808,21 +828,37 @@ The `accuredInterests` is a list with the following elements:
 ---
 
 ### Information for transfer in transaction
-Returns information about a trustline transfer applied by transaction with given hash.
+Returns information about all trustline transfer applied by transaction with given hash
+or identified by block hash and log index.
 #### Request
+To get transfer details via transaction hash:
 ```
-GET /transfers/:txHash
+GET /transfers?transactionHash=hash
 ```
+To get transfer details via transfer id:
+```
+GET /transfers?blockHash=hash&logIndex=logindex
+```
+#### Data Parameters
+| Name            | Type   | Required | Description                                  |
+|-----------------|--------|----------|--------------------------------------------- |
+| transactionHash | string | No       | Hash of transaction responsible for transfer |
+| blockHash       | string | No       | Hash of block identifying transfer event     |
+| logIndex        | number | No       | Log index identifying transfer event         |
+
 #### Example Request
+To get transfer details via transaction hash:
+```bash
+curl https://relay0.testnet.trustlines.network/api/v1/transfers?transactionHash=0x05c91f6506e78b1ca2413df9985ca7d37d2da5fc076c0b55c5d9eb9fdd7513a6
 ```
-curl https://relay0.testnet.trustlines.network/api/v1/transfers/0xC0B33D88C704455075a0724AA167a286da778DDE
+
+To get transfer details via transfer id:
+```bash
+curl https://relay0.testnet.trustlines.network/api/v1/transfers?blockHash=0x05c91f6506e78b1ca2413df9985ca7d37d2da5fc076c0b55c5d9eb9fdd7513a6&logIndex=12
 ```
-#### URL Parameters
-| Name         | Type                      | Required | Description                                       |
-|--------------|---------------------------|----------|---------------------------------------------------|
-| txHash       | string prefixed with "0x" | YES      | Hash of the tx responsible for the transfer       |
+
 #### Response
-The response is a an objects with the following elements:
+The response is a list of objects with the following elements:
 
 | Attribute        | Type                | JSON Type            | Description                                 |
 | ---------------- | ------------------- | -------------------- | ------------------------------------------- |
@@ -840,16 +876,18 @@ The `paymentPath` is an object with the following attributes:
 | feePayer     | string            | string           | who paid the fees, either `sender` or `receiver` |
 #### Example Response
 ```json
-{
-    "currencyNetwork": "0xC0B33D88C704455075a0724AA167a286da778DDE",
-    "paymentPath": {
-        "fees": "1",
-        "path": ["0xcbF1153F6e5AC01D363d432e24112e8aA56c55ce", "0x7Ec3543702FA8F2C7b2bD84C034aAc36C263cA8b", "0x7Ff66eb1A824FF9D1bB7e234a2d3B7A3b0345320"],
-        "value": "100",
-        "feePayer": "sender"
-    },
-    "feesPaid": ["1"]
-}
+[
+    {
+        "currencyNetwork": "0xC0B33D88C704455075a0724AA167a286da778DDE",
+        "paymentPath": {
+            "fees": "1",
+            "path": ["0xcbF1153F6e5AC01D363d432e24112e8aA56c55ce", "0x7Ec3543702FA8F2C7b2bD84C034aAc36C263cA8b", "0x7Ff66eb1A824FF9D1bB7e234a2d3B7A3b0345320"],
+            "value": "100",
+            "feePayer": "sender"
+        },
+        "feesPaid": ["1"]
+    }
+]
 ```
 
 ---
@@ -881,6 +919,8 @@ curl https://relay0.testnet.trustlines.network/api/v1/users/0xcbF1153F6e5AC01D36
 | to             | string | Address of `to` user                                                                      |
 | status         | string | `sent`, `pending` or `confirmed` depending on block height                                |
 | transactionId  | string | Transaction hash                                                                          |
+| blockHash      | string | Hash of the block containing the event                                                    |
+| logIndex       | number | Log index of the event                                                                    |
 
 Following additional attributes for `TrustlineUpdate` and `TrustlineUpdateRequest` events:
 
@@ -911,6 +951,8 @@ Following additional attributes for `Transfer` events:
 		"to": "0x7Ff66eb1A824FF9D1bB7e234a2d3B7A3b0345320",
 		"status": "confirmed",
 		"transactionId": "0xb141aa3baec4e7151d8bd6ecab46d26b1add131e50bcc517c956a7ac979815cd",
+		"blockHash": "0x05c91f6506e78b1ca2413df9985ca7d37d2da5fc076c0b55c5d9eb9fdd7513a6",
+		"logIndex": 1,
 		"given": "20000",
 		"received": "20000",
 		"interestRateGiven": "1000",
@@ -925,7 +967,9 @@ Following additional attributes for `Transfer` events:
 		"from": "0xcbF1153F6e5AC01D363d432e24112e8aA56c55ce",
 		"to": "0x7Ff66eb1A824FF9D1bB7e234a2d3B7A3b0345320",
 		"status": "confirmed",
-		"transactionId": "0xb141aa3baec4e7151d8bd6ecab46d26b1add131e50bcc517c956a7ac979815cd"
+		"transactionId": "0xb141aa3baec4e7151d8bd6ecab46d26b1add131e50bcc517c956a7ac979815cd",
+		"blockHash": "0x05c91f6506e78b1ca2413df9985ca7d37d2da5fc076c0b55c5d9eb9fdd7513a6",
+		"logIndex": 2
 	},
 	{
 		"networkAddress": "0xC0B33D88C704455075a0724AA167a286da778DDE",
@@ -936,6 +980,8 @@ Following additional attributes for `Transfer` events:
 		"to": "0x7Ec3543702FA8F2C7b2bD84C034aAc36C263cA8b",
 		"status": "confirmed",
 		"transactionId": "0x10d4e9acb58d42d433dbc5c995e9a258cd2bb7fe82fedf2ebab82e450d30c643",
+		"blockHash": "0xb141aa3baec4e7151d8bd6ecab46d26b1add131e50bcc517c956a7ac979815cd",
+		"logIndex": 3,
 		"given": "10000",
 		"received": "10000",
 		"interestRateGiven": "1000",
@@ -951,6 +997,8 @@ Following additional attributes for `Transfer` events:
 		"to": "0x7Ec3543702FA8F2C7b2bD84C034aAc36C263cA8b",
 		"status": "confirmed",
 		"transactionId": "0x05c91f6506e78b1ca2413df9985ca7d37d2da5fc076c0b55c5d9eb9fdd7513a6",
+		"blockHash": "0x10d4e9acb58d42d433dbc5c995e9a258cd2bb7fe82fedf2ebab82e450d30c643",
+		"logIndex": 4,
 		"amount": "100",
 		"extraData": "0x1234"
 	}
