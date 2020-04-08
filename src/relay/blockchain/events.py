@@ -13,7 +13,9 @@ class BlockchainEvent(Event):
         self._current_blocknumber = current_blocknumber
         event_block_hash = web3_event.get("blockHash", None)
         if event_block_hash:
-            self.block_hash = _field_to_hexbytes(event_block_hash)
+            self.block_hash: Optional[hexbytes.HexBytes] = _field_to_hexbytes(
+                event_block_hash
+            )
         else:
             self.block_hash = None
         self.transaction_hash = _field_to_hexbytes(web3_event.get("transactionHash"))
