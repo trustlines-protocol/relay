@@ -99,7 +99,10 @@ class MessageEventSchema(EventSchema):
 class BlockchainEventSchema(EventSchema):
     blockNumber = fields.Integer(attribute="blocknumber")
     type = fields.Str(default="event")
-    transactionId = HexBytes(attribute="transaction_id")
+    transactionId = HexBytes(
+        attribute="transaction_hash", dump_only=True
+    )  # TODO: Deprecated, remove in future release
+    transactionHash = HexBytes(attribute="transaction_hash")
     status = fields.Str()
     blockHash = HexBytes(attribute="block_hash")
     logIndex = fields.Int(attribute="log_index")

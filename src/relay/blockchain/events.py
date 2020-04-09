@@ -19,7 +19,6 @@ class BlockchainEvent(Event):
         else:
             self.block_hash = None
         self.transaction_hash = _field_to_hexbytes(web3_event.get("transactionHash"))
-        self.transaction_id = self.transaction_hash
         self.type = web3_event.get("event")
         self.log_index = web3_event.get("logIndex")
 

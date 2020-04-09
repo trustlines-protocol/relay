@@ -390,7 +390,7 @@ def get_balance_from_update_event_viewed_from_a(balance_update_event, a):
 
 
 def event_id(event):
-    return event.transaction_id, event.log_index
+    return event.block_hash, event.log_index
 
 
 class TransferNotFoundException(Exception):
