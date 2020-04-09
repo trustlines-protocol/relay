@@ -41,12 +41,12 @@ def dedup_event_id(client_token, event: Event):
     """generate an event id used for deduplicating push notifications
 
     returns None when a message for the event should be sent anyway, otherwise it
-    returns a tuple of the client_token, the event type and the transaction_id.
+    returns a tuple of the client_token, the event type and the transaction_hash.
     This tuple should be used to deduplicate messages, i.e. we should not send messages twice for
     the same tuple.
     """
     if isinstance(event, BlockchainEvent):
-        return client_token, event.type, event.transaction_id
+        return client_token, event.type, event.transaction_hash
     else:
         return None
 
