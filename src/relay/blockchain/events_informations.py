@@ -1,15 +1,19 @@
 import logging
 import math
-from typing import List
+from operator import attrgetter
+from typing import Iterable, List
 
 import attr
 import toolz
 
 from relay.blockchain.currency_network_events import (
+    BalanceUpdateEvent,
     BalanceUpdateEventType,
+    TransferEvent,
     TransferEventType,
     TrustlineUpdateEventType,
 )
+from relay.blockchain.events import BlockchainEvent
 from relay.network_graph.interests import calculate_interests
 from relay.network_graph.payment_path import FeePayer
 
@@ -82,17 +86,18 @@ class EventsInformationFetcher:
             all_events_of_tx, log_index
         )
         if len(events_with_given_log_index) == 0:
-            raise TransferNotFoundException(block_hash=block_hash, log_index=log_index)
+            raise EventNotFoundException(block_hash=block_hash, log_index=log_index)
         assert (
             len(events_with_given_log_index) == 1
         ), "Multiple events with given log index."
 
-        transfer_event = events_with_given_log_index[0]
+        transfer_event = find_transfer_event(
+            all_events_of_tx, events_with_given_log_index[0]
+        )
 
-        if transfer_event.type != TransferEventType:
-            raise IdentifiedNotTransferException(
-                block_hash=block_hash, log_index=log_index
-            )
+        # TODO check that event_with_given_log_index is part of the found transfer, to ensure we did everything correct
+
+        assert transfer_event.type == TransferEventType
 
         return [self.get_transfer_details(all_events_of_tx, transfer_event)]
 
@@ -262,7 +267,9 @@ def sorted_events(events, reverse=False):
         return event.blocknumber
 
     return sorted(
-        events, key=lambda event: (block_number_key(event), log_index_key(event))
+        events,
+        key=lambda event: (block_number_key(event), log_index_key(event)),
+        reverse=reverse,
     )
 
 
@@ -343,31 +350,84 @@ def get_transfer_path(sorted_balance_updates):
     return path_from_events
 
 
-def get_balance_update_events_for_transfer(all_events, transfer_event):
+def find_transfer_event(
+    all_events: Iterable[BlockchainEvent], any_transfer_event: BlockchainEvent
+) -> TransferEvent:
+    """Finds the corresponding transfer event, where any_transfer_event can by any event of the transfer
+    (BalanceUpdate or Transfer) and all_events should be already only potential BalanceUpdate and Transfer events.
+    """
+
+    log_index = any_transfer_event.log_index
+
+    # Search forward for related Transfer update event
+    # The contracts emit the events in the following order:
+    # events = BalanceUpdate1, BalanceUpdate2, ... BalanceUpdateN, Transfer
+    # They should be right next to each other, so the log_index should be like N, N+1, N+2, ...
+    # If there is a gap, it is because it was not part of a Transfer, but for example part of a TrustlineUpdate
+    relevant_events = list(
+        sorted(
+            [event for event in all_events if event.log_index >= log_index],
+            key=attrgetter("log_index"),
+        )
+    )
+    next_log_index = log_index
+
+    for event in relevant_events:
+        if event.log_index == next_log_index:
+            # Found event that is potentially part of the transfer
+            if event.type == TransferEventType:
+                assert isinstance(event, TransferEvent)
+                return event
+
+            assert (
+                event.type == BalanceUpdateEventType
+            ), "Wrong event type for events before transfer event"
+
+            next_log_index += 1
+        else:  # There was a gap, so what we found is not a Transfer
+            raise IdentifiedNotPartOfTransferException(
+                block_hash=event.block_hash, log_index=log_index
+            )
+    else:  # No TransferEvent found, so no Transfer
+        raise IdentifiedNotPartOfTransferException(
+            block_hash=event.block_hash, log_index=log_index
+        )
+
+
+def get_balance_update_events_for_transfer(
+    all_events: Iterable[BlockchainEvent], transfer_event: TransferEvent
+) -> List[BalanceUpdateEvent]:
     """Returns all balance update events in the correct order that belongs to the transfer event"""
     log_index = transfer_event.log_index
     sender = transfer_event.from_
     receiver = transfer_event.to
 
-    balance_events = []
+    balance_events: List[BalanceUpdateEvent] = []
     saw_sender_event = False
     saw_receiver_event = False
 
     # Search backwards for related BalanceUpdate events
-    for i in range(log_index - 1, -1, -1):
-        for event in all_events:
-            if event.log_index == i:
-                assert (
-                    event.type == BalanceUpdateEventType
-                ), "Wrong event type for events before transfer event"
-                balance_events.append(event)
-                if event.to == receiver:
-                    saw_receiver_event = True
-                if event.from_ == sender:
-                    saw_sender_event = True
-                break
+    # The events of a transfer are in the following order without gaps
+    # events = BalanceUpdate1, BalanceUpdate2, ... BalanceUpdateN, Transfer
+    relevant_events = [event for event in all_events if event.log_index < log_index]
+    relevant_events.sort(key=attrgetter("log_index"), reverse=True)
+
+    next_log_index = log_index - 1
+    for event in relevant_events:
+        assert event.type == BalanceUpdateEventType and isinstance(
+            event, BalanceUpdateEvent
+        ), "Wrong event type for events before transfer event"
+        assert (
+            event.log_index == next_log_index
+        ), f"Logindex is not as expected, {event.log_index} instead of {next_log_index}"
+        balance_events.append(event)
+        if event.to == receiver:
+            saw_receiver_event = True
+        if event.from_ == sender:
+            saw_sender_event = True
         if saw_sender_event and saw_receiver_event:
             break
+        next_log_index -= 1
     else:
         assert False, "Could not find all BalanceUpdate events"
 
@@ -394,13 +454,17 @@ def event_id(event):
 
 
 class TransferNotFoundException(Exception):
-    def __init__(self, *, block_hash=None, log_index=None, tx_hash=None):
-        self.block_hash = block_hash
-        self.log_index = log_index
+    def __init__(self, *, tx_hash=None):
         self.tx_hash = tx_hash
 
 
-class IdentifiedNotTransferException(Exception):
+class EventNotFoundException(Exception):
+    def __init__(self, *, block_hash=None, log_index=None):
+        self.block_hash = block_hash
+        self.log_index = log_index
+
+
+class IdentifiedNotPartOfTransferException(Exception):
     def __init__(self, *, block_hash=None, log_index=None):
         self.block_hash = block_hash
         self.log_index = log_index

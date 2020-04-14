@@ -1,3 +1,5 @@
+from enum import Enum, auto
+
 import pytest
 
 from relay.blockchain.events_informations import EventsInformationFetcher
@@ -138,25 +140,17 @@ def test_get_interests_paid_for_trustline_negative_balance(
         assert accrued_interest.interest_rate == 2000
 
 
-@pytest.mark.parametrize(
-    "path, fee_payer, use_transfer_id",
-    [
-        ([0, 1], "sender", True),
-        ([0, 1, 2, 3], "sender", True),
-        ([3, 2, 1, 0], "sender", True),
-        ([0, 1], "receiver", True),
-        ([0, 1, 2, 3], "receiver", True),
-        ([3, 2, 1, 0], "receiver", True),
-        ([0, 1], "sender", False),
-        ([0, 1, 2, 3], "sender", False),
-        ([3, 2, 1, 0], "sender", False),
-        ([0, 1], "receiver", False),
-        ([0, 1, 2, 3], "receiver", False),
-        ([3, 2, 1, 0], "receiver", False),
-    ],
-)
+class LookupMethod(Enum):
+    TX_HASH = auto()
+    TRANSFER_ID = auto()
+    BALANCE_UPDATE_ID = auto()
+
+
+@pytest.mark.parametrize("lookup_method", list(LookupMethod))
+@pytest.mark.parametrize("fee_payer", ["sender", "receiver"])
+@pytest.mark.parametrize("path", [[0, 1], [0, 1, 2, 3], [3, 2, 1, 0]])
 def test_get_transfer_information_path(
-    currency_network_with_trustlines, web3, accounts, path, fee_payer, use_transfer_id
+    currency_network_with_trustlines, web3, accounts, path, fee_payer, lookup_method
 ):
     """
     test that we can get the path of a sent transfer from the transfer event
@@ -173,36 +167,35 @@ def test_get_transfer_information_path(
     else:
         assert False, "Invalid fee payer"
 
-    if use_transfer_id:
-        transfer_event = network._proxy.events.Transfer().getLogs(
-            fromBlock=block_number
-        )[0]
+    if (
+        lookup_method == LookupMethod.TRANSFER_ID
+        or lookup_method == LookupMethod.BALANCE_UPDATE_ID
+    ):
+        if lookup_method == LookupMethod.TRANSFER_ID:
+            event = network._proxy.events.Transfer().getLogs(fromBlock=block_number)[0]
+        elif lookup_method == LookupMethod.BALANCE_UPDATE_ID:
+            event = network._proxy.events.BalanceUpdate().getLogs(
+                fromBlock=block_number
+            )[0]
+        else:
+            assert False, "Unexpected lookup method"
         transfer_information = EventsInformationFetcher(
             network
-        ).get_transfer_details_for_id(
-            transfer_event["blockHash"], transfer_event["logIndex"]
-        )[
-            0
-        ]
-    else:
+        ).get_transfer_details_for_id(event["blockHash"], event["logIndex"])[0]
+    elif lookup_method == LookupMethod.TX_HASH:
         transfer_information = EventsInformationFetcher(
             network
         ).get_transfer_details_for_tx(tx_hash)[0]
+    else:
+        assert False, "Unknown lookup method"
 
     assert transfer_information.path == account_path
 
 
-@pytest.mark.parametrize(
-    "fee_payer, use_transfer_id",
-    [
-        (FeePayer.SENDER, True),
-        (FeePayer.RECEIVER, True),
-        (FeePayer.SENDER, False),
-        (FeePayer.RECEIVER, False),
-    ],
-)
+@pytest.mark.parametrize("lookup_method", list(LookupMethod))
+@pytest.mark.parametrize("fee_payer", [FeePayer.SENDER, FeePayer.RECEIVER])
 def test_get_transfer_information_values(
-    currency_network_with_trustlines, web3, accounts, fee_payer, use_transfer_id
+    currency_network_with_trustlines, web3, accounts, fee_payer, lookup_method
 ):
     """
     test that we can get the path of a sent transfer from the transfer event
@@ -220,21 +213,27 @@ def test_get_transfer_information_values(
     else:
         assert False, "Invalid fee payer"
 
-    if use_transfer_id:
-        transfer_event = network._proxy.events.Transfer().getLogs(
-            fromBlock=block_number
-        )[0]
+    if (
+        lookup_method == LookupMethod.TRANSFER_ID
+        or lookup_method == LookupMethod.BALANCE_UPDATE_ID
+    ):
+        if lookup_method == LookupMethod.TRANSFER_ID:
+            event = network._proxy.events.Transfer().getLogs(fromBlock=block_number)[0]
+        elif lookup_method == LookupMethod.BALANCE_UPDATE_ID:
+            event = network._proxy.events.BalanceUpdate().getLogs(
+                fromBlock=block_number
+            )[0]
+        else:
+            assert False, "Unexpected lookup method"
         transfer_information = EventsInformationFetcher(
             network
-        ).get_transfer_details_for_id(
-            transfer_event["blockHash"], transfer_event["logIndex"]
-        )[
-            0
-        ]
-    else:
+        ).get_transfer_details_for_id(event["blockHash"], event["logIndex"])[0]
+    elif lookup_method == LookupMethod.TX_HASH:
         transfer_information = EventsInformationFetcher(
             network
         ).get_transfer_details_for_tx(tx_hash)[0]
+    else:
+        assert False, "Unknown lookup method"
 
     assert transfer_information.fees_paid == [1, 1, 1, 1, 1]
     assert transfer_information.value == value
