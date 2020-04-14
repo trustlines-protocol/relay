@@ -25,7 +25,8 @@ from relay.blockchain.delegate import (
     UnknownIdentityFactoryException,
 )
 from relay.blockchain.events_informations import (
-    IdentifiedNotTransferException,
+    EventNotFoundException,
+    IdentifiedNotPartOfTransferException,
     TransferNotFoundException,
 )
 from relay.blockchain.unw_eth_proxy import UnwEthProxy
@@ -540,15 +541,16 @@ class TransferInformation(Resource):
                 return self.trustlines.get_transfer_information_from_event_id(
                     block_hash, log_index
                 )
-            except TransferNotFoundException as e:
+            except EventNotFoundException as e:
                 abort(
                     404,
-                    f"No transfer found in block {e.block_hash} with log index: {e.log_index}",
+                    f"No event found in block {e.block_hash} with log index: {e.log_index}",
                 )
-            except IdentifiedNotTransferException as e:
+            except IdentifiedNotPartOfTransferException as e:
                 abort(
                     400,
-                    f"The event identified by block hash {e.block_hash} and log index {e.log_index} is not a Transfer",
+                    f"The event identified by block hash {e.block_hash} and log index {e.log_index} "
+                    "is not part of a Transfer",
                 )
         else:
             raise RuntimeError("Unhandled input parameters.")
