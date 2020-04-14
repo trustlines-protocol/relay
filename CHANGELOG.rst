@@ -4,6 +4,21 @@ Change Log
 `unreleased`_
 -------------------------------
 
+`0.15.0`_ (2020-04-14)
+-------------------------------
+- Add endpoint to get all events of a trustline: :code:`/networks/<network_address>/users/<user_address>/trustlines/<counter_party_address>/events`
+- Add `logIndex` and `blockHash` to events returned from endpoints
+- Add endpoint :code:`GET /transfers?options...` to get a list of information for transfers either via enveloping tx hash, or via the transfer
+  event or via a related balance update event identified via block hash and log index.
+- Update config of relay to enforce having no :code:`currency_network` if delegation fees are set to :code:`{'base_fee'=0, 'gas_price'=0}`. (BREAKING)
+- Update config so that if no accepted fees are specified, no fees will be accepted, i.e. the delegate will not pay for meta-tx. (BREAKING)
+- Add endpoint to get list of all trustlines in a currency network :code:`GET /networks/:networkAddress/trustlines`
+- Delegate will now check the value of `feeRecipient` for meta-tx, it has to be the delegate's address or the zero_address to be correct. (BREAKING)
+- Remove undocumented field `address` returned when querying trustlines information (for a user, for a network, in between users of a network, for a user in a network).
+  If you were using it, change to :code:`counterParty` (BREAKING)
+- No longer use the pending block to get events, the graph is now updated on the latest block instead. (BREAKING)
+
+
 `0.14.0`_ (2020-03-02)
 -------------------------------
 - Add endpoint to ask for transaction status
@@ -192,4 +207,5 @@ Change Log
 .. _0.13.0: https://github.com/trustlines-protocol/relay/compare/0.12.1...0.13.0
 .. _0.13.1: https://github.com/trustlines-protocol/relay/compare/0.13.0...0.13.1
 .. _0.14.0: https://github.com/trustlines-protocol/relay/compare/0.13.1...0.14.0
-.. _unreleased: https://github.com/trustlines-protocol/relay/compare/0.14.0...master
+.. _0.15.0: https://github.com/trustlines-protocol/relay/compare/0.14.0...0.15.0
+.. _unreleased: https://github.com/trustlines-protocol/relay/compare/0.15.0...master
