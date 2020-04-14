@@ -29,7 +29,7 @@ eth-rlp==0.1.2            # via eth-account
 eth-tester[py-evm]==0.4.0b1  # via contract-deploy-tools
 eth-typing==2.2.1         # via eth-abi, eth-utils, py-ecc, py-evm, web3
 eth-utils==1.8.4          # via contract-deploy-tools, eth-abi, eth-account, eth-keyfile, eth-keys, eth-rlp, eth-tester, hexbytes, py-ecc, py-evm, rlp, trie, trustlines-relay (setup.py), web3
-firebase-admin==4.0.0     # via trustlines-relay (setup.py)
+firebase-admin==2.18.0    # via trustlines-relay (setup.py)
 flask-cors==3.0.8         # via trustlines-relay (setup.py)
 flask-restful==0.3.8      # via trustlines-relay (setup.py)
 flask-sockets==0.2.1      # via trustlines-relay (setup.py)
@@ -86,7 +86,7 @@ rlp==1.2.0                # via eth-account, eth-rlp, eth-tester, py-evm, trie
 rsa==4.0                  # via google-auth
 semantic-version==2.8.4   # via eth-tester, py-solc
 sentry-sdk[flask]==0.14.3  # via trustlines-relay (setup.py)
-six==1.14.0               # via attrdict, flask-cors, flask-restful, google-api-core, google-api-python-client, google-auth, google-resumable-media, grpcio, ipfshttpclient, jsonschema, multiaddr, parsimonious, protobuf, pyrsistent, python-dateutil, tinyrpc
+six==1.14.0               # via attrdict, firebase-admin, flask-cors, flask-restful, google-api-core, google-api-python-client, google-auth, google-resumable-media, grpcio, ipfshttpclient, jsonschema, multiaddr, parsimonious, protobuf, pyrsistent, python-dateutil, tinyrpc
 sqlalchemy==1.3.15        # via trustlines-relay (setup.py)
 tinyrpc==1.0.4            # via trustlines-relay (setup.py)
 toml==0.10.0              # via trustlines-relay (setup.py)
