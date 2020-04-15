@@ -1,8 +1,12 @@
 from enum import Enum, auto
+from time import time
 
 import pytest
 
-from relay.blockchain.events_informations import EventsInformationFetcher
+from relay.blockchain.events_informations import (
+    EventsInformationFetcher,
+    IdentifiedNotPartOfTransferException,
+)
 from relay.network_graph.payment_path import FeePayer
 
 
@@ -240,3 +244,27 @@ def test_get_transfer_information_values(
     assert transfer_information.total_fees == number_of_mediators
     assert transfer_information.fee_payer == fee_payer
     assert transfer_information.currency_network == network.address
+
+
+def test_transfer_by_wrong_balance_update(currency_network, web3, accounts, chain):
+    A, B, *rest = accounts
+
+    currency_network.update_trustline_with_accept(A, B, 1000, 1000, 100, 100)
+    currency_network.transfer_on_path(100, [A, B])
+    now = int(time())
+    chain.time_travel(now + 3600 * 24 * 365)
+    # Should emit BalanceUpdate
+    currency_network.update_trustline_with_accept(A, B, 2000, 2000, 200, 200)
+
+    block_number = web3.eth.blockNumber
+    events = currency_network._proxy.events.BalanceUpdate().getLogs(
+        fromBlock=block_number
+    )
+    assert len(events) == 1
+
+    event = events[0]
+
+    with pytest.raises(IdentifiedNotPartOfTransferException):
+        EventsInformationFetcher(currency_network).get_transfer_details_for_id(
+            event["blockHash"], event["logIndex"]
+        )
