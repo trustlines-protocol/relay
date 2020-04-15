@@ -1,3 +1,5 @@
+import re
+
 import hexbytes
 from eth_utils import is_address, to_checksum_address
 from marshmallow import fields
@@ -19,6 +21,24 @@ class Address(fields.Field):
             )
 
         return to_checksum_address(value)
+
+
+class Hash(fields.String):
+    def _serialize(self, value, attr, obj, **kwargs):
+        if isinstance(value, str) or not re.match(r"0x[0-9a-fA-F]{64}", value):
+            raise ValidationError(
+                f"Could not parse attribute {attr}: Invalid hash {value}"
+            )
+
+        return value
+
+    def _deserialize(self, value, attr, data, **kwargs):
+        if not isinstance(value, str) or not re.match(r"0x[0-9a-fA-F]{64}", value):
+            raise ValidationError(
+                f"Could not parse attribute {attr}: Invalid hash {value}"
+            )
+
+        return value
 
 
 class BigInteger(fields.Field):

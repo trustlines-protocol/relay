@@ -1,5 +1,6 @@
 import hexbytes
 from marshmallow import Schema, ValidationError, fields, post_load, validates_schema
+from marshmallow.validate import Range
 from marshmallow_oneofschema import OneOfSchema
 from tldeploy import identity
 from tldeploy.identity import MetaTransaction
@@ -14,6 +15,7 @@ from .fields import (
     Address,
     BigInteger,
     FeePayerField,
+    Hash,
     HexBytes,
     HexEncodedBytes,
     MetaTransactionStatusField,
@@ -293,23 +295,25 @@ class TransferIdentifierSchema(Schema):
         transaction_hash = data["transactionHash"]
         block_hash = data["blockHash"]
         log_index = data["logIndex"]
-        if transaction_hash and (block_hash or log_index):
+        if transaction_hash is not None and (
+            block_hash is not None or log_index is not None
+        ):
             raise ValidationError(
                 f"Cannot get transfer information using transaction hash and log index or block hash."
             )
-        elif block_hash and not log_index:
+        elif block_hash is not None and log_index is None:
             raise ValidationError(
                 f"Cannot get transfer information using block hash if log index not provided."
             )
-        elif log_index and not block_hash:
+        elif log_index is not None and block_hash is None:
             raise ValidationError(
                 f"Cannot get transfer information using log index if block hash not provided."
             )
-        elif not log_index and not block_hash and not transaction_hash:
+        elif log_index is None and block_hash is None and transaction_hash is None:
             raise ValidationError(
                 "Either transaction hash or block hash and log index need to be provided."
             )
 
-    transactionHash = fields.Str(required=False, missing=None)
-    blockHash = fields.Str(required=False, missing=None)
-    logIndex = fields.Int(required=False, missing=None)
+    transactionHash = Hash(required=False, missing=None)
+    blockHash = Hash(required=False, missing=None)
+    logIndex = fields.Int(required=False, missing=None, validate=Range(min=0))

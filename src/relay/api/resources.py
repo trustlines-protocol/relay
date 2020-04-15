@@ -526,7 +526,7 @@ class TransferInformation(Resource):
         block_hash = args["blockHash"]
         log_index = args["logIndex"]
 
-        if transaction_hash:
+        if transaction_hash is not None:
             try:
                 return self.trustlines.get_transfer_information_for_tx_hash(
                     transaction_hash
@@ -536,7 +536,7 @@ class TransferInformation(Resource):
                     404,
                     f"No transfer found in transaction with transaction hash: {e.tx_hash}",
                 )
-        elif block_hash and log_index:
+        elif block_hash is not None and log_index is not None:
             try:
                 return self.trustlines.get_transfer_information_from_event_id(
                     block_hash, log_index
