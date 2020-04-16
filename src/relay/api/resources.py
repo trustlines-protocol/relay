@@ -12,7 +12,10 @@ from webargs import fields
 from webargs.flaskparser import use_args
 
 from relay.api import fields as custom_fields
-from relay.blockchain.currency_network_proxy import CurrencyNetworkProxy
+from relay.blockchain.currency_network_events import (
+    all_event_types as all_currency_network_event_types,
+    trustline_event_types,
+)
 from relay.blockchain.delegate import (
     IdentityDeploymentFailedException,
     InvalidChainId,
@@ -29,7 +32,7 @@ from relay.blockchain.events_informations import (
     IdentifiedNotPartOfTransferException,
     TransferNotFoundException,
 )
-from relay.blockchain.unw_eth_proxy import UnwEthProxy
+from relay.blockchain.unw_eth_events import all_event_types as all_unw_eth_event_types
 from relay.concurrency_utils import TimeoutException
 from relay.network_graph.payment_path import FeePayer, PaymentPath
 from relay.relay import TrustlinesRelay
@@ -321,7 +324,7 @@ class UserEventsNetwork(Resource):
         "fromBlock": fields.Int(required=False, missing=0),
         "type": fields.Str(
             required=False,
-            validate=validate.OneOf(CurrencyNetworkProxy.event_types),
+            validate=validate.OneOf(all_currency_network_event_types),
             missing=None,
         ),
     }
@@ -354,7 +357,7 @@ class TrustlineEvents(Resource):
         "fromBlock": fields.Int(required=False, missing=0),
         "type": fields.Str(
             required=False,
-            validate=validate.OneOf(CurrencyNetworkProxy.trustline_event_types),
+            validate=validate.OneOf(trustline_event_types),
             missing=None,
         ),
     }
@@ -396,7 +399,7 @@ class UserEvents(Resource):
         "type": fields.Str(
             required=False,
             validate=validate.OneOf(
-                CurrencyNetworkProxy.event_types + UnwEthProxy.event_types
+                all_currency_network_event_types + all_unw_eth_event_types
             ),
             missing=None,
         ),
@@ -432,7 +435,7 @@ class EventsNetwork(Resource):
         "fromBlock": fields.Int(required=False, missing=0),
         "type": fields.Str(
             required=False,
-            validate=validate.OneOf(CurrencyNetworkProxy.event_types),
+            validate=validate.OneOf(all_currency_network_event_types),
             missing=None,
         ),
     }

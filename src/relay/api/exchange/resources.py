@@ -10,7 +10,7 @@ from webargs.flaskparser import abort, use_args
 from relay.api import fields
 from relay.api.exchange.schemas import OrderSchema
 from relay.api.resources import dump_result_with_schema
-from relay.blockchain.exchange_proxy import ExchangeProxy
+from relay.blockchain.exchange_events import all_event_types as all_exchange_event_types
 from relay.concurrency_utils import TimeoutException
 from relay.exchange.order import Order
 from relay.exchange.orderbook import OrderInvalidException
@@ -197,7 +197,7 @@ class UserEventsExchange(Resource):
         "fromBlock": webfields.Int(required=False, missing=0),
         "type": webfields.Str(
             required=False,
-            validate=validate.OneOf(ExchangeProxy.event_types),
+            validate=validate.OneOf(all_exchange_event_types),
             missing=None,
         ),
     }
@@ -230,7 +230,7 @@ class UserEventsAllExchanges(Resource):
         "fromBlock": webfields.Int(required=False, missing=0),
         "type": webfields.Str(
             required=False,
-            validate=validate.OneOf(ExchangeProxy.event_types),
+            validate=validate.OneOf(all_exchange_event_types),
             missing=None,
         ),
     }
@@ -263,7 +263,7 @@ class EventsExchange(Resource):
         "fromBlock": webfields.Int(required=False, missing=0),
         "type": webfields.Str(
             required=False,
-            validate=validate.OneOf(ExchangeProxy.event_types),
+            validate=validate.OneOf(all_exchange_event_types),
             missing=None,
         ),
     }

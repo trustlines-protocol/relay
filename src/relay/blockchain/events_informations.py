@@ -14,6 +14,7 @@ from relay.blockchain.currency_network_events import (
     TrustlineUpdateEventType,
 )
 from relay.blockchain.events import BlockchainEvent
+from relay.ethindex_db import EthindexDB
 from relay.network_graph.interests import calculate_interests
 from relay.network_graph.payment_path import FeePayer
 
@@ -41,7 +42,7 @@ class TransferInformation:
 
 
 class EventsInformationFetcher:
-    def __init__(self, events_proxy):
+    def __init__(self, events_proxy: EthindexDB):
         self.events_proxy = events_proxy
 
     def get_list_of_paid_interests_for_trustline(

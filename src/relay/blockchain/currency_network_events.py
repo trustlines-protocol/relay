@@ -111,3 +111,5 @@ trustline_event_types = [
     TrustlineUpdateEventType,
     BalanceUpdateEventType,
 ]
+
+all_event_types = list(event_builders.keys())
