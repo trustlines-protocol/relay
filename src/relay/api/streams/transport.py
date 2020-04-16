@@ -1,4 +1,5 @@
 import logging
+from typing import Union
 
 from geventwebsocket import WebSocketApplication, WebSocketError
 from tinyrpc import BadRequestError
@@ -23,12 +24,21 @@ class RPCWebSocketApplication(WebSocketApplication):
     def on_open(self):
         logger.debug("Websocket connected")
 
-    def on_message(self, message):
+    def on_message(self, message: Union[bytes, str], *args, **kwargs) -> None:
         def caller(method, args, kwargs):
             return validating_rpc_caller(method, args, kwargs, client=self.client)
 
         try:
-            request = self.rpc.parse_request(message)
+            data: bytes
+            if isinstance(message, str):
+                data = message.encode()
+            elif isinstance(message, bytes):
+                data = message
+            else:
+                raise RuntimeError(
+                    f"Expect message to be string or bytes but was {type(message)}"
+                )
+            request = self.rpc.parse_request(data)
         except BadRequestError as e:
             # request was invalid, directly create response
             response = e.error_respond()
@@ -38,7 +48,11 @@ class RPCWebSocketApplication(WebSocketApplication):
         # now send the response to the client
         if response is not None:
             try:
-                self.ws.send(response.serialize())
+                result: bytes = response.serialize()
+                assert (
+                    type(result) == bytes
+                ), "Response did not return data of type bytes"
+                self.ws.send(result.decode())  # Make sure to send a string over ws
             except WebSocketError:
                 pass
 
@@ -65,7 +79,9 @@ class RPCWebSocketClient(Client):
         request = self.rpc.create_request(
             "subscription_" + str(subscription.id), args={"event": data}, one_way=True
         )
+        result: bytes = request.serialize()
+        assert type(result) == bytes, "Request did not return data of type bytes"
         try:
-            self.ws.send(request.serialize())
+            self.ws.send(result.decode())  # Make sure to send a string over ws
         except WebSocketError as e:
             raise DisconnectedError from e
