@@ -214,7 +214,7 @@ class UserEventsExchange(Resource):
             )
         except TimeoutException:
             logger.warning(
-                "User exchange events: event_name=%s user_address=%s from_block=%s. could not get events in time",
+                "User exchange events: event_type=%s user_address=%s from_block=%s. could not get events in time",
                 type,
                 user_address,
                 from_block,
@@ -247,7 +247,7 @@ class UserEventsAllExchanges(Resource):
         except TimeoutException:
             logger.warning(
                 """User exchange events from all exchanges:
-                   event_name=%s user_address=%s from_block=%s. could not get events in time""",
+                   event_type=%s user_address=%s from_block=%s. could not get events in time""",
                 type,
                 user_address,
                 from_block,
@@ -280,7 +280,7 @@ class EventsExchange(Resource):
             )
         except TimeoutException:
             logger.warning(
-                "Exchange events: event_name=%s from_block=%s. could not get events in time",
+                "Exchange events: event_type=%s from_block=%s. could not get events in time",
                 type,
                 from_block,
             )
