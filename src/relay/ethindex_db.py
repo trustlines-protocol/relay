@@ -7,12 +7,7 @@ from typing import Any, Dict, Iterable, List, Optional
 import psycopg2
 import psycopg2.extras
 
-from relay.blockchain import (
-    currency_network_events,
-    exchange_events,
-    token_events,
-    unw_eth_events,
-)
+from relay.blockchain import currency_network_events
 from relay.blockchain.events import BlockchainEvent, TLNetworkEvent
 
 # proxy.get_all_events just asks for these network events. so we need the list
@@ -444,57 +439,3 @@ class CurrencyNetworkEthindexDB(EthindexDB):
             else:
                 raise ValueError("Expected a TLNetworkEvent")
         return events
-
-
-class UnwEthEthindexDb(EthindexDB):
-    def get_unw_eth_events(
-        self,
-        event_name: str,
-        user_address: str = None,
-        from_block: int = 0,
-        timeout: float = None,
-    ) -> List[BlockchainEvent]:
-        return self.get_user_events(event_name, user_address, from_block, timeout)
-
-    def get_all_unw_eth_events(
-        self, user_address: str = None, from_block: int = 0, timeout: float = None
-    ) -> List[BlockchainEvent]:
-        return self.get_all_contract_events(
-            unw_eth_events.standard_event_types, user_address, from_block, timeout
-        )
-
-
-class TokenEthindexDB(EthindexDB):
-    def get_token_events(
-        self,
-        event_name: str,
-        user_address: str = None,
-        from_block: int = 0,
-        timeout: float = None,
-    ) -> List[BlockchainEvent]:
-        return self.get_user_events(event_name, user_address, from_block, timeout)
-
-    def get_all_token_events(
-        self, user_address: str = None, from_block: int = 0, timeout: float = None
-    ) -> List[BlockchainEvent]:
-        return self.get_all_contract_events(
-            token_events.standard_event_types, user_address, from_block, timeout
-        )
-
-
-class ExchangeEthindexDB(EthindexDB):
-    def get_exchange_events(
-        self,
-        event_name: str,
-        user_address: str = None,
-        from_block: int = 0,
-        timeout: float = None,
-    ) -> List[BlockchainEvent]:
-        return self.get_user_events(event_name, user_address, from_block, timeout)
-
-    def get_all_exchange_events(
-        self, user_address: str = None, from_block: int = 0, timeout: float = None
-    ) -> List[BlockchainEvent]:
-        return self.get_all_contract_events(
-            exchange_events.standard_event_types, user_address, from_block, timeout
-        )

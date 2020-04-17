@@ -176,7 +176,7 @@ class TrustlinesRelay:
         """return an EthindexDB instance
         This is being used from relay.api to query for events.
         """
-        return ethindex_db.TokenEthindexDB(
+        return ethindex_db.EthindexDB(
             ethindex_db.connect(""),
             address=address,
             standard_event_types=token_events.standard_event_types,
@@ -188,7 +188,7 @@ class TrustlinesRelay:
         """return an EthindexDB instance
         This is being used from relay.api to query for events.
         """
-        return ethindex_db.UnwEthEthindexDb(
+        return ethindex_db.EthindexDB(
             ethindex_db.connect(""),
             address=address,
             standard_event_types=unw_eth_events.standard_event_types,
@@ -200,7 +200,7 @@ class TrustlinesRelay:
         """return an EthindexDB instance
         This is being used from relay.api to query for events.
         """
-        return ethindex_db.ExchangeEthindexDB(
+        return ethindex_db.EthindexDB(
             ethindex_db.connect(""),
             address=address,
             standard_event_types=exchange_events.standard_event_types,
@@ -618,7 +618,7 @@ class TrustlinesRelay:
             if type is not None and type in ethindex_db.event_types:
                 queries.append(
                     functools.partial(
-                        ethindex_db.get_unw_eth_events,
+                        ethindex_db.get_user_events,
                         type,
                         user_address=user_address,
                         from_block=from_block,
@@ -627,7 +627,7 @@ class TrustlinesRelay:
             else:
                 queries.append(
                     functools.partial(
-                        ethindex_db.get_all_unw_eth_events,
+                        ethindex_db.get_all_contract_events,
                         user_address=user_address,
                         from_block=from_block,
                     )
@@ -644,8 +644,8 @@ class TrustlinesRelay:
             if type is not None and type in ethindex_db.standard_event_types:
                 queries.append(
                     functools.partial(
-                        ethindex_db.get_exchange_events,
-                        type,
+                        ethindex_db.get_user_events,
+                        event_name=type,
                         user_address=user_address,
                         from_block=from_block,
                     )
@@ -653,7 +653,7 @@ class TrustlinesRelay:
             else:
                 queries.append(
                     functools.partial(
-                        ethindex_db.get_all_exchange_events,
+                        ethindex_db.get_all_contract_events,
                         user_address=user_address,
                         from_block=from_block,
                     )
@@ -670,18 +670,16 @@ class TrustlinesRelay:
 
         if token_address in self.unw_eth_addresses:
             ethindex_db = self.get_ethindex_db_for_unw_eth(token_address)
-            func_names = ["get_unw_eth_events", "get_all_unw_eth_events"]
         else:
             ethindex_db = self.get_ethindex_db_for_token(token_address)
-            func_names = ["get_token_events", "get_all_token_events"]
 
         if type is not None:
-            events = getattr(ethindex_db, func_names[0])(
-                type, user_address, from_block=from_block
+            events = getattr(ethindex_db, "get_user_events")(
+                event_name=type, user_address=user_address, from_block=from_block
             )
         else:
-            events = getattr(ethindex_db, func_names[1])(
-                user_address, from_block=from_block
+            events = getattr(ethindex_db, "get_all_contract_events")(
+                user_address=user_address, from_block=from_block
             )
 
         return events
@@ -721,15 +719,17 @@ class TrustlinesRelay:
     ) -> List[BlockchainEvent]:
         ethindex_db = self.get_ethindex_db_for_exchange(exchange_address)
         if type is not None:
-            events = ethindex_db.get_exchange_events(
-                type,
-                user_address,
+            events = ethindex_db.get_user_events(
+                event_name=type,
+                user_address=user_address,
                 from_block=from_block,
                 timeout=self.event_query_timeout,
             )
         else:
-            events = ethindex_db.get_all_exchange_events(
-                user_address, from_block=from_block, timeout=self.event_query_timeout
+            events = ethindex_db.get_all_contract_events(
+                user_address=user_address,
+                from_block=from_block,
+                timeout=self.event_query_timeout,
             )
         return events
 
