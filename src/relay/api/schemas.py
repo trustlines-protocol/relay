@@ -1,5 +1,12 @@
 import hexbytes
-from marshmallow import Schema, ValidationError, fields, post_load, validates_schema
+from marshmallow import (
+    Schema,
+    ValidationError,
+    fields,
+    post_dump,
+    post_load,
+    validates_schema,
+)
 from marshmallow.validate import Range
 from marshmallow_oneofschema import OneOfSchema
 from tldeploy import identity
@@ -77,6 +84,15 @@ class MetaTransactionFeeSchema(Schema):
     gasPrice = BigInteger(required=True, attribute="gas_price")
     feeRecipient = Address(required=True, attribute="fee_recipient")
     currencyNetworkOfFees = Address(required=True, attribute="currency_network_of_fees")
+
+    @post_dump()
+    def set_default_currency_network(self, data, **kwargs):
+        data = {**data}
+        # TODO Remove in future version
+        # Only here for backwards compatibility with clientlib v0.12.1 and lower
+        if data["currencyNetworkOfFees"] is None:
+            data["currencyNetworkOfFees"] = ZERO_ADDRESS
+        return data
 
 
 class MetaTransactionStatusSchema(Schema):
