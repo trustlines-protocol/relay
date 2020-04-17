@@ -1,12 +1,23 @@
 import pathlib
 
 import pytest
+from marshmallow import Schema, ValidationError, fields
 
 from relay.config.config import (
     _remove_empty_dicts,
     generate_default_config,
     load_config,
+    validation_error_string,
 )
+
+
+class NestedSchema(Schema):
+    a_string = fields.String(required=True)
+
+
+class TestSchema(Schema):
+    an_int = fields.Integer(required=True)
+    nested = fields.Nested(NestedSchema)
 
 
 @pytest.fixture()
@@ -75,3 +86,19 @@ def test_uncommented_default_config_is_valid(uncommented_example_config_filepath
 
 def test_correct_fee_config_is_valid(correct_fees_config_file):
     load_config(correct_fees_config_file)
+
+
+def test_validation_error_message():
+    error_message = ""
+    try:
+        TestSchema().load({"an_int": "Not an int", "nested": {"a_string": 5}})
+    except ValidationError as e:
+        error_message = validation_error_string(e)
+
+    messages = [
+        ".nested.a_string: Not a valid string.",
+        ".an_int: Not a valid integer.",
+    ]
+    assert error_message == ", ".join(messages) or error_message == ", ".join(
+        reversed(messages)
+    )

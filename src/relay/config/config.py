@@ -38,14 +38,18 @@ def validation_error_string(validation_error: ValidationError) -> str:
     ):
         error_list: List[str] = []
         for key, value in messages.items():
-            key = f"{whole_key}.{key}"
+            if key != "_schema":
+                key = f"{whole_key}.{key}"
+            else:
+                # Ignore _schema in key
+                key = whole_key
             if isinstance(value, str):
                 error_list.append(f"{key}: {value}")
             elif isinstance(value, list):
                 for v in value:
                     error_list.append(f"{key}: {v}")
             else:
-                _validation_error_string(key, value)
+                error_list.extend(_validation_error_string(key, value))
         return error_list
 
     if isinstance(messages, list):
