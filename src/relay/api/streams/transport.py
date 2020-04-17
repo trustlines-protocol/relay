@@ -24,7 +24,15 @@ class RPCWebSocketApplication(WebSocketApplication):
     def on_open(self):
         logger.debug("Websocket connected")
 
-    def on_message(self, message: Union[bytes, str], *args, **kwargs) -> None:
+    def on_message(self, message: Union[None, bytes, str], *args, **kwargs) -> None:
+        if message is None:
+            # Should only happen if disconnected.
+            logger.debug(
+                "Received None message, assuming disconnected and stopping connection."
+            )
+            self.client.close()
+            return
+
         def caller(method, args, kwargs):
             return validating_rpc_caller(method, args, kwargs, client=self.client)
 
