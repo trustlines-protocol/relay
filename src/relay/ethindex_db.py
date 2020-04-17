@@ -152,7 +152,7 @@ class EthindexDB:
 
     def get_user_events(
         self,
-        event_name: str,
+        event_type: str,
         user_address: str = None,
         from_block: int = 0,
         timeout: float = None,
@@ -161,7 +161,7 @@ class EthindexDB:
         contract_address = self._get_addr(contract_address)
         if user_address is None:
             return self.get_events(
-                event_name,
+                event_type,
                 from_block=from_block,
                 timeout=timeout,
                 contract_address=contract_address,
@@ -172,17 +172,17 @@ class EthindexDB:
                AND address=%s
                AND (args->>'{_from}'=%s or args->>'{_to}'=%s)
             """.format(
-                _from=self.from_to_types[event_name][0],
-                _to=self.from_to_types[event_name][1],
+                _from=self.from_to_types[event_type][0],
+                _to=self.from_to_types[event_type][1],
             ),
-            (from_block, event_name, contract_address, user_address, user_address),
+            (from_block, event_type, contract_address, user_address, user_address),
         )
 
         events = self._run_events_query(query)
 
         logger.debug(
             "get_user_events(%s, %s, %s, %s, %s) -> %s rows",
-            event_name,
+            event_type,
             user_address,
             from_block,
             timeout,
@@ -259,7 +259,7 @@ class EthindexDB:
 
     def get_events(
         self,
-        event_name,
+        event_type,
         from_block=0,
         timeout: float = None,
         contract_address: str = None,
@@ -269,13 +269,13 @@ class EthindexDB:
             """blockNumber>=%s
                AND eventName=%s
                AND address=%s""",
-            (from_block, event_name, contract_address),
+            (from_block, event_type, contract_address),
         )
         events = self._run_events_query(query)
 
         logger.debug(
             "get_events(%s, %s, %s, %s) -> %s rows",
-            event_name,
+            event_type,
             from_block,
             timeout,
             contract_address,
@@ -369,12 +369,12 @@ class EthindexDB:
 class CurrencyNetworkEthindexDB(EthindexDB):
     def get_network_events(
         self,
-        event_name: str,
+        event_type: str,
         user_address: str = None,
         from_block: int = 0,
         timeout: float = None,
     ) -> List[BlockchainEvent]:
-        return self.get_user_events(event_name, user_address, from_block, timeout)
+        return self.get_user_events(event_type, user_address, from_block, timeout)
 
     def get_all_network_events(
         self, user_address: str = None, from_block: int = 0, timeout: float = None

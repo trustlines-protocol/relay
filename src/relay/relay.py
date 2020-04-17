@@ -645,7 +645,7 @@ class TrustlinesRelay:
                 queries.append(
                     functools.partial(
                         ethindex_db.get_user_events,
-                        event_name=type,
+                        event_type=type,
                         user_address=user_address,
                         from_block=from_block,
                     )
@@ -675,7 +675,7 @@ class TrustlinesRelay:
 
         if type is not None:
             events = getattr(ethindex_db, "get_user_events")(
-                event_name=type, user_address=user_address, from_block=from_block
+                event_type=type, user_address=user_address, from_block=from_block
             )
         else:
             events = getattr(ethindex_db, "get_all_contract_events")(
@@ -720,7 +720,7 @@ class TrustlinesRelay:
         ethindex_db = self.get_ethindex_db_for_exchange(exchange_address)
         if type is not None:
             events = ethindex_db.get_user_events(
-                event_name=type,
+                event_type=type,
                 user_address=user_address,
                 from_block=from_block,
                 timeout=self.event_query_timeout,

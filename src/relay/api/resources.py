@@ -341,7 +341,7 @@ class UserEventsNetwork(Resource):
             )
         except TimeoutException:
             logger.warning(
-                "User network events: event_name=%s user_address=%s from_block=%s. could not get events in time",
+                "User network events: event_type=%s user_address=%s from_block=%s. could not get events in time",
                 type,
                 user_address,
                 from_block,
@@ -380,7 +380,7 @@ class TrustlineEvents(Resource):
             )
         except TimeoutException:
             logger.warning(
-                "Trustline events: event_name=%s user_address=%s "
+                "Trustline events: event_type=%s user_address=%s "
                 "counter_party_address=%s, from_block=%s. could not get events in time",
                 type,
                 user_address,
@@ -419,7 +419,7 @@ class UserEvents(Resource):
             )
         except TimeoutException:
             logger.warning(
-                "User events: event_name=%s user_address=%s from_block=%s. could not get events in time",
+                "User events: event_type=%s user_address=%s from_block=%s. could not get events in time",
                 type,
                 user_address,
                 from_block,
@@ -452,7 +452,7 @@ class EventsNetwork(Resource):
             )
         except TimeoutException:
             logger.warning(
-                "Network events: event_name=%s from_block=%s. could not get events in time",
+                "Network events: event_type=%s from_block=%s. could not get events in time",
                 type,
                 from_block,
             )
