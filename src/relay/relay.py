@@ -160,11 +160,11 @@ class TrustlinesRelay:
 
     def get_ethindex_db_for_currency_network(
         self, network_address: Optional[str] = None
-    ) -> ethindex_db.EthindexDB:
+    ) -> ethindex_db.CurrencyNetworkEthindexDB:
         """return an EthindexDB instance.
         This is being used from relay.api to query for events.
         """
-        return ethindex_db.EthindexDB(
+        return ethindex_db.CurrencyNetworkEthindexDB(
             ethindex_db.connect(""),
             address=network_address,
             standard_event_types=currency_network_events.standard_event_types,
@@ -176,7 +176,7 @@ class TrustlinesRelay:
         """return an EthindexDB instance
         This is being used from relay.api to query for events.
         """
-        return ethindex_db.EthindexDB(
+        return ethindex_db.TokenEthindexDB(
             ethindex_db.connect(""),
             address=address,
             standard_event_types=token_events.standard_event_types,
@@ -188,7 +188,7 @@ class TrustlinesRelay:
         """return an EthindexDB instance
         This is being used from relay.api to query for events.
         """
-        return ethindex_db.EthindexDB(
+        return ethindex_db.UnwEthEthindexDb(
             ethindex_db.connect(""),
             address=address,
             standard_event_types=unw_eth_events.standard_event_types,
@@ -200,7 +200,7 @@ class TrustlinesRelay:
         """return an EthindexDB instance
         This is being used from relay.api to query for events.
         """
-        return ethindex_db.EthindexDB(
+        return ethindex_db.ExchangeEthindexDB(
             ethindex_db.connect(""),
             address=address,
             standard_event_types=exchange_events.standard_event_types,
@@ -513,7 +513,7 @@ class TrustlinesRelay:
         else:
             event_types = [type]
 
-        ethindex = ethindex_db.EthindexDB(
+        ethindex = ethindex_db.CurrencyNetworkEthindexDB(
             ethindex_db.connect(""),
             address=network_address,
             standard_event_types=currency_network_events.trustline_event_types,
