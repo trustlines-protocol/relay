@@ -582,61 +582,10 @@ class TrustlinesRelay:
             timeout=timeout,
         )
 
-    def _get_network_event_queries(
-        self, user_address: str, type: str = None, from_block: int = 0
-    ):
-        assert is_checksum_address(user_address)
-        queries = []
-        for network_address in self.network_addresses:
-            ethindex_db = self.get_ethindex_db_for_currency_network(network_address)
-            if type is not None and type in ethindex_db.event_types:
-                queries.append(
-                    functools.partial(
-                        ethindex_db.get_network_events,
-                        type,
-                        user_address=user_address,
-                        from_block=from_block,
-                    )
-                )
-            else:
-                queries.append(
-                    functools.partial(
-                        ethindex_db.get_all_network_events,
-                        user_address=user_address,
-                        from_block=from_block,
-                    )
-                )
-        return queries
-
-    def _get_unw_eth_event_queries(
-        self, user_address: str, type: str = None, from_block: int = 0
-    ):
-        assert is_checksum_address(user_address)
-        queries = []
-        for unw_eth_address in self.unw_eth_addresses:
-            ethindex_db = self.get_ethindex_db_for_unw_eth(unw_eth_address)
-            if type is not None and type in ethindex_db.event_types:
-                queries.append(
-                    functools.partial(
-                        ethindex_db.get_user_events,
-                        type,
-                        user_address=user_address,
-                        from_block=from_block,
-                    )
-                )
-            else:
-                queries.append(
-                    functools.partial(
-                        ethindex_db.get_all_contract_events,
-                        user_address=user_address,
-                        from_block=from_block,
-                    )
-                )
-        return queries
-
     def _get_exchange_event_queries(
         self, user_address: str, type: str = None, from_block: int = 0
     ):
+        # TODO: remove this
         assert is_checksum_address(user_address)
         queries = []
         for exchange_address in self.exchange_addresses:
