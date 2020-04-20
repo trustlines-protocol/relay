@@ -4,7 +4,7 @@ Change Log
 `unreleased`_
 -------------------------------
 
-`0.15.0`_ (2020-04-16)
+`0.15.0`_ (2020-04-20)
 -------------------------------
 - Add endpoint to get all events of a trustline: :code:`/networks/<network_address>/users/<user_address>/trustlines/<counter_party_address>/events`
 - Add `logIndex` and `blockHash` to events returned from endpoints
@@ -13,9 +13,11 @@ Change Log
 - Add endpoint to get list of all trustlines in a currency network :code:`GET /networks/:networkAddress/trustlines`
 - Change config of relay to enforce having no :code:`currency_network` if delegation fees are set to :code:`{'base_fee'=0, 'gas_price'=0}`. (BREAKING)
 - Change config so that if no accepted fees are specified, no fees will be accepted, i.e. the delegate will not pay for meta-tx. (BREAKING)
-- Change: Delegate will now check the value of `feeRecipient` for meta-tx, it has to be the delegate's address or the zero_address to be correct. (BREAKING)
+- Change: Delegate will now check the value of `feeRecipient` for meta-tx, it has to be the delegate's address or the zero_address to be correct.
+  The zero address is only for backwards compatibility and will be removed in the future. (BREAKING)
 - Change: No longer use the pending block to get events, the graph is now updated on the latest block instead. (BREAKING)
 - Deprecate :code:`transactionId` in events for :code:`transactionHash`. It will be removed in future versions.
+- Deprecate return of currency network address if delegation fees are 0. In the future it will return :code:`null`.
 - Remove undocumented field `address` returned when querying trustlines information (for a user, for a network, in between users of a network, for a user in a network).
   If you were using it, change to :code:`counterParty` (BREAKING)
 
