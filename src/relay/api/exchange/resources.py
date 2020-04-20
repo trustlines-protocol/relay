@@ -208,18 +208,10 @@ class UserEventsExchange(Resource):
         abort_if_unknown_exchange(self.trustlines, exchange_address)
         from_block = args["fromBlock"]
         type = args["type"]
-        try:
-            return self.trustlines.get_user_exchange_events(
-                exchange_address, user_address, type=type, from_block=from_block
-            )
-        except TimeoutException:
-            logger.warning(
-                "User exchange events: event_type=%s user_address=%s from_block=%s. could not get events in time",
-                type,
-                user_address,
-                from_block,
-            )
-            abort(504, TIMEOUT_MESSAGE)
+
+        return self.trustlines.get_user_exchange_events(
+            exchange_address, user_address, type=type, from_block=from_block
+        )
 
 
 class UserEventsAllExchanges(Resource):
@@ -274,14 +266,7 @@ class EventsExchange(Resource):
         abort_if_unknown_exchange(self.trustlines, exchange_address)
         from_block = args["fromBlock"]
         type = args["type"]
-        try:
-            return self.trustlines.get_exchange_events(
-                exchange_address, type=type, from_block=from_block
-            )
-        except TimeoutException:
-            logger.warning(
-                "Exchange events: event_type=%s from_block=%s. could not get events in time",
-                type,
-                from_block,
-            )
-            abort(504, TIMEOUT_MESSAGE)
+
+        return self.trustlines.get_exchange_events(
+            exchange_address, type=type, from_block=from_block
+        )
