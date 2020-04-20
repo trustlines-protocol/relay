@@ -33,7 +33,6 @@ from relay.blockchain.events_informations import (
     TransferNotFoundException,
 )
 from relay.blockchain.unw_eth_events import all_event_types as all_unw_eth_event_types
-from relay.concurrency_utils import TimeoutException
 from relay.network_graph.payment_path import FeePayer, PaymentPath
 from relay.relay import TrustlinesRelay
 from relay.utils import get_version, sha3
@@ -335,18 +334,10 @@ class UserEventsNetwork(Resource):
         abort_if_unknown_network(self.trustlines, network_address)
         from_block = args["fromBlock"]
         type = args["type"]
-        try:
-            return self.trustlines.get_user_network_events(
-                network_address, user_address, type=type, from_block=from_block
-            )
-        except TimeoutException:
-            logger.warning(
-                "User network events: event_type=%s user_address=%s from_block=%s. could not get events in time",
-                type,
-                user_address,
-                from_block,
-            )
-            abort(504, TIMEOUT_MESSAGE)
+
+        return self.trustlines.get_user_network_events(
+            network_address, user_address, type=type, from_block=from_block
+        )
 
 
 class TrustlineEvents(Resource):
@@ -370,24 +361,14 @@ class TrustlineEvents(Resource):
         abort_if_unknown_network(self.trustlines, network_address)
         from_block = args["fromBlock"]
         type = args["type"]
-        try:
-            return self.trustlines.get_trustline_events(
-                network_address,
-                user_address,
-                counter_party_address,
-                type=type,
-                from_block=from_block,
-            )
-        except TimeoutException:
-            logger.warning(
-                "Trustline events: event_type=%s user_address=%s "
-                "counter_party_address=%s, from_block=%s. could not get events in time",
-                type,
-                user_address,
-                counter_party_address,
-                from_block,
-            )
-            abort(504, TIMEOUT_MESSAGE)
+
+        return self.trustlines.get_trustline_events(
+            network_address,
+            user_address,
+            counter_party_address,
+            type=type,
+            from_block=from_block,
+        )
 
 
 class UserEvents(Resource):
@@ -410,21 +391,13 @@ class UserEvents(Resource):
     def get(self, args, user_address: str):
         type = args["type"]
         from_block = args["fromBlock"]
-        try:
-            return self.trustlines.get_user_events(
-                user_address,
-                type=type,
-                from_block=from_block,
-                timeout=self.trustlines.event_query_timeout,
-            )
-        except TimeoutException:
-            logger.warning(
-                "User events: event_type=%s user_address=%s from_block=%s. could not get events in time",
-                type,
-                user_address,
-                from_block,
-            )
-            abort(504, TIMEOUT_MESSAGE)
+
+        return self.trustlines.get_user_events(
+            user_address,
+            type=type,
+            from_block=from_block,
+            timeout=self.trustlines.event_query_timeout,
+        )
 
 
 class EventsNetwork(Resource):
@@ -446,17 +419,10 @@ class EventsNetwork(Resource):
         abort_if_unknown_network(self.trustlines, network_address)
         from_block = args["fromBlock"]
         type = args["type"]
-        try:
-            return self.trustlines.get_network_events(
-                network_address, type=type, from_block=from_block
-            )
-        except TimeoutException:
-            logger.warning(
-                "Network events: event_type=%s from_block=%s. could not get events in time",
-                type,
-                from_block,
-            )
-            abort(504, TIMEOUT_MESSAGE)
+
+        return self.trustlines.get_network_events(
+            network_address, type=type, from_block=from_block
+        )
 
 
 class UserAccruedInterestList(Resource):
