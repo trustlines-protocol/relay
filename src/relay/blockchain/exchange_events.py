@@ -53,3 +53,6 @@ from_to_types = {
 
 
 standard_event_types = [LogFillEventType, LogCancelEventType]
+
+
+all_event_types = list(event_builders.keys())

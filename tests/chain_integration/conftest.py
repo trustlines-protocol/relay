@@ -223,13 +223,6 @@ class CurrencyNetworkProxy(currency_network_proxy.CurrencyNetworkProxy):
     def freeze_network(self):
         self._proxy.functions.freezeNetwork().transact()
 
-    def get_block_logs(self, block_hash):
-        # Mocks the function `get_block_logs` of proxy since eth-tester cannot get logs filtered by block_hash yet
-        block_number = self._web3.eth.getBlock(block_hash)["number"]
-        return self._web3.eth.getLogs(
-            {"fromBlock": block_number, "toBlock": block_number + 1}
-        )
-
 
 @pytest.fixture()
 def trustlines(accounts):
@@ -375,20 +368,6 @@ def currency_network_with_trustlines_and_interests(
     currency_network.setup_trustlines_with_interests_with_updates(
         trustlines_with_interests
     )
-
-    return currency_network
-
-
-@pytest.fixture()
-def currency_network_with_events(currency_network, accounts, test_extra_data):
-    currency_network.update_trustline_with_accept(accounts[0], accounts[1], 25, 50)
-    currency_network.transfer(
-        accounts[1], 10, 10, [accounts[1], accounts[0]], test_extra_data
-    )
-    currency_network.update_trustline_with_accept(accounts[0], accounts[2], 25, 50)
-    currency_network.update_trustline_with_accept(accounts[0], accounts[4], 25, 50)
-    currency_network.update_trustline_and_cancel(accounts[0], accounts[3], 25, 50)
-    currency_network.update_trustline_and_reject(accounts[0], accounts[5], 25, 50)
 
     return currency_network
 

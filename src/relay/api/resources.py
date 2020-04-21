@@ -12,7 +12,10 @@ from webargs import fields
 from webargs.flaskparser import use_args
 
 from relay.api import fields as custom_fields
-from relay.blockchain.currency_network_proxy import CurrencyNetworkProxy
+from relay.blockchain.currency_network_events import (
+    all_event_types as all_currency_network_event_types,
+    trustline_event_types,
+)
 from relay.blockchain.delegate import (
     IdentityDeploymentFailedException,
     InvalidChainId,
@@ -29,8 +32,7 @@ from relay.blockchain.events_informations import (
     IdentifiedNotPartOfTransferException,
     TransferNotFoundException,
 )
-from relay.blockchain.unw_eth_proxy import UnwEthProxy
-from relay.concurrency_utils import TimeoutException
+from relay.blockchain.unw_eth_events import all_event_types as all_unw_eth_event_types
 from relay.network_graph.payment_path import FeePayer, PaymentPath
 from relay.relay import TrustlinesRelay
 from relay.utils import get_version, sha3
@@ -321,7 +323,7 @@ class UserEventsNetwork(Resource):
         "fromBlock": fields.Int(required=False, missing=0),
         "type": fields.Str(
             required=False,
-            validate=validate.OneOf(CurrencyNetworkProxy.event_types),
+            validate=validate.OneOf(all_currency_network_event_types),
             missing=None,
         ),
     }
@@ -332,18 +334,10 @@ class UserEventsNetwork(Resource):
         abort_if_unknown_network(self.trustlines, network_address)
         from_block = args["fromBlock"]
         type = args["type"]
-        try:
-            return self.trustlines.get_user_network_events(
-                network_address, user_address, type=type, from_block=from_block
-            )
-        except TimeoutException:
-            logger.warning(
-                "User network events: event_name=%s user_address=%s from_block=%s. could not get events in time",
-                type,
-                user_address,
-                from_block,
-            )
-            abort(504, TIMEOUT_MESSAGE)
+
+        return self.trustlines.get_user_network_events(
+            network_address, user_address, type=type, from_block=from_block
+        )
 
 
 class TrustlineEvents(Resource):
@@ -354,7 +348,7 @@ class TrustlineEvents(Resource):
         "fromBlock": fields.Int(required=False, missing=0),
         "type": fields.Str(
             required=False,
-            validate=validate.OneOf(CurrencyNetworkProxy.trustline_event_types),
+            validate=validate.OneOf(trustline_event_types),
             missing=None,
         ),
     }
@@ -367,24 +361,14 @@ class TrustlineEvents(Resource):
         abort_if_unknown_network(self.trustlines, network_address)
         from_block = args["fromBlock"]
         type = args["type"]
-        try:
-            return self.trustlines.get_trustline_events(
-                network_address,
-                user_address,
-                counter_party_address,
-                type=type,
-                from_block=from_block,
-            )
-        except TimeoutException:
-            logger.warning(
-                "Trustline events: event_name=%s user_address=%s "
-                "counter_party_address=%s, from_block=%s. could not get events in time",
-                type,
-                user_address,
-                counter_party_address,
-                from_block,
-            )
-            abort(504, TIMEOUT_MESSAGE)
+
+        return self.trustlines.get_trustline_events(
+            network_address,
+            user_address,
+            counter_party_address,
+            type=type,
+            from_block=from_block,
+        )
 
 
 class UserEvents(Resource):
@@ -396,7 +380,7 @@ class UserEvents(Resource):
         "type": fields.Str(
             required=False,
             validate=validate.OneOf(
-                CurrencyNetworkProxy.event_types + UnwEthProxy.event_types
+                all_currency_network_event_types + all_unw_eth_event_types
             ),
             missing=None,
         ),
@@ -407,21 +391,13 @@ class UserEvents(Resource):
     def get(self, args, user_address: str):
         type = args["type"]
         from_block = args["fromBlock"]
-        try:
-            return self.trustlines.get_user_events(
-                user_address,
-                type=type,
-                from_block=from_block,
-                timeout=self.trustlines.event_query_timeout,
-            )
-        except TimeoutException:
-            logger.warning(
-                "User events: event_name=%s user_address=%s from_block=%s. could not get events in time",
-                type,
-                user_address,
-                from_block,
-            )
-            abort(504, TIMEOUT_MESSAGE)
+
+        return self.trustlines.get_user_events(
+            user_address,
+            type=type,
+            from_block=from_block,
+            timeout=self.trustlines.event_query_timeout,
+        )
 
 
 class EventsNetwork(Resource):
@@ -432,7 +408,7 @@ class EventsNetwork(Resource):
         "fromBlock": fields.Int(required=False, missing=0),
         "type": fields.Str(
             required=False,
-            validate=validate.OneOf(CurrencyNetworkProxy.event_types),
+            validate=validate.OneOf(all_currency_network_event_types),
             missing=None,
         ),
     }
@@ -443,17 +419,10 @@ class EventsNetwork(Resource):
         abort_if_unknown_network(self.trustlines, network_address)
         from_block = args["fromBlock"]
         type = args["type"]
-        try:
-            return self.trustlines.get_network_events(
-                network_address, type=type, from_block=from_block
-            )
-        except TimeoutException:
-            logger.warning(
-                "Network events: event_name=%s from_block=%s. could not get events in time",
-                type,
-                from_block,
-            )
-            abort(504, TIMEOUT_MESSAGE)
+
+        return self.trustlines.get_network_events(
+            network_address, type=type, from_block=from_block
+        )
 
 
 class UserAccruedInterestList(Resource):

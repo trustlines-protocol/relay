@@ -6,8 +6,8 @@ from webargs.flaskparser import use_args
 
 from relay.api.resources import dump_result_with_schema
 from relay.api.schemas import TokenEventSchema, UserTokenEventSchema
-from relay.blockchain.token_proxy import TokenProxy
-from relay.blockchain.unw_eth_proxy import UnwEthProxy
+from relay.blockchain.token_events import all_event_types as all_token_event_types
+from relay.blockchain.unw_eth_events import all_event_types as all_unw_eth_event_types
 from relay.relay import TrustlinesRelay
 
 
@@ -51,7 +51,7 @@ class UserEventsToken(Resource):
         "fromBlock": fields.Int(required=False, missing=0),
         "type": fields.Str(
             required=False,
-            validate=validate.OneOf(UnwEthProxy.event_types + TokenProxy.event_types),
+            validate=validate.OneOf(all_unw_eth_event_types + all_token_event_types),
             missing=None,
         ),
     }
@@ -76,7 +76,7 @@ class EventsToken(Resource):
         "fromBlock": fields.Int(required=False, missing=0),
         "type": fields.Str(
             required=False,
-            validate=validate.OneOf(UnwEthProxy.event_types + TokenProxy.event_types),
+            validate=validate.OneOf(all_unw_eth_event_types + all_token_event_types),
             missing=None,
         ),
     }

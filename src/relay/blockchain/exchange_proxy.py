@@ -1,21 +1,9 @@
-import functools
-import itertools
 import logging
-from typing import List
 
-import relay.concurrency_utils as concurrency_utils
-from relay.blockchain.events import BlockchainEvent
 from relay.exchange.order import Order
 
-from .exchange_events import (
-    ExchangeEvent,
-    LogCancelEventType,
-    LogFillEventType,
-    event_builders,
-    from_to_types,
-    standard_event_types,
-)
-from .proxy import Proxy, sorted_events
+from .exchange_events import LogCancelEventType, LogFillEventType, event_builders
+from .proxy import Proxy
 
 logger = logging.getLogger("token")
 
@@ -23,8 +11,6 @@ logger = logging.getLogger("token")
 class ExchangeProxy(Proxy):
 
     event_builders = event_builders
-    event_types = list(event_builders.keys())
-    standard_event_types = standard_event_types
 
     def __init__(
         self, web3, exchange_abi, token_abi, address: str, address_oracle
@@ -89,60 +75,6 @@ class ExchangeProxy(Proxy):
             )
 
         return self.start_listen_on(LogCancelEventType, log)
-
-    def get_exchange_events(
-        self,
-        event_name: str,
-        user_address: str = None,
-        from_block: int = 0,
-        timeout: float = None,
-    ) -> List[BlockchainEvent]:
-        logger.debug(
-            "get_exchange_events: event_name=%s user_address=%s from_block=%s",
-            event_name,
-            user_address,
-            from_block,
-        )
-        if user_address is None:
-            queries = [
-                functools.partial(self.get_events, event_name, from_block=from_block)
-            ]
-            events = concurrency_utils.joinall(queries, timeout=timeout)
-        else:
-            filter1 = {from_to_types[event_name][0]: user_address}
-            # filter2 = {from_to_types[event_name][1]: user_address}
-
-            queries = [
-                functools.partial(self.get_events, event_name, filter1, from_block)
-            ]
-            # TODO taker attribute of LogFill is not indexed in contract yet
-            # if event_name == LogFillEventType:
-            #   queries.append(functools.partial(self.get_events, event_name, filter2, from_block))
-            results = concurrency_utils.joinall(queries, timeout=timeout)
-
-            events = list(itertools.chain.from_iterable(results))
-
-            for event in events:
-                if isinstance(event, ExchangeEvent):
-                    event.user = user_address
-                else:
-                    raise ValueError("Expected a ExchangeEvent")
-        return sorted_events(events)
-
-    def get_all_exchange_events(
-        self, user_address: str = None, from_block: int = 0, timeout: float = None
-    ) -> List[BlockchainEvent]:
-        queries = [
-            functools.partial(
-                self.get_exchange_events,
-                type,
-                user_address=user_address,
-                from_block=from_block,
-            )
-            for type in self.standard_event_types
-        ]
-        results = concurrency_utils.joinall(queries, timeout=timeout)
-        return sorted_events(list(itertools.chain.from_iterable(results)))
 
     def _is_currency_network(self, token_address: str) -> bool:
         return self._address_oracle.is_currency_network(token_address)

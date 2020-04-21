@@ -1,11 +1,9 @@
-import functools
-import itertools
 import logging
 import math
 import socket
 import time
 from collections import defaultdict
-from typing import Any, Callable, Dict, List, Mapping, Optional, Set, Tuple
+from typing import Any, Callable, Dict, List, Mapping, Optional, Set
 
 import eth_utils
 import gevent
@@ -13,8 +11,6 @@ import hexbytes
 from gevent import Greenlet
 from gevent.queue import Queue
 from web3._utils.events import get_event_data
-
-import relay.concurrency_utils as concurrency_utils
 
 from .events import BlockchainEvent
 
@@ -129,8 +125,8 @@ class LogFilterListener:
 
 
 class Proxy(object):
+
     event_builders: Mapping[str, Callable[[Any, int, int], BlockchainEvent]] = {}
-    standard_event_types: List[str] = []
 
     def __init__(self, web3, abi, address: str = None) -> None:
         self._web3 = web3
@@ -168,102 +164,6 @@ class Proxy(object):
             self._log_listener.start()
         watch_filter_greenlet = gevent.spawn(poll_from_queue)
         return watch_filter_greenlet
-
-    def get_events(
-        self, event_name, filter_=None, from_block=0, timeout: float = None
-    ) -> List[BlockchainEvent]:
-        if event_name not in self.event_builders.keys():
-            raise ValueError("Unknown eventname {}".format(event_name))
-        if self.address is None:
-            raise NoAddressError("Tried to get events from proxy with no address")
-
-        if filter_ is None:
-            filter_ = {}
-
-        logfilter = getattr(self._proxy.events, event_name).createFilter(
-            fromBlock=from_block, toBlock=queryBlock, argument_filters=filter_
-        )
-
-        queries = [logfilter.get_all_entries]
-        results = concurrency_utils.joinall(queries, timeout=timeout)
-        return sorted_events(self._build_events(results[0]))
-
-    def get_all_events(
-        self, filter_=None, from_block: int = 0, timeout: float = None
-    ) -> List[BlockchainEvent]:
-        queries = [
-            functools.partial(
-                self.get_events, type, filter_=filter_, from_block=from_block
-            )
-            for type in self.standard_event_types
-        ]
-        results = concurrency_utils.joinall(queries, timeout=timeout)
-        return sorted_events(list(itertools.chain.from_iterable(results)))
-
-    def get_transaction_events(
-        self, tx_hash: str, from_block: int = 0, event_types: Tuple = None
-    ):
-        receipt = self._web3.eth.getTransactionReceipt(tx_hash)
-        events = []
-        for log in receipt["logs"]:
-            try:
-                abi = self._get_abi_for_log(log)
-                rich_log = get_event_data(abi, log)
-                if event_types is None or rich_log["event"] in event_types:
-                    events.append(rich_log)
-            except AbiNotFoundException:
-                pass
-
-        logger.debug(
-            "get_transaction_events(%s, %s) -> %s rows",
-            tx_hash,
-            from_block,
-            len(events),
-        )
-
-        return self._build_events(events)
-
-    def get_block_logs(self, block_hash):
-        return self._web3.eth.getLogs({"blockHash": block_hash})
-
-    def get_transaction_events_by_event_id(
-        self, block_hash, log_index, event_types: Tuple = None
-    ):
-        """Gets all events from a transaction where event_id is the id of one of the events within the transaction
-        Only get events of which the abi is known."""
-        block_logs = self.get_block_logs(block_hash)
-
-        identified_log = None
-        for log in block_logs:
-            if log["logIndex"] == log_index:
-                identified_log = log
-                break
-        if identified_log is None:
-            return []
-
-        transaction_events = []
-        for log in block_logs:
-            if log["transactionHash"] == identified_log["transactionHash"]:
-                try:
-                    abi = self._get_abi_for_log(log)
-                    rich_log = get_event_data(abi, log)
-                    if event_types is None or rich_log["event"] in event_types:
-                        transaction_events.append(rich_log)
-                except AbiNotFoundException:
-                    pass
-
-        logger.debug(
-            "get_transaction_events_by_event_id(%s, %s) -> %s rows",
-            block_hash,
-            log_index,
-            len(transaction_events),
-        )
-
-        return self._build_events(transaction_events)
-
-    def _build_events(self, events: List[Any]):
-        current_blocknumber = self._web3.eth.blockNumber
-        return [self._build_event(event, current_blocknumber) for event in events]
 
     def _register_raw_event_log(self, raw_event_log) -> None:
         """Registers a new log to be decoded and sent to the correct event listener"""

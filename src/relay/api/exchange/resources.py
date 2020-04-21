@@ -10,7 +10,7 @@ from webargs.flaskparser import abort, use_args
 from relay.api import fields
 from relay.api.exchange.schemas import OrderSchema
 from relay.api.resources import dump_result_with_schema
-from relay.blockchain.exchange_proxy import ExchangeProxy
+from relay.blockchain.exchange_events import all_event_types as all_exchange_event_types
 from relay.concurrency_utils import TimeoutException
 from relay.exchange.order import Order
 from relay.exchange.orderbook import OrderInvalidException
@@ -197,7 +197,7 @@ class UserEventsExchange(Resource):
         "fromBlock": webfields.Int(required=False, missing=0),
         "type": webfields.Str(
             required=False,
-            validate=validate.OneOf(ExchangeProxy.event_types),
+            validate=validate.OneOf(all_exchange_event_types),
             missing=None,
         ),
     }
@@ -208,18 +208,10 @@ class UserEventsExchange(Resource):
         abort_if_unknown_exchange(self.trustlines, exchange_address)
         from_block = args["fromBlock"]
         type = args["type"]
-        try:
-            return self.trustlines.get_user_exchange_events(
-                exchange_address, user_address, type=type, from_block=from_block
-            )
-        except TimeoutException:
-            logger.warning(
-                "User exchange events: event_name=%s user_address=%s from_block=%s. could not get events in time",
-                type,
-                user_address,
-                from_block,
-            )
-            abort(504, TIMEOUT_MESSAGE)
+
+        return self.trustlines.get_user_exchange_events(
+            exchange_address, user_address, type=type, from_block=from_block
+        )
 
 
 class UserEventsAllExchanges(Resource):
@@ -230,7 +222,7 @@ class UserEventsAllExchanges(Resource):
         "fromBlock": webfields.Int(required=False, missing=0),
         "type": webfields.Str(
             required=False,
-            validate=validate.OneOf(ExchangeProxy.event_types),
+            validate=validate.OneOf(all_exchange_event_types),
             missing=None,
         ),
     }
@@ -247,7 +239,7 @@ class UserEventsAllExchanges(Resource):
         except TimeoutException:
             logger.warning(
                 """User exchange events from all exchanges:
-                   event_name=%s user_address=%s from_block=%s. could not get events in time""",
+                   event_type=%s user_address=%s from_block=%s. could not get events in time""",
                 type,
                 user_address,
                 from_block,
@@ -263,7 +255,7 @@ class EventsExchange(Resource):
         "fromBlock": webfields.Int(required=False, missing=0),
         "type": webfields.Str(
             required=False,
-            validate=validate.OneOf(ExchangeProxy.event_types),
+            validate=validate.OneOf(all_exchange_event_types),
             missing=None,
         ),
     }
@@ -274,14 +266,7 @@ class EventsExchange(Resource):
         abort_if_unknown_exchange(self.trustlines, exchange_address)
         from_block = args["fromBlock"]
         type = args["type"]
-        try:
-            return self.trustlines.get_exchange_events(
-                exchange_address, type=type, from_block=from_block
-            )
-        except TimeoutException:
-            logger.warning(
-                "Exchange events: event_name=%s from_block=%s. could not get events in time",
-                type,
-                from_block,
-            )
-            abort(504, TIMEOUT_MESSAGE)
+
+        return self.trustlines.get_exchange_events(
+            exchange_address, type=type, from_block=from_block
+        )

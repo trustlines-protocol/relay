@@ -24,6 +24,7 @@ def accrue_interests(currency_network, web3, chain, path, years):
         currency_network.transfer(path[0], 9, 1000, path, b"")
 
 
+@pytest.mark.skip()
 @pytest.mark.parametrize(
     "years, interests", [([0, 1], [0, 2]), ([1, 4, 2, 3], [1, 9, 8, 19])]
 )
@@ -54,6 +55,7 @@ def test_get_interests_received_for_trustline_positive_balance(
         assert accrued_interest.interest_rate == 1000
 
 
+@pytest.mark.skip()
 @pytest.mark.parametrize(
     "years, interests", [([0, 1], [0, 4]), ([1, 4, 2, 3], [2, 24, 26, 74])]
 )
@@ -84,6 +86,7 @@ def test_get_interests_received_for_trustline_negaive_balance(
         assert accrued_interest.interest_rate == 2000
 
 
+@pytest.mark.skip()
 @pytest.mark.parametrize(
     "years, interests", [([0, 1], [0, -2]), ([1, 4, 2, 3], [-1, -9, -8, -19])]
 )
@@ -114,6 +117,7 @@ def test_get_interests_paid_for_trustline_positive_balance(
         assert accrued_interest.interest_rate == 1000
 
 
+@pytest.mark.skip()
 @pytest.mark.parametrize(
     "years, interests", [([0, 1], [0, -4]), ([1, 4, 2, 3], [-2, -24, -26, -74])]
 )
@@ -150,6 +154,7 @@ class LookupMethod(Enum):
     BALANCE_UPDATE_ID = auto()
 
 
+@pytest.mark.skip()
 @pytest.mark.parametrize("lookup_method", list(LookupMethod))
 @pytest.mark.parametrize("fee_payer", ["sender", "receiver"])
 @pytest.mark.parametrize("path", [[0, 1], [0, 1, 2, 3], [3, 2, 1, 0]])
@@ -196,6 +201,7 @@ def test_get_transfer_information_path(
     assert transfer_information.path == account_path
 
 
+@pytest.mark.skip()
 @pytest.mark.parametrize("lookup_method", list(LookupMethod))
 @pytest.mark.parametrize("fee_payer", [FeePayer.SENDER, FeePayer.RECEIVER])
 def test_get_transfer_information_values(
@@ -246,6 +252,7 @@ def test_get_transfer_information_values(
     assert transfer_information.currency_network == network.address
 
 
+@pytest.mark.skip()
 def test_transfer_by_wrong_balance_update(currency_network, web3, accounts, chain):
     A, B, *rest = accounts
 

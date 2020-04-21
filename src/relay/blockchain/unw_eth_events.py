@@ -58,3 +58,5 @@ standard_event_types = [
     WithdrawalEventType,
     ApprovalEventType,
 ]
+
+all_event_types = list(event_builders.keys())
