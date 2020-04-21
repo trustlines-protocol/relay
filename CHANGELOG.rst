@@ -4,7 +4,7 @@ Change Log
 `unreleased`_
 -------------------------------
 
-`0.15.0`_ (2020-04-20)
+`0.15.0`_ (2020-04-21)
 -------------------------------
 - Add endpoint to get all events of a trustline: :code:`/networks/<network_address>/users/<user_address>/trustlines/<counter_party_address>/events`
 - Add `logIndex` and `blockHash` to events returned from endpoints
@@ -18,8 +18,8 @@ Change Log
 - Change: No longer use the pending block to get events, the graph is now updated on the latest block instead. (BREAKING)
 - Deprecate :code:`transactionId` in events for :code:`transactionHash`. It will be removed in future versions.
 - Deprecate return of currency network address if delegation fees are 0. In the future it will return :code:`null`.
-- Remove undocumented field `address` returned when querying trustlines information (for a user, for a network, in between users of a network, for a user in a network).
-  If you were using it, change to :code:`counterParty` (BREAKING)
+- Deprecate undocumented field address returned when querying trustlines information (for a user, for a network, in between users of a network,
+  for a user in a network). If you were using it, change to counterParty. Will be removed in future release.
 
 
 `0.14.0`_ (2020-03-02)
