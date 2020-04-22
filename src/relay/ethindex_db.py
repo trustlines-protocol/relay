@@ -1,6 +1,5 @@
 """provide access to the ethindex database"""
 
-import collections
 import logging
 from typing import Any, Dict, Iterable, List, Optional
 
@@ -8,11 +7,11 @@ import psycopg2
 import psycopg2.extras
 
 from relay.blockchain import currency_network_events
+from relay.blockchain.currency_network_events import (
+    DebtUpdateEvent,
+    DebtUpdateEventType,
+)
 from relay.blockchain.events import BlockchainEvent, TLNetworkEvent
-
-# proxy.get_all_events just asks for these network events. so we need the list
-# here.
-
 
 logger = logging.getLogger("ethindex_db")
 
@@ -21,9 +20,24 @@ def connect(dsn):
     return psycopg2.connect(dsn, cursor_factory=psycopg2.extras.RealDictCursor)
 
 
-# EventsQuery is used to store a where block together with required parameters
-# EthindexDB._run_events_query uses this to build and run a complete query.
-EventsQuery = collections.namedtuple("EventsQuery", ["where_block", "params"])
+# we need to 'select * from events' all the time, but we're using lower-case
+# identifiers in postgres. The following select statement will give us a
+# dictionary with keys in the right case.
+select_star_from_events = """
+    SELECT
+        transactionHash "transactionHash",
+        blockNumber "blockNumber",
+        address,
+        eventName "event",
+        args,
+        blockHash "blockHash",
+        transactionIndex "transactionIndex",
+        logIndex "logIndex",
+        timestamp
+    FROM events
+    """
+
+order_by_default_sort_order = """ORDER BY blocknumber, transactionIndex, logIndex"""
 
 
 class EventBuilder:
@@ -61,25 +75,6 @@ class EventBuilder:
         return self.event_builders[contract_type + event_type](
             event, current_blocknumber, timestamp
         )
-
-
-# we need to 'select * from events' all the time, but we're using lower-case
-# identifiers in postgres. The following select statement will give us a
-# dictionary with keys in the right case.
-select_star_from_events = """SELECT transactionHash "transactionHash",
-              blockNumber "blockNumber",
-              address,
-              eventName "event",
-              args,
-              blockHash "blockHash",
-              transactionIndex "transactionIndex",
-              logIndex "logIndex",
-              timestamp
-       FROM events
-    """
-
-order_by_default_sort_order = """ ORDER BY blocknumber, transactionIndex, logIndex
-    """
 
 
 class EthindexDB:
@@ -136,17 +131,30 @@ class EthindexDB:
         assert r, "no standard event passed in and no default events given"
         return r
 
-    def _run_events_query(self, events_query: EventsQuery) -> List[BlockchainEvent]:
-        """run a query on the events table"""
-        query_string = "{select_star_from_events} WHERE {where_block} {order_by_default_sort_order}".format(
-            select_star_from_events=select_star_from_events,
-            where_block=events_query.where_block,
-            order_by_default_sort_order=order_by_default_sort_order,
-        )
+    def _format_query_string(
+        self,
+        where_block,
+        select_block=select_star_from_events,
+        order_by_block=order_by_default_sort_order,
+        limit_block="",
+    ):
+        """Format a query string with given inputs"""
+        return f"{select_block} {where_block} {order_by_block} {limit_block}"
 
+    def _run_query_where_block(self, where_block, query_params):
+        """Run a query formatted with where_block and params"""
+        if not where_block.startswith("WHERE"):
+            raise ValueError("where_block must start with WHERE")
+        query_string = self._format_query_string(where_block)
+        return self._run_events_query(query_string, query_params)
+
+    def _run_events_query(
+        self, query_string: str, query_params: Iterable
+    ) -> List[BlockchainEvent]:
+        """run a query on the events table"""
         with self.conn as conn:
             with conn.cursor() as cur:
-                cur.execute(query_string, events_query.params)
+                cur.execute(query_string, query_params)
                 rows = cur.fetchall()
                 return self._build_events(rows)
 
@@ -166,19 +174,23 @@ class EthindexDB:
                 timeout=timeout,
                 contract_address=contract_address,
             )
-        query = EventsQuery(
-            """blockNumber>=%s
+
+        where_block = """WHERE blockNumber>=%s
                AND eventName=%s
                AND address=%s
                AND (args->>'{_from}'=%s or args->>'{_to}'=%s)
             """.format(
-                _from=self.from_to_types[event_type][0],
-                _to=self.from_to_types[event_type][1],
-            ),
-            (from_block, event_type, contract_address, user_address, user_address),
+            _from=self.from_to_types[event_type][0],
+            _to=self.from_to_types[event_type][1],
         )
-
-        events = self._run_events_query(query)
+        query_params = (
+            from_block,
+            event_type,
+            contract_address,
+            user_address,
+            user_address,
+        )
+        events = self._run_query_where_block(where_block, query_params)
 
         logger.debug(
             "get_user_events(%s, %s, %s, %s, %s) -> %s rows",
@@ -210,18 +222,18 @@ class EthindexDB:
         contract_address = contract_address or self.default_address
 
         event_types = self._get_standard_event_types(event_types)
-        query_string = "blockNumber>=%s "
+        where_block = "WHERE blockNumber>=%s "
         args: List[Any] = [from_block]
 
         if event_types:
-            query_string += "AND eventName in %s "
+            where_block += "AND eventName in %s "
             args.append(tuple(event_types))
 
         if contract_address:
-            query_string += "AND address=%s "
+            where_block += "AND address=%s "
             args.append(contract_address)
         else:
-            query_string += "AND address in %s "
+            where_block += "AND address in %s "
             args.append(tuple(self.contract_types))
 
         if user_address:
@@ -232,13 +244,11 @@ class EthindexDB:
             user_where = " or ".join(
                 f"args->>'{user_type}'=%s" for user_type in all_user_types
             )
-            query_string += f"AND ({user_where})"
+            where_block += f"AND ({user_where})"
             for _ in range(len(all_user_types)):
                 args.append(user_address)
 
-        query = EventsQuery(query_string, args)
-
-        events = self._run_events_query(query)
+        events = self._run_query_where_block(where_block, args)
 
         logger.debug(
             "get_all_contract_events(%s, %s, %s, %s, %s) -> %s rows",
@@ -265,13 +275,14 @@ class EthindexDB:
         contract_address: str = None,
     ) -> List[BlockchainEvent]:
         contract_address = self._get_addr(contract_address)
-        query = EventsQuery(
-            """blockNumber>=%s
-               AND eventName=%s
-               AND address=%s""",
-            (from_block, event_type, contract_address),
-        )
-        events = self._run_events_query(query)
+
+        where_block = """WHERE
+            blockNumber>=%s
+            AND eventName=%s
+            AND address=%s"""
+        query_params = (from_block, event_type, contract_address)
+
+        events = self._run_query_where_block(where_block, query_params)
 
         logger.debug(
             "get_events(%s, %s, %s, %s) -> %s rows",
@@ -293,14 +304,14 @@ class EthindexDB:
     ) -> List[BlockchainEvent]:
         contract_address = self._get_addr(contract_address)
         standard_event_types = self._get_standard_event_types(standard_event_types)
-        query = EventsQuery(
-            """blockNumber>=%s
-               AND address=%s
-               AND eventName in %s""",
-            (from_block, contract_address, tuple(standard_event_types)),
-        )
 
-        events = self._run_events_query(query)
+        where_block = """WHERE blockNumber>=%s
+            AND address=%s
+            AND eventName in %s"""
+        query_params = (from_block, contract_address, tuple(standard_event_types))
+
+        events = self._run_query_where_block(where_block, query_params)
+
         logger.debug(
             "get_all_events(%s, %s, %s) -> %s rows",
             from_block,
@@ -316,16 +327,13 @@ class EthindexDB:
     ):
         event_types = self._get_standard_event_types(event_types)
 
-        query = EventsQuery(
-            """blockNumber>=%s
+        where_block = """WHERE blockNumber>=%s
                AND transactionHash=%s
                AND eventName in %s
-            """,
-            (from_block, tx_hash, tuple(event_types)),
-        )
+            """
+        query_params = (from_block, tx_hash, tuple(event_types))
 
-        events = self._run_events_query(query)
-
+        events = self._run_query_where_block(where_block, query_params)
         logger.debug(
             "get_transaction_events(%s, %s, %s) -> %s rows",
             tx_hash,
@@ -344,16 +352,14 @@ class EthindexDB:
 
         event_types = self._get_standard_event_types(event_types)
 
-        query = EventsQuery(
-            f"""blockHash=%s
+        where_block = f"""WHERE blockHash=%s
             AND eventName in %s
             AND transactionHash IN
                 (SELECT transactionHash "transactionHash" FROM events WHERE blockHash=%s AND logIndex=%s LIMIT 1)
-            """,
-            (block_hash, tuple(event_types), block_hash, log_index),
-        )
+            """
+        query_params = (block_hash, tuple(event_types), block_hash, log_index)
 
-        transaction_events = self._run_events_query(query)
+        transaction_events = self._run_query_where_block(where_block, query_params)
 
         logger.debug(
             "get_transaction_events_by_event_id(%s, %s, %s) -> %s rows",
@@ -411,16 +417,12 @@ class CurrencyNetworkEthindexDB(EthindexDB):
         for _ in all_event_fieldname_combination:
             args.extend((user_address, counterparty_address))
 
-        query = EventsQuery(
-            f"""blockNumber>=%s
+        where_block = f"""WHERE blockNumber>=%s
                AND eventName in %s
                AND address=%s
                AND ({member_filter_block})
-            """,
-            args,
-        )
-
-        events = self._run_events_query(query)
+            """
+        events = self._run_query_where_block(where_block, args)
 
         logger.debug(
             "get_trustline_events(%s, %s, %s, %s, %s, %s) -> %s rows",
@@ -438,4 +440,39 @@ class CurrencyNetworkEthindexDB(EthindexDB):
                 event.user = user_address
             else:
                 raise ValueError("Expected a TLNetworkEvent")
+        return events
+
+    def get_last_two_debt_update_events(self, tx_hash) -> List[DebtUpdateEvent]:
+        # TODO: this is not reliable if there is more than one DebtUpdate event in the transaction
+
+        from_type = self.from_to_types[DebtUpdateEventType][0]
+        to_type = self.from_to_types[DebtUpdateEventType][1]
+
+        # We want DebtUpdate events where `from` and `to` are in (`a`, `b`)
+        # where `a` and `b` are the `from` and `two` of the DebtUpdate of the matched transactionHash.
+        # We want the last two of these events that occurred before the event in tx_hash
+        query_string = f"""
+            WITH transaction_debt_update AS (
+                SELECT args, blockNumber, logIndex FROM events WHERE eventName=%s AND transactionHash=%s LIMIT 1
+            )
+
+            {select_star_from_events} WHERE
+                eventName=%s
+                AND (args->>'{from_type}', args->>'{to_type}')
+                    IN (SELECT args->>'{from_type}', args->>'{to_type}' FROM transaction_debt_update)
+                AND blockNumber <= (SELECT blockNumber FROM transaction_debt_update)
+                AND logIndex <= (SELECT logIndex FROM transaction_debt_update)
+
+            ORDER BY blockNumber, transactionIndex, logIndex DESC
+            LIMIT 2
+        """
+        query_params = (DebtUpdateEventType, tx_hash, DebtUpdateEventType)
+
+        # We know from the query that the type of events is DebtUpdateEvent
+        events: List[DebtUpdateEvent] = self._run_events_query(query_string, query_params)  # type: ignore
+
+        logger.debug(
+            "get_last_two_debt_update_events(%s) -> %s rows", tx_hash, len(events),
+        )
+
         return events

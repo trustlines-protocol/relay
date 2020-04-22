@@ -79,6 +79,14 @@ class MetaTransactionFeeSchema(Schema):
     currencyNetworkOfFees = Address(required=True, attribute="currency_network_of_fees")
 
 
+class AppliedDelegationFeeSchema(Schema):
+
+    sender = Address(required=True)
+    receiver = Address(required=True)
+    value = BigInteger(required=True)
+    currencyNetwork = Address(required=True, attribute="currency_network")
+
+
 class MetaTransactionStatusSchema(Schema):
 
     status = MetaTransactionStatusField(required=True)
@@ -273,12 +281,6 @@ class AccruedInterestListSchema(Schema):
     counterparty = Address()
 
 
-class PaidFeesSchema(Schema):
-    sender = Address()
-    receiver = Address()
-    value = BigInteger()
-
-
 class TransferInformationSchema(Schema):
 
     currencyNetwork = Address(required=True, attribute="currency_network")
@@ -317,3 +319,8 @@ class TransferIdentifierSchema(Schema):
     transactionHash = Hash(required=False, missing=None)
     blockHash = Hash(required=False, missing=None)
     logIndex = fields.Int(required=False, missing=None, validate=Range(min=0))
+
+
+class TransactionIdentifierSchema(Schema):
+
+    transactionHash = Hash(required=True)

@@ -1,7 +1,7 @@
 import logging
 import math
 from operator import attrgetter
-from typing import Iterable, List
+from typing import Iterable, List, TypeVar
 
 import attr
 import toolz
@@ -39,6 +39,14 @@ class TransferInformation:
     fee_payer = attr.ib()
     total_fees = attr.ib()
     fees_paid = attr.ib()
+
+
+@attr.s
+class PaidDelegationFees:
+    sender = attr.ib()
+    receiver = attr.ib()
+    value = attr.ib()
+    currency_network = attr.ib()
 
 
 class EventsInformationFetcher:
@@ -246,6 +254,54 @@ class EventsInformationFetcher:
                 return accrued_interest.value
         return 0
 
+    def get_delegation_fees_for_tx(self, tx_hash):
+        last_two_debt_updates = self.events_proxy.get_last_two_debt_update_events(
+            tx_hash
+        )
+        if len(last_two_debt_updates) == 0:
+            raise FeesPaidNotFound(tx_hash=tx_hash)
+        elif len(last_two_debt_updates) == 1:
+            debt_update_event = last_two_debt_updates[0]
+            return PaidDelegationFees(
+                sender=debt_update_event.from_,
+                receiver=debt_update_event.to,
+                value=debt_update_event.new_debt,
+                currency_network=debt_update_event.network_address,
+            )
+        elif len(last_two_debt_updates) == 2:
+            last_two_debt_updates = sorted_events(last_two_debt_updates)
+            final_debt_update = last_two_debt_updates[1]
+            original_debt_update = last_two_debt_updates[0]
+
+            final_debt = final_debt_update.new_debt
+
+            if original_debt_update.from_ == final_debt_update.from_:
+                assert (
+                    original_debt_update.to == final_debt_update.to
+                ), "Received two DebtUpdate events with different (from_, to) addresses from event_proxy"
+                original_debt = original_debt_update.new_debt
+            elif original_debt_update.from_ == final_debt_update.to:
+                assert (
+                    original_debt_update.to == final_debt_update.from_
+                ), "Received two DebtUpdate events with different (from_, to) addresses from event_proxy"
+                original_debt = -original_debt_update.new_debt
+            else:
+                raise RuntimeError(
+                    "Received two DebtUpdate events with different (from_, to) addresses from event_proxy"
+                )
+
+            value = final_debt - original_debt
+            return PaidDelegationFees(
+                sender=final_debt_update.from_,
+                receiver=final_debt_update.to,
+                value=value,
+                currency_network=final_debt_update.network_address,
+            )
+        else:
+            raise RuntimeError(
+                "Received more than two events for `get_last_two_debt_update_events()`"
+            )
+
 
 def balance_viewed_from_user(balance_update_event):
     if balance_update_event.direction == DIRECTION_SENT:
@@ -256,7 +312,10 @@ def balance_viewed_from_user(balance_update_event):
         raise RuntimeError("Unexpected balance update event")
 
 
-def sorted_events(events, reverse=False):
+T = TypeVar("T")
+
+
+def sorted_events(events: Iterable[T], reverse=False) -> List[T]:
     def log_index_key(event):
         if event.log_index is None:
             raise RuntimeError("No log index, events cannot be ordered truthfully.")
@@ -469,3 +528,8 @@ class IdentifiedNotPartOfTransferException(Exception):
     def __init__(self, *, block_hash=None, log_index=None):
         self.block_hash = block_hash
         self.log_index = log_index
+
+
+class FeesPaidNotFound(Exception):
+    def __init__(self, *, tx_hash=None):
+        self.tx_hash = tx_hash

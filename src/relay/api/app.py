@@ -9,7 +9,7 @@ from webargs.flaskparser import abort, parser
 from werkzeug.exceptions import HTTPException
 from werkzeug.routing import BaseConverter, ValidationError
 
-from relay.api.resources import TrustlineEvents
+from relay.api.resources import AppliedDelegationFees, TrustlineEvents
 
 from .exchange.resources import (
     EventsExchange,
@@ -121,6 +121,7 @@ def ApiApp(trustlines, *, enabled_apis):
             "interests/<address:counterparty_address>",
         )
         add_resource(TransferInformation, "/transfers")
+        add_resource(AppliedDelegationFees, "/delegation-fees/")
         add_resource(
             User, "/networks/<address:network_address>/users/<address:user_address>"
         )
