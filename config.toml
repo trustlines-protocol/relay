@@ -9,7 +9,6 @@ gas_price = 0
 [trustline_index]
 enable = true
 full_sync_interval = 300
-event_query_timeout = 20
 
 [tx_relay]
 enable = true

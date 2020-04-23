@@ -489,14 +489,11 @@ class TrustlinesRelay:
         ethindex_db = self.get_ethindex_db_for_currency_network(network_address)
         if type is not None:
             events = ethindex_db.get_network_events(
-                type,
-                user_address,
-                from_block=from_block,
-                timeout=self.event_query_timeout,
+                type, user_address, from_block=from_block,
             )
         else:
             events = ethindex_db.get_all_network_events(
-                user_address, from_block=from_block, timeout=self.event_query_timeout
+                user_address, from_block=from_block
             )
         return events
 
@@ -535,21 +532,13 @@ class TrustlinesRelay:
     ) -> List[BlockchainEvent]:
         ethindex_db = self.get_ethindex_db_for_currency_network(network_address)
         if type is not None:
-            events = ethindex_db.get_events(
-                type, from_block=from_block, timeout=self.event_query_timeout
-            )
+            events = ethindex_db.get_events(type, from_block=from_block)
         else:
-            events = ethindex_db.get_all_events(
-                from_block=from_block, timeout=self.event_query_timeout
-            )
+            events = ethindex_db.get_all_events(from_block=from_block)
         return events
 
     def get_user_events(
-        self,
-        user_address: str,
-        type: str = None,
-        from_block: int = 0,
-        timeout: float = None,
+        self, user_address: str, type: str = None, from_block: int = 0,
     ) -> List[BlockchainEvent]:
         assert is_checksum_address(user_address)
         event_types: Optional[List[str]]
@@ -576,10 +565,7 @@ class TrustlinesRelay:
             contract_types=contract_types,
         )
         return ethindex.get_all_contract_events(
-            event_types,
-            user_address=user_address,
-            from_block=from_block,
-            timeout=timeout,
+            event_types, user_address=user_address, from_block=from_block,
         )
 
     def _get_exchange_event_queries(
@@ -669,31 +655,22 @@ class TrustlinesRelay:
         ethindex_db = self.get_ethindex_db_for_exchange(exchange_address)
         if type is not None:
             events = ethindex_db.get_user_events(
-                event_type=type,
-                user_address=user_address,
-                from_block=from_block,
-                timeout=self.event_query_timeout,
+                event_type=type, user_address=user_address, from_block=from_block,
             )
         else:
             events = ethindex_db.get_all_contract_events(
-                user_address=user_address,
-                from_block=from_block,
-                timeout=self.event_query_timeout,
+                user_address=user_address, from_block=from_block,
             )
         return events
 
     def get_all_user_exchange_events(
-        self,
-        user_address: str,
-        type: str = None,
-        from_block: int = 0,
-        timeout: float = None,
+        self, user_address: str, type: str = None, from_block: int = 0,
     ) -> List[BlockchainEvent]:
         assert is_checksum_address(user_address)
         exchange_event_queries = self._get_exchange_event_queries(
             user_address, type, from_block
         )
-        results = concurrency_utils.joinall(exchange_event_queries, timeout=timeout)
+        results = concurrency_utils.joinall(exchange_event_queries)
         return sorted_events(list(itertools.chain.from_iterable(results)))
 
     def _load_gas_price_settings(self, gas_price_settings: Dict):
