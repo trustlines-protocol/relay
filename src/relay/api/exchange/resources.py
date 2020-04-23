@@ -11,7 +11,6 @@ from relay.api import fields
 from relay.api.exchange.schemas import OrderSchema
 from relay.api.resources import dump_result_with_schema
 from relay.blockchain.exchange_events import all_event_types as all_exchange_event_types
-from relay.concurrency_utils import TimeoutException
 from relay.exchange.order import Order
 from relay.exchange.orderbook import OrderInvalidException
 from relay.relay import TrustlinesRelay
@@ -19,8 +18,6 @@ from relay.relay import TrustlinesRelay
 from ..schemas import ExchangeEventSchema, UserExchangeEventSchema
 
 logger = logging.getLogger("api.resources")
-
-TIMEOUT_MESSAGE = "The server could not handle the request in time"
 
 
 def abort_if_invalid_order_hash(order_hash):
@@ -232,19 +229,10 @@ class UserEventsAllExchanges(Resource):
     def get(self, args, user_address: str):
         from_block = args["fromBlock"]
         type = args["type"]
-        try:
-            return self.trustlines.get_all_user_exchange_events(
-                user_address, type=type, from_block=from_block
-            )
-        except TimeoutException:
-            logger.warning(
-                """User exchange events from all exchanges:
-                   event_type=%s user_address=%s from_block=%s. could not get events in time""",
-                type,
-                user_address,
-                from_block,
-            )
-            abort(504, TIMEOUT_MESSAGE)
+
+        return self.trustlines.get_all_user_exchange_events(
+            user_address, type=type, from_block=from_block
+        )
 
 
 class EventsExchange(Resource):

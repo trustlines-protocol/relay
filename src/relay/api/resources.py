@@ -62,9 +62,6 @@ from .schemas import (
 logger = logging.getLogger("api.resources")
 
 
-TIMEOUT_MESSAGE = "The server could not handle the request in time"
-
-
 def abort_if_unknown_network(trustlines, network_address):
     if not trustlines.is_currency_network(network_address):
         abort(404, "Unknown network: {}".format(network_address))
@@ -396,10 +393,7 @@ class UserEvents(Resource):
         from_block = args["fromBlock"]
 
         return self.trustlines.get_user_events(
-            user_address,
-            type=type,
-            from_block=from_block,
-            timeout=self.trustlines.event_query_timeout,
+            user_address, type=type, from_block=from_block,
         )
 
 

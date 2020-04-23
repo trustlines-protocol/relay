@@ -1,5 +1,5 @@
 import logging
-from typing import Dict, List, MutableMapping, Union
+from typing import Dict, List, MutableMapping, Optional, Union
 
 import toml
 from marshmallow import ValidationError
@@ -84,10 +84,9 @@ def convert_legacy_format(raw_data: MutableMapping) -> MutableMapping:
             convert_delegation_fees(_get_nested_dict(raw_data, old_delegation_key)),
         )
 
-    mapping = {
+    mapping_old_config_format: Dict[str, Optional[str]] = {
         "relay.syncInterval": "trustline_index.full_sync_interval",
         "relay.updateNetworksInterval": "relay.update_indexed_networks_interval",
-        "relay.eventQueryTimeout": "trustline_index.event_query_timeout",
         "relay.enableEtherFaucet": "faucet.enable",
         "relay.enableRelayMetaTransaction": "delegate.enable",
         "relay.enableDeployIdentity": "delegate.enable_deploy_identity",
@@ -99,7 +98,14 @@ def convert_legacy_format(raw_data: MutableMapping) -> MutableMapping:
         "relay.sentry": "sentry",
         "relay.firebase.credentialsPath": "push_notification.firebase_credentials_path",
     }
-    for old_path, new_path in mapping.items():
+    not_supported_anymore_config: Dict[str, Optional[str]] = {
+        "trustline_index.event_query_timeout": None,
+        "relay.eventQueryTimeout": None,
+    }
+    for old_path, new_path in {
+        **mapping_old_config_format,
+        **not_supported_anymore_config,
+    }.items():
         raw_data = _remap_config_entry(raw_data, old_path, new_path)
     return _remove_empty_dicts(raw_data)
 
@@ -112,7 +118,7 @@ def _get_nested_dict(d, path: str, default=None):
     return get_in(path.split("."), d, default=default)
 
 
-def _remap_config_entry(d, old_path: str, new_path: str):
+def _remap_config_entry(d, old_path: str, new_path: Optional[str]):
     value = _get_nested_dict(d, old_path)
     if value is not None:
         if new_path is None:
