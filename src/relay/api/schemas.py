@@ -81,10 +81,10 @@ class MetaTransactionFeeSchema(Schema):
 
 class AppliedDelegationFeeSchema(Schema):
 
-    sender = Address(required=True)
-    receiver = Address(required=True)
-    value = BigInteger(required=True)
-    currencyNetwork = Address(required=True, attribute="currency_network")
+    feeSender = Address(required=True, attribute="sender")
+    feeRecipient = Address(required=True, attribute="receiver")
+    totalFee = BigInteger(required=True, attribute="value")
+    currencyNetworkOfFees = Address(required=True, attribute="currency_network")
 
 
 class MetaTransactionStatusSchema(Schema):
