@@ -25,6 +25,7 @@ from .exchange.resources import (
 from .messaging.resources import PostMessage
 from .pushservice.resources import AddClientToken, DeleteClientToken
 from .resources import (
+    AppliedDelegationFees,
     Balance,
     Block,
     CloseTrustline,
@@ -121,6 +122,7 @@ def ApiApp(trustlines, *, enabled_apis):
             "interests/<address:counterparty_address>",
         )
         add_resource(TransferInformation, "/transfers")
+        add_resource(AppliedDelegationFees, "/delegation-fees/")
         add_resource(
             User, "/networks/<address:network_address>/users/<address:user_address>"
         )

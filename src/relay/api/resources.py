@@ -41,6 +41,7 @@ from .schemas import (
     AccruedInterestListSchema,
     AggregatedAccountSummarySchema,
     AnyEventSchema,
+    AppliedDelegationFeeSchema,
     CurrencyNetworkEventSchema,
     CurrencyNetworkSchema,
     IdentityInfosSchema,
@@ -48,6 +49,7 @@ from .schemas import (
     MetaTransactionSchema,
     MetaTransactionStatusSchema,
     PaymentPathSchema,
+    TransactionIdentifierSchema,
     TransactionStatusSchema,
     TransferIdentifierSchema,
     TransferInformationSchema,
@@ -517,6 +519,18 @@ class TransferInformation(Resource):
                 )
         else:
             raise RuntimeError("Unhandled input parameters.")
+
+
+class AppliedDelegationFees(Resource):
+    def __init__(self, trustlines: TrustlinesRelay) -> None:
+        self.trustlines = trustlines
+
+    @use_args(TransactionIdentifierSchema())
+    @dump_result_with_schema(AppliedDelegationFeeSchema(many=True))
+    def get(self, args):
+        transaction_hash = args["transactionHash"]
+
+        return self.trustlines.get_paid_delegation_fees_for_tx_hash(transaction_hash)
 
 
 class TransactionInfos(Resource):

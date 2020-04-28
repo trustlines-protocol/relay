@@ -3,7 +3,7 @@ import math
 import socket
 import time
 from collections import defaultdict
-from typing import Any, Callable, Dict, List, Mapping, Optional, Set
+from typing import Any, Callable, Dict, List, Mapping, Optional, Set, Tuple
 
 import eth_utils
 import gevent
@@ -165,6 +165,27 @@ class Proxy(object):
         watch_filter_greenlet = gevent.spawn(poll_from_queue)
         return watch_filter_greenlet
 
+    def get_transaction_events(self, tx_hash: str, event_types: Tuple = None):
+        receipt = self._web3.eth.getTransactionReceipt(tx_hash)
+        events = []
+        for log in receipt["logs"]:
+            try:
+                abi = self._get_abi_for_log(log)
+                rich_log = get_event_data(abi, log)
+                if event_types is None or rich_log["event"] in event_types:
+                    events.append(rich_log)
+            except AbiNotFoundException:
+                pass
+
+        logger.debug(
+            "get_transaction_events(%s, %s) -> %s rows",
+            tx_hash,
+            event_types,
+            len(events),
+        )
+
+        return self._build_events(events)
+
     def _register_raw_event_log(self, raw_event_log) -> None:
         """Registers a new log to be decoded and sent to the correct event listener"""
         event = get_event_data(self._get_abi_for_log(raw_event_log), raw_event_log)
@@ -179,6 +200,10 @@ class Proxy(object):
                 f"{topic} not in {self._topic2event_abi.keys()}"
             )
         return event_abi
+
+    def _build_events(self, events: List[Any]):
+        current_blocknumber = self._web3.eth.blockNumber
+        return [self._build_event(event, current_blocknumber) for event in events]
 
     def _build_event(
         self, event: Any, current_blocknumber: int = None

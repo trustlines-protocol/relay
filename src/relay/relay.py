@@ -21,6 +21,8 @@ from web3 import Web3
 
 import relay.concurrency_utils as concurrency_utils
 from relay import ethindex_db, signing_middleware
+from relay.blockchain.identity_events import FeePaymentEventType
+from relay.blockchain.identity_proxy import IdentityProxy
 from relay.blockchain.proxy import LogFilterListener
 from relay.pushservice.client import PushNotificationClient
 from relay.pushservice.client_token_db import (
@@ -273,6 +275,12 @@ class TrustlinesRelay:
     def get_transfer_information_from_event_id(self, block_hash, log_index):
         fetcher = EventsInformationFetcher(self.get_ethindex_db_for_currency_network())
         return fetcher.get_transfer_details_for_id(block_hash, log_index)
+
+    def get_paid_delegation_fees_for_tx_hash(self, tx_hash):
+        event_proxy = IdentityProxy(self._web3, abi=self.contracts["Identity"]["abi"])
+        return event_proxy.get_transaction_events(
+            tx_hash, event_types=FeePaymentEventType
+        )
 
     def deploy_identity(self, factory_address, implementation_address, signature):
         return self.delegate.deploy_identity(

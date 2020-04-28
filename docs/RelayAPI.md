@@ -1380,6 +1380,49 @@ curl --header "Content-Type: application/json" \
 
 ---
 
+### Effective delegation fees of transaction
+
+Get the delegation fees that were applied with given transaction.
+
+#### Request
+```
+GET /delegation-fees?transactionHash=hash
+```
+#### Data Parameters
+| Name            | Type   | Required | Description                                         |
+|-----------------|--------|----------|---------------------------------------------------- |
+| transactionHash | string | Yes      | Hash of transaction responsible for delegation fees |
+
+#### Example Request
+```bash
+curl https://relay0.testnet.trustlines.network/api/v1/delegation-fees?transactionHash=0x05c91f6506e78b1ca2413df9985ca7d37d2da5fc076c0b55c5d9eb9fdd7513a6
+```
+
+#### Response
+
+Return a list of all fee payment found in the transaction.
+
+| Attribute             | Type                | JSON Type            | Description                                 |
+| --------------------- | ------------------- | -------------------- | ------------------------------------------- |
+| feeSender             | address             | string               | address of the payer of the fees            |
+| feeRecipient          | address             | string               | address of the recipient of the fee         |
+| totalFee              | BigInteger          | string               | total value of the fee in currency network  |
+| currencyNetworkOfFees | address             | string               | address of the currency network of the fee  |
+
+#### Example Response
+```json
+[
+    {
+        "feeSender": "0xcbF1153F6e5AC01D363d432e24112e8aA56c55ce",
+        "feeRecipient": "0x7Ec3543702FA8F2C7b2bD84C034aAc36C263cA8b",
+        "totalFee": "123456",
+        "currencyNetworkOfFees": "0xC0B33D88C704455075a0724AA167a286da778DDE"
+    }
+]
+```
+
+---
+
 ### Status of meta transaction
 Get the status of a meta transaction for an identity.
 
