@@ -305,6 +305,7 @@ class TransferInformationSchema(Schema):
     feePayer = FeePayerField(required=True, attribute="fee_payer")
     totalFees = BigInteger(required=True, attribute="total_fees")
     feesPaid = fields.List(BigInteger(), required=True, attribute="fees_paid")
+    extraData = HexEncodedBytes(required=True, attribute="extra_data")
 
 
 class TransferIdentifierSchema(Schema):
