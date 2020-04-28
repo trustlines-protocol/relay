@@ -39,6 +39,7 @@ class TransferInformation:
     fee_payer = attr.ib()
     total_fees = attr.ib()
     fees_paid = attr.ib()
+    extra_data = attr.ib()
 
 
 class EventsInformationFetcher:
@@ -153,6 +154,7 @@ class EventsInformationFetcher:
             fee_payer=fee_payer,
             total_fees=total_fees,
             fees_paid=fees_paid,
+            extra_data=transfer_event.extra_data,
         )
 
     def get_delta_balances_of_transfer(
