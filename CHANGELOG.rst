@@ -3,6 +3,9 @@ Change Log
 ==========
 `unreleased`_
 -------------------------------
+- Remove `event_query_timeout` from relay config as it is not used anymore (BREAKING)
+- Add endpoint to get paid delegation fees via tx hash: `GET /delegation-fees?transactionHash=hash`
+  this endpoint returns a list of all delegations fees paid within the transaction with given hash
 
 `0.15.0`_ (2020-04-21)
 -------------------------------
