@@ -57,7 +57,6 @@ class FaucetSchema(Schema):
 class TrustlineIndexSchema(Schema):
     enable = fields.Boolean(missing=True)
     full_sync_interval = fields.Integer(missing=300)
-    event_query_timeout = fields.Integer(missing=20)
 
 
 class GasPriceMethodField(fields.Field):

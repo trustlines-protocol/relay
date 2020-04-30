@@ -41,6 +41,7 @@ from .schemas import (
     AccruedInterestListSchema,
     AggregatedAccountSummarySchema,
     AnyEventSchema,
+    AppliedDelegationFeeSchema,
     CurrencyNetworkEventSchema,
     CurrencyNetworkSchema,
     IdentityInfosSchema,
@@ -48,6 +49,7 @@ from .schemas import (
     MetaTransactionSchema,
     MetaTransactionStatusSchema,
     PaymentPathSchema,
+    TransactionIdentifierSchema,
     TransactionStatusSchema,
     TransferIdentifierSchema,
     TransferInformationSchema,
@@ -57,9 +59,6 @@ from .schemas import (
 )
 
 logger = logging.getLogger("api.resources")
-
-
-TIMEOUT_MESSAGE = "The server could not handle the request in time"
 
 
 def abort_if_unknown_network(trustlines, network_address):
@@ -393,10 +392,7 @@ class UserEvents(Resource):
         from_block = args["fromBlock"]
 
         return self.trustlines.get_user_events(
-            user_address,
-            type=type,
-            from_block=from_block,
-            timeout=self.trustlines.event_query_timeout,
+            user_address, type=type, from_block=from_block,
         )
 
 
@@ -523,6 +519,18 @@ class TransferInformation(Resource):
                 )
         else:
             raise RuntimeError("Unhandled input parameters.")
+
+
+class AppliedDelegationFees(Resource):
+    def __init__(self, trustlines: TrustlinesRelay) -> None:
+        self.trustlines = trustlines
+
+    @use_args(TransactionIdentifierSchema())
+    @dump_result_with_schema(AppliedDelegationFeeSchema(many=True))
+    def get(self, args):
+        transaction_hash = args["transactionHash"]
+
+        return self.trustlines.get_paid_delegation_fees_for_tx_hash(transaction_hash)
 
 
 class TransactionInfos(Resource):
