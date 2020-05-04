@@ -1,5 +1,3 @@
-import functools
-import itertools
 import json
 import logging
 import os
@@ -19,7 +17,6 @@ from sqlalchemy.engine.url import URL
 from tldeploy.identity import MetaTransaction
 from web3 import Web3
 
-import relay.concurrency_utils as concurrency_utils
 from relay import ethindex_db, signing_middleware
 from relay.blockchain.identity_events import FeePaymentEventType
 from relay.blockchain.identity_proxy import IdentityProxy
@@ -47,7 +44,6 @@ from .blockchain.events import BlockchainEvent
 from .blockchain.events_informations import EventsInformationFetcher
 from .blockchain.exchange_proxy import ExchangeProxy
 from .blockchain.node import Node
-from .blockchain.proxy import sorted_events
 from .blockchain.token_proxy import TokenProxy
 from .blockchain.unw_eth_proxy import UnwEthProxy
 from .events import BalanceEvent, NetworkBalanceEvent
@@ -174,7 +170,7 @@ class TrustlinesRelay:
             from_to_types=currency_network_events.from_to_types,
         )
 
-    def get_ethindex_db_for_token(self, address):
+    def get_ethindex_db_for_token(self, address: str):
         """return an EthindexDB instance
         This is being used from relay.api to query for events.
         """
@@ -186,7 +182,7 @@ class TrustlinesRelay:
             from_to_types=token_events.from_to_types,
         )
 
-    def get_ethindex_db_for_unw_eth(self, address):
+    def get_ethindex_db_for_unw_eth(self, address: str):
         """return an EthindexDB instance
         This is being used from relay.api to query for events.
         """
@@ -198,11 +194,11 @@ class TrustlinesRelay:
             from_to_types=unw_eth_events.from_to_types,
         )
 
-    def get_ethindex_db_for_exchange(self, address):
+    def get_ethindex_db_for_exchange(self, address: Optional[str] = None):
         """return an EthindexDB instance
         This is being used from relay.api to query for events.
         """
-        return ethindex_db.EthindexDB(
+        return ethindex_db.ExchangeEthindexDB(
             ethindex_db.connect(""),
             address=address,
             standard_event_types=exchange_events.standard_event_types,
@@ -576,33 +572,6 @@ class TrustlinesRelay:
             event_types, user_address=user_address, from_block=from_block,
         )
 
-    def _get_exchange_event_queries(
-        self, user_address: str, type: str = None, from_block: int = 0
-    ):
-        # TODO: remove this
-        assert is_checksum_address(user_address)
-        queries = []
-        for exchange_address in self.exchange_addresses:
-            ethindex_db = self.get_ethindex_db_for_exchange(exchange_address)
-            if type is not None and type in ethindex_db.standard_event_types:
-                queries.append(
-                    functools.partial(
-                        ethindex_db.get_user_events,
-                        event_type=type,
-                        user_address=user_address,
-                        from_block=from_block,
-                    )
-                )
-            else:
-                queries.append(
-                    functools.partial(
-                        ethindex_db.get_all_contract_events,
-                        user_address=user_address,
-                        from_block=from_block,
-                    )
-                )
-        return queries
-
     def get_user_token_events(
         self,
         token_address: str,
@@ -675,11 +644,14 @@ class TrustlinesRelay:
         self, user_address: str, type: str = None, from_block: int = 0,
     ) -> List[BlockchainEvent]:
         assert is_checksum_address(user_address)
-        exchange_event_queries = self._get_exchange_event_queries(
-            user_address, type, from_block
+
+        exchange_ethindex = self.get_ethindex_db_for_exchange()
+        return exchange_ethindex.get_all_exchange_events_of_user(
+            user_address=user_address,
+            all_exchange_addresses=self.exchange_addresses,
+            type=type,
+            from_block=from_block,
         )
-        results = concurrency_utils.joinall(exchange_event_queries)
-        return sorted_events(list(itertools.chain.from_iterable(results)))
 
     def _load_gas_price_settings(self, gas_price_settings: Dict):
         method = gas_price_settings["method"]
