@@ -218,19 +218,10 @@ class EthindexDB:
             query_string += "AND address in %s "
             args.append(tuple(self.contract_types))
 
-        if user_address:
-            all_user_types = set()
-            for user_types in self.from_to_types.values():
-                for user_type in user_types:
-                    all_user_types.add(user_type)
-            user_where = " or ".join(
-                f"args->>'{user_type}'=%s" for user_type in all_user_types
-            )
-            query_string += f"AND ({user_where})"
-            for _ in range(len(all_user_types)):
-                args.append(user_address)
-
         query = EventsQuery(query_string, args)
+
+        if user_address:
+            query = self.add_all_user_types_to_query(query, user_address)
 
         events = self._run_events_query(query)
 
@@ -351,6 +342,21 @@ class EthindexDB:
 
         return transaction_events
 
+    def add_all_user_types_to_query(self, events_query: EventsQuery, user_address: str):
+        all_user_types = set()
+        for user_types in self.from_to_types.values():
+            for user_type in user_types:
+                all_user_types.add(user_type)
+        user_where = " or ".join(
+            f"args->>'{user_type}'=%s" for user_type in all_user_types
+        )
+        query_string = events_query.where_block + f"AND ({user_where})"
+        args = events_query.params
+        for _ in range(len(all_user_types)):
+            args.append(user_address)
+
+        return EventsQuery(query_string, args)
+
 
 class CurrencyNetworkEthindexDB(EthindexDB):
     def get_network_events(
@@ -361,6 +367,11 @@ class CurrencyNetworkEthindexDB(EthindexDB):
     def get_all_network_events(
         self, user_address: str = None, from_block: int = 0
     ) -> List[BlockchainEvent]:
+        if self.default_address is None:
+            # if the default address is not set we will get events from non currency network contracts
+            raise RuntimeError(
+                "Cannot get all network events if CurrencyNetworkEthindexDB address is not set."
+            )
         return self.get_all_contract_events(
             currency_network_events.standard_event_types, user_address, from_block,
         )
@@ -415,4 +426,36 @@ class CurrencyNetworkEthindexDB(EthindexDB):
                 event.user = user_address
             else:
                 raise ValueError("Expected a TLNetworkEvent")
+        return events
+
+
+class ExchangeEthindexDB(EthindexDB):
+    def get_all_exchange_events_of_user(
+        self,
+        user_address: str,
+        all_exchange_addresses: Iterable[str],
+        type: str,
+        from_block: int,
+    ):
+
+        event_types = self._get_standard_event_types([type])
+
+        query_string = f"""blockNumber>=%s
+                            AND eventName in %s
+                            AND address in %S"""
+        args = [from_block, event_types, all_exchange_addresses]
+        events_query = EventsQuery(query_string, args)
+        events_query = self.add_all_user_types_to_query(events_query, user_address)
+
+        events = self._run_events_query(events_query)
+
+        logger.debug(
+            "get_all_exchange_events_of_user(%s, %s, %s, %s) -> %s rows",
+            user_address,
+            all_exchange_addresses,
+            type,
+            from_block,
+            len(events),
+        )
+
         return events
