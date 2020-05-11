@@ -14,7 +14,7 @@ from relay.blockchain.currency_network_events import (
     TrustlineUpdateEventType,
 )
 from relay.blockchain.events import BlockchainEvent
-from relay.ethindex_db import CurrencyNetworkEthindexDB
+from relay.ethindex_db.ethindex_db import CurrencyNetworkEthindexDB
 from relay.network_graph.interests import calculate_interests
 from relay.network_graph.payment_path import FeePayer
 
@@ -43,21 +43,21 @@ class TransferInformation:
 
 
 class EventsInformationFetcher:
-    def __init__(self, events_proxy: CurrencyNetworkEthindexDB):
-        self.events_proxy = events_proxy
+    def __init__(self, currency_network_db: CurrencyNetworkEthindexDB):
+        self._currency_network_db = currency_network_db
 
     def get_list_of_paid_interests_for_trustline(
         self, currency_network_address, user, counterparty
     ) -> List[InterestAccrued]:
         """Get all balance changes of a trustline because of interests and the time at which it occurred."""
 
-        balance_update_events = self.events_proxy.get_trustline_events(
+        balance_update_events = self._currency_network_db.get_trustline_events(
             currency_network_address,
             user,
             counterparty,
             event_types=[BalanceUpdateEventType],
         )
-        trustline_update_events = self.events_proxy.get_trustline_events(
+        trustline_update_events = self._currency_network_db.get_trustline_events(
             currency_network_address,
             user,
             counterparty,
@@ -79,7 +79,7 @@ class EventsInformationFetcher:
         )
 
     def get_transfer_details_for_id(self, block_hash, log_index):
-        all_events_of_tx = self.events_proxy.get_transaction_events_by_event_id(
+        all_events_of_tx = self._currency_network_db.get_transaction_events_by_event_id(
             block_hash,
             log_index,
             event_types=(TransferEventType, BalanceUpdateEventType),
@@ -105,7 +105,7 @@ class EventsInformationFetcher:
 
     def get_transfer_details_for_tx(self, tx_hash):
 
-        all_events_of_tx = self.events_proxy.get_transaction_events(
+        all_events_of_tx = self._currency_network_db.get_transaction_events(
             tx_hash, event_types=(TransferEventType, BalanceUpdateEventType)
         )
         transfer_events_in_tx = filter_events_with_type(
@@ -225,7 +225,7 @@ class EventsInformationFetcher:
         self, currency_network_address, a, b
     ):
         """Get all balance update events of a trustline in sorted order"""
-        return self.events_proxy.get_trustline_events(
+        return self._currency_network_db.get_trustline_events(
             event_types=[BalanceUpdateEventType],
             user_address=a,
             counterparty_address=b,

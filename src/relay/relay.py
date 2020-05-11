@@ -17,10 +17,11 @@ from sqlalchemy.engine.url import URL
 from tldeploy.identity import MetaTransaction
 from web3 import Web3
 
-from relay import ethindex_db, signing_middleware
+from relay import signing_middleware
 from relay.blockchain.identity_events import FeePaymentEventType
 from relay.blockchain.identity_proxy import IdentityProxy
 from relay.blockchain.proxy import LogFilterListener
+from relay.ethindex_db import ethindex_db
 from relay.pushservice.client import PushNotificationClient
 from relay.pushservice.client_token_db import (
     ClientTokenAlreadyExistsException,
@@ -41,11 +42,11 @@ from .blockchain import (
 from .blockchain.currency_network_proxy import CurrencyNetworkProxy
 from .blockchain.delegate import Delegate, DelegationFees
 from .blockchain.events import BlockchainEvent
-from .blockchain.events_informations import EventsInformationFetcher
 from .blockchain.exchange_proxy import ExchangeProxy
 from .blockchain.node import Node
 from .blockchain.token_proxy import TokenProxy
 from .blockchain.unw_eth_proxy import UnwEthProxy
+from .ethindex_db.events_informations import EventsInformationFetcher
 from .events import BalanceEvent, NetworkBalanceEvent
 from .exchange.orderbook import OrderBookGreenlet
 from .network_graph.graph import CurrencyNetworkGraph

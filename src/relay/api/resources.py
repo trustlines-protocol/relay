@@ -27,12 +27,12 @@ from relay.blockchain.delegate import (
     InvalidTimeLimit,
     UnknownIdentityFactoryException,
 )
-from relay.blockchain.events_informations import (
+from relay.blockchain.unw_eth_events import all_event_types as all_unw_eth_event_types
+from relay.ethindex_db.events_informations import (
     EventNotFoundException,
     IdentifiedNotPartOfTransferException,
     TransferNotFoundException,
 )
-from relay.blockchain.unw_eth_events import all_event_types as all_unw_eth_event_types
 from relay.network_graph.payment_path import FeePayer, PaymentPath
 from relay.relay import TrustlinesRelay
 from relay.utils import get_version, sha3
