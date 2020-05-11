@@ -3,7 +3,7 @@ from time import time
 
 import pytest
 
-from relay.blockchain.events_informations import (
+from relay.ethindex_db.events_informations import (
     EventsInformationFetcher,
     IdentifiedNotPartOfTransferException,
 )
