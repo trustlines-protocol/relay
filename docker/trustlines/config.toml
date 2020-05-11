@@ -7,7 +7,6 @@ gas_price = 0
 
 [trustline_index]
 full_sync_interval = 300
-event_query_timeout = 20
 
 [node_rpc]
 host = "tlbc"

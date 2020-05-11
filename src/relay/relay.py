@@ -152,10 +152,6 @@ class TrustlinesRelay:
     def enable_deploy_identity(self) -> bool:
         return self.config["delegate"]["enable_deploy_identity"]
 
-    @property
-    def event_query_timeout(self) -> int:
-        return self.config["trustline_index"]["event_query_timeout"]
-
     def get_ethindex_db_for_currency_network(
         self, network_address: Optional[str] = None
     ) -> ethindex_db.CurrencyNetworkEthindexDB:
