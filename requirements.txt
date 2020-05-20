@@ -48,7 +48,7 @@ googleapis-common-protos==1.51.0  # via google-api-core
 greenlet==0.4.15          # via gevent
 grpcio==1.27.2            # via google-api-core
 hexbytes==0.2.0           # via eth-account, eth-rlp, web3
-httplib2==0.17.0          # via google-api-python-client, google-auth-httplib2
+httplib2==0.18.0          # via google-api-python-client, google-auth-httplib2
 idna==2.9                 # via requests
 importlib-metadata==1.5.0  # via jsonschema
 ipfshttpclient==0.4.12    # via web3
