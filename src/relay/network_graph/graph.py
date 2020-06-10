@@ -1,7 +1,8 @@
 import csv
 import io
+import logging
 import math
-from typing import Any, Iterable, NamedTuple
+from typing import Any, List, NamedTuple
 
 import networkx as nx
 
@@ -24,10 +25,12 @@ from .fees import calculate_fees, calculate_fees_reverse, imbalance_generated
 from .interests import balance_with_interests
 from .payment_path import FeePayer, PaymentPath
 
+logger = logging.getLogger(__name__)
+
 
 class NetworkGraphConfig(NamedTuple):
     capacity_imbalance_fee_divisor: int = 0
-    trustlines: Iterable = []
+    trustlines: List = []
 
 
 class Account(object):
@@ -480,10 +483,14 @@ class CurrencyNetworkGraph(object):
         self.prevent_mediator_interests = prevent_mediator_interests
         self.graph = nx.Graph()
 
-    def gen_network(self, trustlines: Iterable[Any]):
+    def gen_network(self, trustlines: List[Any]):
+        logger.debug(
+            "Generate Graph from scratch with %d trustline edges", len(trustlines)
+        )
         self.graph.clear()
         for trustline in trustlines:
             assert trustline.user < trustline.counter_party
+            logger.debug("Insert edge: (%s)", trustline)
             self.graph.add_edge(
                 trustline.user,
                 trustline.counter_party,
@@ -541,18 +548,12 @@ class CurrencyNetworkGraph(object):
     ):
         """to update the creditlines, used to react on changes on the blockchain"""
         if not self.graph.has_edge(creditor, debtor):
-            self.graph.add_edge(
-                creditor,
-                debtor,
-                creditline_ab=0,
-                creditline_ba=0,
-                interest_ab=self.default_interest_rate,
-                interest_ba=self.default_interest_rate,
-                is_frozen=False,
-                m_time=0,
-                balance_ab=0,
-            )
+            self.create_edge(creditor, debtor)
+
         account = Account(self.graph[creditor][debtor], creditor, debtor)
+        logger.debug(
+            "Update trustline (%s, %s) from: %s", creditor, debtor, account.data
+        )
         account.creditline = creditline_given
         account.reverse_creditline = creditline_received
 
@@ -569,8 +570,9 @@ class CurrencyNetworkGraph(object):
             raise RuntimeError(
                 "Not interests specified even though custom interests are enabled"
             )
-
         account.is_frozen = is_frozen
+
+        logger.debug("Update trustline (%s, %s) to: %s", creditor, debtor, account.data)
 
         if account.can_be_closed():
             self.remove_trustline(creditor, debtor)
@@ -584,18 +586,15 @@ class CurrencyNetworkGraph(object):
         """to update the balance, used to react on changes on the blockchain
         the last modification time of the balance is also updated to keep track of the interests"""
         if not self.graph.has_edge(a, b):
-            self.graph.add_edge(
-                a,
-                b,
-                creditline_ab=0,
-                creditline_ba=0,
-                interest_ab=0,
-                interest_ba=0,
-                is_frozen=False,
-                m_time=0,
-                balance_ab=0,
-            )
+            self.create_edge(a, b)
         account = Account(self.graph[a][b], a, b)
+        logger.debug(
+            "Update balance of trustline (%s, %s) from: (balance=%s, timestamp=%d)",
+            a,
+            b,
+            account.balance,
+            account.m_time,
+        )
         account.balance = balance
         if timestamp is not None:
             account.m_time = timestamp
@@ -603,10 +602,32 @@ class CurrencyNetworkGraph(object):
             raise RuntimeError(
                 "No timestamp was given. When using interests a timestamp is mandatory"
             )
+        logger.debug(
+            "Update balance of trustline (%s, %s) to: (balance=%s, timestamp=%d)",
+            a,
+            b,
+            account.balance,
+            account.m_time,
+        )
         if account.can_be_closed():
             self.remove_trustline(a, b)
 
+    def create_edge(self, a, b):
+        logger.debug("Create new trustline edge: (%s, %s)", a, b)
+        self.graph.add_edge(
+            a,
+            b,
+            creditline_ab=0,
+            creditline_ba=0,
+            interest_ab=self.default_interest_rate,
+            interest_ba=self.default_interest_rate,
+            is_frozen=False,
+            m_time=0,
+            balance_ab=0,
+        )
+
     def remove_trustline(self, a, b):
+        logger.debug("Remove trustline edge: (%s, %s)", a, b)
         self.graph.remove_edge(a, b)
 
         if len(self.graph.edges(a)) == 0:

@@ -795,11 +795,13 @@ class TrustlinesRelay:
         self._publish_blockchain_event(transfer_event)
 
     def _process_trustline_request(self, trustline_request_event):
-        logger.debug("Process trustline request event")
+        logger.debug("Process trustline request event: %s", trustline_request_event)
         self._publish_blockchain_event(trustline_request_event)
 
     def _process_trustline_request_cancel(self, trustline_request_cancel_event):
-        logger.debug("Process trustline request cancel event")
+        logger.debug(
+            "Process trustline request cancel event: %s", trustline_request_cancel_event
+        )
         self._publish_blockchain_event(trustline_request_cancel_event)
 
     def _process_network_freeze(self, network_freeze_event):
@@ -843,7 +845,7 @@ class TrustlinesRelay:
             self._publish_user_event(ev)
 
     def _process_trustline_update(self, trustline_update_event):
-        logger.debug("Process trustline update event")
+        logger.debug("Process trustline update event: %s", trustline_update_event)
         graph = self.currency_network_graphs[trustline_update_event.network_address]
         graph.update_trustline(
             creditor=trustline_update_event.from_,

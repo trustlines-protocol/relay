@@ -8,6 +8,9 @@ class Event(object):
     def __init__(self, timestamp: int) -> None:
         self.timestamp = timestamp
 
+    def __str__(self):
+        return f"<Event: type={self.type}, timestamp={self.timestamp}>"
+
 
 class AccountEvent(Event):
     def __init__(
