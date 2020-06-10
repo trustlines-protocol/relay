@@ -17,6 +17,12 @@ class CurrencyNetworkEvent(TLNetworkEvent):
         )
         self.network_address = web3_event.get("address")
 
+    def __str__(self):
+        return (
+            f"<CurrencyNetworkEvent: type={self.type}, timestamp={self.timestamp} "
+            f"network_address={self.network_address} data={self._web3_event}>"
+        )
+
 
 class ValueEvent(CurrencyNetworkEvent):
     @property
