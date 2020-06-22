@@ -1,6 +1,5 @@
 [relay]
 addresses_filepath = "addresses.json"
-update_indexed_networks_interval = 120
 
 [relay.gas_price_computation]
 method = "rpc"

@@ -1,5 +1,5 @@
 import logging
-from typing import Dict, List, MutableMapping, Optional, Union
+from typing import Dict, Iterable, List, MutableMapping, Union
 
 import toml
 from marshmallow import ValidationError
@@ -88,9 +88,8 @@ def convert_legacy_format(raw_data: MutableMapping) -> MutableMapping:
             convert_delegation_fees(_get_nested_dict(raw_data, old_delegation_key)),
         )
 
-    mapping_old_config_format: Dict[str, Optional[str]] = {
+    mapping_old_config_format: Dict[str, str] = {
         "relay.syncInterval": "trustline_index.full_sync_interval",
-        "relay.updateNetworksInterval": "relay.update_indexed_networks_interval",
         "relay.enableEtherFaucet": "faucet.enable",
         "relay.enableRelayMetaTransaction": "delegate.enable",
         "relay.enableDeployIdentity": "delegate.enable_deploy_identity",
@@ -102,15 +101,18 @@ def convert_legacy_format(raw_data: MutableMapping) -> MutableMapping:
         "relay.sentry": "sentry",
         "relay.firebase.credentialsPath": "push_notification.firebase_credentials_path",
     }
-    not_supported_anymore_config: Dict[str, Optional[str]] = {
-        "trustline_index.event_query_timeout": None,
-        "relay.eventQueryTimeout": None,
-    }
-    for old_path, new_path in {
-        **mapping_old_config_format,
-        **not_supported_anymore_config,
-    }.items():
+    not_supported_anymore_config = [
+        "trustline_index.event_query_timeout",
+        "relay.eventQueryTimeout",
+    ]
+    deprecated_config: Iterable[str] = [
+        "relay.updateNetworksInterval",
+        "relay.update_indexed_networks_interval",
+    ]
+    for old_path, new_path in mapping_old_config_format.items():
         raw_data = _remap_config_entry(raw_data, old_path, new_path)
+    raw_data = _handle_deprecated_config(raw_data, deprecated_config)
+    _handle_not_supported_config(raw_data, not_supported_anymore_config)
     return _remove_empty_dicts(raw_data)
 
 
@@ -122,11 +124,9 @@ def _get_nested_dict(d, path: str, default=None):
     return get_in(path.split("."), d, default=default)
 
 
-def _remap_config_entry(d, old_path: str, new_path: Optional[str]):
+def _remap_config_entry(d, old_path: str, new_path: str):
     value = _get_nested_dict(d, old_path)
     if value is not None:
-        if new_path is None:
-            raise ValidationError({old_path: "Not supported anymore"})
         if _get_nested_dict(d, new_path) is not None:
             raise ValidationError(
                 {
@@ -138,6 +138,24 @@ def _remap_config_entry(d, old_path: str, new_path: Optional[str]):
         d = _update_nested_dict(d, old_path, None)
         d = _update_nested_dict(d, new_path, value)
     return d
+
+
+def _handle_deprecated_config(config, deprecated_keys: Iterable[str]):
+    for deprecated_key in deprecated_keys:
+        value = _get_nested_dict(config, deprecated_key)
+        if value is not None:
+            logger.warning(
+                f"{deprecated_key} is deprecated, please remove it from the relay config"
+            )
+            config = _update_nested_dict(config, deprecated_key, None)
+    return config
+
+
+def _handle_not_supported_config(config, not_supported_keys: Iterable[str]):
+    for key in not_supported_keys:
+        value = _get_nested_dict(config, key)
+        if value is not None:
+            raise ValidationError({not_supported_keys: "Not supported anymore"})
 
 
 def _remove_empty_dicts(data: MutableMapping, factory=dict) -> MutableMapping:
