@@ -191,7 +191,6 @@ class ChainNodeRPCSchema(Schema):
 
 
 class RelaySchema(Schema):
-    update_indexed_networks_interval = fields.Integer(missing=120)
     gas_price_computation = fields.Nested(GasPriceComputationSchema())
     addresses_filepath = fields.String(missing="addresses.json")
 

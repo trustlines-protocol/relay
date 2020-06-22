@@ -9,10 +9,8 @@ from typing import Dict, Iterable, List, NamedTuple, Optional
 
 import eth_account
 import eth_keyfile
-import gevent
 import sqlalchemy
 from eth_utils import is_checksum_address, to_checksum_address
-from gevent import sleep
 from sqlalchemy.engine.url import URL
 from tldeploy.identity import MetaTransaction
 from web3 import Web3
@@ -313,7 +311,7 @@ class TrustlinesRelay:
             )
         except ValueError:
             raise ValueError(
-                f"Could not decrypt keystore. Please make sure the password is correct."
+                "Could not decrypt keystore. Please make sure the password is correct."
             )
 
         account = eth_account.Account.from_key(private_key)
@@ -362,8 +360,7 @@ class TrustlinesRelay:
         self._log_listener = LogFilterListener(self._web3)
         if self.config["delegate"]["enable"]:
             self._start_delegate()
-        # For now always start listening, until we properly have separated the concerns
-        self._start_listen_on_new_addresses()
+        self._load_addresses()
 
     def new_network(self, address: str) -> None:
         assert is_checksum_address(address)
@@ -732,21 +729,6 @@ class TrustlinesRelay:
         proxy.start_listen_on_network_freeze(
             self._process_network_freeze, start_log_filter=False
         )
-
-    def _start_listen_on_new_addresses(self):
-        logger.info("Start trustlines networks index")
-
-        def listen():
-            while True:
-                try:
-                    self._load_addresses()
-                except Exception:
-                    logger.critical(
-                        "Error while loading addresses", exc_info=sys.exc_info()
-                    )
-                sleep(self.config["relay"]["update_indexed_networks_interval"])
-
-        return gevent.Greenlet.spawn(listen)
 
     def _start_push_service(self):
         logger.info("Start pushnotification service")
