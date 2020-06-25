@@ -13,7 +13,7 @@ ENV LANG C.UTF-8
 
 RUN apt-get update \
     && apt-get install -y apt-utils libssl-dev curl libsecp256k1-dev \
-    python3 python3-distutils python3-dev python3-venv git build-essential libpq-dev libsecp256k1-dev pkg-config \
+    python3 python3-distutils python3-dev python3-venv git build-essential libpq-dev pkg-config \
     && rm -rf /var/lib/apt/lists/*
 
 RUN python3 -m venv /opt/relay
