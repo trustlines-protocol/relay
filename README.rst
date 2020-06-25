@@ -5,16 +5,23 @@
 
 Trustlines relay server
 =======================
-Introduction
-------------
-The relay server is a component in between the Trustlines clientlib, and deployed
-Trustlines contracts on a chosen blockchain.
+The Trustlines relay server is a component of the `Trustlines Protocol <https://trustlines.foundation/protocol.html>`__.
+The Trustlines Protocol is a set of rules to allow the transfer of value on top of existing trust
+relationships stored on a trustless infrastructure, e.g. a blockchain.
 
-It requires a blockchain node to interact with. It also uses a `py-eth-index
+In the technology stack, the relay server is located in between a client of the Trustlines Protocol,
+e.g. a mobile app build on to of the `Trustlines clientlib <https://github.com/trustlines-protocol/clientlib>`__, and the deployed
+`Trustlines smart contracts <https://github.com/trustlines-protocol/contracts>`__ on a chosen blockchain, e.g.
+`The Trustlines Blockchain (TLBC) <https://explore.tlbc.trustlines.foundation>`__.
+
+Operating a relay server requires an ethereum based blockchain node, a postgres database
+and a `py-eth-index
 <https://github.com/trustlines-protocol/py-eth-index>`__
 instance that index events that the relay will be able to process and serve to its users.
 
-The main objectives of the relay include:
+The goal of the relay server is to handle computation and services which are currently not feasible to do on the client
+or on the blockchain.
+More specifically the relay currently handles:
 
 - Computing a graph of the trustlines in a currency networks
 - Computing the path of mediators for trustlines transfer in this graph
@@ -22,13 +29,23 @@ The main objectives of the relay include:
 - Deploying identity contracts for users
 - Relaying transactions of the user to a blockchain node
 - Paying for meta-transactions of a user in exchange for a fee
+- Sending notifications for user events.
 
-To have more information about trustlines in general, visit the `Trustlines Foundation website
-<https://trustlines.network/>`__
+Depending on the use case it is possible to enable/disable some of the functionality.
 
 
-Installation
-------------
+Get Up and Running
+------------------
+
+Via docker-compose
+~~~~~~~~~~~~~~~~~~
+The fastest way to run a relay server is via docker-compose. The only pre-requisites on your system are
+docker and docker-compose. Please note that we officially only support Linux, however other systems with docker should
+work as well. For instructions, please view the
+`relay docker instructions <https://github.com/trustlines-protocol/relay/blob/master/docker/trustlines/README.md>`__.
+
+Manual Installation
+~~~~~~~~~~~~~~~~~~~~
 
 An installation of the relay server requires at least the following
 components:
@@ -62,24 +79,19 @@ Finally, to install all needed dependencies to run the relay, use the following 
 You can verify that the relay is correctly installed by running `tl-relay --help`
 to get an overview of available options.
 
-You can otherwise install the relay simply by running::
 
-    pip install trustlines-relay
-
-However, this will not let you easily access and modify the example :code:`config.toml` and :code:`addresses.json`
-
-Running a relay
----------------
-
-Pre-requisites
-~~~~~~~~~~~~~~
+Additional dependencies
+~~~~~~~~~~~~~~~~~~~~~~~
 In addition to having installed the relay, you will need a blockchain
 node connected to a chain with deployed `trustlines contracts
 <https://github.com/trustlines-protocol/contracts>`__
 to interact with. You can go to the `contracts repository
 <https://github.com/trustlines-protocol/contracts>`__
 to see how to deploy new trustlines contracts, or you may use the provided
-file :code:`addresses.json` containing addresses of deployed contracts on the Trustlines Blockchain.
+:code:`addresses.json` files in `config/` containing addresses of deployed contracts on the Trustlines Blockchain by
+copying them here::
+
+    cp config/addresses_tlbc.json addresses.json
 
 You may use the `blockchain repository
 <https://github.com/trustlines-protocol/blockchain>`__
@@ -127,8 +139,13 @@ You can verify that it is correctly running with::
 
 Start developing
 ----------------
+If you want to start fiddling around with the code, you need to install the relay and the dev requirements.
+Start by cloning the repository::
 
-If you want to start fiddling around with the code, you will need to install the dev requirements::
+    git clone https://github.com/trustlines-protocol/relay.git
+    cd relay
+
+And install the relay and its development dependencies::
 
     pip install -r dev-requirements.txt -r requirements.txt -e .
 
@@ -150,8 +167,7 @@ When opening a PR on the relay repository, make sure:
 - The :code:`unreleased` section of the changelog has been updated with the change.
 - The documentation has been updated if impacted by the change.
 - The code is formatted with black.
-- Commit messages are written following these `guidelines
-<https://chris.beams.io/posts/git-commit/>`__
+- Commit messages are written following these `guidelines <https://chris.beams.io/posts/git-commit/>`__
 
 Pre-commit hooks
 ~~~~~~~~~~~~~~~~
@@ -161,6 +177,9 @@ installed git pre-commit hooks run flake8 and black among other things
 when committing changes to the git repository ::
 
     pre-commit install
+
+You can run them on all files with::
+
     pre-commit run -a
 
 Dependencies
