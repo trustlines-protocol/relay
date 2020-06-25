@@ -57,7 +57,7 @@ components:
 To install the relay server on Ubuntu 18.04, start by installing the pre-requisites
 with the following command::
 
-    sudo apt install build-essential python3-dev libsecp256k1-dev \
+    sudo apt install build-essential python3 python3-pip python3-dev libsecp256k1-dev \
     python3-virtualenv virtualenv pkg-config libssl-dev automake \
     autoconf libtool git libpq-dev
 
