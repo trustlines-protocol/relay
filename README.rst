@@ -160,21 +160,15 @@ work together. For more information about the end2end tests, see
 
 Contributing
 ------------
-
-When opening a PR on the relay repository, make sure:
-
-- The relay tests and end2end tests are passing.
-- The :code:`unreleased` section of the changelog has been updated with the change.
-- The documentation has been updated if impacted by the change.
-- The code is formatted with black.
-- Commit messages are written following these `guidelines <https://chris.beams.io/posts/git-commit/>`__
+Contributions are highly appreciated, but please check our `contributing guidelines </CONTRIBUTING.md>`__.
 
 Pre-commit hooks
 ~~~~~~~~~~~~~~~~
 
 You should consider initializing the pre-commit hooks. The
 installed git pre-commit hooks run flake8 and black among other things
-when committing changes to the git repository ::
+when committing changes to the git repository.
+Install them with ::
 
     pre-commit install
 
@@ -213,11 +207,11 @@ Documentation
 
 If you're trying to setup a complete trustlines system, please visit
 `Running the trustlines system.
-<https://github.com/trustlines-protocol/relay/blob/master/docs/RelayServer.md>`__
+<https://github.com/trustlines-protocol/relay/blob/master/docs/RelayServer.md>`_
 
 The relay server provides a REST API. Please visit the `REST API
 Documentation
-<https://github.com/trustlines-protocol/relay/blob/master/docs/RelayAPI.md>`__
+<https://github.com/trustlines-protocol/relay/blob/master/docs/RelayAPI.md>`_
 page for more information.
 
 .. |Code style: black| image:: https://img.shields.io/badge/code%20style-black-000000.svg
