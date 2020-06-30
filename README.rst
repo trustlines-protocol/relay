@@ -1,7 +1,11 @@
-|Code style: black|
+.. image:: https://img.shields.io/badge/code%20style-black-000000.svg
+    :target: https://github.com/psf/black
 
 .. image:: https://circleci.com/gh/trustlines-protocol/relay.svg?style=svg
     :target: https://circleci.com/gh/trustlines-protocol/relay
+
+.. image:: https://badges.gitter.im/Join%20Chat.svg
+    :target: https://gitter.im/trustlines/community
 
 Trustlines relay server
 =======================
