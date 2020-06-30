@@ -201,6 +201,10 @@ Release
 
 How to release new relay versions.
 
+Licence
+-------
+This software is released under the `MIT License </LICENSE>`_
+
 Change log
 ----------
 
