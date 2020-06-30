@@ -5,7 +5,7 @@ We appreciate all help, depending on your knowledge, this can be
 spreading the word, helping with documentation, reporting issues or even contributing to the source code.
 
 Feel free to checkout the code, play around with it and run the tests.
-Before making a change, please first discuss the change via [opening an issue](issues/new) on this
+Before making a change, please first discuss the change via opening an issue on this
 repository. If you just need some small question answered, you can also reach out to
 us via our [gitter chat](https://gitter.im/trustlines/community).
 
