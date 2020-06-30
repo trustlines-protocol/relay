@@ -25,7 +25,7 @@ Please include a description of what you would like to see implemented and an ex
 
 ### Before starting
 - Follow the [readme](/README.rst) to setup you dev environment.
-- Ensure that you can run the tests and that they pass. The tests can be run with from the root with
+- Ensure that you can run the tests and that they pass. The tests can be run from the root with
 `./pytest tests`
 - Ensure that you can run the end2end tests. You can find them in the
 [end2end repo](https://github.com/trustlines-protocol/end2end):
