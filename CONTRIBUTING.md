@@ -36,7 +36,7 @@ Please include a description of what you would like to see implemented and an ex
 ### To include
 
 - For a bug fix:
-  - Add a test that shows that the bug was fixed, and make sure that the test fails
+  - Add a test that makes the bug explicit, and make sure that the test fails
   - Fix the bug, so that the test passes
 - For a new feature:
   - Add a test, that demonstrate the new feature. Consider also adding the new functionality
