@@ -198,8 +198,10 @@ run :code:`./compile-requirements.sh --upgrade`.
 
 Release
 ~~~~~~~
-
-How to release new relay versions.
+For versioning we use `setuptools-scm <https://pypi.org/project/setuptools-scm/>`_. This means the version number is
+derived from git tags. To release a new version of the relay on PyPI or Docker Hub, simply tag a commit with a valid version
+number either via git, or from `github <https://github.com/trustlines-protocol/relay/releases/new>`_.
+Make sure to update the changelog accordingly and add all changes since the last released version.
 
 Change log
 ----------
