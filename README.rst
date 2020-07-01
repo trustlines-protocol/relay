@@ -37,6 +37,13 @@ More specifically the relay currently handles:
 
 Depending on the use case it is possible to enable/disable some of the functionality.
 
+Try it out
+----------
+If you just want to inspect what you can do with the relay server, have a look at the `ReST API Documentation <docs/RelayAPI.md>`_
+and try it out for example with the relay server running at `https://tlbc.relay.anyblock.tools`.
+To get the list of registered networks, try::
+
+    curl https://tlbc.relay.anyblock.tools/api/v1/networks
 
 Get Up and Running
 ------------------
