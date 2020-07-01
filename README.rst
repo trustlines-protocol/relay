@@ -46,7 +46,7 @@ Via docker-compose
 The fastest way to run a relay server is via docker-compose. The only pre-requisites on your system are
 docker and docker-compose. Please note that we officially only support Linux, however other systems with docker should
 work as well. For instructions, please view the
-`relay docker instructions <https://github.com/trustlines-protocol/relay/blob/master/docker/trustlines/README.md>`__.
+`relay docker instructions <docker/trustlines/README.md>`__.
 
 Manual Installation
 ~~~~~~~~~~~~~~~~~~~~
@@ -206,19 +206,16 @@ Make sure to update the changelog accordingly and add all changes since the last
 Change log
 ----------
 
-See `CHANGELOG <https://github.com/trustlines-protocol/relay/blob/master/CHANGELOG.rst>`_.
+See `CHANGELOG <CHANGELOG.rst>`_.
 
 Documentation
 -------------
 
 If you're trying to setup a complete trustlines system, please visit
 `Running the trustlines system.
-<https://github.com/trustlines-protocol/relay/blob/master/docs/RelayServer.md>`_
+<docs/RelayServer.md>`_
 
 The relay server provides a REST API. Please visit the `REST API
 Documentation
-<https://github.com/trustlines-protocol/relay/blob/master/docs/RelayAPI.md>`_
+<docs/RelayAPI.md>`_
 page for more information.
-
-.. |Code style: black| image:: https://img.shields.io/badge/code%20style-black-000000.svg
-   :target: https://github.com/psf/black
