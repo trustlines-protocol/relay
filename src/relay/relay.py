@@ -1,7 +1,6 @@
 import json
 import logging
 import os
-import sys
 import time
 from collections import defaultdict
 from copy import deepcopy
@@ -12,6 +11,7 @@ import eth_keyfile
 import sqlalchemy
 from eth_utils import is_checksum_address, to_checksum_address
 from sqlalchemy.engine.url import URL
+from tlbin import load_packaged_contracts
 from tldeploy.identity import MetaTransaction
 from web3 import Web3
 
@@ -349,7 +349,7 @@ class TrustlinesRelay:
 
     def start(self):
         self._load_gas_price_settings(self.config["relay"]["gas_price_computation"])
-        self._load_contracts()
+        self.contracts = load_packaged_contracts()
         if self.config["exchange"]["enable"]:
             self._load_orderbook()
         if self.config["push_notification"]["enable"]:
@@ -663,12 +663,6 @@ class TrustlinesRelay:
                     f"Given gasprice: {fixed_gas_price} must be a non negative integer"
                 )
             self.fixed_gas_price = fixed_gas_price
-
-    def _load_contracts(self):
-        with open(
-            os.path.join(sys.prefix, "trustlines-contracts", "build", "contracts.json")
-        ) as data_file:
-            self.contracts = json.load(data_file)
 
     def _load_orderbook(self):
         logger.info("Start exchange orderbook")
