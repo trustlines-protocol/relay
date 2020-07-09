@@ -1,9 +1,6 @@
-import json
-import os
-import sys
-
 import eth_tester
 import pytest
+from tlbin import load_packaged_contracts
 from tldeploy.core import deploy_network, deploy_networks
 from tldeploy.identity import MetaTransaction
 
@@ -266,10 +263,7 @@ def deploy_test_networks(web3):
 
 @pytest.fixture(scope="session")
 def contracts():
-    with open(
-        os.path.join(sys.prefix, "trustlines-contracts", "build", "contracts.json")
-    ) as data_file:
-        return json.load(data_file)
+    return load_packaged_contracts()
 
 
 @pytest.fixture(scope="session")

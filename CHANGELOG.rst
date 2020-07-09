@@ -10,6 +10,7 @@ Change Log
   which returns a list of information for identifies transfer
 - No longer watch address file for new currency networks, exchange, unwEth, identity proxy factory addresses
 - Deprecate config `relay.update_indexed_networks_interval`: it is no longer used and should be removed
+- Fix logging of unknown events with warning `MismatchedABIy`
 
 `0.15.0`_ (2020-04-21)
 -------------------------------
