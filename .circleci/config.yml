@@ -8,7 +8,7 @@ templates:
 executors:
   ubuntu-builder:
     docker:
-      - image: trustlines/builder:master25
+      - image: trustlines/builder:master32
     working_directory: ~/repo
 
 # define some common commands
