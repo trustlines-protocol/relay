@@ -163,3 +163,5 @@ def test_build_firebase_data_message(web3_event_trustline_request):
     assert message.data["logIndex"] == data["logIndex"]
     assert message.data["transactionHash"] == data["transactionHash"]
     assert message.token == "token"
+    assert message.android.priority == "high"
+    assert message.apns.payload.aps.content_available == 1
