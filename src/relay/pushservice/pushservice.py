@@ -124,7 +124,14 @@ def _build_data_message(client_token: str, event: Event) -> Optional[messaging.M
     data = _build_data_prop(event=event)
 
     if data is not None:
-        return messaging.Message(data=data, token=client_token)
+        android_config = messaging.AndroidConfig(priority="high")
+        apns = messaging.APNSConfig(
+            payload=messaging.APNSPayload(aps=messaging.Aps(content_available=True),),
+        )
+
+        return messaging.Message(
+            data=data, token=client_token, android=android_config, apns=apns
+        )
 
     return None
 
