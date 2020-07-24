@@ -64,7 +64,6 @@ class FirebaseRawPushService:
             raise Exception("Firebase admin app not initialized")
 
         self._app = app
-        print(self._app)
         self.cache = cachetools.TTLCache(100_000, ttl=3600)
 
     def send_event(self, client_token, event: Event):
