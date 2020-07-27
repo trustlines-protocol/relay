@@ -8,10 +8,8 @@ from typing import Dict, Iterable, List, NamedTuple, Optional
 
 import eth_account
 import eth_keyfile
-import firebase_admin
 import sqlalchemy
 from eth_utils import is_checksum_address, to_checksum_address
-from firebase_admin import credentials
 from sqlalchemy.engine.url import URL
 from tlbin import load_packaged_contracts
 from tldeploy.identity import MetaTransaction
@@ -30,6 +28,7 @@ from relay.pushservice.client_token_db import (
 from relay.pushservice.pushservice import (
     FirebaseRawPushService,
     InvalidClientTokenException,
+    create_firebase_app_from_path_to_keyfile,
 )
 from relay.web3provider import create_provider_from_config
 
@@ -732,10 +731,8 @@ class TrustlinesRelay:
     def _start_push_service(self):
         logger.info("Start pushnotification service")
         path = self.config["push_notification"]["firebase_credentials_path"]
-        cred = credentials.Certificate(path)
-        self._firebase_raw_push_service = FirebaseRawPushService(
-            firebase_admin.initialize_app(cred)
-        )
+        app = create_firebase_app_from_path_to_keyfile(path)
+        self._firebase_raw_push_service = FirebaseRawPushService(app)
         self._client_token_db = ClientTokenDB(engine=create_engine())
         logger.info("Firebase pushservice started")
         self._start_pushnotifications_for_registered_users()

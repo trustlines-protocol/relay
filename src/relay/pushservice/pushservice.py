@@ -3,7 +3,7 @@ from typing import Optional
 
 import cachetools
 import firebase_admin
-from firebase_admin import messaging
+from firebase_admin import credentials, messaging
 
 from relay.blockchain.currency_network_events import (
     TransferEvent,
@@ -48,6 +48,14 @@ def dedup_event_id(client_token, event: Event):
         return client_token, event.type, event.transaction_hash
     else:
         return None
+
+
+def create_firebase_app_from_path_to_keyfile(path_to_keyfile: str):
+    cred = credentials.Certificate(path_to_keyfile)
+
+    app = firebase_admin.initialize_app(cred)
+
+    return app
 
 
 class FirebaseRawPushService:
