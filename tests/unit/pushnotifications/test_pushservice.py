@@ -2,6 +2,7 @@ import json
 import time
 
 import firebase_admin
+import pytest
 from firebase_admin import messaging
 
 from relay.blockchain.currency_network_events import (
@@ -47,11 +48,29 @@ def _instrument_messaging_service(app, status=200, payload=_DEFAULT_RESPONSE):
     return fcm_service, recorder
 
 
-def test_send_on_blockchain_event(web3_event_transfer):
-    raw_service = FirebaseRawPushService(app=admin_app)
+@pytest.fixture()
+def raw_push_service():
+    return FirebaseRawPushService(app=admin_app)
 
-    _, recorder = _instrument_messaging_service(app=raw_service._app)
 
+@pytest.fixture()
+def recorder(raw_push_service):
+    _, recorder = _instrument_messaging_service(app=raw_push_service._app)
+    return recorder
+
+
+def assert_body_has_correct_payload(recorder, event):
+    assert len(recorder) == 1
+
+    body = {
+        "message": messaging._MessagingService.encode_message(
+            _build_data_message(client_token="token", event=event)
+        )
+    }
+    assert json.loads(recorder[0].body.decode()) == body
+
+
+def test_send_on_blockchain_event(raw_push_service, recorder, web3_event_transfer):
     event = TransferEvent(
         web3_event=web3_event_transfer,
         current_blocknumber=6,
@@ -59,33 +78,15 @@ def test_send_on_blockchain_event(web3_event_transfer):
         user="0x321",
     )
 
-    message = _build_data_message(client_token="token", event=event)
+    raw_push_service.send_event(client_token="token", event=event)
 
-    FirebaseRawPushService.send_event(
-        self=raw_service, client_token="token", event=event
-    )
-
-    assert len(recorder) == 1
-
-    body = {"message": messaging._MessagingService.encode_message(message)}
-    assert json.loads(recorder[0].body.decode()) == body
+    assert_body_has_correct_payload(recorder, event)
 
 
-def test_send_on_non_blockchain_event():
-    raw_service = FirebaseRawPushService(app=admin_app)
+def test_send_on_non_blockchain_event(raw_push_service, recorder):
+    raw_push_service.send_event(client_token="token", event=message_event)
 
-    _, recorder = _instrument_messaging_service(app=raw_service._app)
-
-    message = _build_data_message(client_token="token", event=message_event)
-
-    FirebaseRawPushService.send_event(
-        self=raw_service, client_token="token", event=message_event
-    )
-
-    assert len(recorder) == 1
-
-    body = {"message": messaging._MessagingService.encode_message(message)}
-    assert json.loads(recorder[0].body.decode()) == body
+    assert_body_has_correct_payload(recorder, message_event)
 
 
 def test_build_data_prop_trustline_update(web3_event_trustline_update):
