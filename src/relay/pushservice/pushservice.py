@@ -68,9 +68,6 @@ class FirebaseRawPushService:
             app: The initialized firebase_admin App
         """
 
-        if not isinstance(app, firebase_admin.App):
-            raise Exception("Firebase admin app not initialized")
-
         self._app = app
         self.cache = cachetools.TTLCache(100_000, ttl=3600)
 
