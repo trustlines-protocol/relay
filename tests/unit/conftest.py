@@ -20,7 +20,8 @@ def web3_event():
 
 @pytest.fixture()
 def web3_event_trustline_update(web3_event):
-    web3_event.update(
+    trustline_update_event = web3_event.copy()
+    trustline_update_event.update(
         {
             "args": {
                 "_creditor": "0x123",
@@ -32,12 +33,13 @@ def web3_event_trustline_update(web3_event):
             "event": TrustlineUpdateEventType,
         }
     )
-    return web3_event
+    return trustline_update_event
 
 
 @pytest.fixture()
 def web3_event_trustline_request(web3_event):
-    web3_event.update(
+    trustline_request_event = web3_event.copy()
+    trustline_request_event.update(
         {
             "args": {
                 "_creditor": "0x123",
@@ -49,12 +51,13 @@ def web3_event_trustline_request(web3_event):
             "event": TrustlineRequestEventType,
         }
     )
-    return web3_event
+    return trustline_request_event
 
 
 @pytest.fixture()
 def web3_event_transfer(web3_event, test_extra_data):
-    web3_event.update(
+    trustlines_transfer_event = web3_event.copy()
+    trustlines_transfer_event.update(
         {
             "args": {
                 "_from": "0x123",
@@ -65,4 +68,4 @@ def web3_event_transfer(web3_event, test_extra_data):
             "event": TransferEventType,
         }
     )
-    return web3_event
+    return trustlines_transfer_event
