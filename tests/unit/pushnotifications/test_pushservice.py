@@ -47,45 +47,45 @@ def _instrument_messaging_service(app, status=200, payload=_DEFAULT_RESPONSE):
     return fcm_service, recorder
 
 
-class TestSend:
-    def test_send_on_blockchain_event(self, web3_event_transfer):
-        rawService = FirebaseRawPushService(app=admin_app)
+def test_send_on_blockchain_event(web3_event_transfer):
+    raw_service = FirebaseRawPushService(app=admin_app)
 
-        _, recorder = _instrument_messaging_service(app=rawService._app)
+    _, recorder = _instrument_messaging_service(app=raw_service._app)
 
-        event = TransferEvent(
-            web3_event=web3_event_transfer,
-            current_blocknumber=6,
-            timestamp=123456,
-            user="0x321",
-        )
+    event = TransferEvent(
+        web3_event=web3_event_transfer,
+        current_blocknumber=6,
+        timestamp=123456,
+        user="0x321",
+    )
 
-        message = _build_data_message(client_token="token", event=event)
+    message = _build_data_message(client_token="token", event=event)
 
-        FirebaseRawPushService.send_event(
-            self=rawService, client_token="token", event=event
-        )
+    FirebaseRawPushService.send_event(
+        self=raw_service, client_token="token", event=event
+    )
 
-        assert len(recorder) == 1
+    assert len(recorder) == 1
 
-        body = {"message": messaging._MessagingService.encode_message(message)}
-        assert json.loads(recorder[0].body.decode()) == body
+    body = {"message": messaging._MessagingService.encode_message(message)}
+    assert json.loads(recorder[0].body.decode()) == body
 
-    def test_send_on_non_blockchain_event(self):
-        raw_service = FirebaseRawPushService(app=admin_app)
 
-        _, recorder = _instrument_messaging_service(app=raw_service._app)
+def test_send_on_non_blockchain_event():
+    raw_service = FirebaseRawPushService(app=admin_app)
 
-        message = _build_data_message(client_token="token", event=message_event)
+    _, recorder = _instrument_messaging_service(app=raw_service._app)
 
-        FirebaseRawPushService.send_event(
-            self=raw_service, client_token="token", event=message_event
-        )
+    message = _build_data_message(client_token="token", event=message_event)
 
-        assert len(recorder) == 1
+    FirebaseRawPushService.send_event(
+        self=raw_service, client_token="token", event=message_event
+    )
 
-        body = {"message": messaging._MessagingService.encode_message(message)}
-        assert json.loads(recorder[0].body.decode()) == body
+    assert len(recorder) == 1
+
+    body = {"message": messaging._MessagingService.encode_message(message)}
+    assert json.loads(recorder[0].body.decode()) == body
 
 
 def test_build_data_prop_trustline_update(web3_event_trustline_update):
