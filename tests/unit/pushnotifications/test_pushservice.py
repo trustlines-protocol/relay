@@ -166,3 +166,5 @@ def test_build_firebase_data_message(web3_event_trustline_request):
     assert message.token == "token"
     assert message.android.priority == "high"
     assert message.apns.payload.aps.content_available == 1
+    assert message.apns.headers["apns-priority"] == "5"
+    assert message.apns.headers["apns-push-type"] == "background"
