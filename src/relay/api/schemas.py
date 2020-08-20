@@ -256,6 +256,7 @@ class IdentityInfosSchema(Schema):
     balance = BigInteger()
     nextNonce = fields.Integer()
     identity = Address()
+    implementationAddress = Address()
 
 
 class CurrencyNetworkSchema(Schema):
@@ -318,15 +319,15 @@ class TransferIdentifierSchema(Schema):
             block_hash is not None or log_index is not None
         ):
             raise ValidationError(
-                f"Cannot get transfer information using transaction hash and log index or block hash."
+                "Cannot get transfer information using transaction hash and log index or block hash."
             )
         elif block_hash is not None and log_index is None:
             raise ValidationError(
-                f"Cannot get transfer information using block hash if log index not provided."
+                "Cannot get transfer information using block hash if log index not provided."
             )
         elif log_index is not None and block_hash is None:
             raise ValidationError(
-                f"Cannot get transfer information using log index if block hash not provided."
+                "Cannot get transfer information using log index if block hash not provided."
             )
         elif log_index is None and block_hash is None and transaction_hash is None:
             raise ValidationError(

@@ -8,7 +8,9 @@ from tldeploy.identity import (
     MetaTransaction,
     UnexpectedIdentityContractException,
     deploy_proxied_identity,
+    get_pinned_proxy_interface,
 )
+from web3.exceptions import BadFunctionCallOutput
 
 ZERO_ADDRESS = "0x" + "0" * 40
 
@@ -85,6 +87,16 @@ class Delegate:
         try:
             return self.delegate.get_next_nonce(identity_address)
         except UnexpectedIdentityContractException:
+            raise InvalidIdentityContractException
+
+    def get_implementation_address(self, identity_address: str):
+        proxy_abi = get_pinned_proxy_interface()["abi"]
+        proxy_contract = self._web3.eth.contract(
+            abi=proxy_abi, address=identity_address
+        )
+        try:
+            return proxy_contract.functions.implementation().call()
+        except BadFunctionCallOutput:
             raise InvalidIdentityContractException
 
     def calculate_fees_for_meta_transaction(

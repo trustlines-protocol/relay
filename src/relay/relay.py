@@ -292,6 +292,9 @@ class TrustlinesRelay:
             "balance": self.node.balance(identity_address),
             "identity": identity_address,
             "nextNonce": self.delegate.calc_next_nonce(identity_address),
+            "implementationAddress": self.delegate.get_implementation_address(
+                identity_address
+            ),
         }
 
     def _install_w3_middleware(self):

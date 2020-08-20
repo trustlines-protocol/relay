@@ -805,7 +805,7 @@ Following additional attributes for `BalanceUpdate`:
         "from": "0xcbF1153F6e5AC01D363d432e24112e8aA56c55ce",
         "to": "0x7Ff66eb1A824FF9D1bB7e234a2d3B7A3b0345320",
         "status": "confirmed",
-        "transactionId": "0xb141aa3baec4e7151d8bd6ecab46d26b1add131e50bcc517c956a7ac979815cd"
+        "transactionId": "0xb141aa3baec4e7151d8bd6ecab46d26b1add131e50bcc517c956a7ac979815cd",
         "blockHash": "0x05c91f6506e78b1ca2413df9985ca7d37d2da5fc076c0b55c5d9eb9fdd7513a6",
         "logIndex": 2
     },
@@ -1503,9 +1503,9 @@ This endpoint can be used to deploy an identity contract to the blockchain.
 POST /identities
 ```
 #### Data Parameters
-| Name         | Type    | JSON Type                               | Required | Description            |
-|--------------|---------|-----------------------------------------|----------|------------------------|
-| ownerAddress | address | string - hex-encoded prefixed with "0x" | YES      | MetaTransaction object |
+| Name         | Type    | JSON Type                               | Required | Description                          |
+|--------------|---------|-----------------------------------------|----------|--------------------------------------|
+| ownerAddress | address | string - hex-encoded prefixed with "0x" | YES      | Address of the owner of the identity |
 
 
 
@@ -1519,15 +1519,16 @@ curl --header "Content-Type: application/json" \
 #### Response
 The endpoint returns an object with the following fields:
 
-| Name      | Type       | JSON Type                                 | Description                                   |
-|-----------|------------|-------------------------------------------|-----------------------------------------------|
-| identity  | address    | string - hex-encoded prefixed with "0x"   | the address of the deployed identity contract |
-| nextNonce | number     | number                                    | the next available nonce                      |
-| balance   | BigInteger | string                                    | contracts balance in wei                      |
+| Name                  | Type       | JSON Type                                 | Description                                              |
+|-----------------------|------------|-------------------------------------------|----------------------------------------------------------|
+| identity              | address    | string - hex-encoded prefixed with "0x"   | the address of the deployed identity contract            |
+| nextNonce             | number     | number                                    | the next available nonce                                 |
+| balance               | BigInteger | string                                    | contracts balance in wei                                 |
+| implementationAddress | address    | string - hex-encoded prefixed with "0x"   | Address of the implementation referenced by the identity |
 
 #### Example Response
 ```json
-{"identity": "0x43950642C8685ED8e3Fb89a5C5aeCb12862A87fd", "nextNonce": 0, "balance": "0"}
+{"identity": "0x43950642C8685ED8e3Fb89a5C5aeCb12862A87fd", "nextNonce": 0, "balance": "0", "implementationAddress": "0x8beec4Fa55Ab6908D05E6D8259D685fc6DD3619E"}
 ```
 
 ### Get authorized identity factories
@@ -1568,14 +1569,16 @@ curl https://relay0.testnet.trustlines.network/api/v1/identities/0x2AbCc1389258D
 #### Response
 The endpoint returns an object with the following fields:
 
-| Name      | Type       | JSON Type                                 | Description                                   |
-|-----------|---------   |-------------------------------------------|-----------------------------------------------|
-| identity  | string     | string - hex-encoded prefixed with "0x"   | the address of the deployed identity contract |
-| nextNonce | int        | number                                    | the next available nonce                      |
-| balance   | BigInteger | string                                    | contracts balance in wei                      |
+| Name                  | Type       | JSON Type                                 | Description                                              |
+|-----------------------|------------|-------------------------------------------|----------------------------------------------------------|
+| identity              | address    | string - hex-encoded prefixed with "0x"   | the address of the deployed identity contract            |
+| nextNonce             | number     | number                                    | the next available nonce                                 |
+| balance               | BigInteger | string                                    | contracts balance in wei                                 |
+| implementationAddress | address    | string - hex-encoded prefixed with "0x"   | Address of the implementation referenced by the identity |
+                            | contracts balance in wei                      |
 #### Example Response
 ```json
-{"identity": "0x2AbCc1389258Dc187DB787E33FD2B99d53695DE3", "nextNonce": 0, "balance": "0"}
+{"identity": "0x2AbCc1389258Dc187DB787E33FD2B99d53695DE3", "nextNonce": 0, "balance": "0", "implementationAddress": "0x8beec4Fa55Ab6908D05E6D8259D685fc6DD3619E"}
 ```
 
 ### Get relay version
