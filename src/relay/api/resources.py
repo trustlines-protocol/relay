@@ -94,15 +94,15 @@ def handle_meta_transaction_exceptions(function_to_call):
         except InvalidDelegationFeesException:
             abort(
                 400,
-                f"Invalid delegation fees: fees too low, not supported currency network of fees, "
-                f"or invalid fee recipient",
+                "Invalid delegation fees: fees too low, not supported currency network of fees, "
+                "or invalid fee recipient",
             )
         except InvalidTimeLimit:
             abort(400, f"Invalid time limit for meta-tx: {meta_transaction.time_limit}")
         except identity.ValidateTimeLimitNotFound:
             abort(
                 400,
-                f"The function to validate the time limit was not found in the contract",
+                "The function to validate the time limit was not found in the contract",
             )
         except InvalidChainId:
             abort(400, f"Invalid chain id for meta-tx: {meta_transaction.chain_id}")
@@ -114,17 +114,17 @@ def handle_meta_transaction_exceptions(function_to_call):
         except identity.ValidateNonceNotFound:
             abort(
                 400,
-                f"The function to validate the nonce and hash was not found in the contract",
+                "The function to validate the nonce and hash was not found in the contract",
             )
         except InvalidSignature:
             abort(400, f"Invalid signature for meta-tx: {meta_transaction.signature}")
         except identity.ValidateSignatureNotFound:
             abort(
                 400,
-                f"The function to validate the signature was not found in the contract",
+                "The function to validate the signature was not found in the contract",
             )
         except InvalidMetaTransactionException:
-            abort(400, f"The meta-transaction is invalid")
+            abort(400, "The meta-transaction is invalid")
         except InvalidIdentityContractException as exception:
             abort(
                 400,
@@ -672,7 +672,10 @@ class DeployIdentity(Resource):
             )
         except IdentityDeploymentFailedException:
             abort(400, "The identity deployment failed, identity already deployed?")
-        return self.trustlines.get_identity_info(identity_contract_address)
+        try:
+            return self.trustlines.get_identity_info(identity_contract_address)
+        except InvalidIdentityContractException:
+            abort(400, "The deployed identity is invalid.")
 
 
 class IdentityInfos(Resource):

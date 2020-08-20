@@ -6,12 +6,13 @@ system, where you can:
 - connect to a trustlines laika node via JSONRPC on port 8545
 - use the trustlines laika node as a metamask backend
 - connect to a relay server on port 5000 and interact with currency
-  networks running on chain
+  networks running on the chain
 
 Please be aware that you additionally might have to firewall the
 installed system if you don't want to expose those services.
 
 ## Services
+
 The docker-compose file contains service definitions for the following services:
 
 - db: A service running a postgres server. The postgres files will be
@@ -27,6 +28,7 @@ The docker-compose file contains service definitions for the following services:
 - relay: The relay server itself.
 
 ## Setup
+
 We need to do some initial setup and configuration for the system to work. You
 need to provide the `addresses.json` file, which should be put in the directory
 alongside the `docker-compose.yml` file.
@@ -45,11 +47,12 @@ deploy your own currency networks, please adapt `addresses.json` accordingly.
 
 
 ### Fetch docker image
+
 Let's first build and fetch all of the images that we will need
 without starting any services with the following command:
 
 ```sh
-$ docker-compose up --no-start
+docker-compose up --no-start
 ```
 
 ### Generate keys
@@ -93,10 +96,10 @@ We need to setup the database and import the ABIs for the index
 service by running the following commands:
 
 ```sh
-$ docker-compose up -d db
-$ sleep 2
-$ docker-compose run --rm index createtables
-$ docker-compose run --rm index importabi
+docker-compose up -d db
+sleep 2
+docker-compose run --rm index createtables
+docker-compose run --rm index importabi
 ```
 
 After that you can start the system with `docker-compose up -d`,
