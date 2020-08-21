@@ -26,7 +26,7 @@ eth-hash[pycryptodome,pysha3]==0.2.0  # via eth-bloom, eth-tester, eth-utils, tr
 eth-keyfile==0.5.1        # via contract-deploy-tools, eth-account
 eth-keys==0.2.4           # via eth-account, eth-keyfile, eth-tester, py-evm
 eth-rlp==0.1.2            # via eth-account
-eth-tester[py-evm]==0.4.0b1  # via contract-deploy-tools
+eth-tester[py-evm]==0.5.0b1  # via contract-deploy-tools
 eth-typing==2.2.1         # via eth-abi, eth-utils, py-ecc, py-evm, web3
 eth-utils==1.8.4          # via contract-deploy-tools, eth-abi, eth-account, eth-keyfile, eth-keys, eth-rlp, eth-tester, hexbytes, py-ecc, py-evm, rlp, trie, trustlines-relay (setup.py), web3
 firebase-admin==2.18.0    # via trustlines-relay (setup.py)
@@ -50,7 +50,6 @@ grpcio==1.27.2            # via google-api-core
 hexbytes==0.2.0           # via eth-account, eth-rlp, web3
 httplib2==0.18.0          # via google-api-python-client, google-auth-httplib2
 idna==2.9                 # via requests
-importlib-metadata==1.5.0  # via jsonschema
 ipfshttpclient==0.4.12    # via web3
 itsdangerous==1.1.0       # via flask
 jinja2==2.11.1            # via flask
@@ -70,7 +69,7 @@ protobuf==3.11.3          # via google-api-core, googleapis-common-protos, web3
 psycogreen==1.0.2         # via trustlines-relay (setup.py)
 psycopg2==2.8.4           # via trustlines-relay (setup.py)
 py-ecc==1.7.1             # via py-evm
-py-evm==0.3.0a11          # via eth-tester
+py-evm==0.3.0a15          # via eth-tester
 py-solc==3.2.0            # via contract-deploy-tools
 pyasn1-modules==0.2.8     # via google-auth
 pyasn1==0.4.8             # via pyasn1-modules, rsa
@@ -92,8 +91,8 @@ tinyrpc==1.0.4            # via trustlines-relay (setup.py)
 toml==0.10.0              # via trustlines-relay (setup.py)
 toolz==0.10.0             # via cytoolz
 trie==1.4.0               # via py-evm
-trustlines-contracts-bin==1.1.3  # via trustlines-contracts-deploy, trustlines-relay (setup.py)
-trustlines-contracts-deploy==1.1.3  # via trustlines-relay (setup.py)
+trustlines-contracts-bin==1.1.5  # via trustlines-contracts-deploy, trustlines-relay (setup.py)
+trustlines-contracts-deploy==1.1.5  # via trustlines-relay (setup.py)
 uritemplate==3.0.1        # via google-api-python-client
 urllib3==1.25.8           # via requests, sentry-sdk
 varint==1.0.2             # via multiaddr
@@ -102,7 +101,6 @@ webargs==5.5.3            # via trustlines-relay (setup.py)
 websockets==7.0           # via web3
 werkzeug==0.16.1          # via -r constraints.in, flask
 wrapt==1.12.1             # via trustlines-relay (setup.py)
-zipp==3.1.0               # via importlib-metadata
 
 # The following packages are considered to be unsafe in a requirements file:
 # setuptools
