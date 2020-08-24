@@ -18,7 +18,7 @@ click==7.1.1              # via -c requirements.txt, black, contract-deploy-tool
 contract-deploy-tools==0.7.2  # via -c requirements.txt, -r dev-requirements.in
 coverage==5.0.4           # via pytest-cov
 cytoolz==0.10.1           # via -c requirements.txt, eth-keyfile, eth-utils
-distlib==0.3.0            # via virtualenv
+distlib==0.3.1            # via virtualenv
 entrypoints==0.3          # via flake8
 eth-abi==2.1.1            # via -c requirements.txt, eth-account, eth-tester, web3
 eth-account==0.4.0        # via -c requirements.txt, web3
@@ -80,7 +80,7 @@ typed-ast==1.4.1          # via black, mypy
 typing-extensions==3.7.4.1  # via mypy
 urllib3==1.25.8           # via -c requirements.txt, requests
 varint==1.0.2             # via -c requirements.txt, multiaddr
-virtualenv==20.0.13       # via pre-commit, tox
+virtualenv==20.0.31       # via pre-commit, tox
 wcwidth==0.1.9            # via pytest
 web3==5.1.0               # via -c requirements.txt, contract-deploy-tools
 websockets==7.0           # via -c requirements.txt, web3
