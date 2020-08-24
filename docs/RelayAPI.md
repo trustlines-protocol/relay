@@ -1348,7 +1348,7 @@ The MetaTransaction object must have the following fields:
 ```bash
 curl --header "Content-Type: application/json" \
   --request POST \
-  --data '{"metaTransaction": {"from": "0xF2E246BB76DF876Cef8b38ae84130F4F55De395b", "to": "0x51a240271AB8AB9f9a21C82d9a85396b704E164d", "chainId": 61, "version": 1, "value": "0", "data": "0x46432830000000000000000000000000000000000000000000000000000000000000000a", "gasLimit": 0, "nonce": "1", "timeLimit": 0, "operationType": 0, signature": "0x6d2fe56ef6648cb3f0398966ad3b05d891cde786d8074bdac15bcb92ebfa7222489b8eb6ed87165feeede19b031bb69e12036a5fa13b3a46ad0c2c19d051ea9101"}}' \
+  --data '{"metaTransaction": {"from": "0xF2E246BB76DF876Cef8b38ae84130F4F55De395b", "to": "0x51a240271AB8AB9f9a21C82d9a85396b704E164d", "chainId": 61, "version": 1, "value": "0", "data": "0x46432830000000000000000000000000000000000000000000000000000000000000000a", "gasLimit": 0, "nonce": "1", "timeLimit": 0, "operationType": 0}}' \
   https://relay0.testnet.trustlines.network/api/v1/meta-transaction-fees
 ```
 
@@ -1503,9 +1503,11 @@ This endpoint can be used to deploy an identity contract to the blockchain.
 POST /identities
 ```
 #### Data Parameters
-| Name         | Type    | JSON Type                               | Required | Description                          |
-|--------------|---------|-----------------------------------------|----------|--------------------------------------|
-| ownerAddress | address | string - hex-encoded prefixed with "0x" | YES      | Address of the owner of the identity |
+| Name                  | Type    | JSON Type                               | Required | Description                                      |
+|-----------------------|---------|-----------------------------------------|----------|--------------------------------------------------|
+| factoryAddress        | address | string - hex-encoded prefixed with "0x" | YES      | Address of the owner of the identity             |
+| implementationAddress | address | string - hex-encoded prefixed with "0x" | YES      | Address of the owner of the identity             |
+| signature             | bytes   | string - hex-encoded prefixed with "0x" | YES      | Signature of owner on factory and implementation |
 
 
 
@@ -1513,7 +1515,7 @@ POST /identities
 ```bash
 curl --header "Content-Type: application/json" \
   --request POST \
-  --data '{"ownerAddress": "0xF2E246BB76DF876Cef8b38ae84130F4F55De395b"}' \
+  --data '{"factoryAddress": "0x43e7ed7F5bcc0beBE8758118fae8609607CD874f", "implementationAddress": "0x22e54f55D010542BEbabCe0Bb36dA64fB966caE1", "signature": "0x6d2fe56ef6648cb3f0398966ad3b05d891cde786d8074bdac15bcb92ebfa7222489b8eb6ed87165feeede19b031bb69e12036a5fa13b3a46ad0c2c19d051ea9101"}' \
   https://relay0.testnet.trustlines.network/api/v1/identities
 ```
 #### Response
@@ -1528,7 +1530,7 @@ The endpoint returns an object with the following fields:
 
 #### Example Response
 ```json
-{"identity": "0x43950642C8685ED8e3Fb89a5C5aeCb12862A87fd", "nextNonce": 0, "balance": "0", "implementationAddress": "0x8beec4Fa55Ab6908D05E6D8259D685fc6DD3619E"}
+{"identity": "0x43950642C8685ED8e3Fb89a5C5aeCb12862A87fd", "nextNonce": 0, "balance": "0", "implementationAddress": "0x22e54f55D010542BEbabCe0Bb36dA64fB966caE1"}
 ```
 
 ### Get authorized identity factories
