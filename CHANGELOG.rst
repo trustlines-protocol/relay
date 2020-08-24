@@ -11,6 +11,8 @@ Change Log
 - No longer watch address file for new currency networks, exchange, unwEth, identity proxy factory addresses
 - Deprecate config `relay.update_indexed_networks_interval`: it is no longer used and should be removed
 - Fix logging of unknown events with warning `MismatchedABIy`
+- Added: `identityImplementation` field to response of endpoint about identity information `api/v1/identities`
+
 
 `0.15.0`_ (2020-04-21)
 -------------------------------
