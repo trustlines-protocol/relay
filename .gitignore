@@ -69,3 +69,4 @@ target/
 
 # webstorm, pycharm ide
 .idea
+.DS_Store

@@ -15,7 +15,6 @@ from relay.events import Event, MessageEvent
 
 logger = logging.getLogger("pushservice")
 
-
 # see https://firebase.google.com/docs/cloud-messaging/admin/errors
 INVALID_CLIENT_TOKEN_ERRORS = [
     "invalid-registration-token",
@@ -51,21 +50,30 @@ def dedup_event_id(client_token, event: Event):
         return None
 
 
+def create_firebase_app_from_path_to_keyfile(path_to_keyfile: str):
+    cred = credentials.Certificate(path_to_keyfile)
+
+    app = firebase_admin.initialize_app(cred)
+
+    return app
+
+
 class FirebaseRawPushService:
     """Sends push notifications to firebase. Sending is done based on raw client tokens"""
 
-    def __init__(self, path_to_keyfile: str) -> None:
+    def __init__(self, app) -> None:
         """
         Initializes the push service
         Args:
-            path_to_keyfile: Path to json keyfile with firebase credentials
+            app: The initialized firebase_admin App
         """
-        cred = credentials.Certificate(path_to_keyfile)
-        self._app = firebase_admin.initialize_app(cred)
+
+        self._app = app
         self.cache = cachetools.TTLCache(100_000, ttl=3600)
 
     def send_event(self, client_token, event: Event):
-        message = _build_event_message(client_token, event)
+        message = _build_data_message(client_token, event)
+
         if message is not None:
             msgid = dedup_event_id(client_token, event)
             if msgid is not None and msgid in self.cache:
@@ -116,41 +124,46 @@ class FirebaseRawPushService:
         return True
 
 
-def _build_event_message(
-    client_token: str, event: Event
-) -> Optional[messaging.Message]:
+def _build_data_message(client_token: str, event: Event) -> Optional[messaging.Message]:
+    data = _build_data_prop(event=event)
 
-    notification = _build_notification(event)
-
-    if notification is not None:
-        return messaging.Message(
-            notification=_build_notification(event), data={}, token=client_token
+    if data is not None:
+        android_config = messaging.AndroidConfig(priority="high")
+        apns = messaging.APNSConfig(
+            headers={"apns-push-type": "background", "apns-priority": "5"},
+            payload=messaging.APNSPayload(aps=messaging.Aps(content_available=True),),
         )
-    else:
-        return None
+
+        return messaging.Message(
+            data=data, token=client_token, android=android_config, apns=apns
+        )
+
+    return None
 
 
-def _build_notification(event: Event) -> messaging.Notification:
-    notification = None
-    if isinstance(event, TransferEvent):
+def _build_data_prop(event: Event):
+    data = None
+
+    if isinstance(event, TrustlineUpdateEvent):
+        data = _get_data_prop_dict(event)
+    elif isinstance(event, TransferEvent):
         if event.direction == "received":
-            notification = messaging.Notification(
-                title="Payment received", body="Click for more details"
-            )
+            data = _get_data_prop_dict(event)
     elif isinstance(event, TrustlineRequestEvent):
         if event.direction == "received":
-            notification = messaging.Notification(
-                title="Trustline Update Request",
-                body="Someone wants to update a trustline",
-            )
-    elif isinstance(event, TrustlineUpdateEvent):
-        notification = messaging.Notification(
-            title="Trustline Update", body="A trustline was updated"
-        )
+            data = _get_data_prop_dict(event)
     elif isinstance(event, MessageEvent):
         if event.type == "PaymentRequest":
-            notification = messaging.Notification(
-                title="Payment Request", body="Click for more details"
-            )
+            data = {"message": event.message, "eventType": event.type}
 
-    return notification
+    return data
+
+
+def _get_data_prop_dict(event):
+    return {
+        "blockHash": str(event.block_hash.hex()),
+        "blockNumber": str(event.blocknumber),
+        "logIndex": str(event.log_index),
+        "transactionHash": str(event.transaction_hash.hex()),
+        "eventType": str(event.type),
+    }
