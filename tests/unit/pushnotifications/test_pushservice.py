@@ -28,8 +28,19 @@ requestMessagePayload = (
     '"user":"0xE85bd548b2C961A2385628dcbBcc9A2E480dD925"} '
 )
 
-message_event = MessageEvent(
+requestDeclineMessagePayload = (
+    '{"type":"PaymentRequestDecline","id":"0x5d57fabcc8b6055b",'
+    '"subject":"decline subject"} '
+)
+
+payment_request_message_event = MessageEvent(
     message=requestMessagePayload, type="PaymentRequest", timestamp=int(time.time())
+)
+
+payment_request_decline_message_event = MessageEvent(
+    message=requestDeclineMessagePayload,
+    type="PaymentRequestDecline",
+    timestamp=int(time.time()),
 )
 
 cred = MockCredential()
@@ -84,9 +95,11 @@ def test_send_on_blockchain_event(raw_push_service, recorder, web3_event_transfe
 
 
 def test_send_on_non_blockchain_event(raw_push_service, recorder):
-    raw_push_service.send_event(client_token="token", event=message_event)
+    raw_push_service.send_event(
+        client_token="token", event=payment_request_message_event
+    )
 
-    assert_body_has_correct_payload(recorder, message_event)
+    assert_body_has_correct_payload(recorder, payment_request_message_event)
 
 
 def test_build_data_prop_trustline_update(web3_event_trustline_update):
@@ -145,6 +158,21 @@ def test_build_data_prop_payment_request():
     data = _build_data_prop(payment_request_event)
 
     assert data == {"message": requestMessagePayload, "eventType": "PaymentRequest"}
+
+
+def test_build_data_prop_payment_request_decline():
+    payment_request_decline_event = MessageEvent(
+        message=requestDeclineMessagePayload,
+        type="PaymentRequestDecline",
+        timestamp=int(time.time()),
+    )
+
+    data = _build_data_prop(payment_request_decline_event)
+
+    assert data == {
+        "message": requestDeclineMessagePayload,
+        "eventType": "PaymentRequestDecline",
+    }
 
 
 def test_build_firebase_data_message(web3_event_trustline_request):
