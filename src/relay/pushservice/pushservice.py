@@ -153,7 +153,7 @@ def _build_data_prop(event: Event):
         if event.direction == "received":
             data = _get_data_prop_dict(event)
     elif isinstance(event, MessageEvent):
-        if event.type == "PaymentRequest":
+        if event.type in ["PaymentRequest", "PaymentRequestDecline"]:
             data = {"message": event.message, "eventType": event.type}
 
     return data
