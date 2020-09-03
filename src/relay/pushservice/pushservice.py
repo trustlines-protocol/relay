@@ -3,7 +3,7 @@ from typing import Optional
 
 import cachetools
 import firebase_admin
-from firebase_admin import credentials, messaging
+from firebase_admin import credentials, exceptions as firebase_exceptions, messaging
 
 from relay.blockchain.currency_network_events import (
     TransferEvent,
@@ -83,7 +83,7 @@ class FirebaseRawPushService:
                 messaging.send(message, app=self._app)
                 if msgid is not None:
                     self.cache[msgid] = True
-            except messaging.ApiCallError as e:
+            except firebase_exceptions.FirebaseError as e:
                 # Check if error code is because token is invalid
                 # see https://firebase.google.com/docs/cloud-messaging/admin/errors
                 if e.code in INVALID_CLIENT_TOKEN_ERRORS:
@@ -113,7 +113,7 @@ class FirebaseRawPushService:
             )  # dry run to test token
         except ValueError:
             return False
-        except messaging.ApiCallError as e:
+        except firebase_exceptions.FirebaseError as e:
             # Check if error code is because token is invalid
             # see https://firebase.google.com/docs/cloud-messaging/admin/errors
             if e.code in INVALID_CLIENT_TOKEN_ERRORS:
