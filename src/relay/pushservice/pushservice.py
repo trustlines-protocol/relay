@@ -120,7 +120,15 @@ class FirebaseRawPushService:
             if e.code in INVALID_CLIENT_TOKEN_ERRORS:
                 logger.debug(f"Invalid client token {client_token}: {e.code}")
                 return False
+            elif isinstance(e, firebase_exceptions.NotFoundError):
+                logger.debug(
+                    f"client token {client_token} not found on firebase: {e.code}"
+                )
+                return False
             else:
+                logger.debug(
+                    f"Error while checking client token {client_token}: {e.code}"
+                )
                 raise
         return True
 
