@@ -7,6 +7,7 @@ from firebase_admin import messaging
 
 from relay.blockchain.currency_network_events import (
     TransferEvent,
+    TrustlineRequestCancelEvent,
     TrustlineRequestEvent,
     TrustlineUpdateEvent,
 )
@@ -87,6 +88,7 @@ def test_send_on_blockchain_event(
     recorder,
     web3_event_transfer,
     web3_event_trustline_request,
+    web3_event_trustline_request_cancel,
     web3_event_trustline_update,
 ):
     events = [
@@ -102,10 +104,16 @@ def test_send_on_blockchain_event(
             timestamp=234567,
             user="0x321",
         ),
-        TrustlineUpdateEvent(
-            web3_event=web3_event_trustline_update,
+        TrustlineRequestCancelEvent(
+            web3_event=web3_event_trustline_request_cancel,
             current_blocknumber=8,
             timestamp=345678,
+            user="0x321",
+        ),
+        TrustlineUpdateEvent(
+            web3_event=web3_event_trustline_update,
+            current_blocknumber=9,
+            timestamp=456789,
             user="0x321",
         ),
     ]
@@ -170,6 +178,26 @@ def test_build_data_prop_trustline_request_event(web3_event_trustline_request):
     assert data == {
         "blockHash": "0x123456",
         "eventType": "TrustlineUpdateRequest",
+        "logIndex": "0",
+        "blockNumber": "5",
+        "transactionHash": "0x1234",
+    }
+
+
+def test_build_data_prop_trustline_request_cancel_event(
+    web3_event_trustline_request_cancel,
+):
+    event = TrustlineRequestCancelEvent(
+        web3_event=web3_event_trustline_request_cancel,
+        current_blocknumber=6,
+        timestamp=123456,
+        user="0x321",
+    )
+
+    data = _build_data_prop(event)
+    assert data == {
+        "blockHash": "0x123456",
+        "eventType": "TrustlineUpdateCancel",
         "logIndex": "0",
         "blockNumber": "5",
         "transactionHash": "0x1234",
