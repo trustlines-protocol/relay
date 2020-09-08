@@ -2,6 +2,7 @@ import pytest
 
 from relay.blockchain.currency_network_events import (
     TransferEventType,
+    TrustlineRequestCancelEventType,
     TrustlineRequestEventType,
     TrustlineUpdateEventType,
 )
@@ -52,6 +53,18 @@ def web3_event_trustline_request(web3_event):
         }
     )
     return trustline_request_event
+
+
+@pytest.fixture()
+def web3_event_trustline_request_cancel(web3_event):
+    trustline_request_cancel_event = web3_event.copy()
+    trustline_request_cancel_event.update(
+        {
+            "args": {"_initiator": "0x123", "_counterparty": "0x1234"},
+            "event": TrustlineRequestCancelEventType,
+        }
+    )
+    return trustline_request_cancel_event
 
 
 @pytest.fixture()

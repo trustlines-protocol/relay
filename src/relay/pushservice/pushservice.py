@@ -7,6 +7,7 @@ from firebase_admin import credentials, exceptions as firebase_exceptions, messa
 
 from relay.blockchain.currency_network_events import (
     TransferEvent,
+    TrustlineRequestCancelEvent,
     TrustlineRequestEvent,
     TrustlineUpdateEvent,
 )
@@ -150,6 +151,9 @@ def _build_data_prop(event: Event):
         if event.direction == "received":
             data = _get_data_prop_dict(event)
     elif isinstance(event, TrustlineRequestEvent):
+        if event.direction == "received":
+            data = _get_data_prop_dict(event)
+    elif isinstance(event, TrustlineRequestCancelEvent):
         if event.direction == "received":
             data = _get_data_prop_dict(event)
     elif isinstance(event, MessageEvent):
