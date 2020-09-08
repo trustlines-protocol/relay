@@ -147,13 +147,9 @@ def _build_data_prop(event: Event):
 
     if isinstance(event, TrustlineUpdateEvent):
         data = _get_data_prop_dict(event)
-    elif isinstance(event, TransferEvent):
-        if event.direction == "received":
-            data = _get_data_prop_dict(event)
-    elif isinstance(event, TrustlineRequestEvent):
-        if event.direction == "received":
-            data = _get_data_prop_dict(event)
-    elif isinstance(event, TrustlineRequestCancelEvent):
+    elif isinstance(
+        event, (TransferEvent, TrustlineRequestEvent, TrustlineRequestCancelEvent)
+    ):
         if event.direction == "received":
             data = _get_data_prop_dict(event)
     elif isinstance(event, MessageEvent):
