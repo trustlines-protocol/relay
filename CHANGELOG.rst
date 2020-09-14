@@ -4,6 +4,10 @@ Change Log
 `unreleased`_
 -------------------------------
 
+`0.18.0`_ (2020-09-14)
+-------------------------------
+- Fixed: error handling for firebase when client token is not found
+
 `0.17.1`_ (2020-09-08)
 -------------------------------
 - Added: `TrustlineRequestCancel` push notification support
@@ -237,4 +241,5 @@ Change Log
 .. _0.16.0: https://github.com/trustlines-protocol/relay/compare/0.15.0...0.16.0
 .. _0.17.0: https://github.com/trustlines-protocol/relay/compare/0.16.0...0.17.0
 .. _0.17.1: https://github.com/trustlines-protocol/relay/compare/0.17.0...0.17.1
-.. _unreleased: https://github.com/trustlines-protocol/relay/compare/0.17.1...master
+.. _0.18.0: https://github.com/trustlines-protocol/relay/compare/0.17.1...0.18.0
+.. _unreleased: https://github.com/trustlines-protocol/relay/compare/0.18.0...master
