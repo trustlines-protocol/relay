@@ -51,7 +51,7 @@ setup(
         "web3>=5.0,<6.0",
         "networkx>=2.0",
         "trustlines-contracts-bin>=1.1.5,<1.2.0",
-        "trustlines-contracts-deploy>=1.1.5,<1.2.0",
+        "trustlines-contracts-deploy>=1.1.6,<1.2.0",
         "sqlalchemy",
         "eth-utils",
         "tinyrpc",

@@ -36,6 +36,8 @@ flake8==3.7.9             # via -r dev-requirements.in, flake8-string-format
 hexbytes==0.2.0           # via -c requirements.txt, eth-account, eth-rlp, web3
 identify==1.4.12          # via pre-commit
 idna==2.9                 # via -c requirements.txt, requests
+importlib-metadata==1.7.0  # via -c requirements.txt, jsonschema, pluggy, pre-commit, pytest, virtualenv
+importlib-resources==3.0.0  # via pre-commit, virtualenv
 ipfshttpclient==0.4.12    # via -c requirements.txt, web3
 jsonschema==3.2.0         # via -c requirements.txt, web3
 lru-dict==1.1.6           # via -c requirements.txt, py-evm, web3
@@ -79,11 +81,12 @@ typed-ast==1.4.1          # via black, mypy
 typing-extensions==3.7.4.1  # via mypy
 urllib3==1.25.8           # via -c requirements.txt, requests
 varint==1.0.2             # via -c requirements.txt, multiaddr
-virtualenv==20.0.31       # via pre-commit, tox
+virtualenv==20.0.31       # via pre-commit
 wcwidth==0.1.9            # via pytest
 web3==5.1.0               # via -c requirements.txt, contract-deploy-tools
 websockets==7.0           # via -c requirements.txt, web3
 wheel==0.34.2             # via -r dev-requirements.in
+zipp==3.1.0               # via -c requirements.txt, importlib-metadata, importlib-resources
 
 # The following packages are considered to be unsafe in a requirements file:
 pip==20.1.1               # via -r dev-requirements.in, pip-tools

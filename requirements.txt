@@ -50,6 +50,7 @@ grpcio==1.27.2            # via google-api-core
 hexbytes==0.2.0           # via eth-account, eth-rlp, web3
 httplib2==0.18.0          # via google-api-python-client, google-auth-httplib2
 idna==2.9                 # via requests
+importlib-metadata==1.7.0  # via jsonschema
 ipfshttpclient==0.4.12    # via web3
 itsdangerous==1.1.0       # via flask
 jinja2==2.11.1            # via flask
@@ -92,7 +93,7 @@ toml==0.10.0              # via trustlines-relay (setup.py)
 toolz==0.10.0             # via cytoolz
 trie==1.4.0               # via py-evm
 trustlines-contracts-bin==1.1.5  # via trustlines-contracts-deploy, trustlines-relay (setup.py)
-trustlines-contracts-deploy==1.1.5  # via trustlines-relay (setup.py)
+trustlines-contracts-deploy==1.1.6  # via trustlines-relay (setup.py)
 uritemplate==3.0.1        # via google-api-python-client
 urllib3==1.25.8           # via requests, sentry-sdk
 varint==1.0.2             # via multiaddr
@@ -101,6 +102,7 @@ webargs==5.5.3            # via trustlines-relay (setup.py)
 websockets==7.0           # via web3
 werkzeug==0.16.1          # via -r constraints.in, flask
 wrapt==1.12.1             # via trustlines-relay (setup.py)
+zipp==3.1.0               # via importlib-metadata
 
 # The following packages are considered to be unsafe in a requirements file:
 # setuptools
