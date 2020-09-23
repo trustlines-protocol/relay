@@ -31,15 +31,17 @@ class EventBuilder:
     pretty much the same logic like relay.blockchain.Proxy (or its
     subclasses). The handling for timestamps is different. We also don't ask
     web3 for the currentBlock. It's passed in from the caller.
-    contract_types is a mapping from contract_address to type of the contract
+    address_to_contract_types is a mapping from contract_address to type of the contract
     to resolve naming collisions of events when used with different contract types.
     """
 
     def __init__(
-        self, _event_builders: Dict[str, Any], contract_types: Dict[str, str] = None
+        self,
+        _event_builders: Dict[str, Any],
+        address_to_contract_types: Dict[str, str] = None,
     ) -> None:
         self.event_builders = _event_builders
-        self.contract_types = contract_types
+        self.address_to_contract_types = address_to_contract_types
 
     def build_events(
         self, events: List[Any], current_blocknumber: int
@@ -53,9 +55,9 @@ class EventBuilder:
     def _build_event(self, event: Any, current_blocknumber: int) -> BlockchainEvent:
         event_type: str = event.get("event")
         timestamp: int = event.get("timestamp")
-        if self.contract_types is not None:
+        if self.address_to_contract_types is not None:
             address: str = event.get("address")
-            contract_type = self.contract_types[address]
+            contract_type = self.address_to_contract_types[address]
         else:
             contract_type = ""
         return self.event_builders[contract_type + event_type](
@@ -84,7 +86,7 @@ order_by_default_sort_order = """ ORDER BY blocknumber, transactionIndex, logInd
 
 class EthindexDB:
     """EthIndexDB provides an interface for ethindex database
-    it used to access events from the database.
+    it is used to access events from the database.
     """
 
     def __init__(
@@ -94,14 +96,16 @@ class EthindexDB:
         event_builders,
         from_to_types,
         address=None,
-        contract_types=None,
+        address_to_contract_types: Dict[str, str] = None,
     ):
         self.conn = conn
         self.default_address = address
         self.standard_event_types = standard_event_types
-        self.event_builder = EventBuilder(event_builders, contract_types=contract_types)
+        self.event_builder = EventBuilder(
+            event_builders, address_to_contract_types=address_to_contract_types
+        )
         self.from_to_types = from_to_types
-        self.contract_types = contract_types
+        self.address_to_contract_types = address_to_contract_types
 
     @property
     def event_types(self):
@@ -199,7 +203,7 @@ class EthindexDB:
         from_block: int = 0,
         contract_address: str = None,
     ) -> List[BlockchainEvent]:
-        # This function only works properly for many contracts if self.contract_types is properly set
+        # This function only works properly for many contracts if self.address_to_contract_types is properly set
         # TODO Refactor and move somewhere else
         contract_address = contract_address or self.default_address
 
@@ -216,7 +220,8 @@ class EthindexDB:
             args.append(contract_address)
         else:
             query_string += "AND address in %s "
-            args.append(tuple(self.contract_types))
+            # We assume self.address_to_contract_types is properly set and not None
+            args.append(tuple(self.address_to_contract_types))  # type: ignore
 
         query = EventsQuery(query_string, args)
 
@@ -322,7 +327,7 @@ class EthindexDB:
         event_types = self._get_standard_event_types(event_types)
 
         query = EventsQuery(
-            f"""blockHash=%s
+            """blockHash=%s
             AND eventName in %s
             AND transactionHash IN
                 (SELECT transactionHash "transactionHash" FROM events WHERE blockHash=%s AND logIndex=%s LIMIT 1)
@@ -440,7 +445,7 @@ class ExchangeEthindexDB(EthindexDB):
 
         event_types = self._get_standard_event_types([type])
 
-        query_string = f"""blockNumber>=%s
+        query_string = """blockNumber>=%s
                             AND eventName in %s
                             AND address in %S"""
         args = [from_block, event_types, all_exchange_addresses]

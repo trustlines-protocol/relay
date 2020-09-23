@@ -27,6 +27,7 @@ from relay.blockchain.delegate import (
     InvalidTimeLimit,
     UnknownIdentityFactoryException,
 )
+from relay.blockchain.exchange_events import all_event_types as all_exchange_event_types
 from relay.blockchain.unw_eth_events import all_event_types as all_unw_eth_event_types
 from relay.ethindex_db.events_informations import (
     EventNotFoundException,
@@ -34,7 +35,7 @@ from relay.ethindex_db.events_informations import (
     TransferNotFoundException,
 )
 from relay.network_graph.payment_path import FeePayer, PaymentPath
-from relay.relay import TrustlinesRelay
+from relay.relay import TrustlinesRelay, all_event_contract_types
 from relay.utils import get_version, sha3
 
 from .schemas import (
@@ -379,9 +380,16 @@ class UserEvents(Resource):
         "type": fields.Str(
             required=False,
             validate=validate.OneOf(
-                all_currency_network_event_types + all_unw_eth_event_types
+                all_currency_network_event_types
+                + all_unw_eth_event_types
+                + all_exchange_event_types
             ),
             missing=None,
+        ),
+        "contractType": fields.Str(
+            required=False,
+            missing=None,
+            validate=validate.OneOf(all_event_contract_types),
         ),
     }
 
@@ -390,9 +398,13 @@ class UserEvents(Resource):
     def get(self, args, user_address: str):
         type = args["type"]
         from_block = args["fromBlock"]
+        contract_type = args["contractType"]
 
         return self.trustlines.get_user_events(
-            user_address, type=type, from_block=from_block,
+            user_address,
+            event_type=type,
+            from_block=from_block,
+            contract_type=contract_type,
         )
 
 

@@ -57,6 +57,8 @@ https://relay0.testnet.trustlines.network/api/v1
 
 ---
 
+## Network context
+
 ### Currency networks list
 Returns all registered currency networks with high-level information.
 #### Request
@@ -1004,23 +1006,30 @@ The `paymentPath` is an object with the following attributes:
 
 ---
 
-### Events of user in all currency networks
-Returns a list of event logs of an user in all currency networks. That means all events where the given user address is either `from` or `to`.
+## User context
+
+### All events of users for currency networks / exchanges / tokens / unweth.
+Returns a list of all event logs of a user. That means all events where the given user address is either `from` or `to`.
+You can filter what type of events you want with `contractType` to select the contract
+and `type` to select the name of the events within the contract.
 #### Request
 ```
-GET /users/:user/events?type=:type&fromBlock=:fromBlock
+GET /users/:user/events?type=:type&fromBlock=:fromBlock&contractType:=contractType
 ```
 #### Example Request
 ```
-curl https://relay0.testnet.trustlines.network/api/v1/users/0xcbF1153F6e5AC01D363d432e24112e8aA56c55ce/events?type=TrustlineUpdate&fromBlock=123456
+curl https://relay0.testnet.trustlines.network/api/v1/users/0xcbF1153F6e5AC01D363d432e24112e8aA56c55ce/events?type=TrustlineUpdate&fromBlock=123456&contractType=CurrencyNetwork
 ```
 #### URL Parameters
 |Name|Type|Required|Description|
 |-|-|-|-|
 |user|string|YES|Address of user|
 |type|string|NO|Either `TrustlineUpdate`, `TrustlineUpdateRequest`, `TrustlineUpdateCancel` or `Transfer`|
+|contractType|string|NO|Either `CurrencyNetwork`, `Exchange`, `UnwETH` or `Token`|
 |fromBlock|int|NO|Start of block range|
 #### Response
+For events from currency networks, they will have the following attributes:
+
 | Attribute      | Type   | Description                                                                               |
 |----------------|--------|-------------------------------------------------------------------------------------------|
 | networkAddress | string | Address of currency network                                                               |
@@ -1244,6 +1253,8 @@ curl https://relay0.testnet.trustlines.network/api/v1/users/0xE56d3f8096c765f29A
 ```
 
 ---
+
+## Other
 
 ### Latest block number
 Returns the latest block number.
