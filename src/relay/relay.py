@@ -4,6 +4,7 @@ import os
 import time
 from collections import defaultdict
 from copy import deepcopy
+from enum import Enum
 from typing import Dict, Iterable, List, NamedTuple, Optional
 
 import eth_account
@@ -72,10 +73,12 @@ class NetworkInfo(NamedTuple):
     is_frozen: bool
 
 
-CURRENCY_CONTRACT_TYPE = "C"
-EXCHANGE_CONTRACT_TYPE = "E"
-TOKEN_CONTRACT_TYPE = "T"
-UNWETH_CONTRACT_TYPE = "U"
+class ContractTypes(Enum):
+    CURRENCY_NETWORK = "CurrencyNetwork"
+    EXCHANGE = "Exchange"
+    UNWETH = "UnwETH"
+    TOKEN = "Token"
+
 
 all_standard_event_types = (
     currency_network_events.standard_event_types
@@ -85,18 +88,19 @@ all_standard_event_types = (
 )
 all_event_builders: Dict[str, BlockchainEvent] = {}
 all_from_to_types: Dict[str, List[str]] = {}
+all_event_contract_types = [contract_type.value for contract_type in ContractTypes]
 for contract_type, contract in [
-    (CURRENCY_CONTRACT_TYPE, currency_network_events),
-    (EXCHANGE_CONTRACT_TYPE, exchange_events),
-    (UNWETH_CONTRACT_TYPE, unw_eth_events),
-    (TOKEN_CONTRACT_TYPE, token_events),
+    (ContractTypes.CURRENCY_NETWORK, currency_network_events),
+    (ContractTypes.EXCHANGE, exchange_events),
+    (ContractTypes.UNWETH, unw_eth_events),
+    (ContractTypes.TOKEN, token_events),
 ]:
     for key, value in contract.event_builders.items():  # type: ignore
-        key = contract_type + key
+        key = contract_type.value + key
         assert key not in all_event_builders
         all_event_builders[key] = value
     for key, value in contract.from_to_types.items():  # type: ignore
-        key = contract_type + key
+        key = contract_type.value + key
         assert key not in all_from_to_types
         all_from_to_types[key] = value
 
@@ -540,31 +544,46 @@ class TrustlinesRelay:
         return events
 
     def get_user_events(
-        self, user_address: str, type: str = None, from_block: int = 0,
+        self,
+        user_address: str,
+        event_type: str = None,
+        from_block: int = 0,
+        contract_type: ContractTypes = None,
     ) -> List[BlockchainEvent]:
+        """
+        Get all events of users for user_address.
+        Filter with from_block, event_type and contract_type
+        """
         assert is_checksum_address(user_address)
         event_types: Optional[List[str]]
-        if type:
-            event_types = [type]
+        if event_type:
+            event_types = [event_type]
         else:
             event_types = None
 
-        contract_types: Dict[str, str] = {}
-        for address in self.network_addresses:
-            contract_types[address] = CURRENCY_CONTRACT_TYPE
-        for address in self.exchange_addresses:
-            contract_types[address] = EXCHANGE_CONTRACT_TYPE
-        for address in self.token_addresses:
-            contract_types[address] = TOKEN_CONTRACT_TYPE
-        for address in self.unw_eth_addresses:
-            contract_types[address] = UNWETH_CONTRACT_TYPE
+        address_to_contract_types: Dict[str, str] = {}
+
+        if contract_type == ContractTypes.CURRENCY_NETWORK or contract_type is None:
+            for address in self.network_addresses:
+                address_to_contract_types[
+                    address
+                ] = ContractTypes.CURRENCY_NETWORK.value
+        if contract_type == ContractTypes.EXCHANGE or contract_type is None:
+            for address in self.exchange_addresses:
+                address_to_contract_types[address] = ContractTypes.EXCHANGE.value
+        if contract_type == ContractTypes.TOKEN or contract_type is None:
+            for address in self.token_addresses:
+                address_to_contract_types[address] = ContractTypes.TOKEN.value
+        if contract_type == ContractTypes.UNWETH or contract_type is None:
+            for address in self.unw_eth_addresses:
+                address_to_contract_types[address] = ContractTypes.UNWETH.value
 
         ethindex = ethindex_db.EthindexDB(
             ethindex_db.connect(""),
             standard_event_types=all_standard_event_types,
             event_builders=all_event_builders,
             from_to_types=all_from_to_types,
-            contract_types=contract_types,
+            address_to_contract_types=address_to_contract_types,
         )
         return ethindex.get_all_contract_events(
             event_types, user_address=user_address, from_block=from_block,
