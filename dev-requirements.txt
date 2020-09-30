@@ -15,7 +15,7 @@ certifi==2019.11.28       # via -c requirements.txt, requests
 cfgv==3.1.0               # via pre-commit
 chardet==3.0.4            # via -c requirements.txt, requests
 click==7.1.1              # via -c requirements.txt, black, contract-deploy-tools, pip-tools
-contract-deploy-tools==0.7.2  # via -c requirements.txt, -r dev-requirements.in
+contract-deploy-tools==0.7.3  # via -c requirements.txt, -r dev-requirements.in
 coverage==5.0.4           # via pytest-cov
 cytoolz==0.10.1           # via -c requirements.txt, eth-keyfile, eth-utils
 distlib==0.3.1            # via virtualenv
@@ -78,13 +78,13 @@ toml==0.10.0              # via -c requirements.txt, black, pre-commit
 toolz==0.10.0             # via -c requirements.txt, cytoolz
 trie==1.4.0               # via -c requirements.txt, py-evm
 typed-ast==1.4.1          # via black, mypy
-typing-extensions==3.7.4.1  # via mypy
+typing-extensions==3.7.4.3  # via -c requirements.txt, mypy, web3
 urllib3==1.25.8           # via -c requirements.txt, requests
 varint==1.0.2             # via -c requirements.txt, multiaddr
 virtualenv==20.0.31       # via pre-commit
 wcwidth==0.1.9            # via pytest
-web3==5.1.0               # via -c requirements.txt, contract-deploy-tools
-websockets==7.0           # via -c requirements.txt, web3
+web3==5.7.0               # via -c requirements.txt, contract-deploy-tools
+websockets==8.1           # via -c requirements.txt, web3
 wheel==0.34.2             # via -r dev-requirements.in
 zipp==3.1.0               # via -c requirements.txt, importlib-metadata, importlib-resources
 

@@ -10,7 +10,7 @@ import gevent
 import hexbytes
 from gevent import Greenlet
 from gevent.queue import Queue
-from web3._utils.events import get_event_data
+from web3.types import EventData
 
 from .events import BlockchainEvent
 
@@ -170,10 +170,9 @@ class Proxy(object):
         events = []
         for log in receipt["logs"]:
             try:
-                abi = self._get_abi_for_log(log)
-                rich_log = get_event_data(abi, log)
-                if event_types is None or rich_log["event"] in event_types:
-                    events.append(rich_log)
+                processed_log = self._get_processed_log_from_raw_log(log)
+                if event_types is None or processed_log["event"] in event_types:
+                    events.append(processed_log)
             except AbiNotFoundException:
                 pass
 
@@ -188,8 +187,19 @@ class Proxy(object):
 
     def _register_raw_event_log(self, raw_event_log) -> None:
         """Registers a new log to be decoded and sent to the correct event listener"""
-        event = get_event_data(self._get_abi_for_log(raw_event_log), raw_event_log)
-        self._event2log_queue[event.event].put(event)
+        log = self._get_processed_log_from_raw_log(raw_event_log)
+        self._event2log_queue[log["event"]].put(log)
+
+    def _get_processed_log_from_raw_log(self, raw_event_log) -> EventData:
+        event_abi = self._get_abi_for_log(raw_event_log)
+        # The only public api to process the log is through the `contract` class, so we create one
+        contract_of_event = self._web3.eth.contract(
+            address=raw_event_log["address"], abi=[event_abi]
+        )
+        events_of_contract = contract_of_event.events
+        event_of_log = getattr(events_of_contract, event_abi["name"])()
+
+        return event_of_log.processLog(raw_event_log)
 
     def _get_abi_for_log(self, raw_event_log):
         topic = hexbytes.HexBytes(raw_event_log["topics"][0])
