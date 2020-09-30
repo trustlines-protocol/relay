@@ -16,7 +16,7 @@ cachetools==4.0.0         # via google-auth, trustlines-relay (setup.py)
 certifi==2019.11.28       # via requests, sentry-sdk
 chardet==3.0.4            # via requests
 click==7.1.1              # via contract-deploy-tools, flask, trustlines-contracts-deploy, trustlines-relay (setup.py)
-contract-deploy-tools==0.7.2  # via trustlines-contracts-deploy
+contract-deploy-tools==0.7.3  # via trustlines-contracts-deploy
 cytoolz==0.10.1           # via eth-keyfile, eth-utils
 decorator==4.4.2          # via networkx
 eth-abi==2.1.1            # via eth-account, eth-tester, web3
@@ -94,12 +94,13 @@ toolz==0.10.0             # via cytoolz
 trie==1.4.0               # via py-evm
 trustlines-contracts-bin==1.1.5  # via trustlines-contracts-deploy, trustlines-relay (setup.py)
 trustlines-contracts-deploy==1.1.6  # via trustlines-relay (setup.py)
+typing-extensions==3.7.4.3  # via web3
 uritemplate==3.0.1        # via google-api-python-client
 urllib3==1.25.8           # via requests, sentry-sdk
 varint==1.0.2             # via multiaddr
-web3==5.1.0               # via contract-deploy-tools, trustlines-contracts-deploy, trustlines-relay (setup.py)
+web3==5.7.0               # via contract-deploy-tools, trustlines-contracts-deploy, trustlines-relay (setup.py)
 webargs==5.5.3            # via trustlines-relay (setup.py)
-websockets==7.0           # via web3
+websockets==8.1           # via web3
 werkzeug==0.16.1          # via -r constraints.in, flask
 wrapt==1.12.1             # via trustlines-relay (setup.py)
 zipp==3.1.0               # via importlib-metadata
