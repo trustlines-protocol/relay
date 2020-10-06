@@ -1,0 +1,6 @@
+export PGHOST=127.0.0.1
+export PGUSER=trustlines_test
+export POSTGRES_USER=trustlines_test
+export PGDATABASE=trustlines_test
+export PGPASSWORD=test123
+export POSTGRES_PASSWORD=test123
