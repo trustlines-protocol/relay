@@ -221,7 +221,7 @@ class CurrencyNetworkProxy(currency_network_proxy.CurrencyNetworkProxy):
         self._proxy.functions.freezeNetwork().transact()
 
 
-@pytest.fixture()
+@pytest.fixture(scope="session")
 def trustlines(accounts):
     return [
         (accounts[0], accounts[1], 100, 150),
@@ -234,7 +234,7 @@ def trustlines(accounts):
     ]  # (A, B, clAB, clBA)
 
 
-@pytest.fixture()
+@pytest.fixture(scope="session")
 def trustlines_with_interests(accounts):
     return [
         (accounts[0], accounts[1], 1234, 1234, 2000, 1000),
@@ -286,13 +286,23 @@ def testnetwork1_address(web3):
     return deploy_test_network(web3).address
 
 
-@pytest.fixture()
+@pytest.fixture(scope="session")
 def testnetwork2_address(web3):
     return deploy_test_network(web3).address
 
 
-@pytest.fixture()
+@pytest.fixture(scope="session")
 def testnetwork3_address(web3):
+    return deploy_test_network(web3).address
+
+
+@pytest.fixture(scope="session")
+def testnetwork4_address(web3):
+    return deploy_test_network(web3).address
+
+
+@pytest.fixture(scope="session")
+def testnetwork5_address(web3):
     return deploy_test_network(web3).address
 
 
@@ -362,6 +372,32 @@ def currency_network_with_trustlines_and_interests(
     currency_network.setup_trustlines_with_interests_with_updates(
         trustlines_with_interests
     )
+
+    return currency_network
+
+
+@pytest.fixture(scope="session")
+def currency_network_with_trustlines_and_interests_session(
+    web3, currency_network_abi, testnetwork4_address, trustlines_with_interests
+):
+    currency_network = CurrencyNetworkProxy(
+        web3, currency_network_abi, testnetwork4_address
+    )
+    currency_network.setup_trustlines_with_interests_with_updates(
+        trustlines_with_interests
+    )
+
+    return currency_network
+
+
+@pytest.fixture(scope="session")
+def currency_network_with_trustlines_session(
+    web3, currency_network_abi, testnetwork5_address, trustlines
+):
+    currency_network = CurrencyNetworkProxy(
+        web3, currency_network_abi, testnetwork5_address
+    )
+    currency_network.setup_trustlines(trustlines)
 
     return currency_network
 

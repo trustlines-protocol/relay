@@ -8,6 +8,8 @@ from subprocess import Popen
 
 import pytest
 
+INDEXER_REQUIRED_CONFIRMATION = 10_000
+
 
 class TimeoutException(Exception):
     pass
@@ -107,7 +109,13 @@ class Service:
         """Starts the service and wait for it to be up """
         if self.process:
             raise ServiceAlreadyStarted
-        self.process = Popen(self.args, env=self.env, **self._process_settings)
+        self.process = Popen(
+            self.args,
+            env=self.env,
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+            **self._process_settings,
+        )
         try:
             self._wait_for_up()
             return self.process
@@ -148,14 +156,48 @@ class Service:
 
 
 class PostgresDatabase(Service):
-    def __init__(self, *, name=None):
+    def __init__(self, environment_variables):
+
+        self.path_to_docker_compose = os.path.join(
+            os.getcwd(),
+            "tests/chain_integration/database_integration/docker-compose.yml",
+        )
+        self.environment_variables = environment_variables
 
         super().__init__(
-            ["docker-compose", "up", "postgress"], name=name,
+            ["docker-compose", "-f", self.path_to_docker_compose, "up", "postgres"],
+            env=environment_variables,
+            name="Postgres database",
         )
 
     def is_up(self):
-        return True
+        try:
+            subprocess.run(
+                [
+                    "pg_isready",
+                    "-d",
+                    "trustlines_test",
+                    "-h",
+                    "127.0.0.1",
+                    "-p",
+                    "5432",
+                    "-U",
+                    "trustlines_test",
+                ],
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL,
+                check=True,
+            )
+            return True
+        except subprocess.CalledProcessError:
+            return False
+
+    def terminate(self):
+        super().terminate()
+        Popen(
+            ["docker-compose", "-f", self.path_to_docker_compose, "down"],
+            env=self.environment_variables,
+        )
 
 
 @pytest.fixture(scope="session")
@@ -177,28 +219,31 @@ def environment_variables():
 @pytest.fixture(scope="session")
 def postgres_database(environment_variables):
 
-    path_to_docker_compose = os.path.join(
-        os.getcwd(), "tests/chain_integration/database_integration/docker-compose.yml"
-    )
+    database = PostgresDatabase(environment_variables)
+    database.start()
 
-    process = Popen(
-        ["docker-compose", "-f", path_to_docker_compose, "up", "postgres"],
-        env=environment_variables,
-    )
-    time.sleep(3)
+    yield database
 
-    yield process
-
-    process = Popen(
-        ["docker-compose", "-f", path_to_docker_compose, "down"],
-        env=environment_variables,
-    )
+    database.terminate()
 
 
-@pytest.fixture()
-def address_file_path(testnetwork2_address):
+@pytest.fixture(scope="session")
+def address_file_path(
+    currency_network_with_trustlines_and_interests_session,
+    currency_network_with_trustlines_session,
+    currency_network,
+):
     with open("addresses.json", "w") as f:
-        json.dump({"networks": [testnetwork2_address]}, f)
+        json.dump(
+            {
+                "networks": [
+                    currency_network_with_trustlines_and_interests_session.address,
+                    currency_network_with_trustlines_session.address,
+                    currency_network.address,
+                ]
+            },
+            f,
+        )
     return "addresses.json"
 
 
@@ -207,18 +252,19 @@ def abi_file_path():
     return os.path.join(sys.prefix, "trustlines-contracts", "build", "contracts.json")
 
 
-@pytest.fixture(autouse=True)
+@pytest.fixture(autouse=True, scope="session")
 def start_indexer(
     postgres_database, environment_variables, address_file_path, abi_file_path
 ):
-    createtables_process = Popen(
-        ["ethindex", "createtables"], env=environment_variables
+    subprocess.run(
+        ["ethindex", "createtables"],
+        env=environment_variables,
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.DEVNULL,
+        check=True,
     )
-    all_processes = [createtables_process]
 
-    time.sleep(5)
-
-    import_abi_process = Popen(
+    subprocess.run(
         [
             "ethindex",
             "importabi",
@@ -228,11 +274,12 @@ def start_indexer(
             address_file_path,
         ],
         env=environment_variables,
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.DEVNULL,
+        check=True,
     )
-    all_processes.append(import_abi_process)
 
-    time.sleep(5)
-
+    # out = sys.stdout
     runsync_process = Popen(
         [
             "ethindex",
@@ -240,21 +287,37 @@ def start_indexer(
             "--jsonrpc",
             "http://localhost:8545",
             "--waittime",
-            "200",
+            "100",
+            "--required-confirmations",
+            f"{INDEXER_REQUIRED_CONFIRMATION}",
         ],
         env=environment_variables,
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.DEVNULL,
     )
-    all_processes.append(runsync_process)
 
     yield
 
-    for process in all_processes:
-        try:
-            process.terminate()
-            process.wait(timeout=5)
-        except subprocess.TimeoutExpired:
-            warnings.warn(
-                "start_indexer did not terminate in time and had to be killed"
-            )
-            process.kill()
-            process.wait(timeout=5)
+    try:
+        runsync_process.terminate()
+        runsync_process.wait(timeout=5)
+    except subprocess.TimeoutExpired:
+        warnings.warn("start_indexer did not terminate in time and had to be killed")
+        runsync_process.kill()
+        runsync_process.wait(timeout=5)
+
+
+@pytest.fixture(autouse=True)
+def chain_cleanup(chain, web3):
+    """Cleans up the chain by replacing blocks with empty blocks, and giving time for the indexer to clean up."""
+    # We mine blocks because the indexer will not remove the events of blocks if it does not receive replacing blocks
+    snapshot = chain.take_snapshot()
+    yield
+    last_block_number = web3.eth.blockNumber
+    assert (
+        INDEXER_REQUIRED_CONFIRMATION > last_block_number
+    ), "The reverted chain was final and events cannot be deleted."
+    chain.revert_to_snapshot(snapshot)
+    reverted_block_number = web3.eth.blockNumber
+    chain.mine_blocks(last_block_number - reverted_block_number)
+    time.sleep(1)

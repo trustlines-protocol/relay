@@ -78,7 +78,7 @@ class EventsInformationFetcher:
             all_accrued_interests, start_time, end_time
         )
 
-    def get_transfer_details_for_id(self, block_hash, log_index):
+    def get_transfer_details_for_id(self, block_hash: str, log_index: int):
         all_events_of_tx = self._currency_network_db.get_transaction_events_by_event_id(
             block_hash,
             log_index,
@@ -103,7 +103,7 @@ class EventsInformationFetcher:
 
         return [self.get_transfer_details(all_events_of_tx, transfer_event)]
 
-    def get_transfer_details_for_tx(self, tx_hash):
+    def get_transfer_details_for_tx(self, tx_hash: str):
 
         all_events_of_tx = self._currency_network_db.get_transaction_events(
             tx_hash, event_types=(TransferEventType, BalanceUpdateEventType)

@@ -264,7 +264,7 @@ class TrustlinesRelay:
             network_address, user_address, counterparty_address, start_time, end_time
         )
 
-    def get_transfer_information_for_tx_hash(self, tx_hash):
+    def get_transfer_information_for_tx_hash(self, tx_hash: str):
         fetcher = EventsInformationFetcher(self.get_ethindex_db_for_currency_network())
         return fetcher.get_transfer_details_for_tx(tx_hash)
 
