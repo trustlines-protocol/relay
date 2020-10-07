@@ -13,6 +13,7 @@ INDEXER_REQUIRED_CONFIRMATION = 10_000
 POSTGRES_USER = "trustlines_test"
 POSTGRES_PASSWORD = "test123"
 POSTGRES_DATABASE = "trustlines_test"
+POSTGRES_PORT = 5434
 PROCESS_TIME_OF_ETHINDEX = 1  # upper bound on the time ethindex needs to process events
 
 
@@ -175,19 +176,26 @@ class PostgresDatabase(Service):
             name="Postgres database",
         )
 
+    def start(self):
+        if is_port_in_use(POSTGRES_PORT):
+            raise EnvironmentError(
+                f"The port {POSTGRES_PORT} to be used by the database is already in use on the machine."
+            )
+        super().start()
+
     def is_up(self):
         try:
             subprocess.run(
                 [
                     "pg_isready",
                     "-d",
-                    "trustlines_test",
+                    POSTGRES_DATABASE,
                     "-h",
                     "127.0.0.1",
                     "-p",
-                    "5432",
+                    f"{POSTGRES_PORT}",
                     "-U",
-                    "trustlines_test",
+                    POSTGRES_USER,
                 ],
                 stdout=subprocess.DEVNULL,
                 stderr=subprocess.DEVNULL,
@@ -205,6 +213,13 @@ class PostgresDatabase(Service):
         )
 
 
+def is_port_in_use(port):
+    import socket
+
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+        return s.connect_ex(("localhost", port)) == 0
+
+
 @pytest.fixture(scope="session")
 def environment_variables():
     env = {
@@ -212,6 +227,7 @@ def environment_variables():
         "POSTGRES_USER": POSTGRES_USER,
         "POSTGRES_PASSWORD": POSTGRES_PASSWORD,
         "PGHOST": "127.0.0.1",
+        "PGPORT": f"{POSTGRES_PORT}",
         "PGDATABASE": POSTGRES_DATABASE,
         "PGUSER": POSTGRES_USER,
         "PGPASSWORD": POSTGRES_PASSWORD,
@@ -271,8 +287,8 @@ def start_indexer(
     subprocess.run(
         ["ethindex", "createtables"],
         env=environment_variables,
-        stdout=subprocess.DEVNULL,
-        stderr=subprocess.DEVNULL,
+        # stdout=subprocess.DEVNULL,
+        # stderr=subprocess.DEVNULL,
         check=True,
     )
 

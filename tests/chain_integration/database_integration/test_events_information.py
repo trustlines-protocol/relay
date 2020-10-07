@@ -6,6 +6,7 @@ import pytest
 from tests.chain_integration.database_integration.conftest import (
     POSTGRES_DATABASE,
     POSTGRES_PASSWORD,
+    POSTGRES_PORT,
     POSTGRES_USER,
     PROCESS_TIME_OF_ETHINDEX,
 )
@@ -51,6 +52,7 @@ def make_ethindex_db(network_address):
         database=POSTGRES_DATABASE,
         user=POSTGRES_USER,
         password=POSTGRES_PASSWORD,
+        port=POSTGRES_PORT,
     )
     return ethindex_db.CurrencyNetworkEthindexDB(
         conn,
