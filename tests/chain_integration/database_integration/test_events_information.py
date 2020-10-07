@@ -3,6 +3,12 @@ from enum import Enum, auto
 
 import psycopg2
 import pytest
+from tests.chain_integration.database_integration.conftest import (
+    POSTGRES_DATABASE,
+    POSTGRES_PASSWORD,
+    POSTGRES_USER,
+    PROCESS_TIME_OF_ETHINDEX,
+)
 
 from relay.blockchain import currency_network_events
 from relay.ethindex_db import ethindex_db
@@ -15,58 +21,40 @@ from relay.network_graph.payment_path import FeePayer
 
 def wait_for_event_processing():
     """Wait a certain time to let the eth-indexer catch the events and populate the database."""
-    time.sleep(1)
+    time.sleep(PROCESS_TIME_OF_ETHINDEX)
 
 
 @pytest.fixture(scope="session")
 def ethindex_db_for_currency_network(currency_network):
-    conn = psycopg2.connect(
-        cursor_factory=psycopg2.extras.RealDictCursor,
-        database="trustlines_test",
-        user="trustlines_test",
-        password="test123",
-    )
-    return ethindex_db.CurrencyNetworkEthindexDB(
-        conn,
-        address=currency_network.address,
-        standard_event_types=currency_network_events.standard_event_types,
-        event_builders=currency_network_events.event_builders,
-        from_to_types=currency_network_events.from_to_types,
-    )
+    return make_ethindex_db(currency_network.address)
 
 
 @pytest.fixture(scope="session")
 def ethindex_db_for_currency_network_with_trustlines(
     currency_network_with_trustlines_session,
 ):
-    conn = psycopg2.connect(
-        cursor_factory=psycopg2.extras.RealDictCursor,
-        database="trustlines_test",
-        user="trustlines_test",
-        password="test123",
-    )
-    return ethindex_db.CurrencyNetworkEthindexDB(
-        conn,
-        address=currency_network_with_trustlines_session.address,
-        standard_event_types=currency_network_events.standard_event_types,
-        event_builders=currency_network_events.event_builders,
-        from_to_types=currency_network_events.from_to_types,
-    )
+    return make_ethindex_db(currency_network_with_trustlines_session.address)
 
 
 @pytest.fixture(scope="session")
 def ethindex_db_for_currency_network_with_trustlines_and_interests(
     currency_network_with_trustlines_and_interests_session,
 ):
+    return make_ethindex_db(
+        currency_network_with_trustlines_and_interests_session.address
+    )
+
+
+def make_ethindex_db(network_address):
     conn = psycopg2.connect(
         cursor_factory=psycopg2.extras.RealDictCursor,
-        database="trustlines_test",
-        user="trustlines_test",
-        password="test123",
+        database=POSTGRES_DATABASE,
+        user=POSTGRES_USER,
+        password=POSTGRES_PASSWORD,
     )
     return ethindex_db.CurrencyNetworkEthindexDB(
         conn,
-        address=currency_network_with_trustlines_and_interests_session.address,
+        address=network_address,
         standard_event_types=currency_network_events.standard_event_types,
         event_builders=currency_network_events.event_builders,
         from_to_types=currency_network_events.from_to_types,

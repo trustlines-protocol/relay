@@ -7,8 +7,13 @@ import warnings
 from subprocess import Popen
 
 import pytest
+from deploy_tools.plugin import EXPOSE_RPC_OPTION
 
 INDEXER_REQUIRED_CONFIRMATION = 10_000
+POSTGRES_USER = "trustlines_test"
+POSTGRES_PASSWORD = "test123"
+POSTGRES_DATABASE = "trustlines_test"
+PROCESS_TIME_OF_ETHINDEX = 1  # upper bound on the time ethindex needs to process events
 
 
 class TimeoutException(Exception):
@@ -204,12 +209,12 @@ class PostgresDatabase(Service):
 def environment_variables():
     env = {
         **os.environ,
-        "POSTGRES_USER": "trustlines_test",
-        "POSTGRES_PASSWORD": "test123",
+        "POSTGRES_USER": POSTGRES_USER,
+        "POSTGRES_PASSWORD": POSTGRES_PASSWORD,
         "PGHOST": "127.0.0.1",
-        "PGDATABASE": "trustlines_test",
-        "PGUSER": "trustlines_test",
-        "PGPASSWORD": "test123",
+        "PGDATABASE": POSTGRES_DATABASE,
+        "PGUSER": POSTGRES_USER,
+        "PGPASSWORD": POSTGRES_PASSWORD,
         "LC_ALL": "C.UTF-8",  # to make click work with subprocess / Popen
         "LANG": "C.UTF-8",  # to make click work with subprocess / Popen
     }
@@ -257,7 +262,11 @@ def abi_file_path():
 
 @pytest.fixture(autouse=True, scope="session")
 def start_indexer(
-    postgres_database, environment_variables, address_file_path, abi_file_path
+    postgres_database,
+    environment_variables,
+    address_file_path,
+    abi_file_path,
+    pytestconfig,
 ):
     subprocess.run(
         ["ethindex", "createtables"],
@@ -282,13 +291,13 @@ def start_indexer(
         check=True,
     )
 
-    # out = sys.stdout
+    exposed_port = pytestconfig.getoption(EXPOSE_RPC_OPTION)
     runsync_process = Popen(
         [
             "ethindex",
             "runsync",
             "--jsonrpc",
-            "http://localhost:8545",
+            f"http://localhost:{exposed_port}",
             "--waittime",
             "100",
             "--required-confirmations",
@@ -323,4 +332,4 @@ def chain_cleanup(chain, web3):
     chain.revert_to_snapshot(snapshot)
     reverted_block_number = web3.eth.blockNumber
     chain.mine_blocks(last_block_number - reverted_block_number)
-    time.sleep(1)
+    time.sleep(PROCESS_TIME_OF_ETHINDEX)
