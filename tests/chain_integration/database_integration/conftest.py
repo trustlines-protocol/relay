@@ -46,10 +46,6 @@ class Timer:
         return self.time_passed > self.timeout
 
     @property
-    def is_started(self):
-        return self.start_time is not None
-
-    @property
     def time_left(self):
         if self.start_time is None:
             raise ValueError("Timer is not started yet")
@@ -62,47 +58,31 @@ class Timer:
         return time.time() - self.start_time
 
 
-def assert_within_timeout(check_function, timeout, poll_period=0.5):
-    """
-    Runs a check_function with assertions and give it some time to pass
-    :param check_function: The function which will be periodically called. It should contain some assertions
-    :param timeout: After this timeout non passing assertion will be raised
-    :param poll_period: poll interval to check the check_function
-    """
-    with Timer(timeout) as timer:
-        while True:
-            try:
-                check_function()
-            except AssertionError as e:
-                if not timer.is_timed_out():
-                    time.sleep(min(poll_period, timer.time_left))
-                else:
-                    raise TimeoutException(
-                        f"Assertion did not pass after {timeout} seconds. See causing exception for more details."
-                    ) from e
-            else:
-                break
-
-
-def assert_after_timout(check_function, timeout):
-    time.sleep(timeout)
-    check_function()
-
-
-class Service:
+class PostgresDatabase:
     def __init__(
         self,
-        args,
+        environment_variables,
         *,
-        name=None,
-        env=None,
         timeout=5,
         poll_interval=0.2,
         process_settings=None,
     ):
-        self.args = args
-        self.name = name
-        self.env = env
+
+        self.path_to_docker_compose = os.path.join(
+            os.getcwd(),
+            "tests/chain_integration/database_integration/docker-compose.yml",
+        )
+        self.environment_variables = environment_variables
+
+        self.args = [
+            "docker-compose",
+            "-f",
+            self.path_to_docker_compose,
+            "up",
+            "postgres",
+        ]
+        self.name = "Postgres database"
+        self.env = environment_variables
         self.timeout = timeout
         self.poll_interval = poll_interval
         self.process = None
@@ -112,9 +92,14 @@ class Service:
             self._process_settings = {}
 
     def start(self):
-        """Starts the service and wait for it to be up """
+        """Starts the postgres database and wait for it to be up"""
+        if is_port_in_use(POSTGRES_PORT):
+            raise EnvironmentError(
+                f"The port {POSTGRES_PORT} to be used by the database is already in use on the machine."
+            )
         if self.process:
             raise ServiceAlreadyStarted
+
         self.process = Popen(
             self.args,
             env=self.env,
@@ -128,10 +113,6 @@ class Service:
         except TimeoutException:
             self.terminate()
             raise
-
-    def is_up(self):
-        """Determine if the service is up"""
-        return True
 
     def _wait_for_up(self):
         with Timer(self.timeout) as timer:
@@ -147,41 +128,6 @@ class Service:
                         time.sleep(min(self.poll_interval, timer.time_left))
                 else:
                     break
-
-    def terminate(self):
-        if self.process is None:
-            return
-        try:
-            self.process.terminate()
-            self.process.wait(timeout=5)
-        except subprocess.TimeoutExpired:
-            warnings.warn(f"{self.name} did not terminate in time and had to be killed")
-            self.process.kill()
-            self.process.wait(timeout=5)
-        self.process = None
-
-
-class PostgresDatabase(Service):
-    def __init__(self, environment_variables):
-
-        self.path_to_docker_compose = os.path.join(
-            os.getcwd(),
-            "tests/chain_integration/database_integration/docker-compose.yml",
-        )
-        self.environment_variables = environment_variables
-
-        super().__init__(
-            ["docker-compose", "-f", self.path_to_docker_compose, "up", "postgres"],
-            env=environment_variables,
-            name="Postgres database",
-        )
-
-    def start(self):
-        if is_port_in_use(POSTGRES_PORT):
-            raise EnvironmentError(
-                f"The port {POSTGRES_PORT} to be used by the database is already in use on the machine."
-            )
-        super().start()
 
     def is_up(self):
         try:
@@ -206,7 +152,16 @@ class PostgresDatabase(Service):
             return False
 
     def terminate(self):
-        super().terminate()
+        if self.process is None:
+            return
+        try:
+            self.process.terminate()
+            self.process.wait(timeout=5)
+        except subprocess.TimeoutExpired:
+            warnings.warn(f"{self.name} did not terminate in time and had to be killed")
+            self.process.kill()
+            self.process.wait(timeout=5)
+        self.process = None
         Popen(
             ["docker-compose", "-f", self.path_to_docker_compose, "down"],
             env=self.environment_variables,
@@ -330,7 +285,7 @@ def start_indexer(
         runsync_process.terminate()
         runsync_process.wait(timeout=5)
     except subprocess.TimeoutExpired:
-        warnings.warn("start_indexer did not terminate in time and had to be killed")
+        warnings.warn("runsync_process did not terminate in time and had to be killed")
         runsync_process.kill()
         runsync_process.wait(timeout=5)
 
