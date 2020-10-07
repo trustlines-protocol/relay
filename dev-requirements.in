@@ -11,3 +11,4 @@ pytest-cov
 mypy
 contract-deploy-tools>=0.7.1
 pre-commit
+eth-index
