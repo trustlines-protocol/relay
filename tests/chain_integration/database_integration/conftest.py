@@ -287,8 +287,8 @@ def start_indexer(
     subprocess.run(
         ["ethindex", "createtables"],
         env=environment_variables,
-        # stdout=subprocess.DEVNULL,
-        # stderr=subprocess.DEVNULL,
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.DEVNULL,
         check=True,
     )
 
