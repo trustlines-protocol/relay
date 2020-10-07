@@ -229,11 +229,14 @@ def postgres_database(environment_variables):
 
 @pytest.fixture(scope="session")
 def address_file_path(
+    tmp_path_factory,
     currency_network_with_trustlines_and_interests_session,
     currency_network_with_trustlines_session,
     currency_network,
 ):
-    with open("addresses.json", "w") as f:
+    tmp_path_factory.mktemp("tmp_test_dir")
+    path = os.path.join(tmp_path_factory.getbasetemp(), "addresses.json")
+    with open(path, "w") as f:
         json.dump(
             {
                 "networks": [
@@ -244,7 +247,7 @@ def address_file_path(
             },
             f,
         )
-    return "addresses.json"
+    return path
 
 
 @pytest.fixture(scope="session")
