@@ -27,3 +27,4 @@ def test_tx_status_pending(web3, node, accounts, chain):
         {"from": accounts[0], "to": accounts[1], "value": 10}
     )
     assert node.get_transaction_status(tx_hash) == TransactionStatus.PENDING
+    chain.enable_auto_mine_transactions()

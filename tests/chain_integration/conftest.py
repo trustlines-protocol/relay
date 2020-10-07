@@ -292,17 +292,12 @@ def testnetwork2_address(web3):
 
 
 @pytest.fixture(scope="session")
-def testnetwork3_address(web3):
+def testnetwork3_address(web3, chain):
     return deploy_test_network(web3).address
 
 
 @pytest.fixture(scope="session")
 def testnetwork4_address(web3):
-    return deploy_test_network(web3).address
-
-
-@pytest.fixture(scope="session")
-def testnetwork5_address(web3):
     return deploy_test_network(web3).address
 
 
@@ -378,10 +373,10 @@ def currency_network_with_trustlines_and_interests(
 
 @pytest.fixture(scope="session")
 def currency_network_with_trustlines_and_interests_session(
-    web3, currency_network_abi, testnetwork4_address, trustlines_with_interests
+    web3, currency_network_abi, testnetwork3_address, trustlines_with_interests
 ):
     currency_network = CurrencyNetworkProxy(
-        web3, currency_network_abi, testnetwork4_address
+        web3, currency_network_abi, testnetwork3_address
     )
     currency_network.setup_trustlines_with_interests_with_updates(
         trustlines_with_interests
@@ -392,10 +387,10 @@ def currency_network_with_trustlines_and_interests_session(
 
 @pytest.fixture(scope="session")
 def currency_network_with_trustlines_session(
-    web3, currency_network_abi, testnetwork5_address, trustlines
+    web3, currency_network_abi, testnetwork4_address, trustlines
 ):
     currency_network = CurrencyNetworkProxy(
-        web3, currency_network_abi, testnetwork5_address
+        web3, currency_network_abi, testnetwork4_address
     )
     currency_network.setup_trustlines(trustlines)
 
