@@ -278,6 +278,19 @@ class TrustlinesRelay:
             tx_hash, event_types=FeePaymentEventType
         )
 
+    def get_earned_mediation_fees(self, user_address, network_address):
+        current_network_graph = self.currency_network_graphs[network_address]
+        empty_graph = CurrencyNetworkGraph(
+            capacity_imbalance_fee_divisor=current_network_graph.capacity_imbalance_fee_divisor,
+            default_interest_rate=current_network_graph.default_interest_rate,
+            custom_interests=current_network_graph.custom_interests,
+            prevent_mediator_interests=current_network_graph.prevent_mediator_interests,
+        )
+        event_selector = self.get_ethindex_db_for_currency_network(network_address)
+        return EventsInformationFetcher(event_selector).get_earned_mediation_fees(
+            user_address, empty_graph
+        )
+
     def deploy_identity(self, factory_address, implementation_address, signature):
         return self.delegate.deploy_identity(
             factory_address, implementation_address, signature

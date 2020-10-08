@@ -1,7 +1,7 @@
 import logging
 import math
 from operator import attrgetter
-from typing import Iterable, List
+from typing import Iterable, List, Optional, Union, cast
 
 import attr
 import toolz
@@ -11,10 +11,12 @@ from relay.blockchain.currency_network_events import (
     BalanceUpdateEventType,
     TransferEvent,
     TransferEventType,
+    TrustlineUpdateEvent,
     TrustlineUpdateEventType,
 )
 from relay.blockchain.events import BlockchainEvent
 from relay.ethindex_db.ethindex_db import CurrencyNetworkEthindexDB
+from relay.network_graph.graph import CurrencyNetworkGraph
 from relay.network_graph.interests import calculate_interests
 from relay.network_graph.payment_path import FeePayer
 
@@ -40,6 +42,15 @@ class TransferInformation:
     total_fees = attr.ib()
     fees_paid = attr.ib()
     extra_data = attr.ib()
+
+
+@attr.s
+class MediationFee:
+    value = attr.ib()
+    from_ = attr.ib()
+    to = attr.ib()
+    transaction_hash = attr.ib()
+    timestamp = attr.ib()
 
 
 class EventsInformationFetcher:
@@ -247,6 +258,181 @@ class EventsInformationFetcher:
             if accrued_interest.timestamp == timestamp:
                 return accrued_interest.value
         return 0
+
+    def get_earned_mediation_fees(
+        self, user_address: str, graph: CurrencyNetworkGraph
+    ) -> List[MediationFee]:
+        useful_event_types = [
+            BalanceUpdateEventType,
+            TransferEventType,
+            TrustlineUpdateEventType,
+        ]
+        all_events = self._currency_network_db.get_all_network_events(
+            user_address=user_address, event_types=useful_event_types
+        )
+        all_events = sorted_events(all_events)
+
+        # This event is a standalone balance update that could be:
+        # - the first event of a couple of balance updates for a mediated transfer
+        # - the first event of a transfer initiated by the user
+        # - the last event of a transfer directed to the user
+        # - due to an application of interests from a trustline update
+        last_standalone_balance_update: Optional[BalanceUpdateEvent] = None
+        fees_earned: List[MediationFee] = []
+
+        for event in all_events:
+            if event.type == TrustlineUpdateEventType:
+                event = cast(TrustlineUpdateEvent, event)
+                if does_trustline_update_trigger_balance_update(graph, event):
+                    # The last standalone balance update is not due to mediation, but to interests on trustline update
+                    assert (
+                        last_standalone_balance_update is not None
+                    ), "Found trustline update that should trigger balance update but did not find balance update"
+                    apply_event_on_graph(graph, last_standalone_balance_update)
+                    last_standalone_balance_update = None
+
+                apply_event_on_graph(graph, event)
+
+            elif event.type == TransferEventType:
+                # The last standalone balance update is not due to mediation, but to a transfer from/to user
+                assert (
+                    last_standalone_balance_update is not None
+                ), "Found transfer event but did not previously find balance update"
+                apply_event_on_graph(graph, last_standalone_balance_update)
+                last_standalone_balance_update = None
+
+            elif event.type == BalanceUpdateEventType:
+                event = cast(BalanceUpdateEvent, event)
+                if last_standalone_balance_update is None:
+                    last_standalone_balance_update = event
+                else:
+                    # We found a mediation from the user
+                    safety_checks_on_mediated_transfer_balance_updates(
+                        user_address, event, last_standalone_balance_update
+                    )
+
+                    fee = get_mediation_fee_from_balance_updates(
+                        graph, user_address, last_standalone_balance_update, event
+                    )
+                    fees_earned.append(fee)
+
+                    apply_event_on_graph(graph, event)
+                    apply_event_on_graph(graph, last_standalone_balance_update)
+                    last_standalone_balance_update = None
+
+            else:
+                raise RuntimeError(f"Invalid event type received: {event.type}")
+
+        return fees_earned
+
+
+def does_trustline_update_trigger_balance_update(
+    graph: CurrencyNetworkGraph, trustline_update_event: TrustlineUpdateEvent
+):
+    # If the interests rate change and the balance was not 0
+    # a BalanceUpdate event will be emitted due to application of interests
+    trustline = graph.get_account_summary(
+        trustline_update_event.from_,
+        trustline_update_event.to,
+        trustline_update_event.timestamp,
+    )
+    return trustline.balance != 0 and (
+        trustline.interest_rate_given != trustline_update_event.interest_rate_given
+        or trustline.interest_rate_received
+        != trustline_update_event.interest_rate_received
+    )
+
+
+def get_mediation_fee_from_balance_updates(
+    graph: CurrencyNetworkGraph,
+    user_address: str,
+    first_event: BalanceUpdateEvent,
+    second_event: BalanceUpdateEvent,
+) -> MediationFee:
+    """
+    Get the balance change of a user that mediated a transfer A -> user -> B
+    The two events must be given as ordered by log index
+    """
+    assert (
+        first_event.log_index == second_event.log_index - 1
+    ), "Received unexpected non-consecutive events."
+
+    first_balance_change = (
+        graph.get_balance_with_interests(
+            first_event.from_, first_event.to, first_event.timestamp,
+        )
+        - first_event.value
+    )
+    second_balance_change = (
+        graph.get_balance_with_interests(
+            second_event.from_, second_event.to, second_event.timestamp,
+        )
+        - second_event.value
+    )
+    fee_value = abs(second_balance_change - first_balance_change)
+
+    if first_event.from_ == user_address:
+        # transfer sender pays, emits first user->B and second A-> user
+        transfer_sender = second_event.from_
+        transfer_receiver = first_event.to
+    elif first_event.to == user_address:
+        # transfer receiver pays emits first A->user and second user->B
+        transfer_sender = first_event.from_
+        transfer_receiver = second_event.to
+    else:
+        raise RuntimeError("Could not find user_address in first_event.")
+
+    fee = MediationFee(
+        value=fee_value,
+        from_=transfer_sender,
+        to=transfer_receiver,
+        transaction_hash=first_event.transaction_hash,
+        timestamp=first_event.timestamp,
+    )
+
+    return fee
+
+
+def safety_checks_on_mediated_transfer_balance_updates(
+    user_address: str, first_event: BalanceUpdateEvent, second_event: BalanceUpdateEvent
+):
+    if first_event.to == second_event.from_:
+        assert first_event.to == user_address
+    elif second_event.to == first_event.from_:
+        assert second_event.to == user_address
+    else:
+        assert False, "Found a mediated transfer with to/from not matching"
+    assert (
+        first_event.timestamp == second_event.timestamp
+    ), "Found a mediated transfer with events timestamp not matching"
+    assert (
+        first_event.blocknumber == second_event.blocknumber
+    ), "Found a mediated transfer with events block number not matching"
+    assert (
+        abs(first_event.log_index - second_event.log_index) == 1
+    ), "Found a mediated transfer with events log index difference greater than 1"
+
+
+def apply_event_on_graph(
+    graph: CurrencyNetworkGraph, event: Union[TrustlineUpdateEvent, BalanceUpdateEvent]
+):
+    if event.type == TrustlineUpdateEventType:
+        event = cast(TrustlineUpdateEvent, event)
+        graph.update_trustline(
+            event.from_,
+            event.to,
+            event.creditline_given,
+            event.creditline_received,
+            event.interest_rate_given,
+            event.interest_rate_received,
+        )
+    elif event.type == BalanceUpdateEventType:
+        event = cast(BalanceUpdateEvent, event)
+        graph.update_balance(event.from_, event.to, event.value, event.timestamp)
+    else:
+        raise RuntimeError(
+            f"Invalid event to be applied on graph, type received: {event.type}"
+        )
 
 
 def balance_viewed_from_user(balance_update_event):

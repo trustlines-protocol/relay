@@ -63,7 +63,7 @@ class PostgresDatabase:
         self,
         environment_variables,
         *,
-        timeout=5,
+        timeout=7,
         poll_interval=0.2,
         process_settings=None,
     ):

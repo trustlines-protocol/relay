@@ -43,7 +43,7 @@ class Client:
 
     def transfer_details(self, block_hash, log_index):
         details = self.get(
-            f"transfers", params={"blockHash": block_hash, "logIndex": log_index}
+            "transfers", params={"blockHash": block_hash, "logIndex": log_index}
         )
         return details[0]
 

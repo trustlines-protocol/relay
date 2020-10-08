@@ -7,7 +7,6 @@ from typing import Any, Dict, Iterable, List, Optional
 import psycopg2
 import psycopg2.extras
 
-from relay.blockchain import currency_network_events
 from relay.blockchain.events import BlockchainEvent, TLNetworkEvent
 
 # proxy.get_all_events just asks for these network events. so we need the list
@@ -370,7 +369,10 @@ class CurrencyNetworkEthindexDB(EthindexDB):
         return self.get_user_events(event_type, user_address, from_block)
 
     def get_all_network_events(
-        self, user_address: str = None, from_block: int = 0
+        self,
+        user_address: str = None,
+        from_block: int = 0,
+        event_types: Iterable[str] = None,
     ) -> List[BlockchainEvent]:
         if self.default_address is None:
             # if the default address is not set we will get events from non currency network contracts
@@ -378,7 +380,7 @@ class CurrencyNetworkEthindexDB(EthindexDB):
                 "Cannot get all network events if CurrencyNetworkEthindexDB address is not set."
             )
         return self.get_all_contract_events(
-            currency_network_events.standard_event_types, user_address, from_block,
+            event_types=event_types, user_address=user_address, from_block=from_block,
         )
 
     def get_trustline_events(
