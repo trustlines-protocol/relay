@@ -16,6 +16,7 @@ from relay.ethindex_db.events_informations import (
     EventsInformationFetcher,
     IdentifiedNotPartOfTransferException,
 )
+from relay.network_graph.graph import CurrencyNetworkGraph
 from relay.network_graph.payment_path import FeePayer
 
 
@@ -359,3 +360,42 @@ def test_transfer_by_wrong_balance_update(
         EventsInformationFetcher(
             ethindex_db_for_currency_network
         ).get_transfer_details_for_id(event["blockHash"].hex(), event["logIndex"])
+
+
+@pytest.mark.parametrize("fee_payer", ["sender", "receiver"])
+def test_get_mediation_fees(
+    ethindex_db_for_currency_network_with_trustlines_and_interests,
+    currency_network_with_trustlines_and_interests_session,
+    web3,
+    accounts,
+    fee_payer,
+):
+    currency_network = currency_network_with_trustlines_and_interests_session
+    if fee_payer == "sender":
+        tx_hash = currency_network.transfer_on_path(
+            150, [accounts[0], accounts[1], accounts[2]]
+        )
+    else:
+        tx_hash = currency_network.transfer_receiver_pays_on_path(
+            150, [accounts[0], accounts[1], accounts[2]]
+        )
+    timestamp = web3.eth.getBlock("latest")["timestamp"]
+    graph = CurrencyNetworkGraph(
+        capacity_imbalance_fee_divisor=currency_network.capacity_imbalance_fee_divisor,
+        default_interest_rate=currency_network.default_interest_rate,
+        custom_interests=currency_network.custom_interests,
+        prevent_mediator_interests=currency_network.prevent_mediator_interests,
+    )
+    wait_for_event_processing()
+
+    fees = EventsInformationFetcher(
+        ethindex_db_for_currency_network_with_trustlines_and_interests
+    ).get_earned_mediation_fees(accounts[1], graph)
+
+    assert len(fees) == 1
+    fee = fees[0]
+    assert fee.value == 2
+    assert fee.from_ == accounts[0]
+    assert fee.to == accounts[2]
+    assert fee.transaction_hash == tx_hash
+    assert fee.timestamp == timestamp
