@@ -9,6 +9,6 @@ flake8-string-format
 pytest
 pytest-cov
 mypy
-contract-deploy-tools>=0.7.1
+contract-deploy-tools>=0.8.0
 pre-commit
 eth-index

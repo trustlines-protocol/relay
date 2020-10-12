@@ -76,6 +76,18 @@ def test_extra_data():
     return hexbytes.HexBytes("0x12345678123456781234567812345678")
 
 
+LOCAL_DATABASE_OPTION = "--local-db"
+
+
+def pytest_addoption(parser):
+    parser.addoption(
+        LOCAL_DATABASE_OPTION, default=False, help="Whether to use a local database"
+    )
+    parser.addini(
+        LOCAL_DATABASE_OPTION, default=False, help="Whether to use a local database"
+    )
+
+
 class TestDataReader:
     def __init__(self):
         self.testdata = {}
