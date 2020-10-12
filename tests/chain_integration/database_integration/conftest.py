@@ -8,12 +8,12 @@ from subprocess import Popen
 
 import pytest
 from deploy_tools.plugin import EXPOSE_RPC_OPTION
+from tests.conftest import LOCAL_DATABASE_OPTION
 
 INDEXER_REQUIRED_CONFIRMATION = 10_000
 POSTGRES_USER = "trustlines_test"
 POSTGRES_PASSWORD = "test123"
 POSTGRES_DATABASE = "trustlines_test"
-POSTGRES_PORT = 5434
 PROCESS_TIME_OF_ETHINDEX = 1  # upper bound on the time ethindex needs to process events
 
 
@@ -93,9 +93,10 @@ class PostgresDatabase:
 
     def start(self):
         """Starts the postgres database and wait for it to be up"""
-        if is_port_in_use(POSTGRES_PORT):
+        if is_port_in_use(self.environment_variables["PGPORT"]):
             raise EnvironmentError(
-                f"The port {POSTGRES_PORT} to be used by the database is already in use on the machine."
+                f"The port {self.environment_variables['PGPORT']} "
+                f"to be used by the database is already in use on the machine."
             )
         if self.process:
             raise ServiceAlreadyStarted
@@ -139,7 +140,7 @@ class PostgresDatabase:
                     "-h",
                     "127.0.0.1",
                     "-p",
-                    f"{POSTGRES_PORT}",
+                    f"{self.environment_variables['PGPORT']}",
                     "-U",
                     POSTGRES_USER,
                 ],
@@ -172,17 +173,30 @@ def is_port_in_use(port):
     import socket
 
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-        return s.connect_ex(("localhost", port)) == 0
+        return s.connect_ex(("localhost", int(port))) == 0
 
 
 @pytest.fixture(scope="session")
-def environment_variables():
+def use_local_database(pytestconfig):
+    return pytestconfig.getoption(LOCAL_DATABASE_OPTION)
+
+
+@pytest.fixture(scope="session")
+def postgres_port(use_local_database):
+    if use_local_database:
+        return 5432
+    else:
+        return 5434
+
+
+@pytest.fixture(scope="session")
+def environment_variables(postgres_port):
     env = {
         **os.environ,
         "POSTGRES_USER": POSTGRES_USER,
         "POSTGRES_PASSWORD": POSTGRES_PASSWORD,
         "PGHOST": "127.0.0.1",
-        "PGPORT": f"{POSTGRES_PORT}",
+        "PGPORT": f"{postgres_port}",
         "PGDATABASE": POSTGRES_DATABASE,
         "PGUSER": POSTGRES_USER,
         "PGPASSWORD": POSTGRES_PASSWORD,
@@ -190,17 +204,6 @@ def environment_variables():
         "LANG": "C.UTF-8",  # to make click work with subprocess / Popen
     }
     return env
-
-
-@pytest.fixture(scope="session")
-def postgres_database(environment_variables):
-
-    database = PostgresDatabase(environment_variables)
-    database.start()
-
-    yield database
-
-    database.terminate()
 
 
 @pytest.fixture(scope="session")
@@ -231,19 +234,32 @@ def abi_file_path():
     return os.path.join(sys.prefix, "trustlines-contracts", "build", "contracts.json")
 
 
-@pytest.fixture(autouse=True, scope="session")
+@pytest.fixture(scope="session", autouse=True)
+def setup_database(use_local_database, environment_variables):
+    if use_local_database:
+        yield
+    else:
+        database = PostgresDatabase(environment_variables)
+        database.start()
+
+        yield database
+
+        database.terminate()
+
+
+@pytest.fixture(scope="session", autouse=True)
 def start_indexer(
-    postgres_database,
+    pytestconfig,
+    setup_database,
     environment_variables,
     address_file_path,
     abi_file_path,
-    pytestconfig,
 ):
     subprocess.run(
         ["ethindex", "createtables"],
         env=environment_variables,
-        stdout=subprocess.DEVNULL,
-        stderr=subprocess.DEVNULL,
+        # stdout=subprocess.DEVNULL,
+        # stderr=subprocess.DEVNULL,
         check=True,
     )
 
@@ -288,6 +304,14 @@ def start_indexer(
         warnings.warn("runsync_process did not terminate in time and had to be killed")
         runsync_process.kill()
         runsync_process.wait(timeout=5)
+
+    subprocess.run(
+        ["ethindex", "droptables", "--force"],
+        env=environment_variables,
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.DEVNULL,
+        check=True,
+    )
 
 
 @pytest.fixture(autouse=True)

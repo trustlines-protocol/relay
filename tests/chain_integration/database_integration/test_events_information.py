@@ -6,7 +6,6 @@ import pytest
 from tests.chain_integration.database_integration.conftest import (
     POSTGRES_DATABASE,
     POSTGRES_PASSWORD,
-    POSTGRES_PORT,
     POSTGRES_USER,
     PROCESS_TIME_OF_ETHINDEX,
 )
@@ -20,39 +19,53 @@ from relay.ethindex_db.events_informations import (
 from relay.network_graph.payment_path import FeePayer
 
 
+"""
+The tests are running a postgres database and ethindex to tests out getting and processing event information.
+They assume that you can run docker and docker-compose.
+Otherwise, you can run the tests with `--local-db` option and have a local postgres environment with:
+- user: POSTGRES_USER
+- password: POSTGRES_PASSWORD
+- database: POSTGRES_DATABASE
+- accessible on localhost:postgres_port
+See tests/chain_integration/database_integration/conftest.py for actual values
+"""
+
+
 def wait_for_event_processing():
     """Wait a certain time to let the eth-indexer catch the events and populate the database."""
     time.sleep(PROCESS_TIME_OF_ETHINDEX)
 
 
 @pytest.fixture(scope="session")
-def ethindex_db_for_currency_network(currency_network):
-    return make_ethindex_db(currency_network.address)
+def ethindex_db_for_currency_network(currency_network, postgres_port):
+    return make_ethindex_db(currency_network.address, postgres_port)
 
 
 @pytest.fixture(scope="session")
 def ethindex_db_for_currency_network_with_trustlines(
-    currency_network_with_trustlines_session,
+    currency_network_with_trustlines_session, postgres_port
 ):
-    return make_ethindex_db(currency_network_with_trustlines_session.address)
+    return make_ethindex_db(
+        currency_network_with_trustlines_session.address, postgres_port
+    )
 
 
 @pytest.fixture(scope="session")
 def ethindex_db_for_currency_network_with_trustlines_and_interests(
-    currency_network_with_trustlines_and_interests_session,
+    currency_network_with_trustlines_and_interests_session, postgres_port
 ):
     return make_ethindex_db(
-        currency_network_with_trustlines_and_interests_session.address
+        currency_network_with_trustlines_and_interests_session.address, postgres_port
     )
 
 
-def make_ethindex_db(network_address):
+def make_ethindex_db(network_address, postgres_port):
     conn = psycopg2.connect(
         cursor_factory=psycopg2.extras.RealDictCursor,
         database=POSTGRES_DATABASE,
         user=POSTGRES_USER,
         password=POSTGRES_PASSWORD,
-        port=POSTGRES_PORT,
+        port=postgres_port,
     )
     return ethindex_db.CurrencyNetworkEthindexDB(
         conn,

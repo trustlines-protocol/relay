@@ -31,6 +31,7 @@ commands:
         command: |
           echo >> ${BASH_ENV} 'export PATH=~/bin:~/repo/venv/bin:${PATH}'
 
+
 jobs:
   install:
     executor: ubuntu-builder
@@ -114,8 +115,25 @@ jobs:
       - config-path
       - run:
           name: Run pytest
+          # The 12 first lines ran are setting up a database when you are not able to use sudo
+          # We set up a local test database for the database_integration tests because we cannot run
+          # the database inside a docker container alongside the tests in circleci.
+          # For explanation of commands see: https://datagrok.org/unix/a_little_postgres/
+          # For explanation as to why we can't run docker see: https://support.circleci.com/hc/en-us/articles/115015849028-Docker-Daemon-Not-Available
           command: |
-            ./pytest --cov=relay tests
+            export PGDATA="$PWD/pgdata"
+            export PGHOST="$PGDATA/sockets"
+            /usr/lib/postgresql/10/bin/pg_ctl init
+            mkdir -p "$PGDATA/sockets"
+            echo "unix_socket_directories = 'sockets'" >> "$PGDATA/postgresql.conf"
+            /usr/lib/postgresql/10/bin/pg_ctl start
+            export PGDATABASE="postgres"
+            export PGUSER="$USER"
+            createuser trustlines_test
+            createdb trustlines_test
+            echo "alter user trustlines_test with encrypted password 'test123';" | psql
+            echo "grant all privileges on database trustlines_test to trustlines_test ;" | psql
+            ./pytest --local-db True --cov=relay tests
             codecov
 
   run-mypy:
