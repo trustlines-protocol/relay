@@ -1,8 +1,10 @@
+import functools
 import time
 from enum import Enum, auto
 
 import psycopg2
 import pytest
+from tests.chain_integration.conftest import CurrencyNetworkProxy
 from tests.chain_integration.database_integration.conftest import (
     POSTGRES_DATABASE,
     POSTGRES_PASSWORD,
@@ -362,40 +364,124 @@ def test_transfer_by_wrong_balance_update(
         ).get_transfer_details_for_id(event["blockHash"].hex(), event["logIndex"])
 
 
+def assert_fee(fee, value, from_, to, tx_hash, timestamp):
+    assert fee.value == value
+    assert fee.from_ == from_
+    assert fee.to == to
+    assert fee.transaction_hash == tx_hash
+    assert fee.timestamp == timestamp
+
+
+def make_transfer(currency_network, value, path, fee_payer):
+    if fee_payer == "sender":
+        tx_hash = currency_network.transfer_on_path(value, path)
+    else:
+        tx_hash = currency_network.transfer_receiver_pays_on_path(value, path)
+    return tx_hash
+
+
 @pytest.mark.parametrize("fee_payer", ["sender", "receiver"])
+@pytest.mark.parametrize("transfer_value, fee_value", [(150, 2), (1150, 12)])
 def test_get_mediation_fees(
     ethindex_db_for_currency_network_with_trustlines_and_interests,
     currency_network_with_trustlines_and_interests_session,
     web3,
     accounts,
     fee_payer,
+    transfer_value,
+    fee_value,
 ):
     currency_network = currency_network_with_trustlines_and_interests_session
-    if fee_payer == "sender":
-        tx_hash = currency_network.transfer_on_path(
-            150, [accounts[0], accounts[1], accounts[2]]
-        )
-    else:
-        tx_hash = currency_network.transfer_receiver_pays_on_path(
-            150, [accounts[0], accounts[1], accounts[2]]
-        )
+    tx_hash = make_transfer(
+        currency_network,
+        transfer_value,
+        [accounts[0], accounts[1], accounts[2]],
+        fee_payer,
+    )
     timestamp = web3.eth.getBlock("latest")["timestamp"]
+
+    wait_for_event_processing()
     graph = CurrencyNetworkGraph(
         capacity_imbalance_fee_divisor=currency_network.capacity_imbalance_fee_divisor,
         default_interest_rate=currency_network.default_interest_rate,
         custom_interests=currency_network.custom_interests,
         prevent_mediator_interests=currency_network.prevent_mediator_interests,
     )
-    wait_for_event_processing()
-
     fees = EventsInformationFetcher(
         ethindex_db_for_currency_network_with_trustlines_and_interests
     ).get_earned_mediation_fees(accounts[1], graph)
 
     assert len(fees) == 1
-    fee = fees[0]
-    assert fee.value == 2
-    assert fee.from_ == accounts[0]
-    assert fee.to == accounts[2]
-    assert fee.transaction_hash == tx_hash
-    assert fee.timestamp == timestamp
+    assert_fee(
+        fees[0],
+        value=fee_value,
+        from_=accounts[0],
+        to=accounts[2],
+        tx_hash=tx_hash,
+        timestamp=timestamp,
+    )
+
+
+@pytest.mark.parametrize("fee_payer", ["sender", "receiver"])
+@pytest.mark.parametrize("transfer_value, fee_value", [(150, 2), (1150, 12)])
+def test_get_mediation_fees_with_pollution(
+    ethindex_db_for_currency_network_with_trustlines_and_interests,
+    currency_network_with_trustlines_and_interests_session: CurrencyNetworkProxy,
+    web3,
+    accounts,
+    fee_payer,
+    transfer_value,
+    fee_value,
+):
+    """test getting the mediation fees while there are other trustline updates / transfer polluting events"""
+    currency_network = currency_network_with_trustlines_and_interests_session
+    custom_make_transfer = functools.partial(
+        make_transfer,
+        currency_network,
+        transfer_value,
+        [accounts[0], accounts[1], accounts[2]],
+        fee_payer,
+    )
+
+    tx_hash0 = custom_make_transfer()
+    timestamp0 = web3.eth.getBlock("latest")["timestamp"]
+
+    currency_network.update_trustline_and_reject(
+        accounts[0], accounts[1], 100_000, 100_000
+    )
+    tx_hash1 = custom_make_transfer()
+    timestamp1 = web3.eth.getBlock("latest")["timestamp"]
+
+    currency_network.update_trustline_with_accept(
+        accounts[0], accounts[1], 10_000, 10_000
+    )
+    tx_hash2 = custom_make_transfer()
+    timestamp2 = web3.eth.getBlock("latest")["timestamp"]
+
+    currency_network.transfer_on_path(123, [accounts[1], accounts[0]])
+    currency_network.transfer_receiver_pays_on_path(
+        123, [accounts[1], accounts[2], accounts[3]]
+    )
+
+    tx_hash3 = custom_make_transfer()
+    timestamp3 = web3.eth.getBlock("latest")["timestamp"]
+
+    wait_for_event_processing()
+    graph = CurrencyNetworkGraph(
+        capacity_imbalance_fee_divisor=currency_network.capacity_imbalance_fee_divisor,
+        default_interest_rate=currency_network.default_interest_rate,
+        custom_interests=currency_network.custom_interests,
+        prevent_mediator_interests=currency_network.prevent_mediator_interests,
+    )
+    fees = EventsInformationFetcher(
+        ethindex_db_for_currency_network_with_trustlines_and_interests
+    ).get_earned_mediation_fees(accounts[1], graph)
+
+    assert len(fees) == 4
+    custom_assert_fee = functools.partial(
+        assert_fee, value=fee_value, from_=accounts[0], to=accounts[2]
+    )
+    custom_assert_fee(fee=fees[0], tx_hash=tx_hash0, timestamp=timestamp0)
+    custom_assert_fee(fee=fees[1], tx_hash=tx_hash1, timestamp=timestamp1)
+    custom_assert_fee(fee=fees[2], tx_hash=tx_hash2, timestamp=timestamp2)
+    custom_assert_fee(fee=fees[3], tx_hash=tx_hash3, timestamp=timestamp3)

@@ -14,7 +14,9 @@ INDEXER_REQUIRED_CONFIRMATION = 10_000
 POSTGRES_USER = "trustlines_test"
 POSTGRES_PASSWORD = "test123"
 POSTGRES_DATABASE = "trustlines_test"
-PROCESS_TIME_OF_ETHINDEX = 1  # upper bound on the time ethindex needs to process events
+PROCESS_TIME_OF_ETHINDEX = (
+    1.5  # upper bound on the time ethindex needs to process events
+)
 
 
 class TimeoutException(Exception):

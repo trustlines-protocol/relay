@@ -237,11 +237,11 @@ def trustlines(accounts):
 @pytest.fixture(scope="session")
 def trustlines_with_interests(accounts):
     return [
-        (accounts[0], accounts[1], 1234, 1234, 2000, 1000),
-        (accounts[1], accounts[2], 1234, 1234, 2000, 1000),
-        (accounts[2], accounts[3], 1234, 1234, 2000, 1000),
-        (accounts[3], accounts[4], 1234, 1234, 2000, 1000),
-        (accounts[0], accounts[4], 1234, 1234, 2000, 1000),
+        (accounts[0], accounts[1], 12345, 12345, 2000, 1000),
+        (accounts[1], accounts[2], 12345, 12345, 2000, 1000),
+        (accounts[2], accounts[3], 12345, 12345, 2000, 1000),
+        (accounts[3], accounts[4], 12345, 12345, 2000, 1000),
+        (accounts[0], accounts[4], 12345, 12345, 2000, 1000),
     ]  # (A, B, clAB, clBA)
 
 
