@@ -2,15 +2,8 @@ import functools
 import time
 from enum import Enum, auto
 
-import psycopg2
 import pytest
 from tests.chain_integration.conftest import CurrencyNetworkProxy
-from tests.chain_integration.database_integration.conftest import (
-    POSTGRES_DATABASE,
-    POSTGRES_PASSWORD,
-    POSTGRES_USER,
-    PROCESS_TIME_OF_ETHINDEX,
-)
 
 from relay.blockchain import currency_network_events
 from relay.ethindex_db import ethindex_db
@@ -34,42 +27,31 @@ See tests/chain_integration/database_integration/conftest.py for actual values
 """
 
 
-def wait_for_event_processing():
-    """Wait a certain time to let the eth-indexer catch the events and populate the database."""
-    time.sleep(PROCESS_TIME_OF_ETHINDEX)
-
-
 @pytest.fixture(scope="session")
-def ethindex_db_for_currency_network(currency_network, postgres_port):
-    return make_ethindex_db(currency_network.address, postgres_port)
+def ethindex_db_for_currency_network(currency_network, generic_db_connection):
+    return make_ethindex_db(currency_network.address, generic_db_connection)
 
 
 @pytest.fixture(scope="session")
 def ethindex_db_for_currency_network_with_trustlines(
-    currency_network_with_trustlines_session, postgres_port
+    currency_network_with_trustlines_session, generic_db_connection
 ):
     return make_ethindex_db(
-        currency_network_with_trustlines_session.address, postgres_port
+        currency_network_with_trustlines_session.address, generic_db_connection
     )
 
 
 @pytest.fixture(scope="session")
 def ethindex_db_for_currency_network_with_trustlines_and_interests(
-    currency_network_with_trustlines_and_interests_session, postgres_port
+    currency_network_with_trustlines_and_interests_session, generic_db_connection
 ):
     return make_ethindex_db(
-        currency_network_with_trustlines_and_interests_session.address, postgres_port
+        currency_network_with_trustlines_and_interests_session.address,
+        generic_db_connection,
     )
 
 
-def make_ethindex_db(network_address, postgres_port):
-    conn = psycopg2.connect(
-        cursor_factory=psycopg2.extras.RealDictCursor,
-        database=POSTGRES_DATABASE,
-        user=POSTGRES_USER,
-        password=POSTGRES_PASSWORD,
-        port=postgres_port,
-    )
+def make_ethindex_db(network_address, conn):
     return ethindex_db.CurrencyNetworkEthindexDB(
         conn,
         address=network_address,
@@ -104,12 +86,13 @@ def test_get_interests_received_for_trustline_positive_balance(
     accounts,
     years,
     interests,
+    wait_for_ethindex_to_sync,
 ):
     """Test with a transfer A -> B the interests viewed from B"""
     currency_network = currency_network_with_trustlines_and_interests_session
     path = [accounts[0], accounts[1], accounts[2], accounts[3]]
     accrue_interests(currency_network, web3, chain, path, years)
-    wait_for_event_processing()
+    wait_for_ethindex_to_sync()
 
     accrued_interests = EventsInformationFetcher(
         ethindex_db_for_currency_network_with_trustlines_and_interests
@@ -136,12 +119,13 @@ def test_get_interests_received_for_trustline_negative_balance(
     accounts,
     years,
     interests,
+    wait_for_ethindex_to_sync,
 ):
     """Test with a transfer B -> A the interests viewed from A"""
     currency_network = currency_network_with_trustlines_and_interests_session
     path = [accounts[3], accounts[2], accounts[1], accounts[0]]
     accrue_interests(currency_network, web3, chain, path, years)
-    wait_for_event_processing()
+    wait_for_ethindex_to_sync()
 
     accrued_interests = EventsInformationFetcher(
         ethindex_db_for_currency_network_with_trustlines_and_interests
@@ -168,12 +152,13 @@ def test_get_interests_paid_for_trustline_positive_balance(
     accounts,
     years,
     interests,
+    wait_for_ethindex_to_sync,
 ):
     """Test the with a transfer A -> B the interests viewed from A"""
     currency_network = currency_network_with_trustlines_and_interests_session
     path = [accounts[0], accounts[1], accounts[2], accounts[3]]
     accrue_interests(currency_network, web3, chain, path, years)
-    wait_for_event_processing()
+    wait_for_ethindex_to_sync()
 
     accrued_interests = EventsInformationFetcher(
         ethindex_db_for_currency_network_with_trustlines_and_interests
@@ -200,12 +185,13 @@ def test_get_interests_paid_for_trustline_negative_balance(
     accounts,
     years,
     interests,
+    wait_for_ethindex_to_sync,
 ):
     """Test with a transfer B -> A the interests viewed from B"""
     currency_network = currency_network_with_trustlines_and_interests_session
     path = [accounts[3], accounts[2], accounts[1], accounts[0]]
     accrue_interests(currency_network, web3, chain, path, years)
-    wait_for_event_processing()
+    wait_for_ethindex_to_sync()
 
     accrued_interests = EventsInformationFetcher(
         ethindex_db_for_currency_network_with_trustlines_and_interests
@@ -238,6 +224,7 @@ def test_get_transfer_information_path(
     path,
     fee_payer,
     lookup_method,
+    wait_for_ethindex_to_sync,
 ):
     """
     test that we can get the path of a sent transfer from the transfer event
@@ -253,7 +240,7 @@ def test_get_transfer_information_path(
         tx_hash = network.transfer_receiver_pays_on_path(value, account_path).hex()
     else:
         assert False, "Invalid fee payer"
-    wait_for_event_processing()
+    wait_for_ethindex_to_sync()
 
     if (
         lookup_method == LookupMethod.TRANSFER_ID
@@ -289,6 +276,7 @@ def test_get_transfer_information_values(
     accounts,
     fee_payer,
     lookup_method,
+    wait_for_ethindex_to_sync,
 ):
     """
     test that we can get the path of a sent transfer from the transfer event
@@ -305,7 +293,7 @@ def test_get_transfer_information_values(
         tx_hash = network.transfer_receiver_pays_on_path(value, path).hex()
     else:
         assert False, "Invalid fee payer"
-    wait_for_event_processing()
+    wait_for_ethindex_to_sync()
 
     if (
         lookup_method == LookupMethod.TRANSFER_ID
@@ -337,7 +325,12 @@ def test_get_transfer_information_values(
 
 
 def test_transfer_by_wrong_balance_update(
-    ethindex_db_for_currency_network, currency_network, web3, accounts, chain
+    ethindex_db_for_currency_network,
+    currency_network,
+    web3,
+    accounts,
+    chain,
+    wait_for_ethindex_to_sync,
 ):
     A, B, *rest = accounts
 
@@ -356,7 +349,7 @@ def test_transfer_by_wrong_balance_update(
 
     event = events[0]
 
-    wait_for_event_processing()
+    wait_for_ethindex_to_sync()
 
     with pytest.raises(IdentifiedNotPartOfTransferException):
         EventsInformationFetcher(
@@ -390,6 +383,7 @@ def test_get_mediation_fees(
     fee_payer,
     transfer_value,
     fee_value,
+    wait_for_ethindex_to_sync,
 ):
     currency_network = currency_network_with_trustlines_and_interests_session
     tx_hash = make_transfer(
@@ -400,7 +394,7 @@ def test_get_mediation_fees(
     )
     timestamp = web3.eth.getBlock("latest")["timestamp"]
 
-    wait_for_event_processing()
+    wait_for_ethindex_to_sync()
     graph = CurrencyNetworkGraph(
         capacity_imbalance_fee_divisor=currency_network.capacity_imbalance_fee_divisor,
         default_interest_rate=currency_network.default_interest_rate,
@@ -432,6 +426,7 @@ def test_get_mediation_fees_with_pollution(
     fee_payer,
     transfer_value,
     fee_value,
+    wait_for_ethindex_to_sync,
 ):
     """test getting the mediation fees while there are other trustline updates / transfer polluting events"""
     currency_network = currency_network_with_trustlines_and_interests_session
@@ -466,7 +461,7 @@ def test_get_mediation_fees_with_pollution(
     tx_hash3 = custom_make_transfer()
     timestamp3 = web3.eth.getBlock("latest")["timestamp"]
 
-    wait_for_event_processing()
+    wait_for_ethindex_to_sync()
     graph = CurrencyNetworkGraph(
         capacity_imbalance_fee_divisor=currency_network.capacity_imbalance_fee_divisor,
         default_interest_rate=currency_network.default_interest_rate,

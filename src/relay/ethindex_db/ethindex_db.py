@@ -20,6 +20,16 @@ def connect(dsn):
     return psycopg2.connect(dsn, cursor_factory=psycopg2.extras.RealDictCursor)
 
 
+def get_latest_ethindex_block_number(conn):
+    with conn.cursor() as cur:
+        cur.execute("""select * from sync where syncid='default'""")
+        row = cur.fetchone()
+        if row:
+            return row["last_block_number"]
+        else:
+            raise RuntimeError("Could not determine current block number")
+
+
 # EventsQuery is used to store a where block together with required parameters
 # EthindexDB._run_events_query uses this to build and run a complete query.
 EventsQuery = collections.namedtuple("EventsQuery", ["where_block", "params"])
@@ -114,13 +124,7 @@ class EthindexDB:
         return self.event_builder.build_events(rows, self._get_current_blocknumber())
 
     def _get_current_blocknumber(self):
-        with self.conn.cursor() as cur:
-            cur.execute("""select * from sync where syncid='default'""")
-            row = cur.fetchone()
-            if row:
-                return row["last_block_number"]
-            else:
-                raise RuntimeError("Could not determine current block number")
+        return get_latest_ethindex_block_number(self.conn)
 
     def _get_addr(self, address):
         """all the methods here take an address argument
