@@ -6,17 +6,17 @@ import time
 import warnings
 from subprocess import Popen
 
+import psycopg2
 import pytest
 from deploy_tools.plugin import EXPOSE_RPC_OPTION
 from tests.conftest import LOCAL_DATABASE_OPTION
+
+from relay.ethindex_db import ethindex_db
 
 INDEXER_REQUIRED_CONFIRMATION = 10_000
 POSTGRES_USER = "trustlines_test"
 POSTGRES_PASSWORD = "test123"
 POSTGRES_DATABASE = "trustlines_test"
-PROCESS_TIME_OF_ETHINDEX = (
-    1.5  # upper bound on the time ethindex needs to process events
-)
 
 
 class TimeoutException(Exception):
@@ -65,7 +65,7 @@ class PostgresDatabase:
         self,
         environment_variables,
         *,
-        timeout=7,
+        timeout=10,
         poll_interval=0.2,
         process_settings=None,
     ):
@@ -317,7 +317,7 @@ def start_indexer(
 
 
 @pytest.fixture(autouse=True)
-def chain_cleanup(chain, web3):
+def chain_cleanup(chain, web3, wait_for_ethindex_to_sync):
     """Cleans up the chain by replacing blocks with empty blocks, and giving time for the indexer to clean up."""
     # We mine blocks because the indexer will not remove the events of blocks if it does not receive replacing blocks
     snapshot = chain.take_snapshot()
@@ -329,4 +329,47 @@ def chain_cleanup(chain, web3):
     chain.revert_to_snapshot(snapshot)
     reverted_block_number = web3.eth.blockNumber
     chain.mine_blocks(last_block_number - reverted_block_number)
-    time.sleep(PROCESS_TIME_OF_ETHINDEX)
+    wait_for_ethindex_to_sync()
+
+
+@pytest.fixture(scope="session")
+def generic_db_connection(postgres_port):
+    conn = psycopg2.connect(
+        cursor_factory=psycopg2.extras.RealDictCursor,
+        database=POSTGRES_DATABASE,
+        user=POSTGRES_USER,
+        password=POSTGRES_PASSWORD,
+        port=postgres_port,
+    )
+    yield conn
+    conn.close()
+
+
+@pytest.fixture(scope="session")
+def wait_for_ethindex_to_sync(generic_db_connection, web3):
+    def wait_for_sync(timeout=5, poll_interval=0.2):
+        latest_block = web3.eth.getBlock("latest")["number"]
+        with Timer(timeout) as timer:
+            while True:
+                try:
+                    is_synced = (
+                        ethindex_db.get_latest_ethindex_block_number(
+                            generic_db_connection
+                        )
+                        == latest_block
+                    )
+                except RuntimeError:
+                    # if ethindex_db did not even start syncing yet, we'll receive RuntimeError
+                    is_synced = False
+
+                if not is_synced:
+                    if timer.is_timed_out():
+                        raise TimeoutException(
+                            f"EthindexDB is not synced after {timeout} seconds"
+                        )
+                    else:
+                        time.sleep(min(poll_interval, timer.time_left))
+                else:
+                    break
+
+    return wait_for_sync
