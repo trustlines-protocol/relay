@@ -332,7 +332,7 @@ def chain_cleanup(chain, web3, wait_for_ethindex_to_sync):
     wait_for_ethindex_to_sync()
 
 
-@pytest.fixture(scope="session")
+@pytest.fixture()
 def generic_db_connection(postgres_port):
     conn = psycopg2.connect(
         cursor_factory=psycopg2.extras.RealDictCursor,
@@ -341,11 +341,10 @@ def generic_db_connection(postgres_port):
         password=POSTGRES_PASSWORD,
         port=postgres_port,
     )
-    yield conn
-    conn.close()
+    return conn
 
 
-@pytest.fixture(scope="session")
+@pytest.fixture()
 def wait_for_ethindex_to_sync(generic_db_connection, web3):
     def wait_for_sync(timeout=5, poll_interval=0.2):
         latest_block = web3.eth.getBlock("latest")["number"]
