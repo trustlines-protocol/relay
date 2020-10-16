@@ -27,12 +27,12 @@ See tests/chain_integration/database_integration/conftest.py for actual values
 """
 
 
-@pytest.fixture(scope="session")
+@pytest.fixture()
 def ethindex_db_for_currency_network(currency_network, generic_db_connection):
     return make_ethindex_db(currency_network.address, generic_db_connection)
 
 
-@pytest.fixture(scope="session")
+@pytest.fixture()
 def ethindex_db_for_currency_network_with_trustlines(
     currency_network_with_trustlines_session, generic_db_connection
 ):
@@ -41,7 +41,7 @@ def ethindex_db_for_currency_network_with_trustlines(
     )
 
 
-@pytest.fixture(scope="session")
+@pytest.fixture()
 def ethindex_db_for_currency_network_with_trustlines_and_interests(
     currency_network_with_trustlines_and_interests_session, generic_db_connection
 ):
