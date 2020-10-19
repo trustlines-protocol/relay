@@ -1,7 +1,6 @@
 import json
 import logging
 import os
-import time
 from collections import defaultdict
 from copy import deepcopy
 from enum import Enum
@@ -255,8 +254,6 @@ class TrustlinesRelay:
         start_time: int = 0,
         end_time: int = None,
     ):
-        if not end_time:
-            end_time = int(time.time())
         event_selector = self.get_ethindex_db_for_currency_network(network_address)
         return EventsInformationFetcher(
             event_selector
@@ -278,7 +275,9 @@ class TrustlinesRelay:
             tx_hash, event_types=FeePaymentEventType
         )
 
-    def get_earned_mediation_fees(self, user_address, network_address):
+    def get_earned_mediation_fees(
+        self, network_address, user_address, start_time: int = 0, end_time: int = None,
+    ):
         current_network_graph = self.currency_network_graphs[network_address]
         empty_graph = CurrencyNetworkGraph(
             capacity_imbalance_fee_divisor=current_network_graph.capacity_imbalance_fee_divisor,
@@ -287,8 +286,10 @@ class TrustlinesRelay:
             prevent_mediator_interests=current_network_graph.prevent_mediator_interests,
         )
         event_selector = self.get_ethindex_db_for_currency_network(network_address)
-        return EventsInformationFetcher(event_selector).get_earned_mediation_fees(
-            user_address, empty_graph
+        return EventsInformationFetcher(
+            event_selector
+        ).get_earned_mediation_fees_in_between_timestamps(
+            user_address, empty_graph, start_time, end_time
         )
 
     def deploy_identity(self, factory_address, implementation_address, signature):

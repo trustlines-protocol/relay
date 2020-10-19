@@ -46,6 +46,7 @@ from .schemas import (
     CurrencyNetworkEventSchema,
     CurrencyNetworkSchema,
     IdentityInfosSchema,
+    MediationFeesListSchema,
     MetaTransactionFeeSchema,
     MetaTransactionSchema,
     MetaTransactionStatusSchema,
@@ -489,6 +490,33 @@ class TrustlineAccruedInterestList(Resource):
             "accruedInterests": accrued_interests,
             "user": user_address,
             "counterparty": counterparty_address,
+        }
+
+
+class UserEarnedMediationFeesList(Resource):
+    def __init__(self, trustlines: TrustlinesRelay) -> None:
+        self.trustlines = trustlines
+
+    args = {
+        "startTime": fields.Int(required=False, missing=0),
+        "endTime": fields.Int(required=False, missing=None),
+    }
+
+    @use_args(args)
+    @dump_result_with_schema(MediationFeesListSchema())
+    def get(self, args, network_address: str, user_address):
+        abort_if_unknown_network(self.trustlines, network_address)
+        start_time = args["startTime"]
+        end_time = args["endTime"]
+        mediationFees = self.trustlines.get_earned_mediation_fees(
+            network_address, user_address, start_time, end_time
+        )
+        logger.info(mediationFees)
+
+        return {
+            "mediationFees": mediationFees,
+            "user": user_address,
+            "network": network_address,
         }
 
 
