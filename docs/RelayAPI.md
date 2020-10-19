@@ -1006,6 +1006,66 @@ The `paymentPath` is an object with the following attributes:
 
 ---
 
+### Earned mediation fees of user
+Returns a list of all earned mediation fees for user in a network.
+#### Request
+```
+GET /networks/:network/users/:user/mediation-fees?startTime=:timestamp&endTime=:timestamp
+```
+#### Example Request
+```
+curl https://relay0.testnet.trustlines.network/api/v1/networks/0xC0B33D88C704455075a0724AA167a286da778DDE/users/0xcbF1153F6e5AC01D363d432e24112e8aA56c55ce/mediation-fees?startTime=1579000000&endTime=1579008836
+```
+#### URL Parameters
+| Name     | Type                      | Required | Description                                       |
+|----------|---------------------------|----------|---------------------------------------------------|
+| network  | string prefixed with "0x" | YES      | Address of currency network                       |
+| user     | string prefixed with "0x" | YES      | Address of concerned user                         |
+| startTime| integer                   | NO       | Start of time window to get list for (default: 0) |
+| endTime  | integer                   | NO       | End of time window to get list for (default: now) |
+#### Response
+The response is an object with the following elements:
+
+| Attribute        | Type    | JSON Type | Description                   |
+| ---------------- | ------- | --------- | ----------------------------- |
+| mediationFees    | object  | array     | list of earned mediation fees |
+| user             | address | string    | Address of user               |
+| network          | address | string    | Address of counterparty       |
+
+The `mediationFees` is a list of objects with the following elements:
+
+| Attribute    | Type       | JSON Type | Description                              |
+| ------------ | ---------- | --------- | ---------------------------------------- |
+| value        | BigInteger | string    | value of the earned fee                  |
+| from         | address    | string    | `from` address of the impacted trustline |
+| to           | address    | string    | `to` address of the impacted trustline   |
+| transactionHash | hash    | string    | `to` address of the impacted trustline   |
+| timestamp    | integer    | integer   | timestamp on which the fee was earned    |
+
+For a transfer initiator -> mediator1 -> user -> mediator2 -> receiver, the `from` address will be
+`mediator1` and the `to` address will be `mediator2`. They are the addresses of direct counterparties
+of the user that were used in the mediated transfer.
+
+#### Example Response
+```json
+{
+  "user": "0xcbF1153F6e5AC01D363d432e24112e8aA56c55ce",
+  "network": "0xC0B33D88C704455075a0724AA167a286da778DDE",
+  "mediationFees":
+    [
+      {
+        "value": 123,
+        "from": "0x7Ff66eb1A824FF9D1bB7e234a2d3B7A3b0345320",
+        "to": "0xC0B33D88C704455075a0724AA167a286da778DDE",
+        "transactionHash": "0xb141aa3baec4e7151d8bd6ecab46d26b1add131e50bcc517c956a7ac979815cd",
+        "timestamp": "1579000000"
+      }
+    ]
+}
+```
+
+---
+
 ## User context
 
 ### All events of users for currency networks / exchanges / tokens / unweth.

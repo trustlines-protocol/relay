@@ -1,5 +1,6 @@
 import logging
 import math
+import time
 from operator import attrgetter
 from typing import Iterable, List, Optional, Union, cast
 
@@ -85,7 +86,7 @@ class EventsInformationFetcher:
         all_accrued_interests = self.get_list_of_paid_interests_for_trustline(
             currency_network_address, user, counterparty
         )
-        return filter_list_of_accrued_interests_for_time_window(
+        return filter_list_of_information_for_time_window(
             all_accrued_interests, start_time, end_time
         )
 
@@ -325,6 +326,18 @@ class EventsInformationFetcher:
 
         return fees_earned
 
+    def get_earned_mediation_fees_in_between_timestamps(
+        self,
+        user_address: str,
+        graph: CurrencyNetworkGraph,
+        start_time: int,
+        end_time: Optional[int],
+    ) -> List[MediationFee]:
+        mediation_fees = self.get_earned_mediation_fees(user_address, graph)
+        return filter_list_of_information_for_time_window(
+            mediation_fees, start_time, end_time
+        )
+
 
 def does_trustline_update_trigger_balance_update(
     graph: CurrencyNetworkGraph, trustline_update_event: TrustlineUpdateEvent
@@ -510,13 +523,15 @@ def get_accrued_interests_from_events(balance_update_events, trustline_update_ev
     return accrued_interests
 
 
-def filter_list_of_accrued_interests_for_time_window(
-    accrued_interests: List[InterestAccrued], start_time, end_time
+def filter_list_of_information_for_time_window(
+    information_list: List, start_time: int = 0, end_time: Optional[int] = None
 ):
+    if not end_time:
+        end_time = int(time.time())
     filtered_list = []
-    for interest in accrued_interests:
-        if interest.timestamp <= end_time and interest.timestamp >= start_time:
-            filtered_list.append(interest)
+    for information in information_list:
+        if information.timestamp <= end_time and information.timestamp >= start_time:
+            filtered_list.append(information)
     return filtered_list
 
 

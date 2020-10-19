@@ -298,6 +298,22 @@ class AccruedInterestListSchema(Schema):
     counterparty = Address()
 
 
+class MediationFeeSchema(Schema):
+
+    value = BigInteger()
+    from_ = Address(data_key="from")
+    to = Address()
+    transactionHash = HexEncodedBytes(attribute="transaction_hash")
+    timestamp = fields.Integer()
+
+
+class MediationFeesListSchema(Schema):
+
+    mediationFees = fields.Nested(MediationFeeSchema, many=True)
+    user = Address()
+    network = Address()
+
+
 class TransferInformationSchema(Schema):
 
     currencyNetwork = Address(required=True, attribute="currency_network")
