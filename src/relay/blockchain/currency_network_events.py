@@ -7,6 +7,7 @@ TrustlineRequestCancelEventType = "TrustlineUpdateCancel"
 TrustlineUpdateEventType = "TrustlineUpdate"
 BalanceUpdateEventType = "BalanceUpdate"
 TransferEventType = "Transfer"
+DebtUpdateEventType = "DebtUpdate"
 NetworkFreezeEventType = "NetworkFreeze"
 
 
@@ -44,6 +45,12 @@ class TransferEvent(ValueEvent):
 
 class BalanceUpdateEvent(ValueEvent):
     pass
+
+
+class DebtUpdateEvent(CurrencyNetworkEvent):
+    @property
+    def debt(self):
+        return self._web3_event.get("args").get("_newDebt")
 
 
 class TrustlineEvent(CurrencyNetworkEvent):
@@ -93,6 +100,7 @@ event_builders = {
     TrustlineRequestCancelEventType: TrustlineRequestCancelEvent,
     BalanceUpdateEventType: BalanceUpdateEvent,
     NetworkFreezeEventType: NetworkFreezeEvent,
+    DebtUpdateEventType: DebtUpdateEvent,
 }
 
 
@@ -102,6 +110,7 @@ from_to_types = {
     TrustlineRequestCancelEventType: ["_initiator", "_counterparty"],
     TrustlineUpdateEventType: ["_creditor", "_debtor"],
     BalanceUpdateEventType: ["_from", "_to"],
+    DebtUpdateEventType: ["_debtor", "_creditor"],
 }
 
 standard_event_types = [

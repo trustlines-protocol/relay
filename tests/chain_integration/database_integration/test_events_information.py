@@ -13,6 +13,7 @@ from relay.ethindex_db.events_informations import (
 )
 from relay.network_graph.graph import CurrencyNetworkGraph
 from relay.network_graph.payment_path import FeePayer
+from relay.relay import ContractTypes, all_event_builders
 
 
 """
@@ -56,8 +57,11 @@ def make_ethindex_db(network_address, conn):
         conn,
         address=network_address,
         standard_event_types=currency_network_events.standard_event_types,
-        event_builders=currency_network_events.event_builders,
+        event_builders=all_event_builders,
         from_to_types=currency_network_events.from_to_types,
+        address_to_contract_types={
+            network_address: ContractTypes.CURRENCY_NETWORK.value
+        },
     )
 
 
@@ -480,3 +484,118 @@ def test_get_mediation_fees_with_pollution(
     custom_assert_fee(fee=fees[1], tx_hash=tx_hash1, timestamp=timestamp1)
     custom_assert_fee(fee=fees[2], tx_hash=tx_hash2, timestamp=timestamp2)
     custom_assert_fee(fee=fees[3], tx_hash=tx_hash3, timestamp=timestamp3)
+
+
+def get_debts_of_single_currency_network(
+    ethindex_db, creditor, currency_network_address
+):
+    debts_in_all_currency_network = EventsInformationFetcher(
+        ethindex_db
+    ).get_debts_lists(creditor)
+    assert len(debts_in_all_currency_network.keys()) == 1
+    return debts_in_all_currency_network[currency_network_address]
+
+
+@pytest.mark.parametrize("creditor_number, debtor_number", [(0, 1), (1, 0)])
+def test_get_debts(
+    ethindex_db_for_currency_network,
+    currency_network,
+    accounts,
+    creditor_number,
+    debtor_number,
+    wait_for_ethindex_to_sync,
+):
+    debtor = accounts[debtor_number]
+    creditor = accounts[creditor_number]
+    debt_value = 123
+
+    currency_network.increase_debt(debtor, creditor, debt_value)
+
+    wait_for_ethindex_to_sync()
+
+    # Test the point of view of creditor
+    debts = get_debts_of_single_currency_network(
+        ethindex_db_for_currency_network, creditor, currency_network.address
+    )
+    assert len(debts) == 1
+    assert debts[debtor] == debt_value
+
+    # Test the point of view of debtor
+    debts = get_debts_of_single_currency_network(
+        ethindex_db_for_currency_network, debtor, currency_network.address
+    )
+    assert len(debts) == 1
+    assert debts[creditor] == -debt_value
+
+
+def test_get_debts_repaid_debt(
+    ethindex_db_for_currency_network,
+    currency_network,
+    accounts,
+    wait_for_ethindex_to_sync,
+):
+    """
+    Test getting the debts after canceling a debt to 0
+    """
+    creditor = accounts[0]
+    debtor = accounts[1]
+    debt_value = 123
+
+    currency_network.increase_debt(debtor, creditor, debt_value)
+    currency_network.increase_debt(creditor, debtor, debt_value)
+
+    wait_for_ethindex_to_sync()
+    debts = EventsInformationFetcher(ethindex_db_for_currency_network).get_debts_lists(
+        creditor
+    )
+    assert debts == {}
+
+
+def test_get_debts_multiple_updates(
+    ethindex_db_for_currency_network,
+    currency_network,
+    accounts,
+    wait_for_ethindex_to_sync,
+):
+    """
+    Test getting the debts after updating them multiple times
+    """
+    creditor = accounts[0]
+    debtor = accounts[1]
+    debt_value = 123
+
+    currency_network.increase_debt(debtor, creditor, debt_value)
+    currency_network.increase_debt(debtor, creditor, debt_value)
+
+    wait_for_ethindex_to_sync()
+    debts = get_debts_of_single_currency_network(
+        ethindex_db_for_currency_network, creditor, currency_network.address
+    )
+    assert len(debts.keys()) == 1
+    assert debts[debtor] == debt_value * 2
+
+
+def test_get_debts_multiple_debtors(
+    ethindex_db_for_currency_network,
+    currency_network,
+    accounts,
+    wait_for_ethindex_to_sync,
+):
+    """
+    Test getting the debts with multiple different debtors
+    """
+    creditor = accounts[0]
+    debtors = [accounts[x] for x in range(1, 5)]
+    debt_values = range(1, 5)
+
+    for index in range(len(debtors)):
+        currency_network.increase_debt(debtors[index], creditor, debt_values[index])
+
+    wait_for_ethindex_to_sync()
+    debts = get_debts_of_single_currency_network(
+        ethindex_db_for_currency_network, creditor, currency_network.address
+    )
+    assert len(debts.keys()) == len(debtors)
+
+    for index in range(len(debtors)):
+        assert debts[debtors[index]] == debt_values[index]
