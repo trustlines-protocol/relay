@@ -43,6 +43,7 @@ https://relay0.testnet.trustlines.network/api/v1
 - [Transaction infos for user](#transaction-infos-for-user)
 - [Balance of user](#balance-of-user)
 - [All trustlines](#all-trustlines-of-user-in-all-currency-networks)
+- [All debts of user](#all-debts-of-user)
 ### Other
 - [Latest block number](#latest-block-number)
 - [Relay transaction](#relay-transaction)
@@ -1312,6 +1313,49 @@ curl https://relay0.testnet.trustlines.network/api/v1/users/0xE56d3f8096c765f29A
     }
 ]
 
+```
+
+---
+
+### All debts of user
+Returns a list of all the debts in all currency networks for the user.
+#### Request
+```
+GET /users/:userAddress/debts
+```
+#### Example Request
+```
+curl https://relay0.testnet.trustlines.network/api/v1/users/0x00a329c0648769A73afAc7F9381E08FB43dBEA72/debts
+```
+#### URL Parameters
+| Name        | Type   | Required | Description     |
+| ----------- | ------ | -------- | --------------- |
+| userAddress | string | YES      | Address of user |
+#### Response
+The response is a list of objects with the following fields:
+| Attribute       | Type    | JSON Type | Description                                                |
+| --------------- | ------- | --------- | ---------------------------------------------------------- |
+| currencyNetwork | address | string    | address of the currency network of all the following debts |
+| debts           | object  | object    | list of debts involving the user in the currency network   |
+
+Debts is a list of objects with the following fields:
+| Attribute       | Type    | JSON Type | Description                                                                       |
+| --------------- | ------- | --------- | --------------------------------------------------------------------------------- |
+| debtor          | address | string    | address of the debtor that owes money to the user / towards which user owes money |
+| value           | object  | object    | value of the debt, positive if user is owed money, negative if it owes money      |
+
+#### Example Response
+```json
+[
+  {
+    "currencyNetwork": "0xee35211C4D9126D520bBfeaf3cFee5FE7B86F221",
+    "debts": [
+      {"value": "1572", "debtor": "0xBeEac99C8439044B282E796f7C821d543AFb7C00"},
+      {"value": "1342", "debtor": "0xF5FFaFb5bbFE348097327f2Eba64Fc127f6a35E2"},
+      {"value": "633", "debtor": "0xFFa82F6639247a76365514c2F53DB8388c349d8D"}
+    ]
+  }
+]
 ```
 
 ---
