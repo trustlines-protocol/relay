@@ -2,7 +2,7 @@ import logging
 import math
 import time
 from operator import attrgetter
-from typing import Iterable, List, Optional, Union, cast
+from typing import Dict, Iterable, List, Optional, Union, cast
 
 import attr
 import toolz
@@ -10,6 +10,8 @@ import toolz
 from relay.blockchain.currency_network_events import (
     BalanceUpdateEvent,
     BalanceUpdateEventType,
+    DebtUpdateEvent,
+    DebtUpdateEventType,
     TransferEvent,
     TransferEventType,
     TrustlineUpdateEvent,
@@ -337,6 +339,55 @@ class EventsInformationFetcher:
         return filter_list_of_information_for_time_window(
             mediation_fees, start_time, end_time
         )
+
+    def get_debts_lists(self, user_address) -> Dict[str, Dict[str, int]]:
+        """
+        Return a mapping from currency network to debts for user in currency network
+        debts are a mapping from debtor to debt value
+        """
+        debt_update_events = self._currency_network_db.get_all_contract_events(
+            user_address=user_address, event_types=[DebtUpdateEventType]
+        )
+        debt_update_events = sorted_events(debt_update_events)
+
+        debts_in_all_currency_networks: Dict[str, Dict[str, int]] = {}
+        for debt_update_event in debt_update_events:
+            debt_update_event = cast(DebtUpdateEvent, debt_update_event)
+            from_ = debt_update_event.from_
+            to = debt_update_event.to
+            debt_value = debt_update_event.debt
+            network_address = debt_update_event.network_address
+
+            if network_address not in debts_in_all_currency_networks.keys():
+                debts_in_all_currency_networks[network_address] = {}
+
+            if debt_update_event.to == user_address:
+                if debt_value != 0:
+                    debts_in_all_currency_networks[network_address][from_] = debt_value
+                else:
+                    clean_null_debt(
+                        debts_in_all_currency_networks, network_address, from_
+                    )
+
+            elif from_ == user_address:
+                if debt_value != 0:
+                    debts_in_all_currency_networks[network_address][to] = -debt_value
+                else:
+                    clean_null_debt(debts_in_all_currency_networks, network_address, to)
+
+            else:
+                raise RuntimeError(
+                    f"Found debt update where user_address {user_address}"
+                    f" is neither `from_` nor `to`: {debt_update_event}."
+                )
+
+        return debts_in_all_currency_networks
+
+
+def clean_null_debt(debts_in_all_currency_networks, network_address, debtor):
+    del debts_in_all_currency_networks[network_address][debtor]
+    if len(debts_in_all_currency_networks[network_address]) == 0:
+        del debts_in_all_currency_networks[network_address]
 
 
 def does_trustline_update_trigger_balance_update(

@@ -182,10 +182,10 @@ class CurrencyNetworkProxy(currency_network_proxy.CurrencyNetworkProxy):
         self.cancel_trustline_update(to, from_)
 
     def transfer(self, from_, value, max_fee, path, extra_data=b""):
-        txid = self._proxy.functions.transfer(
+        tx_id = self._proxy.functions.transfer(
             value, max_fee, path, extra_data
         ).transact({"from": from_})
-        self._web3.eth.waitForTransactionReceipt(txid)
+        self._web3.eth.waitForTransactionReceipt(tx_id)
 
     def transfer_on_path(self, value, path, max_fee=None, extra_data=b""):
         if max_fee is None:
@@ -219,6 +219,19 @@ class CurrencyNetworkProxy(currency_network_proxy.CurrencyNetworkProxy):
 
     def freeze_network(self):
         self._proxy.functions.freezeNetwork().transact()
+
+    def increase_debt(self, debtor, creditor, value):
+        tx_id = self._proxy.functions.increaseDebt(creditor, value).transact(
+            {"from": debtor}
+        )
+        self._web3.eth.waitForTransactionReceipt(tx_id)
+        return tx_id
+
+    def get_debt(self, debtor, creditor):
+        return self._proxy.functions.getDebt(debtor, creditor).call()
+
+    def assert_debt_value(self, debtor, creditor, value):
+        assert self.get_debt(debtor, creditor) == value
 
 
 @pytest.fixture(scope="session")
