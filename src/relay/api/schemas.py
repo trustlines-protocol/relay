@@ -314,6 +314,18 @@ class MediationFeesListSchema(Schema):
     network = Address()
 
 
+class Debts(Schema):
+
+    debtor = Address(required=True)
+    value = BigInteger(required=True)
+
+
+class DebtsListInCurrencyNetwork(Schema):
+
+    currencyNetwork = Address(required=True, attribute="currency_network")
+    debts = fields.Nested(Debts, many=True)
+
+
 class TransferInformationSchema(Schema):
 
     currencyNetwork = Address(required=True, attribute="currency_network")

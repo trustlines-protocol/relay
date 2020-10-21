@@ -9,7 +9,11 @@ from webargs.flaskparser import abort, parser
 from werkzeug.exceptions import HTTPException
 from werkzeug.routing import BaseConverter, ValidationError
 
-from relay.api.resources import TrustlineEvents, UserEarnedMediationFeesList
+from relay.api.resources import (
+    TrustlineEvents,
+    UserDebtsLists,
+    UserEarnedMediationFeesList,
+)
 
 from .exchange.resources import (
     EventsExchange,
@@ -156,6 +160,7 @@ def ApiApp(trustlines, *, enabled_apis):
         add_resource(TransactionInfos, "/users/<address:user_address>/txinfos")
         add_resource(Balance, "/users/<address:user_address>/balance")
         add_resource(UserTrustlines, "/users/<address:user_address>/trustlines")
+        add_resource(UserDebtsLists, "/users/<address:user_address>/debts")
 
         api_bp.add_url_rule(
             "/networks/<address:network_address>/image",

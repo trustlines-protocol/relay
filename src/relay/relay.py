@@ -161,12 +161,17 @@ class TrustlinesRelay:
         """return an EthindexDB instance.
         This is being used from relay.api to query for events.
         """
+        address_to_contract_types: Dict[str, str] = {}
+        for address in self.network_addresses:
+            address_to_contract_types[address] = ContractTypes.CURRENCY_NETWORK.value
+
         return ethindex_db.CurrencyNetworkEthindexDB(
             ethindex_db.connect(""),
             address=network_address,
             standard_event_types=currency_network_events.standard_event_types,
-            event_builders=currency_network_events.event_builders,
+            event_builders=all_event_builders,
             from_to_types=currency_network_events.from_to_types,
+            address_to_contract_types=address_to_contract_types,
         )
 
     def get_ethindex_db_for_token(self, address: str):
@@ -295,6 +300,11 @@ class TrustlinesRelay:
         ).get_earned_mediation_fees_in_between_timestamps(
             user_address, empty_graph, start_time, end_time
         )
+
+    def get_debt_list_of_user(self, user_address):
+
+        event_selector = self.get_ethindex_db_for_currency_network()
+        return EventsInformationFetcher(event_selector).get_debts_lists(user_address)
 
     def deploy_identity(self, factory_address, implementation_address, signature):
         return self.delegate.deploy_identity(
