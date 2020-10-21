@@ -341,7 +341,9 @@ def generic_db_connection(postgres_port):
         password=POSTGRES_PASSWORD,
         port=postgres_port,
     )
-    return conn
+    yield conn
+    conn.commit()
+    conn.close()
 
 
 @pytest.fixture()
