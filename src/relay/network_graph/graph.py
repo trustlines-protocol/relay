@@ -33,6 +33,11 @@ class NetworkGraphConfig(NamedTuple):
     trustlines: List = []
 
 
+class CapacityPath(NamedTuple):
+    capacity: int
+    path: List
+
+
 class Account(object):
     """account from the view of a"""
 
@@ -855,7 +860,9 @@ class CurrencyNetworkGraph(object):
 
         return PaymentPath(fee=cost[0], path=path, value=value, fee_payer=fee_payer)
 
-    def find_maximum_capacity_path(self, source, target, max_hops=None, timestamp=0):
+    def find_maximum_capacity_path(
+        self, source, target, max_hops=None, timestamp=0
+    ) -> CapacityPath:
         """
         find a path probably with the maximum capacity to transfer from source to target
         The "imbalance_fee" function not being bijective, only an estimate of the fees can be found from "value + fee"
@@ -885,9 +892,9 @@ class CurrencyNetworkGraph(object):
             nx.NetworkXNoPath,
             KeyError,
         ):  # key error for if source or target is not in graph
-            return 0, []
+            return CapacityPath(capacity=0, path=[])
 
-        return -cost[0], list(path)
+        return CapacityPath(capacity=-cost[0], path=list(path))
 
     def get_balances_along_path(self, path):
         balances = []

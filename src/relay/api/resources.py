@@ -45,7 +45,7 @@ from .schemas import (
     AppliedDelegationFeeSchema,
     CurrencyNetworkEventSchema,
     CurrencyNetworkSchema,
-    DebtsListInCurrencyNetwork,
+    DebtsListInCurrencyNetworkSchema,
     IdentityInfosSchema,
     MediationFeesListSchema,
     MetaTransactionFeeSchema,
@@ -526,29 +526,9 @@ class UserDebtsLists(Resource):
     def __init__(self, trustlines: TrustlinesRelay) -> None:
         self.trustlines = trustlines
 
-    @dump_result_with_schema(DebtsListInCurrencyNetwork(many=True))
+    @dump_result_with_schema(DebtsListInCurrencyNetworkSchema(many=True))
     def get(self, user_address):
-        debts_in_all_currency_networks = self.trustlines.get_debt_list_of_user(
-            user_address
-        )
-
-        return [
-            {
-                "currency_network": currency_network,
-                "debts": [
-                    {
-                        "debtor": debtor,
-                        "value": debts_in_all_currency_networks[currency_network][
-                            debtor
-                        ],
-                    }
-                    for debtor in debts_in_all_currency_networks[
-                        currency_network
-                    ].keys()
-                ],
-            }
-            for currency_network in debts_in_all_currency_networks.keys()
-        ]
+        return self.trustlines.get_debt_list_of_user(user_address)
 
 
 class TransferInformation(Resource):
