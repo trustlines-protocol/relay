@@ -1360,10 +1360,12 @@ The response is a list of objects with the following fields:
 | debts           | object  | object    | list of debts involving the user in the currency network   |
 
 Debts is a list of objects with the following fields:
-| Attribute       | Type    | JSON Type | Description                                                                       |
-| --------------- | ------- | --------- | --------------------------------------------------------------------------------- |
-| debtor          | address | string    | address of the debtor that owes money to the user / towards which user owes money |
-| value           | object  | object    | value of the debt, positive if user is owed money, negative if it owes money      |
+| Attribute             | Type       | JSON Type      | Description                                                                          |
+| --------------------- | ---------- | -------------- | ------------------------------------------------------------------------------------ |
+| debtor                | address    | string         | address of the debtor that owes money to the user / towards which user owes money    |
+| value                 | object     | object         | value of the debt, positive if user is owed money, negative if it owes money         |
+| maximumClaimableValue | BigInteger | string         | the maximum value currently claimable considering the available paths in the network |
+| claimPath             | List       | list of string | if it exists, a path to claim the claimable value of the debt in the network         |
 
 #### Example Response
 ```json
@@ -1371,9 +1373,9 @@ Debts is a list of objects with the following fields:
   {
     "currencyNetwork": "0xee35211C4D9126D520bBfeaf3cFee5FE7B86F221",
     "debts": [
-      {"value": "1572", "debtor": "0xBeEac99C8439044B282E796f7C821d543AFb7C00"},
-      {"value": "1342", "debtor": "0xF5FFaFb5bbFE348097327f2Eba64Fc127f6a35E2"},
-      {"value": "633", "debtor": "0xFFa82F6639247a76365514c2F53DB8388c349d8D"}
+      {"value": "1572", "debtor": "0xBeEac99C8439044B282E796f7C821d543AFb7C00", "maximumClaimableValue": 0},
+      {"value": "1342", "debtor": "0xF5FFaFb5bbFE348097327f2Eba64Fc127f6a35E2", "maximumClaimableValue": "1342", "claimPath": ["0xF5FFaFb5bbFE348097327f2Eba64Fc127f6a35E2", "0xee35211C4D9126D520bBfeaf3cFee5FE7B86F221"]},
+      {"value": "-633", "debtor": "0xFFa82F6639247a76365514c2F53DB8388c349d8D", "maximumClaimableValue": "-100", "claimPath":  ["0xee35211C4D9126D520bBfeaf3cFee5FE7B86F221", "0xFFa82F6639247a76365514c2F53DB8388c349d8D"]}
     ]
   }
 ]
