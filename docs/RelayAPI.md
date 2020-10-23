@@ -39,7 +39,7 @@ https://relay0.testnet.trustlines.network/api/v1
 - [Accrued interests of trustline](#accrued-interests-of-trustline)
 - [Information for transfer in transaction](#information-for-transfer-in-transaction)
 ### User context
-- [Events of user in all currency networks](#events-of-user-in-all-currency-networks)
+- [All events of user](#all-events-of-user)
 - [Transaction infos for user](#transaction-infos-for-user)
 - [Balance of user](#balance-of-user)
 - [All trustlines](#all-trustlines-of-user-in-all-currency-networks)
@@ -1071,10 +1071,12 @@ of the user that were used in the mediated transfer.
 
 ## User context
 
-### All events of users for currency networks / exchanges / tokens / unweth.
-Returns a list of all event logs of a user. That means all events where the given user address is either `from` or `to`.
+### All events of user
+Returns a list of all event logs of a user for currency networks / exchanges / tokens / unweth.
+That means all events where the given user address is either `from` or `to`.
 You can filter what type of events you want with `contractType` to select the contract
 and `type` to select the name of the events within the contract.
+
 #### Request
 ```
 GET /users/:user/events?type=:type&fromBlock=:fromBlock&contractType:=contractType
@@ -1084,12 +1086,25 @@ GET /users/:user/events?type=:type&fromBlock=:fromBlock&contractType:=contractTy
 curl https://relay0.testnet.trustlines.network/api/v1/users/0xcbF1153F6e5AC01D363d432e24112e8aA56c55ce/events?type=TrustlineUpdate&fromBlock=123456&contractType=CurrencyNetwork
 ```
 #### URL Parameters
-|Name|Type|Required|Description|
-|-|-|-|-|
-|user|string|YES|Address of user|
-|type|string|NO|Either `TrustlineUpdate`, `TrustlineUpdateRequest`, `TrustlineUpdateCancel` or `Transfer`|
-|contractType|string|NO|Either `CurrencyNetwork`, `Exchange`, `UnwETH` or `Token`|
-|fromBlock|int|NO|Start of block range|
+|Name        |Type   |Required|Description|
+|------------|-------|--------|-|
+|user        |string |YES     |Address of user|
+|type        |string |NO      |Either `TrustlineUpdate`, `TrustlineUpdateRequest`, `TrustlineUpdateCancel` or `Transfer`|
+|contractType|string |NO      |Either `CurrencyNetwork`, `Exchange`, `UnwETH` or `Token`|
+|fromBlock   |int    |NO      |Start of block range|
+
+The types available for currency networks contracts are: `"TrustlineUpdateRequest"`, `"TrustlineUpdateCancel"`,
+`"TrustlineUpdate"`, `"BalanceUpdate"`, `"Transfer"`, `"DebtUpdate"`, and `"NetworkFreeze"`.
+
+The types available for exchange contracts are: `"LogFill"`, and `"LogCancel"`
+
+The types available for UnwETH contracts are: `"Deposit"`, `"Withdrawal"`, `"Transfer"`, and `"Approval"`
+
+The types available for token contracts are: `"Transfer"`, and `"Approval"`
+
+If no contract type or event type are given, the response will have all events of types,
+excluding `"DebtUpdate"`, `"BalanceUpdate"`, and `"NetworkFreeze"`
+
 #### Response
 For events from currency networks, they will have the following attributes:
 
@@ -1122,6 +1137,12 @@ Following additional attributes for `Transfer` events:
 |-----------|--------|------------------------------------------------------|
 | amount    | string | Transfer amount `from -> to`                         |
 | extraData | string | extraData as specified in the corresponding transfer |
+
+Following additional attributes for `DebtUpdate` events:
+
+| Attribute | Type   | Description                                                                                |
+|-----------|--------|--------------------------------------------------------------------------------------------|
+| debt      | string | Debt of `from` in the view of `to`, positive if `from` owes to `to` and negative otherwise |
 
 #### Example Response
 ```json
