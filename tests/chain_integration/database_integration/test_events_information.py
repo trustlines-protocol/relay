@@ -491,7 +491,7 @@ def get_debts_of_single_currency_network(
 ):
     debts_in_all_currency_network = EventsInformationFetcher(
         ethindex_db
-    ).get_debts_lists(creditor)
+    ).get_debt_lists_in_all_networks(creditor)
     assert len(debts_in_all_currency_network.keys()) == 1
     return debts_in_all_currency_network[currency_network_address]
 
@@ -545,9 +545,9 @@ def test_get_debts_repaid_debt(
     currency_network.increase_debt(creditor, debtor, debt_value)
 
     wait_for_ethindex_to_sync()
-    debts = EventsInformationFetcher(ethindex_db_for_currency_network).get_debts_lists(
-        creditor
-    )
+    debts = EventsInformationFetcher(
+        ethindex_db_for_currency_network
+    ).get_debt_lists_in_all_networks(creditor)
     assert debts == {}
 
 

@@ -314,16 +314,18 @@ class MediationFeesListSchema(Schema):
     network = Address()
 
 
-class Debts(Schema):
+class DebtsSchema(Schema):
 
     debtor = Address(required=True)
     value = BigInteger(required=True)
+    maximumClaimableValue = BigInteger(required=True, attribute="claimable_value")
+    claimPath = fields.List(Address(), required=False, attribute="claim_path")
 
 
-class DebtsListInCurrencyNetwork(Schema):
+class DebtsListInCurrencyNetworkSchema(Schema):
 
     currencyNetwork = Address(required=True, attribute="currency_network")
-    debts = fields.Nested(Debts, many=True)
+    debts = fields.Nested(DebtsSchema, many=True, attribute="debts_list")
 
 
 class TransferInformationSchema(Schema):

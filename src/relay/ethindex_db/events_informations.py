@@ -56,6 +56,20 @@ class MediationFee:
     timestamp = attr.ib()
 
 
+@attr.s
+class Debt:
+    debtor = attr.ib(type=str)
+    value = attr.ib(type=int)
+    claimable_value = attr.ib(type=int)
+    claim_path = attr.ib(type=Optional[List[str]], init=False)
+
+
+@attr.s
+class DebtsListInCurrencyNetwork:
+    currency_network = attr.ib(type=str)
+    debts_list = attr.ib(type=List[Debt])
+
+
 class EventsInformationFetcher:
     def __init__(self, currency_network_db: CurrencyNetworkEthindexDB):
         self._currency_network_db = currency_network_db
@@ -340,7 +354,19 @@ class EventsInformationFetcher:
             mediation_fees, start_time, end_time
         )
 
-    def get_debts_lists(self, user_address) -> Dict[str, Dict[str, int]]:
+    def get_debt_lists_in_all_networks_with_path(
+        self,
+        user_address: str,
+        currency_network_graphs: Dict[str, CurrencyNetworkGraph],
+    ) -> List[DebtsListInCurrencyNetwork]:
+        debts_list_in_all_networks = self.get_debt_lists_in_all_networks(user_address)
+        return self.add_path_information_to_debt_lists(
+            user_address, currency_network_graphs, debts_list_in_all_networks
+        )
+
+    def get_debt_lists_in_all_networks(
+        self, user_address: str
+    ) -> Dict[str, Dict[str, int]]:
         """
         Return a mapping from currency network to debts for user in currency network
         debts are a mapping from debtor to debt value
@@ -382,6 +408,53 @@ class EventsInformationFetcher:
                 )
 
         return debts_in_all_currency_networks
+
+    def add_path_information_to_debt_lists(
+        self,
+        user_address: str,
+        currency_network_graphs: Dict[str, CurrencyNetworkGraph],
+        debts_list_in_all_currency_networks: Dict[str, Dict[str, int]],
+    ) -> List[DebtsListInCurrencyNetwork]:
+        enriched_debts_lists_in_all_currency_networks = []
+        for currency_network in debts_list_in_all_currency_networks.keys():
+            enriched_debts_list = []
+
+            for debtor in debts_list_in_all_currency_networks[currency_network].keys():
+                debt_value = debts_list_in_all_currency_networks[currency_network][
+                    debtor
+                ]
+
+                if debt_value > 0:
+                    debt_claimer = user_address
+                    debt_payer = debtor
+                elif debt_value < 0:
+                    debt_claimer = debtor
+                    debt_payer = user_address
+                else:
+                    raise RuntimeError(f"Found null debt with debtor {debtor}")
+                capacity_path = currency_network_graphs[
+                    currency_network
+                ].find_maximum_capacity_path(
+                    debt_payer, debt_claimer, timestamp=int(time.time())
+                )
+                claimable_debt = min(capacity_path.capacity, abs(debt_value))
+
+                debt = Debt(
+                    debtor=debtor, value=debt_value, claimable_value=claimable_debt
+                )
+
+                if capacity_path.path != []:
+                    debt.claim_path = capacity_path.path
+
+                enriched_debts_list.append(debt)
+
+            enriched_debts_lists_in_all_currency_networks.append(
+                DebtsListInCurrencyNetwork(
+                    currency_network=currency_network, debts_list=enriched_debts_list
+                )
+            )
+
+        return enriched_debts_lists_in_all_currency_networks
 
 
 def clean_null_debt(debts_in_all_currency_networks, network_address, debtor):

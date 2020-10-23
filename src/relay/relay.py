@@ -304,7 +304,11 @@ class TrustlinesRelay:
     def get_debt_list_of_user(self, user_address):
 
         event_selector = self.get_ethindex_db_for_currency_network()
-        return EventsInformationFetcher(event_selector).get_debts_lists(user_address)
+        return EventsInformationFetcher(
+            event_selector
+        ).get_debt_lists_in_all_networks_with_path(
+            user_address, currency_network_graphs=self.currency_network_graphs
+        )
 
     def deploy_identity(self, factory_address, implementation_address, signature):
         return self.delegate.deploy_identity(
