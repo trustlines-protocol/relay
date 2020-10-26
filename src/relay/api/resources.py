@@ -511,7 +511,6 @@ class UserEarnedMediationFeesList(Resource):
         mediationFees = self.trustlines.get_earned_mediation_fees(
             network_address, user_address, start_time, end_time
         )
-        logger.info(mediationFees)
 
         return {
             "mediationFees": mediationFees,
