@@ -276,7 +276,11 @@ class TrustlinesRelay:
         )
 
     def get_earned_mediation_fees(
-        self, network_address, user_address, start_time: int = 0, end_time: int = None,
+        self,
+        network_address,
+        user_address,
+        start_time: int = 0,
+        end_time: Optional[int] = None,
     ):
         current_network_graph = self.currency_network_graphs[network_address]
         empty_graph = CurrencyNetworkGraph(
