@@ -456,15 +456,17 @@ class UserAccruedInterestList(Resource):
         for friend in self.trustlines.get_friends_of_user_in_network(
             network_address, user_address
         ):
-            accrued_interest_list.append(
-                {
-                    "accruedInterests": self.trustlines.get_list_of_accrued_interests_for_trustline(
-                        network_address, user_address, friend, start_time, end_time
-                    ),
-                    "user": user_address,
-                    "counterparty": friend,
-                }
+            accrued_interest_with_friend = self.trustlines.get_list_of_accrued_interests_for_trustline(
+                network_address, user_address, friend, start_time, end_time
             )
+            if len(accrued_interest_with_friend) != 0:
+                accrued_interest_list.append(
+                    {
+                        "accruedInterests": accrued_interest_with_friend,
+                        "user": user_address,
+                        "counterparty": friend,
+                    }
+                )
         return accrued_interest_list
 
 
