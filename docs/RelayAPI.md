@@ -1008,6 +1008,8 @@ The `paymentPath` is an object with the following attributes:
 
 ### Earned mediation fees of user
 Returns a list of all earned mediation fees for user in a network.
+Mediation fees are the fees received by a user in a currency network for mediating a transfer,
+e.g. for a transfer A -> user -> B, the user will receive a mediation fee for enabling the transfer.
 #### Request
 ```
 GET /networks/:network/users/:user/mediation-fees?startTime=:timestamp&endTime=:timestamp
