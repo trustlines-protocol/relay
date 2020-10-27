@@ -16,7 +16,7 @@ cffi==1.14.3              # via cryptography
 chardet==3.0.4            # via requests
 click==7.1.1              # via contract-deploy-tools, eth-tester-rpc, flask, trustlines-contracts-deploy, trustlines-relay (setup.py)
 contract-deploy-tools==0.8.0  # via -r constraints.in, trustlines-contracts-deploy
-cryptography==2.9.2       # via py-evm
+cryptography==3.2       # via py-evm
 cytoolz==0.10.1           # via eth-keyfile, eth-tester-rpc, eth-utils
 decorator==4.4.2          # via networkx
 eth-abi==2.1.1            # via eth-account, eth-tester, web3
