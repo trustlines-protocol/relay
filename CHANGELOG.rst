@@ -6,8 +6,10 @@ Change Log
 - Changed: Update major dependencies, notably web3 version 5.7.0
 - Changed: add filtering by contract type to user events endpoint
   /users/:user/events?type=:type&fromBlock=:fromBlock&contractType:=contractType
+
 - Added: endpoint for getting mediation fees earned by user
   /networks/:network/users/:user/mediation-fees?startTime=:timestamp&endTime=:timestamp
+- Added: endpoint to get debt of user in all currency networks `GET /users/:userAddress/debts`
 
 `0.18.0`_ (2020-09-14)
 -------------------------------
