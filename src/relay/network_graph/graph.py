@@ -6,6 +6,10 @@ from typing import Any, List, NamedTuple
 
 import networkx as nx
 
+from relay.ethindex_db.sync_updates import (
+    BalanceUpdateFeedUpdate,
+    TrustlineUpdateFeedUpdate,
+)
 from relay.network_graph.graph_constants import balance_ab, creditline_ab, creditline_ba
 from relay.network_graph.trustline_data import (
     get_balance,
@@ -616,6 +620,27 @@ class CurrencyNetworkGraph(object):
         )
         if account.can_be_closed():
             self.remove_trustline(a, b)
+
+    def update_from_feed(self, feed_update):
+        if type(feed_update) == TrustlineUpdateFeedUpdate:
+            self.update_trustline(
+                feed_update.from_,
+                feed_update.to,
+                feed_update.creditline_given,
+                feed_update.creditline_received,
+                feed_update.interest_rate_given,
+                feed_update.interest_rate_received,
+                feed_update.is_frozen,
+            )
+        elif type(feed_update) == BalanceUpdateFeedUpdate:
+            self.update_balance(
+                feed_update.from_,
+                feed_update.to,
+                feed_update.value,
+                feed_update.timestamp,
+            )
+        else:
+            raise RuntimeError(f"Got feed update of unexpected type {feed_update}")
 
     def create_edge(self, a, b):
         logger.debug("Create new trustline edge: (%s, %s)", a, b)
