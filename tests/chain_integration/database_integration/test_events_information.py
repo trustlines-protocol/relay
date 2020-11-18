@@ -5,64 +5,12 @@ from enum import Enum, auto
 import pytest
 from tests.chain_integration.conftest import CurrencyNetworkProxy
 
-from relay.blockchain import currency_network_events
-from relay.ethindex_db import ethindex_db
 from relay.ethindex_db.events_informations import (
     EventsInformationFetcher,
     IdentifiedNotPartOfTransferException,
 )
 from relay.network_graph.graph import CurrencyNetworkGraph
 from relay.network_graph.payment_path import FeePayer
-from relay.relay import ContractTypes, all_event_builders
-
-
-"""
-The tests are running a postgres database and ethindex to tests out getting and processing event information.
-They assume that you can run docker and docker-compose.
-Otherwise, you can run the tests with `--local-db` option and have a local postgres environment with:
-- user: POSTGRES_USER
-- password: POSTGRES_PASSWORD
-- database: POSTGRES_DATABASE
-- accessible on localhost:postgres_port
-See tests/chain_integration/database_integration/conftest.py for actual values
-"""
-
-
-@pytest.fixture()
-def ethindex_db_for_currency_network(currency_network, generic_db_connection):
-    return make_ethindex_db(currency_network.address, generic_db_connection)
-
-
-@pytest.fixture()
-def ethindex_db_for_currency_network_with_trustlines(
-    currency_network_with_trustlines_session, generic_db_connection
-):
-    return make_ethindex_db(
-        currency_network_with_trustlines_session.address, generic_db_connection
-    )
-
-
-@pytest.fixture()
-def ethindex_db_for_currency_network_with_trustlines_and_interests(
-    currency_network_with_trustlines_and_interests_session, generic_db_connection
-):
-    return make_ethindex_db(
-        currency_network_with_trustlines_and_interests_session.address,
-        generic_db_connection,
-    )
-
-
-def make_ethindex_db(network_address, conn):
-    return ethindex_db.CurrencyNetworkEthindexDB(
-        conn,
-        address=network_address,
-        standard_event_types=currency_network_events.standard_event_types,
-        event_builders=all_event_builders,
-        from_to_types=currency_network_events.from_to_types,
-        address_to_contract_types={
-            network_address: ContractTypes.CURRENCY_NETWORK.value
-        },
-    )
 
 
 def accrue_interests(currency_network, web3, chain, path, years):
