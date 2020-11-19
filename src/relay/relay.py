@@ -407,9 +407,9 @@ class TrustlinesRelay:
         if self.config["delegate"]["enable"]:
             self._start_delegate()
         self._load_addresses()
-        self._start_sync_graph_via_feed()
+        self._start_sync_graphs_via_feed()
 
-    def _start_sync_graph_via_feed(self):
+    def _start_sync_graphs_via_feed(self):
         conn = ethindex_db.connect("")
 
         def sync():
@@ -436,7 +436,17 @@ class TrustlinesRelay:
             prevent_mediator_interests=currency_network_proxy.prevent_mediator_interests,
         )
         self._log_listener.add_proxy(currency_network_proxy)
+        self.fully_sync_graph(address)
         self._start_listen_network(address)
+
+    def fully_sync_graph(self, address):
+        logger.info(f"Fully syncing graph from blockchain state for address: {address}")
+
+        self.currency_network_graphs[address].gen_network(
+            self.currency_network_proxies[address].gen_graph_representation()
+        )
+
+        logger.info(f"Graph fully synced for address: {address}")
 
     def new_exchange(self, address: str) -> None:
         assert is_checksum_address(address)
@@ -914,13 +924,6 @@ class TrustlinesRelay:
     def _publish_user_event(self, event):
         assert event.user is not None
         self.subjects[event.user].publish(event)
-
-
-def _create_on_full_sync(graph):
-    def update_community(graph_rep):
-        graph.gen_network(graph_rep)
-
-    return update_community
 
 
 def create_engine():
