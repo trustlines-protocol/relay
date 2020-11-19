@@ -89,7 +89,6 @@ def convert_legacy_format(raw_data: MutableMapping) -> MutableMapping:
         )
 
     mapping_old_config_format: Dict[str, str] = {
-        "relay.syncInterval": "trustline_index.full_sync_interval",
         "relay.enableEtherFaucet": "faucet.enable",
         "relay.enableRelayMetaTransaction": "delegate.enable",
         "relay.enableDeployIdentity": "delegate.enable_deploy_identity",
@@ -104,10 +103,12 @@ def convert_legacy_format(raw_data: MutableMapping) -> MutableMapping:
     not_supported_anymore_config = [
         "trustline_index.event_query_timeout",
         "relay.eventQueryTimeout",
-    ]
-    deprecated_config: Iterable[str] = [
         "relay.updateNetworksInterval",
         "relay.update_indexed_networks_interval",
+    ]
+    deprecated_config: Iterable[str] = [
+        "trustline_index.full_sync_interval",
+        "relay.syncInterval",
     ]
     for old_path, new_path in mapping_old_config_format.items():
         raw_data = _remap_config_entry(raw_data, old_path, new_path)

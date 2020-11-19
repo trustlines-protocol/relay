@@ -416,7 +416,7 @@ class TrustlinesRelay:
             while True:
                 graph_updates = get_graph_updates_feed(conn)
                 self._apply_feed_update_on_graph(graph_updates)
-                gevent.sleep(0.05)
+                gevent.sleep(self.config["trustline_index"]["sync_interval"])
 
         gevent.Greenlet.spawn(sync)
 

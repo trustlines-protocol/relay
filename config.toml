@@ -7,7 +7,7 @@ gas_price = 0
 
 [trustline_index]
 enable = true
-full_sync_interval = 300
+sync_interval = 1
 
 [tx_relay]
 enable = true
