@@ -27,8 +27,26 @@ def get_new_entries(filter, callback):
     new_entries = filter.get_new_entries()
     if new_entries:
         logger.debug("new entries for filter %s: %s", filter, new_entries)
-    for event in new_entries:
+    sorted_entries = sort_log_entries(new_entries)
+    for event in sorted_entries:
         callback(event)
+
+
+def sort_log_entries(log_entries):
+    def log_index_key(log_entry):
+        if log_entry.get("logIndex") is None:
+            return 0
+        return log_entry.get("logIndex")
+
+    def block_number_key(log_entry):
+        if log_entry.get("blockNumber") is None:
+            return math.inf
+        return log_entry.get("blockNumber")
+
+    return sorted(
+        log_entries,
+        key=lambda log_entry: (block_number_key(log_entry), log_index_key(log_entry)),
+    )
 
 
 def watch_filter(filter, callback):
