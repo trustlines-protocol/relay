@@ -56,6 +56,7 @@ from .schemas import (
     TransactionStatusSchema,
     TransferIdentifierSchema,
     TransferInformationSchema,
+    TransferredSumSchema,
     TrustlineSchema,
     TxInfosSchema,
     UserCurrencyNetworkEventSchema,
@@ -529,6 +530,37 @@ class UserDebtsLists(Resource):
     @dump_result_with_schema(DebtsListInCurrencyNetworkSchema(many=True))
     def get(self, user_address):
         return self.trustlines.get_debt_list_of_user(user_address)
+
+
+class TotalTransferredSum(Resource):
+    def __init__(self, trustlines: TrustlinesRelay) -> None:
+        self.trustlines = trustlines
+
+    args = {
+        "startTime": fields.Int(required=False, missing=0),
+        "endTime": fields.Int(required=False, missing=None),
+    }
+
+    @use_args(args)
+    @dump_result_with_schema(TransferredSumSchema())
+    def get(self, args, network_address: str, sender_address, receiver_address):
+        abort_if_unknown_network(self.trustlines, network_address)
+        start_time = args["startTime"]
+        end_time = args["endTime"]
+
+        if end_time is None:
+            end_time = time.time()
+
+        value = self.trustlines.get_total_sum_transferred(
+            network_address, sender_address, receiver_address, start_time, end_time
+        )
+        return {
+            "sender": sender_address,
+            "receiver": receiver_address,
+            "startTime": start_time,
+            "endTime": end_time,
+            "value": value,
+        }
 
 
 class TransferInformation(Resource):

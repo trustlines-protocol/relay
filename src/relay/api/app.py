@@ -10,6 +10,7 @@ from werkzeug.exceptions import HTTPException
 from werkzeug.routing import BaseConverter, ValidationError
 
 from relay.api.resources import (
+    TotalTransferredSum,
     TrustlineEvents,
     UserDebtsLists,
     UserEarnedMediationFeesList,
@@ -161,6 +162,11 @@ def ApiApp(trustlines, *, enabled_apis):
         add_resource(Balance, "/users/<address:user_address>/balance")
         add_resource(UserTrustlines, "/users/<address:user_address>/trustlines")
         add_resource(UserDebtsLists, "/users/<address:user_address>/debts")
+        add_resource(
+            TotalTransferredSum,
+            "/networks/<address:network_address>/users/<address:sender_address>/"
+            "transferredSums/<address:receiver_address>",
+        )
 
         api_bp.add_url_rule(
             "/networks/<address:network_address>/image",

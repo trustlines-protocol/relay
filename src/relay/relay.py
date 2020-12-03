@@ -272,6 +272,19 @@ class TrustlinesRelay:
             network_address, user_address, counterparty_address, start_time, end_time
         )
 
+    def get_total_sum_transferred(
+        self,
+        network_address,
+        sender_address,
+        receiver_address,
+        start_time=0,
+        end_time=None,
+    ):
+        event_selector = self.get_ethindex_db_for_currency_network(network_address)
+        return EventsInformationFetcher(event_selector).get_total_sum_transferred(
+            sender_address, receiver_address, start_time, end_time
+        )
+
     def get_transfer_information_for_tx_hash(self, tx_hash: str):
         fetcher = EventsInformationFetcher(self.get_ethindex_db_for_currency_network())
         return fetcher.get_transfer_details_for_tx(tx_hash)

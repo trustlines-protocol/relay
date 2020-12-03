@@ -372,3 +372,12 @@ class TransferIdentifierSchema(Schema):
 class TransactionIdentifierSchema(Schema):
 
     transactionHash = Hash(required=True)
+
+
+class TransferredSumSchema(Schema):
+
+    sender = Address(required=True)
+    receiver = Address(required=True)
+    startTime = fields.Integer(required=True)
+    endTime = fields.Integer(required=True)
+    value = BigInteger(required=True)
