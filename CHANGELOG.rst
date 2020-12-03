@@ -10,6 +10,8 @@ Change Log
 - Added: endpoint for getting mediation fees earned by user
   /networks/:network/users/:user/mediation-fees?startTime=:timestamp&endTime=:timestamp
 - Added: endpoint to get debt of user in all currency networks `GET /users/:userAddress/debts`
+- Added: endpoint to get total transferred sum between users in time window
+  `GET /networks/:network/users/:sender/transferredSums/:receiver?startTime=:timestamp&endTime=:timestamp`
 
 `0.18.0`_ (2020-09-14)
 -------------------------------
