@@ -456,6 +456,30 @@ class EventsInformationFetcher:
 
         return enriched_debts_lists_in_all_currency_networks
 
+    def get_total_sum_transferred(
+        self, sender_address, receiver_address, start_time=0, end_time=None
+    ):
+        all_transfer_events = self._currency_network_db.get_events_from_to(
+            event_types=[TransferEventType],
+            start_time=start_time,
+            end_time=end_time,
+            from_address=sender_address,
+            to_address=receiver_address,
+        )
+        sum = 0
+        for event in all_transfer_events:
+            assert (
+                event.type == TransferEventType
+            ), f"Expected event to be of type transfer: {event}"
+            assert (
+                event.from_ == sender_address
+            ), f"Expected transfer sender to be {sender_address}: {event}"
+            assert (
+                event.to == receiver_address
+            ), f"Expected transfer receiver to be {receiver_address}: {event}"
+            sum += event.value
+        return sum
+
 
 def clean_null_debt(debts_in_all_currency_networks, network_address, debtor):
     del debts_in_all_currency_networks[network_address][debtor]
