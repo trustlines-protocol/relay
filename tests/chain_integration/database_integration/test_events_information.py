@@ -547,3 +547,120 @@ def test_get_debts_multiple_debtors(
 
     for index in range(len(debtors)):
         assert debts[debtors[index]] == debt_values[index]
+
+
+def test_get_total_sum_transferred_single_transfer(
+    ethindex_db_for_currency_network_with_trustlines,
+    currency_network_with_trustlines_session: CurrencyNetworkProxy,
+    accounts,
+    wait_for_ethindex_to_sync,
+):
+
+    sender = accounts[0]
+    receiver = accounts[1]
+    value = 123
+
+    currency_network_with_trustlines_session.transfer_on_path(
+        value, path=[sender, receiver]
+    )
+
+    wait_for_ethindex_to_sync()
+    sum = EventsInformationFetcher(
+        ethindex_db_for_currency_network_with_trustlines
+    ).get_total_sum_transferred(sender, receiver)
+
+    assert sum == value
+
+
+def test_get_total_sum_transferred_multi_transfer(
+    ethindex_db_for_currency_network_with_trustlines,
+    currency_network_with_trustlines_session: CurrencyNetworkProxy,
+    accounts,
+    wait_for_ethindex_to_sync,
+):
+
+    sender = accounts[0]
+    receiver = accounts[1]
+    value = 11
+    number_transfer = 5
+
+    for x in range(number_transfer):
+        currency_network_with_trustlines_session.transfer_on_path(
+            value, path=[sender, receiver]
+        )
+
+    wait_for_ethindex_to_sync()
+    sum = EventsInformationFetcher(
+        ethindex_db_for_currency_network_with_trustlines
+    ).get_total_sum_transferred(sender, receiver)
+
+    assert sum == value * number_transfer
+
+
+def test_get_total_sum_transferred_time_window(
+    ethindex_db_for_currency_network_with_trustlines,
+    currency_network_with_trustlines_session: CurrencyNetworkProxy,
+    accounts,
+    wait_for_ethindex_to_sync,
+    chain,
+):
+
+    sender = accounts[0]
+    receiver = accounts[1]
+    value = 11
+    start_time = 2_000_000_000
+    end_time = 2_100_000_000
+
+    currency_network_with_trustlines_session.transfer_on_path(
+        value, path=[sender, receiver]
+    )
+    chain.time_travel(start_time)
+    currency_network_with_trustlines_session.transfer_on_path(
+        value, path=[sender, receiver]
+    )
+    chain.time_travel(end_time + 1)
+    currency_network_with_trustlines_session.transfer_on_path(
+        value, path=[sender, receiver]
+    )
+
+    wait_for_ethindex_to_sync()
+    sum = EventsInformationFetcher(
+        ethindex_db_for_currency_network_with_trustlines
+    ).get_total_sum_transferred(sender, receiver, start_time, end_time)
+
+    assert sum == value
+
+
+def test_get_total_sum_transferred_with_noise(
+    ethindex_db_for_currency_network_with_trustlines,
+    currency_network_with_trustlines_session: CurrencyNetworkProxy,
+    accounts,
+    wait_for_ethindex_to_sync,
+):
+
+    sender = accounts[1]
+    receiver = accounts[3]
+    value = 11
+
+    currency_network_with_trustlines_session.transfer_on_path(
+        value, path=[accounts[0], accounts[1], accounts[2], accounts[3], accounts[4]]
+    )
+    currency_network_with_trustlines_session.transfer_on_path(
+        value, path=[accounts[0], accounts[1], accounts[2], accounts[3]]
+    )
+    currency_network_with_trustlines_session.transfer_on_path(
+        value, path=[accounts[1], accounts[2], accounts[3], accounts[4]]
+    )
+    currency_network_with_trustlines_session.transfer_on_path(
+        value, path=[receiver, accounts[2], sender]
+    )
+    currency_network_with_trustlines_session.transfer_on_path(
+        value, path=[sender, accounts[2], receiver]
+    )
+
+    wait_for_ethindex_to_sync()
+    sum = EventsInformationFetcher(
+        ethindex_db_for_currency_network_with_trustlines
+    ).get_total_sum_transferred(sender, receiver)
+
+    assert sum == value

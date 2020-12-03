@@ -133,7 +133,7 @@ class EthindexDB:
         default_address.
         """
         r = address or self.default_address
-        assert r, "no network address passed in and no default network address given"
+        assert r, "no contract address passed in and no default contract address given"
         return r
 
     def _get_standard_event_types(
@@ -250,7 +250,7 @@ class EthindexDB:
         return events
 
     def get_events(
-        self, event_type, from_block=0, contract_address: str = None,
+        self, event_type, from_block: int = 0, contract_address: str = None
     ) -> List[BlockchainEvent]:
         contract_address = self._get_addr(contract_address)
         query = EventsQuery(
@@ -270,6 +270,116 @@ class EthindexDB:
         )
 
         return events
+
+    def get_events_from_to(
+        self,
+        event_types: Iterable[str] = None,
+        start_time: int = 0,
+        end_time: int = None,
+        contract_address: str = None,
+        from_address: str = None,
+        to_address: str = None,
+    ):
+        """
+        Get events with given parameters.
+
+        If `from_address` and `to_address` are set, will find all events with matching `from` and `to` for given event
+        types. e.g. for a TrustlineUpdate it will match for `_creditor` and `_debtor`.
+
+        If no event_types is given, uses self.standard_event_types.
+        """
+        if event_types is None:
+            event_types = self.standard_event_types
+
+        query_strings = []
+        query_params: List[Any] = []
+
+        if from_address is not None or to_address is not None:
+            from_to_string, from_to_args = self.get_query_for_from_to(
+                event_types, from_address, to_address
+            )
+            query_strings.append(from_to_string)
+            query_params += from_to_args
+        elif event_types is not None:
+            query_strings.append("eventName in %s")
+            query_params.append(tuple(event_types))
+
+        if start_time != 0:
+            query_strings.append("timestamp>=%s")
+            query_params.append(start_time)
+        if end_time is not None:
+            query_strings.append("timestamp<=%s")
+            query_params.append(end_time)
+
+        contract_address = self._get_addr(contract_address)
+        query_strings.append("address=%s")
+        query_params.append(contract_address)
+
+        query = EventsQuery(" AND ".join(query_strings), query_params)
+
+        events = self._run_events_query(query)
+
+        logger.debug(
+            "get_events_from_to(%s, %s, %s, %s, %s, %s) -> %s rows",
+            event_types,
+            start_time,
+            end_time,
+            contract_address,
+            from_address,
+            to_address,
+            len(events),
+        )
+
+        return events
+
+    def get_query_for_from_to(self, event_types, from_address, to_address):
+        """
+        Make a query string for finding events of types `event_types` with matching `from_address` and `to_address`
+
+        Assumes self.from_to_types is properly set for given event_types
+        """
+
+        if from_address is None and to_address is None:
+            raise ValueError(
+                "Cannot filter for from_address and to_address if addresses are None"
+            )
+
+        event_type_from_to_query_strings = []
+        query_params = []
+
+        for event_type in event_types:
+            if event_type not in self.from_to_types.keys():
+                raise ValueError(
+                    f"No `from_to_types` for given event type: {event_type}"
+                )
+            query_params.append(event_type)
+            user_types = self.from_to_types[event_type]
+
+            from_string = ""
+            to_string = ""
+            if from_address is not None:
+                from_string = f"args->>'{user_types[0]}'=%s"
+                query_params.append(from_address)
+            if to_address is not None:
+                to_string = f"args->>'{user_types[1]}'=%s"
+                query_params.append(to_address)
+
+            coordinator = ""
+            if from_string != "" and to_string != "":
+                coordinator = " AND "
+            from_to_query_string = from_string + coordinator + to_string
+
+            event_type_from_to_string = (
+                "(eventName=%s AND (" + from_to_query_string + "))"
+            )
+
+            event_type_from_to_query_strings.append(event_type_from_to_string)
+
+        final_string = " OR ".join(
+            string for string in event_type_from_to_query_strings
+        )
+
+        return final_string, query_params
 
     def get_all_events(
         self,
