@@ -5,37 +5,37 @@
 #    ./compile-requirements
 #
 appdirs==1.4.3            # via black, virtualenv
-attrdict==2.0.1           # via -c requirements.txt, eth-account
 attrs==19.3.0             # via -c requirements.txt, black, eth-index, jsonschema, pytest
 base58==2.0.0             # via -c requirements.txt, multiaddr
+bitarray==1.2.2           # via -c requirements.txt, eth-account
 black==19.10b0            # via -r dev-requirements.in
+blake2b-py==0.1.3         # via -c requirements.txt, py-evm
+cached-property==1.5.2    # via -c requirements.txt, py-evm
 certifi==2019.11.28       # via -c requirements.txt, requests
-cffi==1.14.3              # via -c requirements.txt, cryptography
 cfgv==3.1.0               # via pre-commit
 chardet==3.0.4            # via -c requirements.txt, requests
 click==7.1.1              # via -c requirements.txt, black, contract-deploy-tools, eth-index, eth-tester-rpc, pip-tools
 contract-deploy-tools==0.8.0  # via -c requirements.txt, -r dev-requirements.in
 coverage==5.0.4           # via pytest-cov
-cryptography==2.9.2       # via -c requirements.txt, py-evm
 cytoolz==0.10.1           # via -c requirements.txt, eth-keyfile, eth-tester-rpc, eth-utils
 distlib==0.3.1            # via virtualenv
 entrypoints==0.3          # via flake8
 eth-abi==2.1.1            # via -c requirements.txt, eth-account, eth-tester, web3
-eth-account==0.4.0        # via -c requirements.txt, web3
+eth-account==0.5.4        # via -c requirements.txt, web3
 eth-bloom==1.0.3          # via -c requirements.txt, py-evm
 eth-hash[pycryptodome,pysha3]==0.2.0  # via -c requirements.txt, eth-bloom, eth-tester, eth-tester-rpc, eth-utils, trie, web3
 eth-index==0.3.2          # via -r dev-requirements.in
 eth-keyfile==0.5.1        # via -c requirements.txt, contract-deploy-tools, eth-account
 eth-keys==0.2.4           # via -c requirements.txt, eth-account, eth-keyfile, eth-tester, py-evm
-eth-rlp==0.1.2            # via -c requirements.txt, eth-account
-eth-tester-rpc==0.4.0b1   # via -c requirements.txt, contract-deploy-tools
-eth-tester[py-evm]==0.1.0b39  # via -c requirements.txt, contract-deploy-tools, eth-tester-rpc
+eth-rlp==0.2.1            # via -c requirements.txt, eth-account
+eth-tester-rpc==0.5.0b1   # via -c requirements.txt, contract-deploy-tools
+eth-tester[py-evm]==0.5.0b3  # via -c requirements.txt, contract-deploy-tools, eth-tester-rpc
 eth-typing==2.2.1         # via -c requirements.txt, eth-abi, eth-utils, py-ecc, py-evm, web3
-eth-utils==1.8.4          # via -c requirements.txt, contract-deploy-tools, eth-abi, eth-account, eth-keyfile, eth-keys, eth-rlp, eth-tester, eth-tester-rpc, hexbytes, py-ecc, py-evm, rlp, trie, web3
+eth-utils==1.9.5          # via -c requirements.txt, contract-deploy-tools, eth-abi, eth-account, eth-keyfile, eth-keys, eth-rlp, eth-tester, eth-tester-rpc, hexbytes, py-ecc, py-evm, rlp, trie, web3
 filelock==3.0.12          # via virtualenv
 flake8-string-format==0.3.0  # via -r dev-requirements.in
 flake8==3.7.9             # via -r dev-requirements.in, flake8-string-format
-hexbytes==0.2.0           # via -c requirements.txt, eth-account, eth-rlp, web3
+hexbytes==0.2.0           # via -c requirements.txt, eth-account, eth-rlp, trie, web3
 identify==1.4.12          # via pre-commit
 idna==2.9                 # via -c requirements.txt, requests
 importlib-metadata==1.7.0  # via -c requirements.txt, eth-index, jsonschema, pluggy, pre-commit, pytest, virtualenv
@@ -60,11 +60,10 @@ pre-commit==2.2.0         # via -r dev-requirements.in
 protobuf==3.11.3          # via -c requirements.txt, web3
 psycopg2==2.8.4           # via -c requirements.txt, eth-index
 py-ecc==1.7.1             # via -c requirements.txt, py-evm
-py-evm==0.2.0a42          # via -c requirements.txt, eth-tester
+py-evm==0.3.0a20          # via -c requirements.txt, eth-tester
 py-solc==3.2.0            # via -c requirements.txt, contract-deploy-tools
 py==1.8.1                 # via pytest
 pycodestyle==2.5.0        # via flake8
-pycparser==2.20           # via -c requirements.txt, cffi
 pycryptodome==3.9.7       # via -c requirements.txt, eth-hash, eth-keyfile
 pyethash==0.1.27          # via -c requirements.txt, py-evm
 pyflakes==2.1.1           # via flake8
@@ -76,19 +75,20 @@ pytest==5.4.1             # via -r dev-requirements.in, pytest-cov
 pyyaml==5.3.1             # via pre-commit
 regex==2020.2.20          # via black
 requests==2.23.0          # via -c requirements.txt, ipfshttpclient, web3
-rlp==1.2.0                # via -c requirements.txt, eth-account, eth-rlp, eth-tester, py-evm, trie
+rlp==2.0.1                # via -c requirements.txt, eth-account, eth-rlp, eth-tester, py-evm, trie
 semantic-version==2.8.4   # via -c requirements.txt, eth-tester, py-solc
-six==1.14.0               # via -c requirements.txt, attrdict, cryptography, ipfshttpclient, jsonschema, multiaddr, packaging, parsimonious, pip-tools, protobuf, pyrsistent, virtualenv
+six==1.14.0               # via -c requirements.txt, ipfshttpclient, jsonschema, multiaddr, packaging, parsimonious, pip-tools, protobuf, pyrsistent, virtualenv
+sortedcontainers==2.3.0   # via -c requirements.txt, trie
 toml==0.10.0              # via -c requirements.txt, black, pre-commit
 toolz==0.10.0             # via -c requirements.txt, cytoolz
-trie==1.4.0               # via -c requirements.txt, py-evm
+trie==2.0.0-alpha.5       # via -c requirements.txt, py-evm
 typed-ast==1.4.1          # via black, mypy
-typing-extensions==3.7.4.3  # via -c requirements.txt, mypy, web3
+typing-extensions==3.7.4.3  # via -c requirements.txt, mypy, trie, web3
 urllib3==1.25.8           # via -c requirements.txt, requests
 varint==1.0.2             # via -c requirements.txt, multiaddr
 virtualenv==20.0.31       # via pre-commit
 wcwidth==0.1.9            # via pytest
-web3==5.7.0               # via -c requirements.txt, contract-deploy-tools, eth-index
+web3==5.9.0               # via -c requirements.txt, contract-deploy-tools, eth-index
 websockets==8.1           # via -c requirements.txt, web3
 werkzeug==0.16.1          # via -c requirements.txt, eth-tester-rpc
 wheel==0.34.2             # via -r dev-requirements.in
