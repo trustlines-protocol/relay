@@ -23,7 +23,7 @@ COPY ./dev-requirements.txt /relay/dev-requirements.txt
 RUN /opt/relay/bin/pip install --disable-pip-version-check -c dev-requirements.txt pip wheel setuptools
 COPY ./requirements.txt /relay/requirements.txt
 
-RUN /opt/relay/bin/pip install --disable-pip-version-check -r requirements.txt
+RUN /opt/relay/bin/pip install --disable-pip-version-check -r requirements.txt -r dev-requirements.txt
 
 COPY . /relay
 

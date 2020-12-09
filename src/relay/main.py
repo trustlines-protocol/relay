@@ -4,6 +4,8 @@ import sys
 
 import click
 import sentry_sdk.integrations.flask
+from coverage import Coverage
+from gevent import signal
 from gevent.pywsgi import WSGIServer
 from geventwebsocket.handler import WebSocketHandler
 
@@ -97,14 +99,27 @@ def _show_version(ctx, param, value):
     is_flag=True,
     callback=_show_version,
 )
+@click.option(
+    "--coverage",
+    "report_coverage",
+    help="creates a file /end2end-coverage/coverage.xml on shut down to report coverage",
+    is_flag=True,
+    default=False,
+)
 @click.pass_context
-def main(ctx, port: int, config: str, addresses: str, version) -> None:
+def main(
+    ctx, port: int, config: str, addresses: str, version: bool, report_coverage: bool
+) -> None:
     """run the relay server"""
 
     # silence warnings from urllib3, see github issue 246
     logging.getLogger("urllib3.connectionpool").setLevel(logging.CRITICAL)
 
     logger.info("Starting relay server version %s", get_version())
+
+    if report_coverage:
+        coverage = Coverage()
+        coverage.start()
 
     try:
         config_dict = load_config(config)
@@ -131,6 +146,20 @@ def main(ctx, port: int, config: str, addresses: str, version) -> None:
     ipport = (host, port)
     app = ApiApp(trustlines, enabled_apis=select_enabled_apis(config_dict))
     http_server = WSGIServer(ipport, app, log=None, handler_class=WebSocketHandler)
+
+    if report_coverage:
+
+        def shutdown():
+            logger.info("Relay server is shutting down ...")
+            http_server.stop(timeout=60)
+            coverage.stop()
+            coverage.xml_report(outfile="/end2end-coverage/coverage.xml")
+            exit(signal.SIGTERM)
+
+        signal(signal.SIGTERM, shutdown)
+        signal(signal.SIGQUIT, shutdown)
+        signal(signal.SIGINT, shutdown)
+
     logger.info("Server is running on {}".format(ipport))
     http_server.serve_forever()
 
