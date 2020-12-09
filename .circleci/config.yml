@@ -52,7 +52,7 @@ jobs:
       - run:
           name: Install codecov
           command: |
-            pip install codecov==2.0.16
+            pip install codecov==2.1.10
       - save_cache:
           key: venv-{{ checksum "dev-requirements.txt" }}-{{ checksum "requirements.txt" }}
           paths:
@@ -251,6 +251,7 @@ jobs:
       LOCAL_IMAGE: relay
     working_directory: ~
     steps:
+      - config-path
       - setup_remote_docker
       - attach_workspace:
           at: '~'
@@ -268,6 +269,15 @@ jobs:
             docker tag $LOCAL_IMAGE $DOCKER_REPO
             cd end2end
             ./run-e2e.sh
+      - run:
+          name: copy out the end2end coverage file from remote docker to host
+          command: |
+            scp circleci@remote-docker:project/end2end/end2end-coverage/coverage.xml /home/circleci/repo/coverage.xml
+      - run:
+          name: upload end2end codecov
+          command: |
+            cd ~/repo
+            codecov --file coverage.xml
 
   run-backwards-compatibiltiy-end2end-tests:
     executor: ubuntu-builder
@@ -407,6 +417,7 @@ workflows:
           filters:
             <<: *tagged-filter
           requires:
+            - install
             - build-docker-image
 
       - run-backwards-compatibiltiy-end2end-tests:
