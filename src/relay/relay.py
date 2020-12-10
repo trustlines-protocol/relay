@@ -24,7 +24,7 @@ from relay.ethindex_db import ethindex_db
 from relay.ethindex_db.sync_updates import (
     BalanceUpdateFeedUpdate,
     TrustlineUpdateFeedUpdate,
-    get_graph_updates_feed,
+    graph_update_getter,
 )
 from relay.pushservice.client import PushNotificationClient
 from relay.pushservice.client_token_db import (
@@ -411,10 +411,11 @@ class TrustlinesRelay:
 
     def _start_sync_graphs_via_feed(self):
         conn = ethindex_db.connect("")
+        updates_getter = graph_update_getter()
 
         def sync():
             while True:
-                graph_updates = get_graph_updates_feed(conn)
+                graph_updates = updates_getter(conn)
                 self._apply_feed_update_on_graph(graph_updates)
                 gevent.sleep(self.config["trustline_index"]["sync_interval"])
 

@@ -11,9 +11,15 @@ from relay.ethindex_db.ethindex_db import CurrencyNetworkEthindexDB
 from relay.ethindex_db.sync_updates import (
     BalanceUpdateFeedUpdate,
     TrustlineUpdateFeedUpdate,
+    ensure_graph_sync_id_file_exists,
     get_graph_updates_feed,
 )
 from relay.network_graph.graph import CurrencyNetworkGraph
+
+
+@pytest.fixture(autouse=True)
+def fix_ensure_graph_sync_id_file_exists():
+    ensure_graph_sync_id_file_exists()
 
 
 @pytest.fixture(autouse=True)
