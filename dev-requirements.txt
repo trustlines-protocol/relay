@@ -16,7 +16,7 @@ cfgv==3.1.0               # via pre-commit
 chardet==3.0.4            # via -c requirements.txt, requests
 click==7.1.1              # via -c requirements.txt, black, contract-deploy-tools, eth-index, eth-tester-rpc, pip-tools
 contract-deploy-tools==0.8.0  # via -c requirements.txt, -r dev-requirements.in
-coverage==5.0.4           # via pytest-cov
+coverage==5.3             # via -c requirements.txt, pytest-cov
 cytoolz==0.10.1           # via -c requirements.txt, eth-keyfile, eth-tester-rpc, eth-utils
 distlib==0.3.1            # via virtualenv
 entrypoints==0.3          # via flake8

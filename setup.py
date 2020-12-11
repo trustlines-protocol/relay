@@ -67,6 +67,7 @@ setup(
         "click",
         "toml",
         "cachetools",
+        "coverage",
     ],
     python_requires=">=3.6",
     entry_points={"console_scripts": ["tl-relay=relay.boot:main"]},
