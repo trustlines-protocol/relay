@@ -516,3 +516,59 @@ def test_sync_same_graphs(
     event_graph.apply_events_on_graph(events)
 
     assert_equal_graphs(feed_graph, event_graph)
+
+
+def test_sync_with_reordering_of_events(
+    currency_network_with_trustlines_and_interests_session: CurrencyNetworkProxy,
+    wait_for_ethindex_to_sync,
+    accounts,
+    generic_db_connection,
+    chain,
+):
+    """Test that if we have a reordering of events with the same values, we still get a correct graph from syncing"""
+
+    currency_network = currency_network_with_trustlines_and_interests_session
+    feed_graph = Graph(
+        currency_network.capacity_imbalance_fee_divisor,
+        currency_network.default_interest_rate,
+        currency_network.custom_interests,
+        currency_network.prevent_mediator_interests,
+    )
+
+    from_ = accounts[0]
+    to = accounts[1]
+    credit_limit_1 = 1_000_000
+    credit_limit_2 = 2_000_000
+
+    time_1 = 2_000_000_000
+
+    snapshot = chain.take_snapshot()
+    chain.time_travel(time_1)
+
+    currency_network_with_trustlines_and_interests_session.update_trustline_with_accept(
+        from_, to, credit_limit_1, credit_limit_1
+    )
+    currency_network_with_trustlines_and_interests_session.update_trustline_with_accept(
+        from_, to, credit_limit_2, credit_limit_2
+    )
+
+    wait_for_ethindex_to_sync()
+
+    chain.revert_to_snapshot(snapshot)
+    chain.time_travel(time_1)
+    currency_network_with_trustlines_and_interests_session.update_trustline_with_accept(
+        from_, to, credit_limit_2, credit_limit_2
+    )
+    currency_network_with_trustlines_and_interests_session.update_trustline_with_accept(
+        from_, to, credit_limit_1, credit_limit_1
+    )
+
+    chain.mine_block()
+    wait_for_ethindex_to_sync()
+
+    feed_updates = get_graph_updates_feed(generic_db_connection)
+    feed_graph.apply_feed_updates_on_graph(feed_updates)
+    trustline_data = feed_graph.graph.get_edge_data(from_, to)
+
+    assert trustline_data["creditline_ab"] == credit_limit_1
+    assert trustline_data["creditline_ba"] == credit_limit_1
