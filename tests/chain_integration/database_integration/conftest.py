@@ -307,8 +307,8 @@ def start_indexer(
             f"{INDEXER_REQUIRED_CONFIRMATION}",
         ],
         env=environment_variables,
-        stdout=subprocess.DEVNULL,
-        stderr=subprocess.DEVNULL,
+        # stdout=subprocess.DEVNULL,
+        # stderr=subprocess.DEVNULL,
     )
 
     yield

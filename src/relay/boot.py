@@ -1,3 +1,4 @@
+# flake8: noqa E402
 # boot the main program, let gevent do it's monkeypatching and setup
 # a greenlet aware custom logger class
 

@@ -1,3 +1,5 @@
+from typing import cast
+
 import pytest
 from tests.chain_integration.conftest import CurrencyNetworkProxy
 
@@ -108,6 +110,7 @@ def test_get_event_feed_trustline_update(
     assert len(feed_updates) == 1
     update = feed_updates[0]
     assert type(update) == TrustlineUpdateFeedUpdate
+    update = cast(TrustlineUpdateFeedUpdate, update)
     assert update.from_ == from_
     assert update.to == to
     assert update.creditline_received == creditline_received
@@ -132,6 +135,7 @@ def test_get_event_feed_balance_update(
     assert len(feed_updates) == 1
     update = feed_updates[0]
     assert type(update) == BalanceUpdateFeedUpdate
+    update = cast(BalanceUpdateFeedUpdate, update)
     assert update.from_ == from_
     assert update.to == to
     assert update.value == -value
@@ -167,9 +171,15 @@ def test_get_event_feed_reversed_trustline_update_to_empty(
     wait_for_ethindex_to_sync()
 
     feed_updates = get_graph_updates_feed(generic_db_connection)
+    print("feed updates")
+    for update in feed_updates:
+        print(update)
+        print()
+
     assert len(feed_updates) == 2
     update = feed_updates[0]
     assert type(update) == TrustlineUpdateFeedUpdate
+    update = cast(TrustlineUpdateFeedUpdate, update)
     assert update.from_ == from_
     assert update.to == to
     assert update.creditline_received == creditline_received
@@ -179,6 +189,7 @@ def test_get_event_feed_reversed_trustline_update_to_empty(
 
     second_update = feed_updates[1]
     assert type(second_update) == TrustlineUpdateFeedUpdate
+    second_update = cast(TrustlineUpdateFeedUpdate, second_update)
     assert second_update.from_ == from_
     assert second_update.to == to
     assert second_update.creditline_received == 0
@@ -229,6 +240,7 @@ def test_get_event_feed_reversed_trustline_update_to_old(
     feed_updates = get_graph_updates_feed(generic_db_connection)
     update = feed_updates[len(feed_updates) - 1]
     assert type(update) == TrustlineUpdateFeedUpdate
+    update = cast(TrustlineUpdateFeedUpdate, update)
     assert update.from_ == from_
     assert update.to == to
     assert update.creditline_received == creditline_received
@@ -263,6 +275,7 @@ def test_get_event_feed_reversed_balance_update_to_empty(
     assert len(feed_updates) == 2
     update = feed_updates[1]
     assert type(update) == BalanceUpdateFeedUpdate
+    update = cast(BalanceUpdateFeedUpdate, update)
     assert update.from_ == from_
     assert update.to == to
     assert update.value == 0
@@ -294,6 +307,7 @@ def test_get_event_feed_reversed_balance_update_to_old(
 
     update = feed_updates[len(feed_updates) - 1]
     assert type(update) == BalanceUpdateFeedUpdate
+    update = cast(BalanceUpdateFeedUpdate, update)
     assert update.from_ == from_
     assert update.to == to
     assert update.value == -value
@@ -340,6 +354,7 @@ def test_get_event_feed_replaced_trustline_update(
 
     update = feed_updates[len(feed_updates) - 1]
     assert type(update) == TrustlineUpdateFeedUpdate
+    update = cast(TrustlineUpdateFeedUpdate, update)
     assert update.from_ == from_
     assert update.to == to
     assert update.creditline_received == 2 * creditline_received
@@ -374,6 +389,7 @@ def test_get_event_feed_replaced_balance_update(
     feed_updates = get_graph_updates_feed(generic_db_connection)
 
     update = feed_updates[len(feed_updates) - 1]
+    update = cast(BalanceUpdateFeedUpdate, update)
     assert type(update) == BalanceUpdateFeedUpdate
     assert update.from_ == from_
     assert update.to == to
