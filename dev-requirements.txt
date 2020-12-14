@@ -24,7 +24,7 @@ eth-abi==2.1.1            # via -c requirements.txt, eth-account, eth-tester, we
 eth-account==0.5.4        # via -c requirements.txt, web3
 eth-bloom==1.0.3          # via -c requirements.txt, py-evm
 eth-hash[pycryptodome,pysha3]==0.2.0  # via -c requirements.txt, eth-bloom, eth-tester, eth-tester-rpc, eth-utils, trie, web3
-eth-index==0.3.2          # via -r dev-requirements.in
+eth-index==0.3.4          # via -r dev-requirements.in
 eth-keyfile==0.5.1        # via -c requirements.txt, contract-deploy-tools, eth-account
 eth-keys==0.2.4           # via -c requirements.txt, eth-account, eth-keyfile, eth-tester, py-evm
 eth-rlp==0.2.1            # via -c requirements.txt, eth-account
