@@ -102,6 +102,9 @@ def get_graph_updates_feed(
         else:
             logger.warning(f"Got feed update with unknown type from database: {row}")
 
+    if len(rows) >= 1:
+        write_graph_sync_id_file(rows[len(rows) - 1]["id"])
+
     return feed_update
 
 

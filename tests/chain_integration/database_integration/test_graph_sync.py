@@ -15,13 +15,15 @@ from relay.ethindex_db.sync_updates import (
     TrustlineUpdateFeedUpdate,
     ensure_graph_sync_id_file_exists,
     get_graph_updates_feed,
+    write_graph_sync_id_file,
 )
 from relay.network_graph.graph import CurrencyNetworkGraph
 
 
-@pytest.fixture(autouse=True)
+@pytest.fixture(autouse=True, scope="session")
 def fix_ensure_graph_sync_id_file_exists():
     ensure_graph_sync_id_file_exists()
+    write_graph_sync_id_file(0)
 
 
 @pytest.fixture(autouse=True)
@@ -457,6 +459,7 @@ def test_sync_same_graphs(
     transactions_sent = 0
     snapshot = chain.take_snapshot()
 
+    # tx 1
     currency_network.transfer_on_path(
         123, [accounts[0], accounts[1], accounts[2], accounts[3]]
     )
@@ -472,6 +475,7 @@ def test_sync_same_graphs(
         snapshot, transactions_sent, transactions_between_revert
     )
 
+    # tx 2
     currency_network.transfer_on_path(321, [accounts[4], accounts[3], accounts[2]])
     transactions_sent += 1
     sync_if_enough_transactions_sent(
@@ -485,6 +489,7 @@ def test_sync_same_graphs(
         snapshot, transactions_sent, transactions_between_revert
     )
 
+    # tx 3
     currency_network.update_trustline_with_accept(
         accounts[0], accounts[1], 123123123, 321321321, 222, 333
     )
@@ -500,6 +505,7 @@ def test_sync_same_graphs(
         snapshot, transactions_sent, transactions_between_revert
     )
 
+    # tx 4
     currency_network.update_trustline_with_accept(
         accounts[0], accounts[1], 100000000, 200000000, 200, 300
     )
@@ -515,6 +521,7 @@ def test_sync_same_graphs(
         snapshot, transactions_sent, transactions_between_revert
     )
 
+    # tx 5
     currency_network.update_trustline_with_accept(
         accounts[0], accounts[1], 123123123, 321321321, 222, 333
     )
