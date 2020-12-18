@@ -1,8 +1,6 @@
 import logging
-import socket
 from typing import List, NamedTuple
 
-import gevent
 from gevent import Greenlet
 
 from .currency_network_events import (
@@ -14,7 +12,7 @@ from .currency_network_events import (
     TrustlineUpdateEventType,
     event_builders,
 )
-from .proxy import Proxy, reconnect_interval
+from .proxy import Proxy
 
 
 class Trustline(NamedTuple):
@@ -94,25 +92,6 @@ class CurrencyNetworkProxy(Proxy):
                         )
                     )
         return result
-
-    def start_listen_on_full_sync(self, function, sync_interval: float):
-        def sync():
-            while True:
-                try:
-                    function(self.gen_graph_representation())
-                    gevent.sleep(sync_interval)
-                except socket.timeout as err:
-                    logger.warning(
-                        "Full sync failed because of timeout, try again: " + str(err)
-                    )
-                    gevent.sleep(reconnect_interval)
-                except socket.error as err:
-                    logger.warning(
-                        "Full sync failed because of error, try again: " + str(err)
-                    )
-                    gevent.sleep(reconnect_interval)
-
-        gevent.Greenlet.spawn(sync)
 
     def start_listen_on_balance(self, on_balance, *, start_log_filter=True) -> Greenlet:
         def log(log_entry):

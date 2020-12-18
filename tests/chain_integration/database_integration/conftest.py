@@ -11,7 +11,21 @@ import pytest
 from deploy_tools.plugin import EXPOSE_RPC_OPTION
 from tests.conftest import LOCAL_DATABASE_OPTION
 
+from relay.blockchain import currency_network_events
 from relay.ethindex_db import ethindex_db
+from relay.relay import ContractTypes, all_event_builders
+
+"""
+The tests are running a postgres database and ethindex to tests out getting and processing event information.
+They assume that you can run docker and docker-compose.
+Otherwise, you can run the tests with `--local-db` option and have a local postgres environment with:
+- user: POSTGRES_USER
+- password: POSTGRES_PASSWORD
+- database: POSTGRES_DATABASE
+- accessible on localhost:postgres_port
+See tests/chain_integration/database_integration/conftest.py for actual values
+"""
+
 
 INDEXER_REQUIRED_CONFIRMATION = 10_000
 POSTGRES_USER = "trustlines_test"
@@ -260,8 +274,8 @@ def start_indexer(
     subprocess.run(
         ["ethindex", "createtables"],
         env=environment_variables,
-        # stdout=subprocess.DEVNULL,
-        # stderr=subprocess.DEVNULL,
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.DEVNULL,
         check=True,
     )
 
@@ -293,8 +307,8 @@ def start_indexer(
             f"{INDEXER_REQUIRED_CONFIRMATION}",
         ],
         env=environment_variables,
-        stdout=subprocess.DEVNULL,
-        stderr=subprocess.DEVNULL,
+        # stdout=subprocess.DEVNULL,
+        # stderr=subprocess.DEVNULL,
     )
 
     yield
@@ -316,19 +330,32 @@ def start_indexer(
     )
 
 
+@pytest.fixture()
+def replace_blocks_with_empty_from_snapshot(web3, chain):
+    def revert(snapshot):
+        last_block_number = web3.eth.blockNumber
+        chain.revert_to_snapshot(snapshot)
+        reverted_blocks = last_block_number - web3.eth.blockNumber
+        # We need to mine one more block to make sure we correctly wait for ethindex to sync
+        # by checking the number of the latest block.
+        chain.mine_blocks(reverted_blocks + 1)
+        assert (
+            INDEXER_REQUIRED_CONFIRMATION > reverted_blocks
+        ), "The reverted chain was final and events cannot be deleted."
+        return chain.take_snapshot()
+
+    return revert
+
+
 @pytest.fixture(autouse=True)
-def chain_cleanup(chain, web3, wait_for_ethindex_to_sync):
+def chain_cleanup(
+    chain, web3, wait_for_ethindex_to_sync, replace_blocks_with_empty_from_snapshot
+):
     """Cleans up the chain by replacing blocks with empty blocks, and giving time for the indexer to clean up."""
     # We mine blocks because the indexer will not remove the events of blocks if it does not receive replacing blocks
     snapshot = chain.take_snapshot()
     yield
-    last_block_number = web3.eth.blockNumber
-    assert (
-        INDEXER_REQUIRED_CONFIRMATION > last_block_number
-    ), "The reverted chain was final and events cannot be deleted."
-    chain.revert_to_snapshot(snapshot)
-    reverted_block_number = web3.eth.blockNumber
-    chain.mine_blocks(last_block_number - reverted_block_number)
+    replace_blocks_with_empty_from_snapshot(snapshot)
     wait_for_ethindex_to_sync()
 
 
@@ -348,7 +375,7 @@ def generic_db_connection(postgres_port):
 
 @pytest.fixture()
 def wait_for_ethindex_to_sync(generic_db_connection, web3):
-    def wait_for_sync(timeout=5, poll_interval=0.2):
+    def wait_for_sync(timeout=20, poll_interval=0.2):
         latest_block = web3.eth.getBlock("latest")["number"]
         with Timer(timeout) as timer:
             while True:
@@ -374,3 +401,40 @@ def wait_for_ethindex_to_sync(generic_db_connection, web3):
                     break
 
     return wait_for_sync
+
+
+@pytest.fixture()
+def ethindex_db_for_currency_network(currency_network, generic_db_connection):
+    return make_ethindex_db(currency_network.address, generic_db_connection)
+
+
+@pytest.fixture()
+def ethindex_db_for_currency_network_with_trustlines(
+    currency_network_with_trustlines_session, generic_db_connection
+):
+    return make_ethindex_db(
+        currency_network_with_trustlines_session.address, generic_db_connection
+    )
+
+
+@pytest.fixture()
+def ethindex_db_for_currency_network_with_trustlines_and_interests(
+    currency_network_with_trustlines_and_interests_session, generic_db_connection
+):
+    return make_ethindex_db(
+        currency_network_with_trustlines_and_interests_session.address,
+        generic_db_connection,
+    )
+
+
+def make_ethindex_db(network_address, conn):
+    return ethindex_db.CurrencyNetworkEthindexDB(
+        conn,
+        address=network_address,
+        standard_event_types=currency_network_events.standard_event_types,
+        event_builders=all_event_builders,
+        from_to_types=currency_network_events.from_to_types,
+        address_to_contract_types={
+            network_address: ContractTypes.CURRENCY_NETWORK.value
+        },
+    )

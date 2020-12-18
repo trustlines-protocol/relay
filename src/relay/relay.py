@@ -4,10 +4,11 @@ import os
 from collections import defaultdict
 from copy import deepcopy
 from enum import Enum
-from typing import Dict, Iterable, List, NamedTuple, Optional
+from typing import Dict, Iterable, List, NamedTuple, Optional, Union
 
 import eth_account
 import eth_keyfile
+import gevent
 import sqlalchemy
 from eth_utils import is_checksum_address, to_checksum_address
 from sqlalchemy.engine.url import URL
@@ -20,6 +21,11 @@ from relay.blockchain.identity_events import FeePaymentEventType
 from relay.blockchain.identity_proxy import IdentityProxy
 from relay.blockchain.proxy import LogFilterListener
 from relay.ethindex_db import ethindex_db
+from relay.ethindex_db.sync_updates import (
+    BalanceUpdateFeedUpdate,
+    TrustlineUpdateFeedUpdate,
+    graph_update_getter,
+)
 from relay.pushservice.client import PushNotificationClient
 from relay.pushservice.client_token_db import (
     ClientTokenAlreadyExistsException,
@@ -401,6 +407,19 @@ class TrustlinesRelay:
         if self.config["delegate"]["enable"]:
             self._start_delegate()
         self._load_addresses()
+        self._start_sync_graphs_via_feed()
+
+    def _start_sync_graphs_via_feed(self):
+        conn = ethindex_db.connect("")
+        updates_getter = graph_update_getter()
+
+        def sync():
+            while True:
+                graph_updates = updates_getter(conn)
+                self._apply_feed_update_on_graph(graph_updates)
+                gevent.sleep(self.config["trustline_index"]["sync_interval"])
+
+        gevent.Greenlet.spawn(sync)
 
     def new_network(self, address: str) -> None:
         assert is_checksum_address(address)
@@ -418,7 +437,17 @@ class TrustlinesRelay:
             prevent_mediator_interests=currency_network_proxy.prevent_mediator_interests,
         )
         self._log_listener.add_proxy(currency_network_proxy)
+        self.fully_sync_graph(address)
         self._start_listen_network(address)
+
+    def fully_sync_graph(self, address):
+        logger.info(f"Fully syncing graph from blockchain state for address: {address}")
+
+        self.currency_network_graphs[address].gen_network(
+            self.currency_network_proxies[address].gen_graph_representation()
+        )
+
+        logger.info(f"Graph fully synced for address: {address}")
 
     def new_exchange(self, address: str) -> None:
         assert is_checksum_address(address)
@@ -702,6 +731,19 @@ class TrustlinesRelay:
             from_block=from_block,
         )
 
+    def _apply_feed_update_on_graph(
+        self,
+        feed_update: Iterable[
+            Union[TrustlineUpdateFeedUpdate, BalanceUpdateFeedUpdate]
+        ],
+    ):
+        for update in feed_update:
+            if update.address not in self.currency_network_graphs.keys():
+                logger.warning(f"Got event_feed with unknown network address {update}")
+                continue
+            graph = self.currency_network_graphs[update.address]
+            graph.update_from_feed(update)
+
     def _load_gas_price_settings(self, gas_price_settings: Dict):
         method = gas_price_settings["method"]
         methods = ["fixed", "rpc"]
@@ -756,12 +798,7 @@ class TrustlinesRelay:
 
     def _start_listen_network(self, address):
         assert is_checksum_address(address)
-        graph = self.currency_network_graphs[address]
         proxy = self.currency_network_proxies[address]
-        proxy.start_listen_on_full_sync(
-            _create_on_full_sync(graph),
-            self.config["trustline_index"]["full_sync_interval"],
-        )
         proxy.start_listen_on_balance(
             self._process_balance_update, start_log_filter=False
         )
@@ -809,13 +846,6 @@ class TrustlinesRelay:
         )
 
     def _process_balance_update(self, balance_update_event):
-        graph = self.currency_network_graphs[balance_update_event.network_address]
-        graph.update_balance(
-            balance_update_event.from_,
-            balance_update_event.to,
-            balance_update_event.value,
-            balance_update_event.timestamp,
-        )
         self._publish_trustline_events(
             user1=balance_update_event.from_,
             user2=balance_update_event.to,
@@ -878,15 +908,6 @@ class TrustlinesRelay:
 
     def _process_trustline_update(self, trustline_update_event):
         logger.debug("Process trustline update event: %s", trustline_update_event)
-        graph = self.currency_network_graphs[trustline_update_event.network_address]
-        graph.update_trustline(
-            creditor=trustline_update_event.from_,
-            debtor=trustline_update_event.to,
-            creditline_given=trustline_update_event.creditline_given,
-            creditline_received=trustline_update_event.creditline_received,
-            interest_rate_given=trustline_update_event.interest_rate_given,
-            interest_rate_received=trustline_update_event.interest_rate_received,
-        )
         self._publish_blockchain_event(trustline_update_event)
         self._publish_trustline_events(
             user1=trustline_update_event.from_,
@@ -904,13 +925,6 @@ class TrustlinesRelay:
     def _publish_user_event(self, event):
         assert event.user is not None
         self.subjects[event.user].publish(event)
-
-
-def _create_on_full_sync(graph):
-    def update_community(graph_rep):
-        graph.gen_network(graph_rep)
-
-    return update_community
 
 
 def create_engine():

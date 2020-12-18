@@ -70,3 +70,4 @@ target/
 # webstorm, pycharm ide
 .idea
 .DS_Store
+last_graph_feed_sync_id
