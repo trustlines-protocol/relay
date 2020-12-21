@@ -6,12 +6,21 @@ Change Log
 - Changed: Update major dependencies, notably web3 version 5.7.0
 - Changed: add filtering by contract type to user events endpoint
   /users/:user/events?type=:type&fromBlock=:fromBlock&contractType:=contractType
+- Changed: Update internal trustlines graph using `graphfeed` table populated by the ethindex.
+  requires py-eth-index version 0.3.4
+- Changed: No longer fully sync the graph every `full_sync_interval` seconds.
+  This should be unnecessary as we rely on the indexer to sync the graph and it is reorg safe.
+
+- Removed: support for config keys `relay.updateNetworksInterval` and `relay.update_indexed_networks_interval`
+- Removed: deprecated config `trustline_index.full_sync_interval` which is unused.
 
 - Added: endpoint for getting mediation fees earned by user
   /networks/:network/users/:user/mediation-fees?startTime=:timestamp&endTime=:timestamp
 - Added: endpoint to get debt of user in all currency networks `GET /users/:userAddress/debts`
 - Added: endpoint to get total transferred sum between users in time window
   `GET /networks/:network/users/:sender/transferredSums/:receiver?startTime=:timestamp&endTime=:timestamp`
+- Added: Config key `config.trustline_index.sync_interval` the time in seconds in between two fetch fetch
+  of graph updates from the database `graphfeed`
 
 `0.18.0`_ (2020-09-14)
 -------------------------------
