@@ -3,7 +3,10 @@ Change Log
 ==========
 `unreleased`_
 -------------------------------
-- Changed: Update major dependencies, notably web3 version 5.7.0
+
+`0.19.0`_ (2020-01-26)
+-------------------------------
+- Changed: Update major dependencies, notably web3 version 5.9.0
 - Changed: add filtering by contract type to user events endpoint
   /users/:user/events?type=:type&fromBlock=:fromBlock&contractType:=contractType
 - Changed: Update internal trustlines graph using `graphfeed` table populated by the ethindex.
@@ -260,4 +263,5 @@ Change Log
 .. _0.17.0: https://github.com/trustlines-protocol/relay/compare/0.16.0...0.17.0
 .. _0.17.1: https://github.com/trustlines-protocol/relay/compare/0.17.0...0.17.1
 .. _0.18.0: https://github.com/trustlines-protocol/relay/compare/0.17.1...0.18.0
-.. _unreleased: https://github.com/trustlines-protocol/relay/compare/0.18.0...master
+.. _0.19.0: https://github.com/trustlines-protocol/relay/compare/0.18.0...0.19.0
+.. _unreleased: https://github.com/trustlines-protocol/relay/compare/0.19.0...master
