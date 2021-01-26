@@ -2,7 +2,7 @@ from enum import Enum
 from typing import List
 
 import attr
-from deploy_tools.deploy import TransactionFailed
+from deploy_tools.transact import TransactionFailed
 from tldeploy.identity import (
     Delegate as DelegateImplementation,
     ImplementationAddressNotFound,

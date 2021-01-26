@@ -1,7 +1,7 @@
 import eth_tester
 import pytest
 from tlbin import load_packaged_contracts
-from tldeploy.core import deploy_network, deploy_networks
+from tldeploy.core import NetworkSettings, deploy_network, deploy_networks
 from tldeploy.identity import MetaTransaction
 
 from relay.blockchain import currency_network_proxy
@@ -10,32 +10,23 @@ EXPIRATION_TIME = 4102444800  # 01/01/2100
 
 
 NETWORK_SETTINGS = [
-    {
-        "name": "Cash",
-        "symbol": "CASH",
-        "decimals": 4,
-        "fee_divisor": 1000,
-        "default_interest_rate": 0,
-        "custom_interests": True,
-        "expiration_time": EXPIRATION_TIME,
-    },
-    {
-        "name": "Work Hours",
-        "symbol": "HOU",
-        "decimals": 4,
-        "fee_divisor": 0,
-        "default_interest_rate": 1000,
-        "custom_interests": False,
-        "expiration_time": EXPIRATION_TIME,
-    },
-    {
-        "name": "Beers",
-        "symbol": "BEER",
-        "decimals": 0,
-        "fee_divisor": 0,
-        "custom_interests": False,
-        "expiration_time": EXPIRATION_TIME,
-    },
+    NetworkSettings(
+        name="Cash",
+        symbol="CASH",
+        fee_divisor=1000,
+        custom_interests=True,
+        expiration_time=EXPIRATION_TIME,
+    ),
+    NetworkSettings(
+        name="Work Hours",
+        symbol="HOU",
+        custom_interests=False,
+        default_interest_rate=1000,
+        expiration_time=EXPIRATION_TIME,
+    ),
+    NetworkSettings(
+        name="Beers", symbol="BEER", decimals=0, expiration_time=EXPIRATION_TIME
+    ),
 ]
 
 
@@ -261,11 +252,13 @@ def trustlines_with_interests(accounts):
 def deploy_test_network(web3):
     return deploy_network(
         web3,
-        "Trustlines",
-        "T",
-        6,
-        fee_divisor=100,
-        expiration_time=EXPIRATION_TIME,
+        network_settings=NetworkSettings(
+            fee_divisor=100,
+            name="Trustlines",
+            symbol="T",
+            custom_interests=True,
+            expiration_time=EXPIRATION_TIME,
+        ),
         currency_network_contract_name="TestCurrencyNetwork",
     )
 
