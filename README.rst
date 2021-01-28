@@ -9,12 +9,12 @@
 
 Trustlines relay server
 =======================
-The Trustlines relay server is a component of the `Trustlines Protocol<https://trustlines.foundation/protocol.html>`__.
+The Trustlines relay server is a component of the `Trustlines Protocol <https://trustlines.foundation/protocol.html>`__.
 
 The goal of the relay server is to handle computation and services which are currently not feasible to do on the client
 or on the blockchain.
 
-Documentation can be found at https://dev.trustlines.network/relay/introduction.
+Documentation can be found at `https://dev.trustlines.network/relay/introduction <https://dev.trustlines.network/relay/introduction>`__.
 
 Contributing
 ------------
