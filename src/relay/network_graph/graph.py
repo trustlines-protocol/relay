@@ -8,6 +8,8 @@ import networkx as nx
 
 from relay.ethindex_db.sync_updates import (
     BalanceUpdateFeedUpdate,
+    NetworkFreezeFeedUpdate,
+    NetworkUnfreezeFeedUpdate,
     TrustlineUpdateFeedUpdate,
 )
 from relay.network_graph.graph_constants import balance_ab, creditline_ab, creditline_ba
@@ -484,12 +486,13 @@ class CurrencyNetworkGraph(object):
         default_interest_rate=0,
         custom_interests=False,
         prevent_mediator_interests=False,
+        is_frozen=False,
     ):
-
         self.capacity_imbalance_fee_divisor = capacity_imbalance_fee_divisor
         self.default_interest_rate = default_interest_rate
         self.custom_interests = custom_interests
         self.prevent_mediator_interests = prevent_mediator_interests
+        self.is_frozen = is_frozen
         self.graph = nx.Graph()
 
     def gen_network(self, trustlines: List[Any]):
@@ -639,6 +642,10 @@ class CurrencyNetworkGraph(object):
                 feed_update.value,
                 feed_update.timestamp,
             )
+        elif type(feed_update) == NetworkFreezeFeedUpdate:
+            self.is_frozen = True
+        elif type(feed_update) == NetworkUnfreezeFeedUpdate:
+            self.is_frozen = False
         else:
             raise RuntimeError(f"Got feed update of unexpected type {feed_update}")
 

@@ -157,23 +157,3 @@ def test_listen_on_trustline_update_with_interests(currency_network, accounts):
     assert events[0].is_frozen is False
 
     greenlet.kill()
-
-
-def test_listen_on_freeze_network(currency_network, chain, expiration_time):
-    chain.time_travel(expiration_time)
-    chain.mine_block()
-
-    events = []
-
-    def f(event):
-        events.append(event)
-
-    greenlet = currency_network.start_listen_on_network_freeze(f)
-    context_switch()
-    currency_network.freeze_network()
-    gevent.sleep(1)
-
-    assert len(events) == 1
-    assert events[0].network_address == currency_network.address
-
-    greenlet.kill()
