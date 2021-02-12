@@ -4,7 +4,7 @@ import os
 from collections import defaultdict
 from copy import deepcopy
 from enum import Enum
-from typing import Dict, Iterable, List, NamedTuple, Optional, Union
+from typing import Dict, Iterable, List, NamedTuple, Optional
 
 import eth_account
 import eth_keyfile
@@ -21,11 +21,7 @@ from relay.blockchain.identity_events import FeePaymentEventType
 from relay.blockchain.identity_proxy import IdentityProxy
 from relay.blockchain.proxy import LogFilterListener
 from relay.ethindex_db import ethindex_db
-from relay.ethindex_db.sync_updates import (
-    BalanceUpdateFeedUpdate,
-    TrustlineUpdateFeedUpdate,
-    graph_update_getter,
-)
+from relay.ethindex_db.sync_updates import FeedUpdate, graph_update_getter
 from relay.pushservice.client import PushNotificationClient
 from relay.pushservice.client_token_db import (
     ClientTokenAlreadyExistsException,
@@ -220,7 +216,7 @@ class TrustlinesRelay:
         return address in self.network_addresses
 
     def is_currency_network_frozen(self, address: str) -> bool:
-        return self.currency_network_proxies[address].is_frozen
+        return self.currency_network_graphs[address].is_frozen
 
     def is_trusted_token(self, address: str) -> bool:
         return address in self.token_addresses or address in self.unw_eth_addresses
@@ -242,7 +238,7 @@ class TrustlinesRelay:
             custom_interests=proxy.custom_interests,
             prevent_mediator_interests=proxy.prevent_mediator_interests,
             interest_rate_decimals=proxy.interest_rate_decimals,
-            is_frozen=proxy.is_frozen,
+            is_frozen=graph.is_frozen,
         )
 
     def get_network_infos(self) -> List[NetworkInfo]:
@@ -745,10 +741,7 @@ class TrustlinesRelay:
         )
 
     def _apply_feed_update_on_graph(
-        self,
-        feed_update: Iterable[
-            Union[TrustlineUpdateFeedUpdate, BalanceUpdateFeedUpdate]
-        ],
+        self, feed_update: Iterable[FeedUpdate],
     ):
         for update in feed_update:
             if update.address not in self.currency_network_graphs.keys():
@@ -825,9 +818,6 @@ class TrustlinesRelay:
         proxy.start_listen_on_trustline_request_cancel(
             self._process_trustline_request_cancel, start_log_filter=False
         )
-        proxy.start_listen_on_network_freeze(
-            self._process_network_freeze, start_log_filter=False
-        )
 
     def _start_push_service(self):
         logger.info("Start pushnotification service")
@@ -878,12 +868,6 @@ class TrustlinesRelay:
             "Process trustline request cancel event: %s", trustline_request_cancel_event
         )
         self._publish_blockchain_event(trustline_request_cancel_event)
-
-    def _process_network_freeze(self, network_freeze_event):
-        logger.info(f"Currency network frozen: {network_freeze_event.network_address}")
-        self.currency_network_proxies[
-            network_freeze_event.network_address
-        ].is_frozen = True
 
     def _generate_trustline_events(self, *, user1, user2, network_address, timestamp):
         events = []

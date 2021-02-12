@@ -5,7 +5,6 @@ from gevent import Greenlet
 
 from .currency_network_events import (
     BalanceUpdateEventType,
-    NetworkFreezeEventType,
     TransferEventType,
     TrustlineRequestCancelEventType,
     TrustlineRequestEventType,
@@ -49,7 +48,6 @@ class CurrencyNetworkProxy(Proxy):
         )
         # Fixed for now, see contracts
         self.interest_rate_decimals = 2
-        self.is_frozen = self._proxy.functions.isNetworkFrozen().call()
 
     def fetch_users(self) -> List[str]:
         return list(self._proxy.functions.getUsers().call())
@@ -143,14 +141,4 @@ class CurrencyNetworkProxy(Proxy):
 
         return self.start_listen_on(
             TransferEventType, log, start_log_filter=start_log_filter
-        )
-
-    def start_listen_on_network_freeze(
-        self, on_network_freeze, *, start_log_filter=True
-    ):
-        def log(log_entry):
-            on_network_freeze(self._build_event(log_entry))
-
-        return self.start_listen_on(
-            NetworkFreezeEventType, log, start_log_filter=start_log_filter
         )

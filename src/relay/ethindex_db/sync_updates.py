@@ -1,6 +1,6 @@
 import logging
 import os.path
-from typing import Dict, List, Union
+from typing import Dict, List
 
 import attr
 
@@ -10,10 +10,14 @@ SYNC_FILE_PATH = "last_graph_feed_sync_id"
 
 
 @attr.s()
-class TrustlineUpdateFeedUpdate:
-    args: Dict = attr.ib()
+class FeedUpdate:
     address: str = attr.ib()
     timestamp: int = attr.ib()
+
+
+@attr.s()
+class TrustlineUpdateFeedUpdate(FeedUpdate):
+    args: Dict = attr.ib()
 
     @property
     def from_(self):
@@ -45,10 +49,8 @@ class TrustlineUpdateFeedUpdate:
 
 
 @attr.s()
-class BalanceUpdateFeedUpdate:
+class BalanceUpdateFeedUpdate(FeedUpdate):
     args: Dict = attr.ib()
-    address: str = attr.ib()
-    timestamp: int = attr.ib()
 
     @property
     def value(self):
@@ -63,14 +65,22 @@ class BalanceUpdateFeedUpdate:
         return self.args.get("_to")
 
 
+@attr.s()
+class NetworkFreezeFeedUpdate(FeedUpdate):
+    pass
+
+
+@attr.s()
+class NetworkUnfreezeFeedUpdate(FeedUpdate):
+    pass
+
+
 def graph_update_getter():
     ensure_graph_sync_id_file_exists()
     return get_graph_updates_feed
 
 
-def get_graph_updates_feed(
-    conn,
-) -> List[Union[TrustlineUpdateFeedUpdate, BalanceUpdateFeedUpdate]]:
+def get_graph_updates_feed(conn,) -> List[FeedUpdate]:
     """Get a list of updates to be applied on the trustlines graphs to make them up to date with the chain"""
 
     last_synced_graph_id = get_latest_graph_sync_id()
@@ -83,7 +93,7 @@ def get_graph_updates_feed(
         cur.execute(query_string, [last_synced_graph_id])
         rows = cur.fetchall()
 
-    feed_update: List[Union[TrustlineUpdateFeedUpdate, BalanceUpdateFeedUpdate]] = []
+    feed_update: List[FeedUpdate] = []
 
     for row in rows:
         event_type = row.get("eventname", None)
@@ -97,6 +107,18 @@ def get_graph_updates_feed(
             feed_update.append(
                 BalanceUpdateFeedUpdate(
                     args=row["args"], address=row["address"], timestamp=row["timestamp"]
+                )
+            )
+        elif event_type == "NetworkFreeze":
+            feed_update.append(
+                NetworkFreezeFeedUpdate(
+                    address=row["address"], timestamp=row["timestamp"]
+                )
+            )
+        elif event_type == "NetworkUnfreeze":
+            feed_update.append(
+                NetworkUnfreezeFeedUpdate(
+                    address=row["address"], timestamp=row["timestamp"]
                 )
             )
         else:

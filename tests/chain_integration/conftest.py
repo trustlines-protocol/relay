@@ -209,7 +209,10 @@ class CurrencyNetworkProxy(currency_network_proxy.CurrencyNetworkProxy):
         return self._proxy.functions.balance(from_, to).call()
 
     def freeze_network(self):
-        self._proxy.functions.freezeNetwork().transact()
+        return self._proxy.functions.testFreezeNetwork().transact()
+
+    def unfreeze_network(self):
+        return self._proxy.functions.testUnfreezeNetwork().transact()
 
     def increase_debt(self, debtor, creditor, value):
         tx_id = self._proxy.functions.increaseDebt(creditor, value).transact(

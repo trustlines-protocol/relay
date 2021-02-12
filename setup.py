@@ -50,7 +50,7 @@ setup(
         "gevent",
         "web3>=5.0,<6.0",
         "networkx>=2.0",
-        "trustlines-contracts-bin>=1.2.0,<1.3.0",
+        "trustlines-contracts-bin>=1.3.0,<1.4.0",
         "trustlines-contracts-deploy>=1.2.0,<1.3.0",
         "contract-deploy-tools>=0.9.1,<0.10.0",
         "sqlalchemy",

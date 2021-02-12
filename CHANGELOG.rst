@@ -3,6 +3,8 @@ Change Log
 ==========
 `unreleased`_
 -------------------------------
+- Updated: Use ethindex to update `is_frozen` status of network graphs instead of filters
+  requires ethindex>=0.3.5
 
 `0.19.0`_ (2020-01-26)
 -------------------------------

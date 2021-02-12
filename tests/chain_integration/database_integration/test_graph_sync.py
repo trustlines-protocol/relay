@@ -12,12 +12,16 @@ from relay.blockchain.currency_network_events import (
 from relay.ethindex_db.ethindex_db import CurrencyNetworkEthindexDB
 from relay.ethindex_db.sync_updates import (
     BalanceUpdateFeedUpdate,
+    NetworkFreezeFeedUpdate,
+    NetworkUnfreezeFeedUpdate,
     TrustlineUpdateFeedUpdate,
     ensure_graph_sync_id_file_exists,
     get_graph_updates_feed,
     write_graph_sync_id_file,
 )
 from relay.network_graph.graph import CurrencyNetworkGraph
+
+ZERO_ADDRESS = "0x0000000000000000000000000000000000000000"
 
 
 @pytest.fixture(autouse=True, scope="session")
@@ -398,6 +402,83 @@ def test_get_event_feed_replaced_balance_update(
     assert update.value == -2 * value
 
 
+def test_get_event_feed_network_freeze(
+    currency_network_with_trustlines_and_interests_session: CurrencyNetworkProxy,
+    wait_for_ethindex_to_sync,
+    generic_db_connection,
+):
+    currency_network = currency_network_with_trustlines_and_interests_session
+    currency_network.freeze_network()
+
+    wait_for_ethindex_to_sync()
+
+    feed_updates = get_graph_updates_feed(generic_db_connection)
+
+    update = feed_updates[len(feed_updates) - 1]
+    assert type(update) == NetworkFreezeFeedUpdate
+
+
+def test_get_event_feed_network_unfreeze(
+    currency_network_with_trustlines_and_interests_session: CurrencyNetworkProxy,
+    wait_for_ethindex_to_sync,
+    generic_db_connection,
+):
+    currency_network = currency_network_with_trustlines_and_interests_session
+    currency_network.freeze_network()
+    currency_network.unfreeze_network()
+
+    wait_for_ethindex_to_sync()
+
+    feed_updates = get_graph_updates_feed(generic_db_connection)
+    update = feed_updates[len(feed_updates) - 1]
+    assert type(update) == NetworkUnfreezeFeedUpdate
+
+
+def test_get_event_feed_reversed_network_freeze(
+    currency_network_with_trustlines_and_interests_session: CurrencyNetworkProxy,
+    wait_for_ethindex_to_sync,
+    generic_db_connection,
+    chain,
+    replace_blocks_with_empty_from_snapshot,
+):
+    currency_network = currency_network_with_trustlines_and_interests_session
+
+    snapshot = chain.take_snapshot()
+    currency_network.freeze_network()
+    wait_for_ethindex_to_sync()
+
+    replace_blocks_with_empty_from_snapshot(snapshot)
+    wait_for_ethindex_to_sync()
+
+    feed_updates = get_graph_updates_feed(generic_db_connection)
+
+    update = feed_updates[len(feed_updates) - 1]
+    assert type(update) == NetworkUnfreezeFeedUpdate
+
+
+def test_get_event_feed_reversed_network_unfreeze(
+    currency_network_with_trustlines_and_interests_session: CurrencyNetworkProxy,
+    wait_for_ethindex_to_sync,
+    generic_db_connection,
+    chain,
+    replace_blocks_with_empty_from_snapshot,
+):
+    currency_network = currency_network_with_trustlines_and_interests_session
+
+    snapshot = chain.take_snapshot()
+    currency_network.freeze_network()
+    currency_network.unfreeze_network()
+    wait_for_ethindex_to_sync()
+
+    replace_blocks_with_empty_from_snapshot(snapshot)
+    wait_for_ethindex_to_sync()
+
+    feed_updates = get_graph_updates_feed(generic_db_connection)
+
+    update = feed_updates[len(feed_updates) - 1]
+    assert type(update) == NetworkFreezeFeedUpdate
+
+
 def sync_if_enough_transactions_sent(
     transactions_sent,
     transactions_between_sync,
@@ -595,3 +676,23 @@ def test_sync_with_reordering_of_events(
 
     assert trustline_data["creditline_ab"] == credit_limit_1
     assert trustline_data["creditline_ba"] == credit_limit_1
+
+
+def test_sync_network_freeze_on_graph():
+    feed_graph = CurrencyNetworkGraph(is_frozen=False)
+    network_freeze_update = NetworkFreezeFeedUpdate(address=ZERO_ADDRESS, timestamp=0)
+
+    assert feed_graph.is_frozen is False
+    feed_graph.update_from_feed(network_freeze_update)
+    assert feed_graph.is_frozen
+
+
+def test_sync_network_unfreeze_on_graph():
+    feed_graph = CurrencyNetworkGraph(is_frozen=True)
+    network_unfreeze_update = NetworkUnfreezeFeedUpdate(
+        address=ZERO_ADDRESS, timestamp=0
+    )
+
+    assert feed_graph.is_frozen
+    feed_graph.update_from_feed(network_unfreeze_update)
+    assert feed_graph.is_frozen is False
