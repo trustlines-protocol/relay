@@ -4,6 +4,11 @@ Change Log
 `unreleased`_
 -------------------------------
 
+`0.20.1`_ (2020-02-12)
+-------------------------------
+- Fixed: Correclty fetch the `is_frozen` status of currency networks at start up.
+  previously, networks where start unfrozen by default and synced further.
+
 `0.20.0`_ (2020-02-12)
 -------------------------------
 - Updated: Use ethindex to update `is_frozen` status of network graphs instead of filters
@@ -270,4 +275,5 @@ Change Log
 .. _0.18.0: https://github.com/trustlines-protocol/relay/compare/0.17.1...0.18.0
 .. _0.19.0: https://github.com/trustlines-protocol/relay/compare/0.18.0...0.19.0
 .. _0.20.0: https://github.com/trustlines-protocol/relay/compare/0.19.0...0.20.0
-.. _unreleased: https://github.com/trustlines-protocol/relay/compare/0.20.0...master
+.. _0.20.1: https://github.com/trustlines-protocol/relay/compare/0.20.0...0.20.1
+.. _unreleased: https://github.com/trustlines-protocol/relay/compare/0.20.1...master
