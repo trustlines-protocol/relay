@@ -63,6 +63,12 @@ def test_users(currency_network_with_trustlines, accounts):
     assert currency_network_with_trustlines.fetch_users() == accounts[0:7]
 
 
+def test_is_frozen(currency_network):
+    assert currency_network.fetch_is_frozen_status() is False
+    currency_network.freeze_network()
+    assert currency_network.fetch_is_frozen_status() is True
+
+
 def test_gen_graph_representation(currency_network_with_trustlines, accounts):
     graph_representation = currency_network_with_trustlines.gen_graph_representation()
 

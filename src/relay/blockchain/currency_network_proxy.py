@@ -61,6 +61,9 @@ class CurrencyNetworkProxy(Proxy):
     def fetch_account(self, a_address: str, b_address: str):
         return self._proxy.functions.getAccount(a_address, b_address).call()
 
+    def fetch_is_frozen_status(self):
+        return self._proxy.functions.isNetworkFrozen().call()
+
     def gen_graph_representation(self) -> List[Trustline]:
         """Returns the trustlines network as a dict address -> list of Friendships"""
         result = []
