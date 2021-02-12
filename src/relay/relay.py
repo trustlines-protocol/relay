@@ -455,6 +455,9 @@ class TrustlinesRelay:
         self.currency_network_graphs[address].gen_network(
             self.currency_network_proxies[address].gen_graph_representation()
         )
+        self.currency_network_graphs[address].is_frozen = self.currency_network_proxies[
+            address
+        ].fetch_is_frozen_status()
 
         logger.info(f"Graph fully synced for address: {address}")
 
