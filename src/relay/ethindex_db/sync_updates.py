@@ -132,10 +132,7 @@ def get_graph_updates_feed(conn,) -> List[FeedUpdate]:
 
 def write_graph_sync_id_file(sync_id: int):
     with open(SYNC_FILE_PATH, "w") as f:
-        f.write(
-            "#### This file contains the last synced graph feed id from the database ###\n"
-            + str(sync_id)
-        )
+        f.write(str(sync_id))
 
 
 def ensure_graph_sync_id_file_exists():
@@ -150,6 +147,4 @@ def get_latest_graph_sync_id():
     with open(SYNC_FILE_PATH, "r") as f:
         contents = f.read()
 
-    # first line is a comment
-    # second line which we return is the last synced id
-    return contents.split("\n")[1]
+    return contents
