@@ -8,7 +8,7 @@ templates:
 executors:
   ubuntu-builder:
     docker:
-      - image: trustlines/builder:master32
+      - image: trustlines/builder:master61
     working_directory: ~/repo
 
 # define some common commands
@@ -20,8 +20,8 @@ commands:
       - run:
           name: Create python venv
           command: |
-            python3 -m venv venv
-            venv/bin/pip install -c dev-requirements.txt pip wheel setuptools
+            python3.8 -m venv venv
+            venv/bin/pip install -U pip wheel setuptools
 
   config-path:
     description: "set environment variables and change PATH"
@@ -29,7 +29,7 @@ commands:
     - run:
         name: Configuring PATH
         command: |
-          echo >> ${BASH_ENV} 'export PATH=~/bin:~/repo/venv/bin:${PATH}'
+          echo >> ${BASH_ENV} 'export PATH=~/bin:~/repo/venv/bin:~/.cargo/bin:${PATH}'
 
 
 jobs:
@@ -69,6 +69,18 @@ jobs:
           root: "~"
           paths:
             - repo
+
+  install-py39:
+    executor: ubuntu-builder
+    steps:
+      - checkout
+      - config-path
+      - create-venv
+      - run:
+          name: Install with python 3.9
+          command: |
+            pip install tox
+            tox -e py39
 
   build-sdist:
     executor: ubuntu-builder
@@ -360,6 +372,10 @@ workflows:
   default:
     jobs:
       - install:
+          filters:
+            <<: *tagged-filter
+
+      - install-py39:
           filters:
             <<: *tagged-filter
 

@@ -366,6 +366,7 @@ def generic_db_connection(postgres_port):
         database=POSTGRES_DATABASE,
         user=POSTGRES_USER,
         password=POSTGRES_PASSWORD,
+        host="127.0.0.1",
         port=postgres_port,
     )
     yield conn

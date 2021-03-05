@@ -1,11 +1,11 @@
 import logging
 import logging.config
+import signal
 import sys
 
 import click
 import sentry_sdk.integrations.flask
 from coverage import Coverage
-from gevent import signal
 from gevent.pywsgi import WSGIServer
 from geventwebsocket.handler import WebSocketHandler
 
@@ -149,16 +149,16 @@ def main(
 
     if report_coverage:
 
-        def shutdown():
+        def shutdown(code, frame):
             logger.info("Relay server is shutting down ...")
             http_server.stop(timeout=60)
             coverage.stop()
             coverage.xml_report(outfile="/end2end-coverage/coverage.xml")
             exit(signal.SIGTERM)
 
-        signal(signal.SIGTERM, shutdown)
-        signal(signal.SIGQUIT, shutdown)
-        signal(signal.SIGINT, shutdown)
+        signal.signal(signal.SIGTERM, shutdown)
+        signal.signal(signal.SIGQUIT, shutdown)
+        signal.signal(signal.SIGINT, shutdown)
 
     logger.info("Server is running on {}".format(ipport))
     http_server.serve_forever()

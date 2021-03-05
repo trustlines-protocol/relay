@@ -37,7 +37,7 @@ flask-restful==0.3.8      # via trustlines-relay (setup.py)
 flask-sockets==0.2.1      # via trustlines-relay (setup.py)
 flask==1.1.1              # via flask-cors, flask-restful, flask-sockets, sentry-sdk, trustlines-relay (setup.py)
 gevent-websocket==0.10.1  # via flask-sockets, trustlines-relay (setup.py)
-gevent==1.4.0             # via flask-sockets, gevent-websocket, trustlines-relay (setup.py)
+gevent==21.1.2            # via -r constraints.in, flask-sockets, gevent-websocket, trustlines-relay (setup.py)
 google-api-core[grpc]==1.16.0  # via firebase-admin, google-api-python-client, google-cloud-core, google-cloud-firestore
 google-api-python-client==1.8.0  # via firebase-admin
 google-auth-httplib2==0.0.3  # via google-api-python-client
@@ -47,12 +47,11 @@ google-cloud-firestore==1.6.2  # via firebase-admin
 google-cloud-storage==1.26.0  # via firebase-admin
 google-resumable-media==0.5.0  # via google-cloud-storage
 googleapis-common-protos==1.51.0  # via google-api-core
-greenlet==0.4.15          # via gevent
+greenlet==1.0.0           # via gevent
 grpcio==1.27.2            # via google-api-core
 hexbytes==0.2.0           # via eth-account, eth-rlp, trie, web3
 httplib2==0.18.0          # via google-api-python-client, google-auth-httplib2
 idna==2.9                 # via requests
-importlib-metadata==1.7.0  # via jsonschema
 ipfshttpclient==0.4.12    # via web3
 itsdangerous==1.1.0       # via flask
 jinja2==2.11.1            # via flask
@@ -68,7 +67,7 @@ mypy-extensions==0.4.3    # via py-ecc, py-evm
 netaddr==0.7.19           # via multiaddr
 networkx==2.4             # via trustlines-relay (setup.py)
 parsimonious==0.8.1       # via eth-abi
-pendulum==2.1.0           # via trustlines-contracts-deploy
+pendulum==2.1.2           # via -r constraints.in, trustlines-contracts-deploy
 protobuf==3.11.3          # via google-api-core, googleapis-common-protos, web3
 psycogreen==1.0.2         # via trustlines-relay (setup.py)
 psycopg2==2.8.4           # via trustlines-relay (setup.py)
@@ -83,7 +82,7 @@ pyrsistent==0.15.7        # via jsonschema
 pysha3==1.0.2             # via eth-hash
 python-dateutil==2.8.1    # via pendulum
 pytz==2019.3              # via flask-restful, google-api-core, google-cloud-firestore
-pytzdata==2019.3          # via pendulum
+pytzdata==2020.1          # via pendulum
 requests==2.23.0          # via cachecontrol, google-api-core, ipfshttpclient, web3
 rlp==2.0.1                # via eth-account, eth-rlp, eth-tester, py-evm, trie
 rsa==4.0                  # via google-auth
@@ -98,7 +97,7 @@ toolz==0.10.0             # via cytoolz
 trie==2.0.0-alpha.5       # via py-evm
 trustlines-contracts-bin==1.3.0  # via trustlines-contracts-deploy, trustlines-relay (setup.py)
 trustlines-contracts-deploy==1.2.0  # via trustlines-relay (setup.py)
-typing-extensions==3.7.4.3  # via trie, web3
+typing-extensions==3.7.4.3  # via trie
 uritemplate==3.0.1        # via google-api-python-client
 urllib3==1.25.8           # via requests, sentry-sdk
 varint==1.0.2             # via multiaddr
@@ -107,7 +106,8 @@ webargs==5.5.3            # via trustlines-relay (setup.py)
 websockets==8.1           # via web3
 werkzeug==0.16.1          # via -r constraints.in, eth-tester-rpc, flask
 wrapt==1.12.1             # via trustlines-relay (setup.py)
-zipp==3.1.0               # via importlib-metadata
+zope.event==4.5.0         # via gevent
+zope.interface==5.2.0     # via gevent
 
 # The following packages are considered to be unsafe in a requirements file:
 # setuptools
