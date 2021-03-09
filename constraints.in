@@ -1,2 +1,4 @@
 werkzeug<1.0  # Seems to be incompatible with flask-sockets
 contract-deploy-tools>=0.8.0   # to make requirements and dev-requirements compatible
+pendulum>=2.1.2  # Earlier versions fail to install with python 3.9
+gevent>=21.1.0  # Earlier versions fail with python 3.8
