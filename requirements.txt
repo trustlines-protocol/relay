@@ -4,110 +4,354 @@
 #
 #    ./compile-requirements
 #
-aniso8601==8.0.0          # via flask-restful
-attrs==19.3.0             # via jsonschema, trustlines-contracts-deploy, trustlines-relay (setup.py)
-base58==2.0.0             # via multiaddr
-bitarray==1.2.2           # via eth-account
-blake2b-py==0.1.3         # via py-evm
-blinker==1.4              # via sentry-sdk
-cachecontrol==0.12.6      # via firebase-admin
-cached-property==1.5.2    # via py-evm
-cachetools==4.0.0         # via google-auth, trustlines-relay (setup.py)
-certifi==2019.11.28       # via requests, sentry-sdk
-chardet==3.0.4            # via requests
-click==7.1.1              # via contract-deploy-tools, eth-tester-rpc, flask, trustlines-contracts-deploy, trustlines-relay (setup.py)
-contract-deploy-tools==0.9.1  # via -r constraints.in, trustlines-contracts-deploy, trustlines-relay (setup.py)
-coverage==5.3             # via trustlines-relay (setup.py)
-cytoolz==0.10.1           # via eth-keyfile, eth-tester-rpc, eth-utils
-decorator==4.4.2          # via networkx
-eth-abi==2.1.1            # via eth-account, eth-tester, web3
-eth-account==0.5.4        # via web3
-eth-bloom==1.0.3          # via py-evm
-eth-hash[pycryptodome,pysha3]==0.2.0  # via eth-bloom, eth-tester, eth-tester-rpc, eth-utils, trie, web3
-eth-keyfile==0.5.1        # via contract-deploy-tools, eth-account
-eth-keys==0.2.4           # via eth-account, eth-keyfile, eth-tester, py-evm
-eth-rlp==0.2.1            # via eth-account
-eth-tester-rpc==0.5.0b1   # via contract-deploy-tools
-eth-tester[py-evm]==0.5.0b3  # via contract-deploy-tools, eth-tester-rpc
-eth-typing==2.2.1         # via eth-abi, eth-utils, py-ecc, py-evm, web3
-eth-utils==1.9.5          # via contract-deploy-tools, eth-abi, eth-account, eth-keyfile, eth-keys, eth-rlp, eth-tester, eth-tester-rpc, hexbytes, py-ecc, py-evm, rlp, trie, trustlines-relay (setup.py), web3
-firebase-admin==4.3.0     # via trustlines-relay (setup.py)
-flask-cors==3.0.8         # via trustlines-relay (setup.py)
-flask-restful==0.3.8      # via trustlines-relay (setup.py)
-flask-sockets==0.2.1      # via trustlines-relay (setup.py)
-flask==1.1.1              # via flask-cors, flask-restful, flask-sockets, sentry-sdk, trustlines-relay (setup.py)
-gevent-websocket==0.10.1  # via flask-sockets, trustlines-relay (setup.py)
-gevent==21.1.2            # via -r constraints.in, flask-sockets, gevent-websocket, trustlines-relay (setup.py)
-google-api-core[grpc]==1.16.0  # via firebase-admin, google-api-python-client, google-cloud-core, google-cloud-firestore
-google-api-python-client==1.8.0  # via firebase-admin
-google-auth-httplib2==0.0.3  # via google-api-python-client
-google-auth==1.11.3       # via google-api-core, google-api-python-client, google-auth-httplib2, google-cloud-storage
-google-cloud-core==1.3.0  # via google-cloud-firestore, google-cloud-storage
-google-cloud-firestore==1.6.2  # via firebase-admin
-google-cloud-storage==1.26.0  # via firebase-admin
-google-resumable-media==0.5.0  # via google-cloud-storage
-googleapis-common-protos==1.51.0  # via google-api-core
-greenlet==1.0.0           # via gevent
-grpcio==1.27.2            # via google-api-core
-hexbytes==0.2.0           # via eth-account, eth-rlp, trie, web3
-httplib2==0.18.0          # via google-api-python-client, google-auth-httplib2
-idna==2.9                 # via requests
-ipfshttpclient==0.4.12    # via web3
-itsdangerous==1.1.0       # via flask
-jinja2==2.11.1            # via flask
-json-rpc==1.13.0          # via eth-tester-rpc
-jsonschema==3.2.0         # via web3
-lru-dict==1.1.6           # via py-evm, web3
-markupsafe==1.1.1         # via jinja2
-marshmallow-oneofschema==2.0.1  # via trustlines-relay (setup.py)
-marshmallow==3.5.1        # via marshmallow-oneofschema, trustlines-relay (setup.py), webargs
-msgpack==1.0.0            # via cachecontrol
-multiaddr==0.0.9          # via ipfshttpclient
-mypy-extensions==0.4.3    # via py-ecc, py-evm
-netaddr==0.7.19           # via multiaddr
-networkx==2.4             # via trustlines-relay (setup.py)
-parsimonious==0.8.1       # via eth-abi
-pendulum==2.1.2           # via -r constraints.in, trustlines-contracts-deploy
-protobuf==3.11.3          # via google-api-core, googleapis-common-protos, web3
-psycogreen==1.0.2         # via trustlines-relay (setup.py)
-psycopg2==2.8.4           # via trustlines-relay (setup.py)
-py-ecc==1.7.1             # via py-evm
-py-evm==0.3.0a20          # via eth-tester
-py-solc==3.2.0            # via contract-deploy-tools
-pyasn1-modules==0.2.8     # via google-auth
-pyasn1==0.4.8             # via pyasn1-modules, rsa
-pycryptodome==3.9.7       # via eth-hash, eth-keyfile
-pyethash==0.1.27          # via py-evm
-pyrsistent==0.15.7        # via jsonschema
-pysha3==1.0.2             # via eth-hash
-python-dateutil==2.8.1    # via pendulum
-pytz==2019.3              # via flask-restful, google-api-core, google-cloud-firestore
-pytzdata==2020.1          # via pendulum
-requests==2.23.0          # via cachecontrol, google-api-core, ipfshttpclient, web3
-rlp==2.0.1                # via eth-account, eth-rlp, eth-tester, py-evm, trie
-rsa==4.0                  # via google-auth
-semantic-version==2.8.4   # via eth-tester, py-solc
-sentry-sdk[flask]==0.14.3  # via trustlines-relay (setup.py)
-six==1.14.0               # via flask-cors, flask-restful, google-api-core, google-api-python-client, google-auth, google-resumable-media, grpcio, ipfshttpclient, jsonschema, multiaddr, parsimonious, protobuf, pyrsistent, python-dateutil, tinyrpc
-sortedcontainers==2.3.0   # via trie
-sqlalchemy==1.3.15        # via trustlines-relay (setup.py)
-tinyrpc==1.0.4            # via trustlines-relay (setup.py)
-toml==0.10.0              # via trustlines-relay (setup.py)
-toolz==0.10.0             # via cytoolz
-trie==2.0.0-alpha.5       # via py-evm
-trustlines-contracts-bin==1.3.0  # via trustlines-contracts-deploy, trustlines-relay (setup.py)
-trustlines-contracts-deploy==1.2.0  # via trustlines-relay (setup.py)
-typing-extensions==3.7.4.3  # via trie
-uritemplate==3.0.1        # via google-api-python-client
-urllib3==1.25.8           # via requests, sentry-sdk
-varint==1.0.2             # via multiaddr
-web3==5.9.0               # via contract-deploy-tools, trustlines-contracts-deploy, trustlines-relay (setup.py)
-webargs==5.5.3            # via trustlines-relay (setup.py)
-websockets==8.1           # via web3
-werkzeug==0.16.1          # via -r constraints.in, eth-tester-rpc, flask
-wrapt==1.12.1             # via trustlines-relay (setup.py)
-zope.event==4.5.0         # via gevent
-zope.interface==5.2.0     # via gevent
+aniso8601==8.0.0
+    # via flask-restful
+attrs==19.3.0
+    # via
+    #   jsonschema
+    #   trustlines-contracts-deploy
+    #   trustlines-relay (setup.py)
+base58==2.0.0
+    # via multiaddr
+bitarray==1.2.2
+    # via eth-account
+blake2b-py==0.1.3
+    # via py-evm
+blinker==1.4
+    # via sentry-sdk
+cachecontrol==0.12.6
+    # via firebase-admin
+cached-property==1.5.2
+    # via py-evm
+cachetools==4.0.0
+    # via
+    #   google-auth
+    #   trustlines-relay (setup.py)
+certifi==2019.11.28
+    # via
+    #   requests
+    #   sentry-sdk
+chardet==3.0.4
+    # via requests
+click==7.1.1
+    # via
+    #   contract-deploy-tools
+    #   eth-tester-rpc
+    #   flask
+    #   trustlines-contracts-deploy
+    #   trustlines-relay (setup.py)
+contract-deploy-tools==0.9.1
+    # via
+    #   -r constraints.in
+    #   trustlines-contracts-deploy
+    #   trustlines-relay (setup.py)
+coverage==5.3
+    # via trustlines-relay (setup.py)
+cytoolz==0.10.1
+    # via
+    #   eth-keyfile
+    #   eth-tester-rpc
+    #   eth-utils
+decorator==4.4.2
+    # via networkx
+eth-abi==2.1.1
+    # via
+    #   eth-account
+    #   eth-tester
+    #   web3
+eth-account==0.5.4
+    # via web3
+eth-bloom==1.0.3
+    # via py-evm
+eth-hash[pycryptodome,pysha3]==0.2.0
+    # via
+    #   eth-bloom
+    #   eth-tester
+    #   eth-tester-rpc
+    #   eth-utils
+    #   trie
+    #   web3
+eth-keyfile==0.5.1
+    # via
+    #   contract-deploy-tools
+    #   eth-account
+eth-keys==0.2.4
+    # via
+    #   eth-account
+    #   eth-keyfile
+    #   eth-tester
+    #   py-evm
+eth-rlp==0.2.1
+    # via eth-account
+eth-tester-rpc==0.5.0b1
+    # via contract-deploy-tools
+eth-tester[py-evm]==0.5.0b3
+    # via
+    #   contract-deploy-tools
+    #   eth-tester-rpc
+eth-typing==2.2.1
+    # via
+    #   eth-abi
+    #   eth-utils
+    #   py-ecc
+    #   py-evm
+    #   web3
+eth-utils==1.9.5
+    # via
+    #   contract-deploy-tools
+    #   eth-abi
+    #   eth-account
+    #   eth-keyfile
+    #   eth-keys
+    #   eth-rlp
+    #   eth-tester
+    #   eth-tester-rpc
+    #   hexbytes
+    #   py-ecc
+    #   py-evm
+    #   rlp
+    #   trie
+    #   trustlines-relay (setup.py)
+    #   web3
+firebase-admin==4.3.0
+    # via trustlines-relay (setup.py)
+flask-cors==3.0.8
+    # via trustlines-relay (setup.py)
+flask-restful==0.3.8
+    # via trustlines-relay (setup.py)
+flask-sockets==0.2.1
+    # via trustlines-relay (setup.py)
+flask==1.1.1
+    # via
+    #   flask-cors
+    #   flask-restful
+    #   flask-sockets
+    #   sentry-sdk
+    #   trustlines-relay (setup.py)
+gevent-websocket==0.10.1
+    # via
+    #   flask-sockets
+    #   trustlines-relay (setup.py)
+gevent==21.1.2
+    # via
+    #   -r constraints.in
+    #   flask-sockets
+    #   gevent-websocket
+    #   trustlines-relay (setup.py)
+google-api-core[grpc]==1.16.0
+    # via
+    #   firebase-admin
+    #   google-api-python-client
+    #   google-cloud-core
+    #   google-cloud-firestore
+google-api-python-client==1.8.0
+    # via firebase-admin
+google-auth-httplib2==0.0.3
+    # via google-api-python-client
+google-auth==1.11.3
+    # via
+    #   google-api-core
+    #   google-api-python-client
+    #   google-auth-httplib2
+    #   google-cloud-storage
+google-cloud-core==1.3.0
+    # via
+    #   google-cloud-firestore
+    #   google-cloud-storage
+google-cloud-firestore==1.6.2
+    # via firebase-admin
+google-cloud-storage==1.26.0
+    # via firebase-admin
+google-resumable-media==0.5.0
+    # via google-cloud-storage
+googleapis-common-protos==1.51.0
+    # via google-api-core
+greenlet==1.0.0
+    # via gevent
+grpcio==1.27.2
+    # via google-api-core
+hexbytes==0.2.0
+    # via
+    #   eth-account
+    #   eth-rlp
+    #   trie
+    #   web3
+httplib2==0.19.0
+    # via
+    #   -r constraints.in
+    #   google-api-python-client
+    #   google-auth-httplib2
+idna==2.9
+    # via requests
+ipfshttpclient==0.4.12
+    # via web3
+itsdangerous==1.1.0
+    # via flask
+jinja2==2.11.1
+    # via flask
+json-rpc==1.13.0
+    # via eth-tester-rpc
+jsonschema==3.2.0
+    # via web3
+lru-dict==1.1.6
+    # via
+    #   py-evm
+    #   web3
+markupsafe==1.1.1
+    # via jinja2
+marshmallow-oneofschema==2.0.1
+    # via trustlines-relay (setup.py)
+marshmallow==3.5.1
+    # via
+    #   marshmallow-oneofschema
+    #   trustlines-relay (setup.py)
+    #   webargs
+msgpack==1.0.0
+    # via cachecontrol
+multiaddr==0.0.9
+    # via ipfshttpclient
+mypy-extensions==0.4.3
+    # via
+    #   py-ecc
+    #   py-evm
+netaddr==0.7.19
+    # via multiaddr
+networkx==2.4
+    # via trustlines-relay (setup.py)
+parsimonious==0.8.1
+    # via eth-abi
+pendulum==2.1.2
+    # via
+    #   -r constraints.in
+    #   trustlines-contracts-deploy
+protobuf==3.11.3
+    # via
+    #   google-api-core
+    #   googleapis-common-protos
+    #   web3
+psycogreen==1.0.2
+    # via trustlines-relay (setup.py)
+psycopg2==2.8.4
+    # via trustlines-relay (setup.py)
+py-ecc==1.7.1
+    # via py-evm
+py-evm==0.3.0a20
+    # via eth-tester
+py-solc==3.2.0
+    # via contract-deploy-tools
+pyasn1-modules==0.2.8
+    # via google-auth
+pyasn1==0.4.8
+    # via
+    #   pyasn1-modules
+    #   rsa
+pycryptodome==3.9.7
+    # via
+    #   eth-hash
+    #   eth-keyfile
+pyethash==0.1.27
+    # via py-evm
+pyparsing==2.4.7
+    # via httplib2
+pyrsistent==0.15.7
+    # via jsonschema
+pysha3==1.0.2
+    # via eth-hash
+python-dateutil==2.8.1
+    # via pendulum
+pytz==2019.3
+    # via
+    #   flask-restful
+    #   google-api-core
+    #   google-cloud-firestore
+pytzdata==2020.1
+    # via pendulum
+requests==2.23.0
+    # via
+    #   cachecontrol
+    #   google-api-core
+    #   ipfshttpclient
+    #   web3
+rlp==2.0.1
+    # via
+    #   eth-account
+    #   eth-rlp
+    #   eth-tester
+    #   py-evm
+    #   trie
+rsa==4.0
+    # via google-auth
+semantic-version==2.8.4
+    # via
+    #   eth-tester
+    #   py-solc
+sentry-sdk[flask]==0.14.3
+    # via trustlines-relay (setup.py)
+six==1.14.0
+    # via
+    #   flask-cors
+    #   flask-restful
+    #   google-api-core
+    #   google-api-python-client
+    #   google-auth
+    #   google-resumable-media
+    #   grpcio
+    #   ipfshttpclient
+    #   jsonschema
+    #   multiaddr
+    #   parsimonious
+    #   protobuf
+    #   pyrsistent
+    #   python-dateutil
+    #   tinyrpc
+sortedcontainers==2.3.0
+    # via trie
+sqlalchemy==1.3.15
+    # via trustlines-relay (setup.py)
+tinyrpc==1.0.4
+    # via trustlines-relay (setup.py)
+toml==0.10.0
+    # via trustlines-relay (setup.py)
+toolz==0.10.0
+    # via cytoolz
+trie==2.0.0-alpha.5
+    # via py-evm
+trustlines-contracts-bin==1.3.0
+    # via
+    #   trustlines-contracts-deploy
+    #   trustlines-relay (setup.py)
+trustlines-contracts-deploy==1.2.0
+    # via trustlines-relay (setup.py)
+typing-extensions==3.7.4.3
+    # via trie
+uritemplate==3.0.1
+    # via google-api-python-client
+urllib3==1.25.8
+    # via
+    #   requests
+    #   sentry-sdk
+varint==1.0.2
+    # via multiaddr
+web3==5.9.0
+    # via
+    #   contract-deploy-tools
+    #   trustlines-contracts-deploy
+    #   trustlines-relay (setup.py)
+webargs==5.5.3
+    # via trustlines-relay (setup.py)
+websockets==8.1
+    # via web3
+werkzeug==0.16.1
+    # via
+    #   -r constraints.in
+    #   eth-tester-rpc
+    #   flask
+wrapt==1.12.1
+    # via trustlines-relay (setup.py)
+zope.event==4.5.0
+    # via gevent
+zope.interface==5.2.0
+    # via gevent
 
 # The following packages are considered to be unsafe in a requirements file:
 # setuptools
