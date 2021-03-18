@@ -4,7 +4,6 @@ from typing import List, NamedTuple
 from gevent import Greenlet
 
 from .currency_network_events import (
-    BalanceUpdateEventType,
     TransferEventType,
     TrustlineRequestCancelEventType,
     TrustlineRequestEventType,
@@ -93,14 +92,6 @@ class CurrencyNetworkProxy(Proxy):
                         )
                     )
         return result
-
-    def start_listen_on_balance(self, on_balance, *, start_log_filter=True) -> Greenlet:
-        def log(log_entry):
-            on_balance(self._build_event(log_entry))
-
-        return self.start_listen_on(
-            BalanceUpdateEventType, log, start_log_filter=start_log_filter
-        )
 
     def start_listen_on_trustline(
         self, on_trustline_change, *, start_log_filter=True

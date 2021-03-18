@@ -4,7 +4,7 @@ import os
 from collections import defaultdict
 from copy import deepcopy
 from enum import Enum
-from typing import Dict, Iterable, List, NamedTuple, Optional
+from typing import Dict, Iterable, List, NamedTuple, Optional, Set, Union, cast
 
 import eth_account
 import eth_keyfile
@@ -21,7 +21,12 @@ from relay.blockchain.identity_events import FeePaymentEventType
 from relay.blockchain.identity_proxy import IdentityProxy
 from relay.blockchain.proxy import LogFilterListener
 from relay.ethindex_db import ethindex_db
-from relay.ethindex_db.sync_updates import FeedUpdate, graph_update_getter
+from relay.ethindex_db.sync_updates import (
+    BalanceUpdateFeedUpdate,
+    FeedUpdate,
+    TrustlineUpdateFeedUpdate,
+    graph_update_getter,
+)
 from relay.pushservice.client import PushNotificationClient
 from relay.pushservice.client_token_db import (
     ClientTokenAlreadyExistsException,
@@ -426,6 +431,7 @@ class TrustlinesRelay:
             while True:
                 graph_updates = updates_getter(conn)
                 self._apply_feed_update_on_graph(graph_updates)
+                self._publish_feed_update_events(graph_updates)
                 gevent.sleep(self.config["trustline_index"]["sync_interval"])
 
         gevent.Greenlet.spawn(sync)
@@ -750,8 +756,37 @@ class TrustlinesRelay:
             if update.address not in self.currency_network_graphs.keys():
                 logger.warning(f"Got event_feed with unknown network address {update}")
                 continue
+
             graph = self.currency_network_graphs[update.address]
             graph.update_from_feed(update)
+
+    def _publish_feed_update_events(
+        self, feed_update: Iterable[FeedUpdate],
+    ):
+        def unique_updated_id(from_, to, network_address):
+            if from_ > to:
+                return from_ + to + network_address
+            else:
+                return to + from_ + network_address
+
+        processed_updates: Set[str] = set()
+
+        for update in feed_update:
+            if update.address not in self.currency_network_graphs.keys():
+                continue
+            if type(update) in [TrustlineUpdateFeedUpdate, BalanceUpdateFeedUpdate]:
+                update = cast(
+                    Union[TrustlineUpdateFeedUpdate, BalanceUpdateFeedUpdate], update
+                )
+                uid = unique_updated_id(update.from_, update.to, update.address)
+                if uid not in processed_updates:
+                    self._publish_trustline_events(
+                        user1=update.from_,
+                        user2=update.to,
+                        network_address=update.address,
+                        timestamp=update.timestamp,
+                    )
+                processed_updates.add(uid)
 
     def _load_gas_price_settings(self, gas_price_settings: Dict):
         method = gas_price_settings["method"]
@@ -808,9 +843,6 @@ class TrustlinesRelay:
     def _start_listen_network(self, address):
         assert is_checksum_address(address)
         proxy = self.currency_network_proxies[address]
-        proxy.start_listen_on_balance(
-            self._process_balance_update, start_log_filter=False
-        )
         proxy.start_listen_on_trustline(
             self._process_trustline_update, start_log_filter=False
         )
@@ -849,14 +881,6 @@ class TrustlinesRelay:
             "Start pushnotifications for {} registered user devices".format(
                 number_of_new_listeners
             )
-        )
-
-    def _process_balance_update(self, balance_update_event):
-        self._publish_trustline_events(
-            user1=balance_update_event.from_,
-            user2=balance_update_event.to,
-            network_address=balance_update_event.network_address,
-            timestamp=balance_update_event.timestamp,
         )
 
     def _process_transfer(self, transfer_event):
@@ -909,12 +933,6 @@ class TrustlinesRelay:
     def _process_trustline_update(self, trustline_update_event):
         logger.debug("Process trustline update event: %s", trustline_update_event)
         self._publish_blockchain_event(trustline_update_event)
-        self._publish_trustline_events(
-            user1=trustline_update_event.from_,
-            user2=trustline_update_event.to,
-            network_address=trustline_update_event.network_address,
-            timestamp=trustline_update_event.timestamp,
-        )
 
     def _publish_blockchain_event(self, event):
         for user in [event.from_, event.to]:

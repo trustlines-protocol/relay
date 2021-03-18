@@ -78,26 +78,6 @@ def test_gen_graph_representation(currency_network_with_trustlines, accounts):
         )
 
 
-def test_listen_on_balance_update(currency_network, accounts):
-    events = []
-
-    def f(event):
-        events.append(event)
-
-    greenlet = currency_network.start_listen_on_balance(f)
-    context_switch()
-    currency_network.update_trustline_with_accept(accounts[0], accounts[1], 25, 50)
-    currency_network.transfer(accounts[1], 10, 10, [accounts[1], accounts[0]])
-    gevent.sleep(1)
-
-    assert len(events) == 1
-    assert events[0].from_ == accounts[0] or events[0].from_ == accounts[1]
-    assert events[0].to == accounts[0] or events[0].to == accounts[1]
-    assert -12 < events[0].value < 12  # because there might be fees
-
-    greenlet.kill()
-
-
 def test_listen_on_transfer(currency_network, accounts):
     events = []
 
