@@ -642,6 +642,7 @@ class CurrencyNetworkGraph(object):
                 feed_update.value,
                 feed_update.timestamp,
             )
+
         elif type(feed_update) == NetworkFreezeFeedUpdate:
             self.is_frozen = True
         elif type(feed_update) == NetworkUnfreezeFeedUpdate:

@@ -3,6 +3,8 @@ Change Log
 ==========
 `unreleased`_
 -------------------------------
+- Fixed: No longer publish events for balance changes from filter for BalanceUpdates and TrustlineUpdates
+  Now uses graph updates from ethindex to publish information
 
 `0.20.1`_ (2020-02-12)
 -------------------------------
