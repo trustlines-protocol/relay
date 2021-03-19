@@ -3,20 +3,23 @@ Change Log
 ==========
 `unreleased`_
 -------------------------------
+
+`0.20.2`_ (2021-03-19)
+-------------------------------
 - Fixed: No longer publish events for balance changes from filter for BalanceUpdates and TrustlineUpdates
   Now uses graph updates from ethindex to publish information
 
-`0.20.1`_ (2020-02-12)
+`0.20.1`_ (2021-02-12)
 -------------------------------
 - Fixed: Correclty fetch the `is_frozen` status of currency networks at start up.
   previously, networks where start unfrozen by default and synced further.
 
-`0.20.0`_ (2020-02-12)
+`0.20.0`_ (2021-02-12)
 -------------------------------
 - Updated: Use ethindex to update `is_frozen` status of network graphs instead of filters
   requires ethindex>=0.3.5
 
-`0.19.0`_ (2020-01-26)
+`0.19.0`_ (2021-01-26)
 -------------------------------
 - Changed: Update major dependencies, notably web3 version 5.9.0
 - Changed: add filtering by contract type to user events endpoint
