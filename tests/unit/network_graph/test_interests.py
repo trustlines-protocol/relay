@@ -13,10 +13,7 @@ from relay.network_graph.graph_constants import (
     interest_ba,
     m_time,
 )
-from relay.network_graph.interests import (
-    DELTA_TIME_MINIMAL_ALLOWED_VALUE,
-    calculate_interests,
-)
+from relay.network_graph.interests import calculate_interests
 
 A, B, C, D, E, F, G, H = addresses
 
@@ -24,7 +21,7 @@ A, B, C, D, E, F, G, H = addresses
 SECONDS_PER_YEAR = 60 * 60 * 24 * 365
 
 
-@pytest.fixture(params=[0, -1, DELTA_TIME_MINIMAL_ALLOWED_VALUE])
+@pytest.fixture(params=[0, -1, -60])
 def small_non_positive_delta_time(request):
     return request.param
 
@@ -352,17 +349,11 @@ def test_interests_path_from_B_balance_negative_irrelevant_interests(
 
 
 def test_calculate_interests_time_glitch(small_non_positive_delta_time):
-    calculate_interests(
-        balance=1000000000,
-        internal_interest_rate=1000,
-        delta_time_in_seconds=small_non_positive_delta_time,
-    ) == 0
-
-
-def test_calculate_interests_delta_time_out_of_bounds():
-    with pytest.raises(ValueError):
+    assert (
         calculate_interests(
             balance=1000000000,
             internal_interest_rate=1000,
-            delta_time_in_seconds=DELTA_TIME_MINIMAL_ALLOWED_VALUE - 1,
+            delta_time_in_seconds=small_non_positive_delta_time,
         )
+        == 0
+    )
