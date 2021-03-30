@@ -1,17 +1,11 @@
 SECONDS_PER_YEAR = 60 * 60 * 24 * 365
 INTERESTS_DECIMALS = 2
-DELTA_TIME_MINIMAL_ALLOWED_VALUE = -60
 
 
 def _ensure_non_negative_delta_time(delta_time):
     """make sure the delta_time - used for computation of interests - is mostly
-    positive. Every value passed in that's less than
-    DELTA_TIME_MINIMAL_ALLOWED_VALUE will trigger a ValueError.
-
-    see https://github.com/trustlines-protocol/relay/issues/279
+    positive.
     """
-    if delta_time < DELTA_TIME_MINIMAL_ALLOWED_VALUE:
-        raise ValueError("delta_time out of bounds")
     return max(delta_time, 0)
 
 
