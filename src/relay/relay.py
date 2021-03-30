@@ -765,30 +765,49 @@ class TrustlinesRelay:
     def _publish_feed_update_events(
         self, feed_update: Iterable[FeedUpdate],
     ):
-        def unique_updated_id(from_, to, network_address):
+        # We want to publish only the latest update for each user / trustline
+        feed_update = sorted(
+            feed_update, key=lambda update: update.timestamp, reverse=True
+        )
+
+        def unique_trustline_id(from_, to, network_address):
             if from_ > to:
                 return from_ + to + network_address
             else:
                 return to + from_ + network_address
 
-        processed_updates: Set[str] = set()
+        processed_trusline_updates: Set[str] = set()
+        processed_user_updates: Set[str] = set()
 
         for update in feed_update:
             if update.address not in self.currency_network_graphs.keys():
                 continue
+
             if type(update) in [TrustlineUpdateFeedUpdate, BalanceUpdateFeedUpdate]:
                 update = cast(
                     Union[TrustlineUpdateFeedUpdate, BalanceUpdateFeedUpdate], update
                 )
-                uid = unique_updated_id(update.from_, update.to, update.address)
-                if uid not in processed_updates:
+
+                trustline_id = unique_trustline_id(
+                    update.from_, update.to, update.address
+                )
+                if trustline_id not in processed_trusline_updates:
                     self._publish_trustline_events(
                         user1=update.from_,
                         user2=update.to,
                         network_address=update.address,
                         timestamp=update.timestamp,
                     )
-                processed_updates.add(uid)
+                    processed_trusline_updates.add(trustline_id)
+
+                for user in [update.from_, update.to]:
+                    if user not in processed_user_updates:
+                        self._publish_network_balance_event(
+                            user=user,
+                            network_address=update.address,
+                            timestamp=update.timestamp,
+                        )
+                        processed_user_updates.add(user)
 
     def _load_gas_price_settings(self, gas_price_settings: Dict):
         method = gas_price_settings["method"]
@@ -911,16 +930,16 @@ class TrustlinesRelay:
                     timestamp,
                 )
             )
-        for user in [user1, user2]:
-            events.append(
-                NetworkBalanceEvent(
-                    network_address,
-                    user,
-                    graph.get_account_sum(user, timestamp=timestamp),
-                    timestamp,
-                )
-            )
         return events
+
+    def _generate_network_balance_event(self, *, user, network_address, timestamp):
+        graph = self.currency_network_graphs[network_address]
+        return NetworkBalanceEvent(
+            network_address,
+            user,
+            graph.get_account_sum(user, timestamp=timestamp),
+            timestamp,
+        )
 
     def _publish_trustline_events(self, *, user1, user2, network_address, timestamp):
         events = self._generate_trustline_events(
@@ -931,6 +950,12 @@ class TrustlinesRelay:
         )
         for ev in events:
             self._publish_user_event(ev)
+
+    def _publish_network_balance_event(self, *, user, network_address, timestamp):
+        event = self._generate_network_balance_event(
+            user=user, network_address=network_address, timestamp=timestamp
+        )
+        self._publish_user_event(event)
 
     def _process_trustline_update(self, trustline_update_event):
         logger.debug("Process trustline update event: %s", trustline_update_event)
