@@ -1,6 +1,7 @@
 import json
 import logging
 import os
+import sys
 from collections import defaultdict
 from copy import deepcopy
 from enum import Enum
@@ -434,7 +435,8 @@ class TrustlinesRelay:
                 self._publish_feed_update_events(graph_updates)
                 gevent.sleep(self.config["trustline_index"]["sync_interval"])
 
-        gevent.Greenlet.spawn(sync)
+        greenlet = gevent.Greenlet.spawn(sync)
+        greenlet.link_exception(lambda *args: sys.exit("Graph sync greenlet died"))
 
     def new_network(self, address: str) -> None:
         assert is_checksum_address(address)
