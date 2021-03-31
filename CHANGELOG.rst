@@ -4,6 +4,13 @@ Change Log
 `unreleased`_
 -------------------------------
 
+`0.20.3`_ (2021-03-31)
+-------------------------------
+- Updated: Make relay exit when greenlet for graph sync dies.
+- Fixed: Only publish most recent events on websocket for trustline update and network balance update.
+  This fixes a bug that stopped the updating of the currency network graph in certain situations.
+- Fixed: Relay crash on logging with insufficient parameters.
+
 `0.20.2`_ (2021-03-19)
 -------------------------------
 - Fixed: No longer publish events for balance changes from filter for BalanceUpdates and TrustlineUpdates
@@ -281,4 +288,6 @@ Change Log
 .. _0.19.0: https://github.com/trustlines-protocol/relay/compare/0.18.0...0.19.0
 .. _0.20.0: https://github.com/trustlines-protocol/relay/compare/0.19.0...0.20.0
 .. _0.20.1: https://github.com/trustlines-protocol/relay/compare/0.20.0...0.20.1
-.. _unreleased: https://github.com/trustlines-protocol/relay/compare/0.20.1...master
+.. _0.20.2: https://github.com/trustlines-protocol/relay/compare/0.20.1...0.20.2
+.. _0.20.3: https://github.com/trustlines-protocol/relay/compare/0.20.2...0.20.3
+.. _unreleased: https://github.com/trustlines-protocol/relay/compare/0.20.3...master
