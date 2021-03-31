@@ -398,7 +398,7 @@ class EthindexDB:
 
         events = self._run_events_query(query)
         logger.debug(
-            "get_all_events(%s, %s, %s) -> %s rows",
+            "get_all_events(%s, %s, standard_event_types) -> %s rows",
             from_block,
             contract_address,
             len(events),
