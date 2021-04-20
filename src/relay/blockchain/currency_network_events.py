@@ -80,7 +80,9 @@ class TrustlineUpdateEvent(TrustlineEvent):
 
 
 class TrustlineRequestEvent(TrustlineEvent):
-    pass
+    @property
+    def transfer(self):
+        return self._web3_event.get("args").get("_transfer", default=0)
 
 
 class TrustlineRequestCancelEvent(CurrencyNetworkEvent):

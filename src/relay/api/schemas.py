@@ -143,6 +143,7 @@ class CurrencyNetworkEventSchema(BlockchainEventSchema):
     interestRateGiven = BigInteger(attribute="interest_rate_given")
     interestRateReceived = BigInteger(attribute="interest_rate_received")
     isFrozen = fields.Bool(attribute="is_frozen")
+    transfer = BigInteger(attribute="transfer")
     leftGiven = BigInteger(attribute="left_given")
     leftReceived = BigInteger(attribute="left_received")
     from_ = Address(data_key="from")
