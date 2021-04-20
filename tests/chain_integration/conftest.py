@@ -61,16 +61,10 @@ def taker(accounts):
 
 class CurrencyNetworkProxy(currency_network_proxy.CurrencyNetworkProxy):
     def setup_trustlines(self, trustlines):
-        for (A, B, clAB, clBA) in trustlines:
-            txid = self._proxy.functions.setAccount(
-                A, B, clAB, clBA, 0, 0, False, 0, 0
-            ).transact()
-            self._web3.eth.waitForTransactionReceipt(txid)
-
-    def setup_trustlines_with_interests_with_updates(self, trustlines_with_interests):
-        # uses `update_trustline` instead of `setAccount` so that events are emitted when setting up trustlines
-        for (A, B, clAB, clBA, intAB, intBA) in trustlines_with_interests:
-            self.update_trustline_with_accept(A, B, clAB, clBA, intAB, intBA)
+        for (A, B, clAB, clBA, intAB, intBA, is_frozen, balanceAB) in trustlines:
+            self.update_trustline_with_accept(
+                A, B, clAB, clBA, intAB, intBA, is_frozen, balanceAB
+            )
 
     def update_trustline(
         self,
@@ -81,10 +75,20 @@ class CurrencyNetworkProxy(currency_network_proxy.CurrencyNetworkProxy):
         interest_rate_given=None,
         interest_rate_received=None,
         is_frozen=False,
+        transfer=0,
     ):
         if interest_rate_given is None or interest_rate_received is None:
             txid = self._proxy.functions.updateCreditlimits(
                 to, creditline_given, creditline_received
+            ).transact({"from": from_})
+        elif transfer == 0:
+            txid = self._proxy.functions.updateTrustline(
+                to,
+                creditline_given,
+                creditline_received,
+                interest_rate_given,
+                interest_rate_received,
+                is_frozen,
             ).transact({"from": from_})
         else:
             txid = self._proxy.functions.updateTrustline(
@@ -94,6 +98,7 @@ class CurrencyNetworkProxy(currency_network_proxy.CurrencyNetworkProxy):
                 interest_rate_given,
                 interest_rate_received,
                 is_frozen,
+                transfer,
             ).transact({"from": from_})
         self._web3.eth.waitForTransactionReceipt(txid)
 
@@ -110,6 +115,7 @@ class CurrencyNetworkProxy(currency_network_proxy.CurrencyNetworkProxy):
         interest_rate_given=None,
         interest_rate_received=None,
         is_frozen=False,
+        transfer=0,
     ):
         self.update_trustline(
             from_,
@@ -119,6 +125,7 @@ class CurrencyNetworkProxy(currency_network_proxy.CurrencyNetworkProxy):
             interest_rate_given,
             interest_rate_received,
             is_frozen,
+            transfer,
         )
         self.update_trustline(
             to,
@@ -128,6 +135,7 @@ class CurrencyNetworkProxy(currency_network_proxy.CurrencyNetworkProxy):
             interest_rate_received,
             interest_rate_given,
             is_frozen,
+            -transfer,
         )
 
     def update_trustline_and_cancel(
@@ -231,25 +239,25 @@ class CurrencyNetworkProxy(currency_network_proxy.CurrencyNetworkProxy):
 @pytest.fixture(scope="session")
 def trustlines(accounts):
     return [
-        (accounts[0], accounts[1], 100, 150),
-        (accounts[1], accounts[2], 200, 250),
-        (accounts[2], accounts[3], 300, 350),
-        (accounts[3], accounts[4], 400, 450),
-        (accounts[4], accounts[5], 400, 450),
-        (accounts[5], accounts[6], 400, 450),
-        (accounts[0], accounts[4], 500, 550),
-    ]  # (A, B, clAB, clBA)
+        (accounts[0], accounts[1], 100, 150, 0, 0, False, 0),
+        (accounts[1], accounts[2], 200, 250, 0, 0, False, 0),
+        (accounts[2], accounts[3], 300, 350, 0, 0, False, 0),
+        (accounts[3], accounts[4], 400, 450, 0, 0, False, 0),
+        (accounts[4], accounts[5], 400, 450, 0, 0, False, 0),
+        (accounts[5], accounts[6], 400, 450, 0, 0, False, 0),
+        (accounts[0], accounts[4], 500, 550, 0, 0, False, 0),
+    ]  # (A, B, clAB, clBA, intAB, intBA, frozen, transferAB)
 
 
 @pytest.fixture(scope="session")
 def trustlines_with_interests(accounts):
     return [
-        (accounts[0], accounts[1], 12345, 12345, 2000, 1000),
-        (accounts[1], accounts[2], 12345, 12345, 2000, 1000),
-        (accounts[2], accounts[3], 12345, 12345, 2000, 1000),
-        (accounts[3], accounts[4], 12345, 12345, 2000, 1000),
-        (accounts[0], accounts[4], 12345, 12345, 2000, 1000),
-    ]  # (A, B, clAB, clBA)
+        (accounts[0], accounts[1], 12345, 12345, 2000, 1000, False, 0),
+        (accounts[1], accounts[2], 12345, 12345, 2000, 1000, False, 0),
+        (accounts[2], accounts[3], 12345, 12345, 2000, 1000, False, 0),
+        (accounts[3], accounts[4], 12345, 12345, 2000, 1000, False, 0),
+        (accounts[0], accounts[4], 12345, 12345, 2000, 1000, False, 0),
+    ]  # (A, B, clAB, clBA, intAB, intBA, frozen, transferAB)
 
 
 def deploy_test_network(web3):
@@ -262,7 +270,7 @@ def deploy_test_network(web3):
             custom_interests=True,
             expiration_time=EXPIRATION_TIME,
         ),
-        currency_network_contract_name="TestCurrencyNetwork",
+        currency_network_contract_name="CurrencyNetworkV2",
     )
 
 
@@ -276,8 +284,8 @@ def contracts():
 
 
 @pytest.fixture(scope="session")
-def currency_network_abi(contracts):
-    return contracts["TestCurrencyNetwork"]["abi"]
+def currency_network_v2_abi(contracts):
+    return contracts["CurrencyNetworkV2"]["abi"]
 
 
 @pytest.fixture(scope="session")
@@ -302,7 +310,17 @@ def testnetwork2_address(web3):
 
 @pytest.fixture(scope="session")
 def testnetwork3_address(web3, chain):
-    return deploy_test_network(web3).address
+    return deploy_network(
+        web3,
+        network_settings=NetworkSettings(
+            fee_divisor=100,
+            name="Trustlines",
+            symbol="T",
+            custom_interests=True,
+            expiration_time=EXPIRATION_TIME,
+        ),
+        currency_network_contract_name="CurrencyNetworkV2",
+    ).address
 
 
 @pytest.fixture(scope="session")
@@ -347,19 +365,19 @@ def network_addresses_with_exchange(testnetworks):
 
 
 @pytest.fixture(scope="session")
-def currency_network(web3, currency_network_abi, testnetwork1_address):
+def currency_network(web3, currency_network_v2_abi, testnetwork1_address):
     currency_network = CurrencyNetworkProxy(
-        web3, currency_network_abi, testnetwork1_address
+        web3, currency_network_v2_abi, testnetwork1_address
     )
     return currency_network
 
 
 @pytest.fixture()
 def currency_network_with_trustlines(
-    web3, currency_network_abi, testnetwork2_address, trustlines
+    web3, currency_network_v2_abi, testnetwork2_address, trustlines
 ):
     currency_network = CurrencyNetworkProxy(
-        web3, currency_network_abi, testnetwork2_address
+        web3, currency_network_v2_abi, testnetwork2_address
     )
     currency_network.setup_trustlines(trustlines)
 
@@ -368,38 +386,34 @@ def currency_network_with_trustlines(
 
 @pytest.fixture()
 def currency_network_with_trustlines_and_interests(
-    web3, currency_network_abi, testnetwork2_address, trustlines_with_interests
+    web3, currency_network_v2_abi, testnetwork2_address, trustlines_with_interests
 ):
     currency_network = CurrencyNetworkProxy(
-        web3, currency_network_abi, testnetwork2_address
+        web3, currency_network_v2_abi, testnetwork2_address
     )
-    currency_network.setup_trustlines_with_interests_with_updates(
-        trustlines_with_interests
-    )
+    currency_network.setup_trustlines(trustlines_with_interests)
 
     return currency_network
 
 
 @pytest.fixture(scope="session")
 def currency_network_with_trustlines_and_interests_session(
-    web3, currency_network_abi, testnetwork3_address, trustlines_with_interests
+    web3, currency_network_v2_abi, testnetwork3_address, trustlines_with_interests
 ):
     currency_network = CurrencyNetworkProxy(
-        web3, currency_network_abi, testnetwork3_address
+        web3, currency_network_v2_abi, testnetwork3_address
     )
-    currency_network.setup_trustlines_with_interests_with_updates(
-        trustlines_with_interests
-    )
+    currency_network.setup_trustlines(trustlines_with_interests)
 
     return currency_network
 
 
 @pytest.fixture(scope="session")
 def currency_network_with_trustlines_session(
-    web3, currency_network_abi, testnetwork4_address, trustlines
+    web3, currency_network_v2_abi, testnetwork4_address, trustlines
 ):
     currency_network = CurrencyNetworkProxy(
-        web3, currency_network_abi, testnetwork4_address
+        web3, currency_network_v2_abi, testnetwork4_address
     )
     currency_network.setup_trustlines(trustlines)
 

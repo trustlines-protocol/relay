@@ -48,6 +48,7 @@ def web3_event_trustline_request(web3_event):
                 "_creditlineGiven": 50,
                 "_creditlineReceived": 100,
                 "_isFrozen": True,
+                "_transfer": 10,
             },
             "event": TrustlineRequestEventType,
         }
