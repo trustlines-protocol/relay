@@ -180,6 +180,9 @@ class CurrencyNetworkProxy(currency_network_proxy.CurrencyNetworkProxy):
         )
         self.cancel_trustline_update(to, from_)
 
+    def close_trustline(self, from_, to):
+        self._proxy.functions.closeTrustline(to).transact({"from": from_})
+
     def transfer(self, from_, value, max_fee, path, extra_data=b""):
         tx_id = self._proxy.functions.transfer(
             value, max_fee, path, extra_data

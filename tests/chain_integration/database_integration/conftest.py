@@ -1,7 +1,6 @@
 import json
 import os
 import subprocess
-import sys
 import time
 import warnings
 from subprocess import Popen
@@ -245,11 +244,6 @@ def address_file_path(
     return path
 
 
-@pytest.fixture(scope="session")
-def abi_file_path():
-    return os.path.join(sys.prefix, "trustlines-contracts", "build", "contracts.json")
-
-
 @pytest.fixture(scope="session", autouse=True)
 def setup_database(use_local_database, environment_variables):
     if use_local_database:
@@ -265,11 +259,7 @@ def setup_database(use_local_database, environment_variables):
 
 @pytest.fixture(scope="session", autouse=True)
 def start_indexer(
-    pytestconfig,
-    setup_database,
-    environment_variables,
-    address_file_path,
-    abi_file_path,
+    pytestconfig, setup_database, environment_variables, address_file_path,
 ):
     subprocess.run(
         ["ethindex", "createtables"],
@@ -280,14 +270,7 @@ def start_indexer(
     )
 
     subprocess.run(
-        [
-            "ethindex",
-            "importabi",
-            "--contracts",
-            abi_file_path,
-            "--addresses",
-            address_file_path,
-        ],
+        ["ethindex", "importabi", "--addresses", address_file_path],
         env=environment_variables,
         stdout=subprocess.DEVNULL,
         stderr=subprocess.DEVNULL,
@@ -307,8 +290,8 @@ def start_indexer(
             f"{INDEXER_REQUIRED_CONFIRMATION}",
         ],
         env=environment_variables,
-        # stdout=subprocess.DEVNULL,
-        # stderr=subprocess.DEVNULL,
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.DEVNULL,
     )
 
     yield

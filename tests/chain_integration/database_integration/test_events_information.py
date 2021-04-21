@@ -10,7 +10,10 @@ from relay.ethindex_db.events_informations import (
     IdentifiedNotPartOfTransferException,
 )
 from relay.network_graph.graph import CurrencyNetworkGraph
+from relay.network_graph.interests import calculate_interests
 from relay.network_graph.payment_path import FeePayer
+
+ONE_YEAR_IN_SECONDS = 365 * 3600 * 24
 
 
 def accrue_interests(currency_network, web3, chain, path, years):
@@ -20,7 +23,7 @@ def accrue_interests(currency_network, web3, chain, path, years):
 
     for year in years:
         timestamp = web3.eth.getBlock("latest").timestamp
-        timestamp += (3600 * 24 * 365) * year + 1
+        timestamp += ONE_YEAR_IN_SECONDS * year + 1
 
         chain.time_travel(timestamp)
         chain.mine_block()
@@ -28,7 +31,7 @@ def accrue_interests(currency_network, web3, chain, path, years):
 
 
 @pytest.mark.parametrize(
-    "years, interests", [([0, 1], [0, 2]), ([1, 4, 2, 3], [1, 9, 8, 19])]
+    "years, interests", [([0, 1], [2]), ([1, 4, 2, 3], [1, 9, 8, 19])]
 )
 def test_get_interests_received_for_trustline_positive_balance(
     ethindex_db_for_currency_network_with_trustlines_and_interests,
@@ -61,7 +64,7 @@ def test_get_interests_received_for_trustline_positive_balance(
 
 
 @pytest.mark.parametrize(
-    "years, interests", [([0, 1], [0, 4]), ([1, 4, 2, 3], [2, 24, 26, 74])]
+    "years, interests", [([0, 1], [4]), ([1, 4, 2, 3], [2, 24, 26, 74])]
 )
 def test_get_interests_received_for_trustline_negative_balance(
     ethindex_db_for_currency_network_with_trustlines_and_interests,
@@ -94,7 +97,7 @@ def test_get_interests_received_for_trustline_negative_balance(
 
 
 @pytest.mark.parametrize(
-    "years, interests", [([0, 1], [0, -2]), ([1, 4, 2, 3], [-1, -9, -8, -19])]
+    "years, interests", [([0, 1], [-2]), ([1, 4, 2, 3], [-1, -9, -8, -19])]
 )
 def test_get_interests_paid_for_trustline_positive_balance(
     ethindex_db_for_currency_network_with_trustlines_and_interests,
@@ -127,7 +130,7 @@ def test_get_interests_paid_for_trustline_positive_balance(
 
 
 @pytest.mark.parametrize(
-    "years, interests", [([0, 1], [0, -4]), ([1, 4, 2, 3], [-2, -24, -26, -74])]
+    "years, interests", [([0, 1], [-4]), ([1, 4, 2, 3], [-2, -24, -26, -74])]
 )
 def test_get_interests_paid_for_trustline_negative_balance(
     ethindex_db_for_currency_network_with_trustlines_and_interests,
@@ -157,6 +160,184 @@ def test_get_interests_paid_for_trustline_negative_balance(
     assert list_of_interests == interests
     for accrued_interest in accrued_interests:
         assert accrued_interest.interest_rate == 2000
+
+
+@pytest.mark.parametrize(
+    "years, interests", [([0, 1], [2]), ([1, 4, 2, 3], [1, 9, 8, 19])]
+)
+def test_get_interests_received_open_trustline_with_transfer(
+    ethindex_db_for_currency_network_with_trustlines_and_interests,
+    currency_network_with_trustlines_and_interests_session,
+    web3,
+    chain,
+    accounts,
+    years,
+    interests,
+    wait_for_ethindex_to_sync,
+):
+    """Test that opening a trustline with balance will still allow us to get interests"""
+    currency_network = currency_network_with_trustlines_and_interests_session
+
+    currency_network.close_trustline(accounts[1], accounts[2])
+    currency_network.update_trustline_with_accept(
+        accounts[1], accounts[2], 12345, 12345, 0, 0, False, 123
+    )
+    currency_network.transfer(accounts[2], 123, 0, [accounts[2], accounts[1]])
+
+    currency_network.update_trustline_with_accept(
+        accounts[1], accounts[2], 12345, 12345, 2000, 1000, False, 0
+    )
+
+    path = [accounts[0], accounts[1], accounts[2], accounts[3]]
+    accrue_interests(currency_network, web3, chain, path, years)
+    wait_for_ethindex_to_sync()
+
+    accrued_interests = EventsInformationFetcher(
+        ethindex_db_for_currency_network_with_trustlines_and_interests
+    ).get_list_of_paid_interests_for_trustline(
+        currency_network.address, accounts[2], accounts[1]
+    )
+    list_of_interests = [
+        accrued_interest.value for accrued_interest in accrued_interests
+    ]
+    assert list_of_interests == interests
+    for accrued_interest in accrued_interests:
+        assert accrued_interest.interest_rate == 1000
+
+
+@pytest.mark.parametrize(
+    "years, interests", [([0, 1], [4]), ([1, 4, 2, 3], [2, 24, 26, 74])]
+)
+def test_get_interests_paid_open_trustline_with_transfer(
+    ethindex_db_for_currency_network_with_trustlines_and_interests,
+    currency_network_with_trustlines_and_interests_session,
+    web3,
+    chain,
+    accounts,
+    years,
+    interests,
+    wait_for_ethindex_to_sync,
+):
+    """Test that opening a trustline with balance will still allow us to get paid interests"""
+    currency_network = currency_network_with_trustlines_and_interests_session
+
+    currency_network.close_trustline(accounts[1], accounts[2])
+    currency_network.update_trustline_with_accept(
+        accounts[1], accounts[2], 12345, 12345, 0, 0, False, 123
+    )
+    currency_network.transfer(accounts[2], 123, 0, [accounts[2], accounts[1]])
+
+    currency_network.update_trustline_with_accept(
+        accounts[1], accounts[2], 12345, 12345, 2000, 1000, False, 0
+    )
+
+    path = [accounts[3], accounts[2], accounts[1], accounts[0]]
+    accrue_interests(currency_network, web3, chain, path, years)
+    wait_for_ethindex_to_sync()
+
+    accrued_interests = EventsInformationFetcher(
+        ethindex_db_for_currency_network_with_trustlines_and_interests
+    ).get_list_of_paid_interests_for_trustline(
+        currency_network.address, accounts[1], accounts[2]
+    )
+    list_of_interests = [
+        accrued_interest.value for accrued_interest in accrued_interests
+    ]
+    assert list_of_interests == interests
+    for accrued_interest in accrued_interests:
+        assert accrued_interest.interest_rate == 2000
+
+
+def test_get_interests_received_during_opening_of_trustline(
+    ethindex_db_for_currency_network_with_trustlines_and_interests,
+    currency_network_with_trustlines_and_interests_session,
+    web3,
+    chain,
+    accounts,
+    wait_for_ethindex_to_sync,
+):
+    """Test that opening a trustline with balance and interests will allow us to get resulting accrued interests"""
+    currency_network = currency_network_with_trustlines_and_interests_session
+    initial_transfer = 100
+    interest_rate = 1000
+
+    currency_network.close_trustline(accounts[1], accounts[2])
+    currency_network.update_trustline_with_accept(
+        accounts[1],
+        accounts[2],
+        12345,
+        12345,
+        2000,
+        interest_rate,
+        False,
+        initial_transfer,
+    )
+
+    path = [accounts[0], accounts[1], accounts[2], accounts[3]]
+    timestamp = web3.eth.getBlock("latest").timestamp
+    timestamp += ONE_YEAR_IN_SECONDS + 1
+    chain.time_travel(timestamp)
+    currency_network.transfer(path[0], 9, 1000, path, b"")
+
+    wait_for_ethindex_to_sync()
+
+    accrued_interests = EventsInformationFetcher(
+        ethindex_db_for_currency_network_with_trustlines_and_interests
+    ).get_list_of_paid_interests_for_trustline(
+        currency_network.address, accounts[2], accounts[1]
+    )
+    assert len(accrued_interests) == 1
+    assert accrued_interests[0].value == calculate_interests(
+        initial_transfer, interest_rate, ONE_YEAR_IN_SECONDS
+    )
+    assert accrued_interests[0].interest_rate == interest_rate
+    assert accrued_interests[0].timestamp == web3.eth.getBlock("latest").timestamp
+
+
+def test_get_interests_paid_during_opening_of_trustline(
+    ethindex_db_for_currency_network_with_trustlines_and_interests,
+    currency_network_with_trustlines_and_interests_session,
+    web3,
+    chain,
+    accounts,
+    wait_for_ethindex_to_sync,
+):
+    """Test that opening a trustline with balance and interests will allow us to get resulting paid interests"""
+    currency_network = currency_network_with_trustlines_and_interests_session
+    initial_transfer = -100
+    interest_rate = 2000
+
+    currency_network.close_trustline(accounts[1], accounts[2])
+    currency_network.update_trustline_with_accept(
+        accounts[1],
+        accounts[2],
+        12345,
+        12345,
+        interest_rate,
+        1000,
+        False,
+        initial_transfer,
+    )
+
+    path = [accounts[0], accounts[1], accounts[2], accounts[3]]
+    timestamp = web3.eth.getBlock("latest").timestamp
+    timestamp += ONE_YEAR_IN_SECONDS + 1
+    chain.time_travel(timestamp)
+    currency_network.transfer(path[0], 9, 1000, path, b"")
+
+    wait_for_ethindex_to_sync()
+
+    accrued_interests = EventsInformationFetcher(
+        ethindex_db_for_currency_network_with_trustlines_and_interests
+    ).get_list_of_paid_interests_for_trustline(
+        currency_network.address, accounts[2], accounts[1]
+    )
+    assert len(accrued_interests) == 1
+    assert accrued_interests[0].value == calculate_interests(
+        initial_transfer, interest_rate, ONE_YEAR_IN_SECONDS
+    )
+    assert accrued_interests[0].interest_rate == interest_rate
+    assert accrued_interests[0].timestamp == web3.eth.getBlock("latest").timestamp
 
 
 class LookupMethod(Enum):
