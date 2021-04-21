@@ -273,7 +273,7 @@ def trustlines_with_interests(accounts):
     ]  # (A, B, clAB, clBA, intAB, intBA, frozen, transferAB)
 
 
-def deploy_test_network(web3):
+def deploy_currency_network_v2(web3):
     return deploy_network(
         web3,
         network_settings=NetworkSettings(
@@ -313,32 +313,22 @@ def token_abi(contracts):
 
 @pytest.fixture(scope="session")
 def testnetwork1_address(web3):
-    return deploy_test_network(web3).address
+    return deploy_currency_network_v2(web3).address
 
 
 @pytest.fixture(scope="session")
 def testnetwork2_address(web3):
-    return deploy_test_network(web3).address
+    return deploy_currency_network_v2(web3).address
 
 
 @pytest.fixture(scope="session")
 def testnetwork3_address(web3, chain):
-    return deploy_network(
-        web3,
-        network_settings=NetworkSettings(
-            fee_divisor=100,
-            name="Trustlines",
-            symbol="T",
-            custom_interests=True,
-            expiration_time=EXPIRATION_TIME,
-        ),
-        currency_network_contract_name="CurrencyNetworkV2",
-    ).address
+    return deploy_currency_network_v2(web3).address
 
 
 @pytest.fixture(scope="session")
 def testnetwork4_address(web3):
-    return deploy_test_network(web3).address
+    return deploy_currency_network_v2(web3).address
 
 
 @pytest.fixture()

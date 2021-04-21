@@ -960,3 +960,30 @@ def test_get_total_sum_transferred_with_noise(
     ).get_total_sum_transferred(sender, receiver)
 
     assert sum == value
+
+
+def test_get_total_sum_transferred_trustline_update(
+    ethindex_db_for_currency_network,
+    currency_network: CurrencyNetworkProxy,
+    accounts,
+    wait_for_ethindex_to_sync,
+):
+    """Test getting the sum transferred for transfer occurring while opening a trustline"""
+    sender = accounts[0]
+    receiver = accounts[1]
+    value = 123
+
+    currency_network.update_trustline_with_accept(
+        sender, receiver, 12345, 12345, 0, 0, False, value,
+    )
+    currency_network.settle_and_close_trustline(sender, receiver)
+    currency_network.update_trustline_with_accept(
+        sender, receiver, 12345, 12345, 0, 0, False, -value,
+    )
+
+    wait_for_ethindex_to_sync()
+    sum = EventsInformationFetcher(
+        ethindex_db_for_currency_network
+    ).get_total_sum_transferred(sender, receiver)
+
+    assert sum == value
