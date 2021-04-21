@@ -101,6 +101,7 @@ class CurrencyNetworkProxy(currency_network_proxy.CurrencyNetworkProxy):
                 transfer,
             ).transact({"from": from_})
         self._web3.eth.waitForTransactionReceipt(txid)
+        return txid
 
     def cancel_trustline_update(self, from_, to):
         txid = self._proxy.functions.cancelTrustlineUpdate(to).transact({"from": from_})
@@ -127,7 +128,7 @@ class CurrencyNetworkProxy(currency_network_proxy.CurrencyNetworkProxy):
             is_frozen,
             transfer,
         )
-        self.update_trustline(
+        return self.update_trustline(
             to,
             from_,
             creditline_received,

@@ -457,6 +457,66 @@ def test_get_transfer_information_values(
     assert transfer_information.currency_network == network.address
 
 
+@pytest.mark.parametrize("lookup_method", list(LookupMethod))
+@pytest.mark.parametrize("transfer_value", [100, -100])
+def test_get_transfer_information_trustline_update(
+    ethindex_db_for_currency_network_with_trustlines,
+    currency_network_with_trustlines_session,
+    web3,
+    accounts,
+    lookup_method,
+    transfer_value,
+    wait_for_ethindex_to_sync,
+):
+    """
+    test that we can get the transfer information from a transfer applied when opening a trustline
+    """
+    network = currency_network_with_trustlines_session
+
+    initiator = accounts[1]
+    counterparty = accounts[2]
+
+    network.close_trustline(initiator, counterparty)
+    block_number = web3.eth.blockNumber
+    tx_hash = network.update_trustline_with_accept(
+        initiator, counterparty, 12345, 12345, 0, 0, False, transfer_value
+    ).hex()
+
+    wait_for_ethindex_to_sync()
+
+    if (
+        lookup_method == LookupMethod.TRANSFER_ID
+        or lookup_method == LookupMethod.BALANCE_UPDATE_ID
+    ):
+        if lookup_method == LookupMethod.TRANSFER_ID:
+            event = network._proxy.events.Transfer().getLogs(fromBlock=block_number)[0]
+        elif lookup_method == LookupMethod.BALANCE_UPDATE_ID:
+            event = network._proxy.events.BalanceUpdate().getLogs(
+                fromBlock=block_number
+            )[0]
+        else:
+            assert False, "Unexpected lookup method"
+        transfer_information = EventsInformationFetcher(
+            ethindex_db_for_currency_network_with_trustlines
+        ).get_transfer_details_for_id(event["blockHash"].hex(), event["logIndex"])[0]
+    elif lookup_method == LookupMethod.TX_HASH:
+        transfer_information = EventsInformationFetcher(
+            ethindex_db_for_currency_network_with_trustlines
+        ).get_transfer_details_for_tx(tx_hash)[0]
+    else:
+        assert False, "Unknown lookup method"
+
+    if transfer_value > 0:
+        assert transfer_information.path == [initiator, counterparty]
+    else:
+        assert transfer_information.path == [counterparty, initiator]
+    assert transfer_information.fees_paid == []
+    assert transfer_information.value == abs(transfer_value)
+    assert transfer_information.total_fees == 0
+    assert transfer_information.extra_data == b""
+    assert transfer_information.currency_network == network.address
+
+
 def test_transfer_by_wrong_balance_update(
     ethindex_db_for_currency_network,
     currency_network,
