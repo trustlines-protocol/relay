@@ -184,6 +184,15 @@ class CurrencyNetworkProxy(currency_network_proxy.CurrencyNetworkProxy):
     def close_trustline(self, from_, to):
         self._proxy.functions.closeTrustline(to).transact({"from": from_})
 
+    def settle_and_close_trustline(self, from_, to):
+        balance = self.get_balance(from_, to)
+        if balance > 0:
+            self.transfer(from_, balance, max_fee=0, path=[from_, to])
+        elif balance < 0:
+            self.transfer(to, -balance, max_fee=0, path=[to, from_])
+
+        self.close_trustline(from_, to)
+
     def transfer(self, from_, value, max_fee, path, extra_data=b""):
         tx_id = self._proxy.functions.transfer(
             value, max_fee, path, extra_data

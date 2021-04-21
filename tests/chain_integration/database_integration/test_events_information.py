@@ -654,6 +654,60 @@ def test_get_mediation_fees_with_pollution(
     tx_hash3 = custom_make_transfer()
     timestamp3 = web3.eth.getBlock("latest")["timestamp"]
 
+    # Pollution from opening trustline with a transfer
+    open_trustline_transfer_value = 123
+
+    currency_network.settle_and_close_trustline(accounts[1], accounts[2])
+    currency_network.update_trustline_with_accept(
+        accounts[1],
+        accounts[2],
+        12345,
+        12345,
+        0,
+        0,
+        False,
+        open_trustline_transfer_value,
+    )
+
+    currency_network.settle_and_close_trustline(accounts[1], accounts[2])
+    currency_network.update_trustline_with_accept(
+        accounts[1],
+        accounts[2],
+        12345,
+        12345,
+        0,
+        0,
+        False,
+        -open_trustline_transfer_value,
+    )
+
+    currency_network.settle_and_close_trustline(accounts[1], accounts[2])
+    currency_network.update_trustline_with_accept(
+        accounts[2],
+        accounts[1],
+        12345,
+        12345,
+        0,
+        0,
+        False,
+        open_trustline_transfer_value,
+    )
+
+    currency_network.settle_and_close_trustline(accounts[1], accounts[2])
+    currency_network.update_trustline_with_accept(
+        accounts[2],
+        accounts[1],
+        12345,
+        12345,
+        0,
+        0,
+        False,
+        -open_trustline_transfer_value,
+    )
+
+    tx_hash4 = custom_make_transfer()
+    timestamp4 = web3.eth.getBlock("latest")["timestamp"]
+
     wait_for_ethindex_to_sync()
     graph = CurrencyNetworkGraph(
         capacity_imbalance_fee_divisor=currency_network.capacity_imbalance_fee_divisor,
@@ -665,7 +719,7 @@ def test_get_mediation_fees_with_pollution(
         ethindex_db_for_currency_network_with_trustlines_and_interests
     ).get_earned_mediation_fees(accounts[1], graph)
 
-    assert len(fees) == 4
+    assert len(fees) == 5
     custom_assert_fee = functools.partial(
         assert_fee, value=fee_value, from_=accounts[0], to=accounts[2]
     )
@@ -673,6 +727,7 @@ def test_get_mediation_fees_with_pollution(
     custom_assert_fee(fee=fees[1], tx_hash=tx_hash1, timestamp=timestamp1)
     custom_assert_fee(fee=fees[2], tx_hash=tx_hash2, timestamp=timestamp2)
     custom_assert_fee(fee=fees[3], tx_hash=tx_hash3, timestamp=timestamp3)
+    custom_assert_fee(fee=fees[4], tx_hash=tx_hash4, timestamp=timestamp4)
 
 
 def get_debts_of_single_currency_network(
