@@ -3,6 +3,9 @@ Change Log
 ==========
 `unreleased`_
 -------------------------------
+- Updated: Add `transfer` argument to schema for `TrustlineUpdateRequest` events corresponding to change
+  in `CurrencyNetworkV2` contract
+- Updated: Remove interests with a value of `0` for endpoint to query list of accrued / paid interests
 
 `0.20.3`_ (2021-03-31)
 -------------------------------
