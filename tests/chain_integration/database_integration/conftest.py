@@ -227,6 +227,7 @@ def address_file_path(
     currency_network_with_trustlines_and_interests_session,
     currency_network_with_trustlines_session,
     currency_network,
+    test_currency_network_v1,
 ):
     tmp_path_factory.mktemp("tmp_test_dir")
     path = os.path.join(tmp_path_factory.getbasetemp(), "addresses.json")
@@ -237,6 +238,7 @@ def address_file_path(
                     currency_network_with_trustlines_and_interests_session.address,
                     currency_network_with_trustlines_session.address,
                     currency_network.address,
+                    test_currency_network_v1.address,
                 ]
             },
             f,
