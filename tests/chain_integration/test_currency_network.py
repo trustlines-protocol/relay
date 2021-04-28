@@ -66,7 +66,7 @@ def test_users(currency_network_with_trustlines, accounts):
 def test_is_frozen(currency_network, chain):
     assert currency_network.fetch_is_frozen_status() is False
     currency_network.time_travel_to_expiration(chain)
-    currency_network.freeze_network()
+    currency_network._proxy.functions.freezeNetwork().transact()
     assert currency_network.fetch_is_frozen_status() is True
 
 
