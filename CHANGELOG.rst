@@ -296,4 +296,5 @@ Change Log
 .. _0.20.1: https://github.com/trustlines-protocol/relay/compare/0.20.0...0.20.1
 .. _0.20.2: https://github.com/trustlines-protocol/relay/compare/0.20.1...0.20.2
 .. _0.20.3: https://github.com/trustlines-protocol/relay/compare/0.20.2...0.20.3
-.. _unreleased: https://github.com/trustlines-protocol/relay/compare/0.20.3...master
+.. _0.21.0: https://github.com/trustlines-protocol/relay/compare/0.20.3...0.21.0
+.. _unreleased: https://github.com/trustlines-protocol/relay/compare/0.21.0...master
