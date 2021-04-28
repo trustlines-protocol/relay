@@ -68,7 +68,7 @@ eth-hash[pycryptodome,pysha3]==0.2.0
     #   -c requirements.txt
     #   eth-utils
     #   web3
-eth-index==0.4.0
+eth-index==0.4.1
     # via -r dev-requirements.in
 eth-keyfile==0.5.1
     # via
@@ -250,6 +250,10 @@ toolz==0.10.0
     #   cytoolz
 tox==3.22.0
     # via -r dev-requirements.in
+trustlines-contracts-bin==2.0.0
+    # via
+    #   -c requirements.txt
+    #   eth-index
 typed-ast==1.4.1
     # via
     #   black

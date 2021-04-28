@@ -10,5 +10,5 @@ pytest
 pytest-cov
 mypy
 pre-commit
-eth-index>=0.4.0
+eth-index>=0.4.1
 tox

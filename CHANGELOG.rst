@@ -4,6 +4,12 @@ Change Log
 `unreleased`_
 -------------------------------
 
+`0.21.0`_ (2021-04-28)
+-------------------------------
+- Updated: Add `transfer` argument to schema for `TrustlineUpdateRequest` events corresponding to change
+  in `CurrencyNetworkV2` contract
+- Updated: Remove interests with a value of `0` for endpoint to query list of accrued / paid interests (BREAKING)
+
 `0.20.3`_ (2021-03-31)
 -------------------------------
 - Updated: Make relay exit when greenlet for graph sync dies.

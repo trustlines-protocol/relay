@@ -664,9 +664,12 @@ def get_accrued_interests_from_events(balance_update_events, trustline_update_ev
             interest_rate,
             post_balance_event.timestamp - pre_balance_event.timestamp,
         )
-        accrued_interests.append(
-            InterestAccrued(interest_value, interest_rate, post_balance_event.timestamp)
-        )
+        if interest_value != 0:
+            accrued_interests.append(
+                InterestAccrued(
+                    interest_value, interest_rate, post_balance_event.timestamp
+                )
+            )
 
     return accrued_interests
 

@@ -13,7 +13,7 @@ import gevent
 import sqlalchemy
 from eth_utils import is_checksum_address, to_checksum_address
 from sqlalchemy.engine.url import URL
-from tlbin import load_packaged_contracts
+from tlbin import load_packaged_contracts, load_packaged_merged_abis
 from tldeploy.identity import MetaTransaction
 from web3 import Web3
 
@@ -444,7 +444,9 @@ class TrustlinesRelay:
             return
         logger.info("New network: {}".format(address))
         self.currency_network_proxies[address] = CurrencyNetworkProxy(
-            self._web3, self.contracts["CurrencyNetwork"]["abi"], address
+            self._web3,
+            load_packaged_merged_abis()["MergedCurrencyNetworksAbi"]["abi"],
+            address,
         )
         currency_network_proxy = self.currency_network_proxies[address]
         self.currency_network_graphs[address] = CurrencyNetworkGraph(
