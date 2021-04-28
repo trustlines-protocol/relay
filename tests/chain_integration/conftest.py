@@ -77,21 +77,45 @@ class CurrencyNetworkProxy(currency_network_proxy.CurrencyNetworkProxy):
         is_frozen=False,
         transfer=0,
     ):
+        txid = self.update_trustline_function_call(
+            to,
+            creditline_given,
+            creditline_received,
+            interest_rate_given,
+            interest_rate_received,
+            is_frozen,
+            transfer,
+        ).transact({"from": from_})
+
+        self._web3.eth.waitForTransactionReceipt(txid)
+        return txid
+
+    def update_trustline_function_call(
+        self,
+        to,
+        creditline_given,
+        creditline_received,
+        interest_rate_given=None,
+        interest_rate_received=None,
+        is_frozen=False,
+        transfer=0,
+    ):
+
         if interest_rate_given is None or interest_rate_received is None:
-            txid = self._proxy.functions.updateCreditlimits(
+            return self._proxy.functions.updateCreditlimits(
                 to, creditline_given, creditline_received
-            ).transact({"from": from_})
+            )
         elif transfer == 0:
-            txid = self._proxy.functions.updateTrustline(
+            return self._proxy.functions.updateTrustline(
                 to,
                 creditline_given,
                 creditline_received,
                 interest_rate_given,
                 interest_rate_received,
                 is_frozen,
-            ).transact({"from": from_})
+            )
         else:
-            txid = self._proxy.functions.updateTrustline(
+            return self._proxy.functions.updateTrustline(
                 to,
                 creditline_given,
                 creditline_received,
@@ -99,9 +123,7 @@ class CurrencyNetworkProxy(currency_network_proxy.CurrencyNetworkProxy):
                 interest_rate_received,
                 is_frozen,
                 transfer,
-            ).transact({"from": from_})
-        self._web3.eth.waitForTransactionReceipt(txid)
-        return txid
+            )
 
     def cancel_trustline_update(self, from_, to):
         txid = self._proxy.functions.cancelTrustlineUpdate(to).transact({"from": from_})
@@ -226,11 +248,42 @@ class CurrencyNetworkProxy(currency_network_proxy.CurrencyNetworkProxy):
 
         return meta_transaction
 
+    def trustline_update_meta_transaction(
+        self,
+        to,
+        creditline_given,
+        creditline_received,
+        interest_rate_given,
+        interest_rate_received,
+        is_frozen,
+        transfer,
+    ):
+
+        function_call = self.update_trustline_function_call(
+            to,
+            creditline_given,
+            creditline_received,
+            interest_rate_given,
+            interest_rate_received,
+            is_frozen,
+            transfer,
+        )
+        meta_transaction = MetaTransaction.from_function_call(
+            function_call, to=self.address
+        )
+
+        return meta_transaction
+
     def get_balance(self, from_, to):
         return self._proxy.functions.balance(from_, to).call()
 
     def freeze_network(self):
         return self._proxy.functions.testFreezeNetwork().transact()
+
+    def time_travel_to_expiration(self, chain):
+        expiration_time = self._proxy.functions.expirationTime().call()
+        chain.time_travel(expiration_time)
+        chain.mine_block()
 
     def unfreeze_network(self):
         return self._proxy.functions.testUnfreezeNetwork().transact()
@@ -421,6 +474,28 @@ def currency_network_with_trustlines_session(
     currency_network.setup_trustlines(trustlines)
 
     return currency_network
+
+
+@pytest.fixture(scope="session")
+def test_currency_network_v1(
+    web3, currency_network_v2_abi, testnetwork1_address, contracts
+):
+    """This is the only remaining contract of type `TestCurrencyNetwork`.
+    It should only be used for its test functions of unfreezing a network"""
+    network = deploy_network(
+        web3,
+        network_settings=NetworkSettings(
+            fee_divisor=100,
+            name="Trustlines",
+            symbol="T",
+            custom_interests=True,
+            expiration_time=EXPIRATION_TIME,
+        ),
+        currency_network_contract_name="TestCurrencyNetwork",
+    )
+    return CurrencyNetworkProxy(
+        web3, contracts["TestCurrencyNetwork"]["abi"], network.address
+    )
 
 
 @pytest.fixture()

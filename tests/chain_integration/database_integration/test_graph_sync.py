@@ -403,11 +403,11 @@ def test_get_event_feed_replaced_balance_update(
 
 
 def test_get_event_feed_network_freeze(
-    currency_network_with_trustlines_and_interests_session: CurrencyNetworkProxy,
+    test_currency_network_v1: CurrencyNetworkProxy,
     wait_for_ethindex_to_sync,
     generic_db_connection,
 ):
-    currency_network = currency_network_with_trustlines_and_interests_session
+    currency_network = test_currency_network_v1
     currency_network.freeze_network()
 
     wait_for_ethindex_to_sync()
@@ -419,11 +419,11 @@ def test_get_event_feed_network_freeze(
 
 
 def test_get_event_feed_network_unfreeze(
-    currency_network_with_trustlines_and_interests_session: CurrencyNetworkProxy,
+    test_currency_network_v1: CurrencyNetworkProxy,
     wait_for_ethindex_to_sync,
     generic_db_connection,
 ):
-    currency_network = currency_network_with_trustlines_and_interests_session
+    currency_network = test_currency_network_v1
     currency_network.freeze_network()
     currency_network.unfreeze_network()
 
@@ -435,13 +435,13 @@ def test_get_event_feed_network_unfreeze(
 
 
 def test_get_event_feed_reversed_network_freeze(
-    currency_network_with_trustlines_and_interests_session: CurrencyNetworkProxy,
+    test_currency_network_v1: CurrencyNetworkProxy,
     wait_for_ethindex_to_sync,
     generic_db_connection,
     chain,
     replace_blocks_with_empty_from_snapshot,
 ):
-    currency_network = currency_network_with_trustlines_and_interests_session
+    currency_network = test_currency_network_v1
 
     snapshot = chain.take_snapshot()
     currency_network.freeze_network()
@@ -457,13 +457,13 @@ def test_get_event_feed_reversed_network_freeze(
 
 
 def test_get_event_feed_reversed_network_unfreeze(
-    currency_network_with_trustlines_and_interests_session: CurrencyNetworkProxy,
+    test_currency_network_v1: CurrencyNetworkProxy,
     wait_for_ethindex_to_sync,
     generic_db_connection,
     chain,
     replace_blocks_with_empty_from_snapshot,
 ):
-    currency_network = currency_network_with_trustlines_and_interests_session
+    currency_network = test_currency_network_v1
 
     snapshot = chain.take_snapshot()
     currency_network.freeze_network()

@@ -164,15 +164,21 @@ def signed_meta_transaction(identity, owner_key, accounts, build_meta_transactio
 def meta_transaction_for_currency_network_transfer(
     currency_network, identity, source, destination
 ):
-
-    trustlines = [(source, destination, 100, 100)]
-    currency_network.setup_trustlines(trustlines)
     meta_transaction = currency_network.transfer_meta_transaction(
         100, 0, [source, destination]
     )
     meta_transaction = identity.filled_and_signed_meta_transaction(meta_transaction)
 
     return meta_transaction
+
+
+def meta_transaction_update_trustline(currency_network, identity, trustline):
+    (A, B, clAB, clBA, intAB, intBA, is_frozen, balanceAB) = trustline
+    meta_transaction = currency_network.trustline_update_meta_transaction(
+        B, clAB, clBA, intAB, intBA, is_frozen, balanceAB
+    )
+
+    return identity.filled_and_signed_meta_transaction(meta_transaction)
 
 
 def test_delegate_meta_transaction(delegate, identity, web3, signed_meta_transaction):
@@ -196,11 +202,19 @@ def test_delegated_transaction_trustlines_flow(
 
     source = identity.address
     destination = accounts[3]
+    trustline = (source, destination, 100, 100, 1, 1, False, 0)
 
+    # open a trustline
+    meta_transaction = meta_transaction_update_trustline(
+        currency_network, identity, trustline
+    )
+    delegate.send_signed_meta_transaction(meta_transaction)
+    currency_network.update_trustline(destination, source, 100, 100, 1, 1, False, 0)
+
+    # make a transfer
     meta_transaction = meta_transaction_for_currency_network_transfer(
         currency_network, identity, source, destination
     )
-
     delegate.send_signed_meta_transaction(meta_transaction)
 
     assert currency_network.get_balance(source, destination) == -100
@@ -214,6 +228,7 @@ def test_deploy_identity(
     owner_key,
     identity_implementation,
     signature_of_owner_on_implementation,
+    web3,
 ):
     """
     Tests that the deployment of an identity contract by the relay server delegate works
@@ -225,21 +240,27 @@ def test_deploy_identity(
         identity_implementation.address,
         signature_of_owner_on_implementation,
     )
+    web3.eth.sendTransaction(
+        {"to": identity_contract_address, "from": accounts[0], "value": 1_000_000}
+    )
 
     destination = accounts[3]
+    balance_before = web3.eth.getBalance(destination)
 
-    meta_transaction = currency_network.transfer_meta_transaction(
-        100, 0, [identity_contract_address, destination]
+    meta_transaction = MetaTransaction(
+        to=destination,
+        value=1,
+        currency_network_of_fees=currency_network.address,
+        chain_id=web3.eth.chainId,
     )
     signed_meta_transaction = attr.evolve(
         meta_transaction, from_=identity_contract_address, nonce=0
     ).signed(owner_key)
-
-    currency_network.setup_trustlines(
-        [(identity_contract_address, destination, 100, 100)]
-    )
     delegate.send_signed_meta_transaction(signed_meta_transaction)
-    assert currency_network.get_balance(identity_contract_address, destination) == -100
+
+    balance_after = web3.eth.getBalance(destination)
+
+    assert balance_after - balance_before == 1
 
 
 def test_next_nonce(
