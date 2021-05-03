@@ -26,7 +26,7 @@ See tests/chain_integration/database_integration/conftest.py for actual values
 """
 
 
-INDEXER_REQUIRED_CONFIRMATION = 10_000
+INDEXER_REQUIRED_CONFIRMATION = 50
 POSTGRES_USER = "trustlines_test"
 POSTGRES_PASSWORD = "test123"
 POSTGRES_DATABASE = "trustlines_test"
