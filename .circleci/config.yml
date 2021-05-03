@@ -9,6 +9,8 @@ executors:
   ubuntu-builder:
     docker:
       - image: trustlines/builder:master61
+    resource_class:
+      medium
     working_directory: ~/repo
 
 # define some common commands
