@@ -4,6 +4,9 @@ Change Log
 `unreleased`_
 -------------------------------
 
+- Updated: dropped support for websocket connection to the blockchain node. It was not working due to a conflict
+  in between the concurrency library used by web3's websocket and gevent.
+
 `0.21.0`_ (2021-04-28)
 -------------------------------
 - Updated: Add `transfer` argument to schema for `TrustlineUpdateRequest` events corresponding to change
