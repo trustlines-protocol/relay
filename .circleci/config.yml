@@ -317,7 +317,7 @@ jobs:
             docker tag $LOCAL_IMAGE $DOCKER_REPO
             cd end2end
             # Should point to latest stable clientlib e2e tests
-            TL_E2E_IMAGE=trustlines/e2e:v0.13.7 ./run-e2e.sh
+            TL_E2E_IMAGE=trustlines/e2e:v0.15.0 ./run-e2e.sh
 
   pre-commit-checks:
     executor: ubuntu-builder
