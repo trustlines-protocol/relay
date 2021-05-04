@@ -16,8 +16,7 @@ enable = true
 enable = true
 
 [node_rpc]
-## Possible values for connection type are ipc, http, websocket. Default: http
-## type = websocket
+## Possible values for connection type are ipc, or http. Default: http
 port = 8545
 host = "localhost"
 use_ssl = false
