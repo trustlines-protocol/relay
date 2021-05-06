@@ -267,6 +267,7 @@ class CurrencyNetworkSchema(Schema):
     address = Address()
     decimals = fields.Int()
     numUsers = fields.Int(attribute="num_users")
+    capacityImbalanceFeeDivisor = fields.Int(attribute="capacity_imbalance_fee_divisor")
     defaultInterestRate = BigInteger(attribute="default_interest_rate")
     interestRateDecimals = fields.Int(attribute="interest_rate_decimals")
     customInterests = fields.Bool(attribute="custom_interests")
