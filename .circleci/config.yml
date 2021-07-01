@@ -99,6 +99,17 @@ jobs:
           paths:
             - repo/dist
 
+  check-sdist:
+    executor: ubuntu-builder
+    steps:
+      - attach_workspace:
+          at: '~'
+      - config-path
+      - run:
+          name: Check distribution
+          command: |
+            twine check dist/*
+
   run-flake8:
     executor: ubuntu-builder
     steps:
@@ -382,6 +393,12 @@ workflows:
             <<: *tagged-filter
 
       - build-sdist:
+          filters:
+            <<: *tagged-filter
+
+      - check-sdist:
+          requires:
+            - build-sdist
           filters:
             <<: *tagged-filter
 
