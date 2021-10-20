@@ -320,22 +320,32 @@ class EventsInformationFetcher:
 
             elif event.type == BalanceUpdateEventType:
                 event = cast(BalanceUpdateEvent, event)
-                if last_standalone_balance_update is None:
-                    last_standalone_balance_update = event
+
+                if last_standalone_balance_update is not None:
+                    if (
+                        event.blocknumber != last_standalone_balance_update.blocknumber
+                        or event.transaction_index
+                        != last_standalone_balance_update.transaction_index
+                    ):
+                        apply_event_on_graph(graph, last_standalone_balance_update)
+                        last_standalone_balance_update = event
+                        continue
+                    else:
+                        # We found a mediation from the user
+                        safety_checks_on_mediated_transfer_balance_updates(
+                            user_address, event, last_standalone_balance_update
+                        )
+
+                        fee = get_mediation_fee_from_balance_updates(
+                            graph, user_address, last_standalone_balance_update, event
+                        )
+                        fees_earned.append(fee)
+
+                        apply_event_on_graph(graph, event)
+                        apply_event_on_graph(graph, last_standalone_balance_update)
+                        last_standalone_balance_update = None
                 else:
-                    # We found a mediation from the user
-                    safety_checks_on_mediated_transfer_balance_updates(
-                        user_address, event, last_standalone_balance_update
-                    )
-
-                    fee = get_mediation_fee_from_balance_updates(
-                        graph, user_address, last_standalone_balance_update, event
-                    )
-                    fees_earned.append(fee)
-
-                    apply_event_on_graph(graph, event)
-                    apply_event_on_graph(graph, last_standalone_balance_update)
-                    last_standalone_balance_update = None
+                    last_standalone_balance_update = event
 
             else:
                 raise RuntimeError(f"Invalid event type received: {event.type}")
@@ -557,12 +567,6 @@ def get_mediation_fee_from_balance_updates(
 def safety_checks_on_mediated_transfer_balance_updates(
     user_address: str, first_event: BalanceUpdateEvent, second_event: BalanceUpdateEvent
 ):
-    if first_event.to == second_event.from_:
-        assert first_event.to == user_address
-    elif second_event.to == first_event.from_:
-        assert second_event.to == user_address
-    else:
-        assert False, "Found a mediated transfer with to/from not matching"
     assert (
         first_event.timestamp == second_event.timestamp
     ), "Found a mediated transfer with events timestamp not matching"
@@ -572,6 +576,12 @@ def safety_checks_on_mediated_transfer_balance_updates(
     assert (
         abs(first_event.log_index - second_event.log_index) == 1
     ), "Found a mediated transfer with events log index difference greater than 1"
+    if first_event.to == second_event.from_:
+        assert first_event.to == user_address
+    elif second_event.to == first_event.from_:
+        assert second_event.to == user_address
+    else:
+        assert False, "Found a mediated transfer with to/from not matching"
 
 
 def apply_event_on_graph(

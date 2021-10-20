@@ -21,6 +21,7 @@ class BlockchainEvent(Event):
         self.transaction_hash = _field_to_hexbytes(web3_event.get("transactionHash"))
         self.type = web3_event.get("event")
         self.log_index = web3_event.get("logIndex")
+        self.transaction_index = web3_event.get("transactionIndex")
 
     @property
     def status(self) -> str:
