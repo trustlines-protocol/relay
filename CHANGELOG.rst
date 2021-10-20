@@ -4,8 +4,13 @@ Change Log
 `unreleased`_
 -------------------------------
 
+
+`0.22.0`_ (2021-10-20)
+-------------------------------
+
 - Updated: dropped support for websocket connection to the blockchain node. It was not working due to a conflict
   in between the concurrency library used by web3's websocket and gevent.
+- Fixed: get mediation fees endpoint no longer crashing due to network migration events.
 
 `0.21.0`_ (2021-04-28)
 -------------------------------
@@ -300,4 +305,5 @@ Change Log
 .. _0.20.2: https://github.com/trustlines-protocol/relay/compare/0.20.1...0.20.2
 .. _0.20.3: https://github.com/trustlines-protocol/relay/compare/0.20.2...0.20.3
 .. _0.21.0: https://github.com/trustlines-protocol/relay/compare/0.20.3...0.21.0
-.. _unreleased: https://github.com/trustlines-protocol/relay/compare/0.21.0...master
+.. _0.22.0: https://github.com/trustlines-protocol/relay/compare/0.21.0...0.22.0
+.. _unreleased: https://github.com/trustlines-protocol/relay/compare/0.22.0...master
