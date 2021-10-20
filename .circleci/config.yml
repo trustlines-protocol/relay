@@ -196,7 +196,8 @@ jobs:
       LOCAL_IMAGE: relay
 
     steps:
-      - setup_remote_docker
+      - setup_remote_docker:
+          version: 20.10.7
       - checkout
       - run:
           name: Build docker image
@@ -219,7 +220,8 @@ jobs:
       LOCAL_IMAGE: relay
     working_directory: ~/repo
     steps:
-      - setup_remote_docker
+      - setup_remote_docker:
+          version: 20.10.7
       - attach_workspace:
           at: '~'
       - run:
@@ -250,7 +252,8 @@ jobs:
       LOCAL_IMAGE: relay
     working_directory: ~/repo
     steps:
-      - setup_remote_docker
+      - setup_remote_docker:
+          version: 20.10.7
       - attach_workspace:
           at: "~"
       - run:
@@ -277,7 +280,8 @@ jobs:
     working_directory: ~
     steps:
       - config-path
-      - setup_remote_docker
+      - setup_remote_docker:
+          version: 20.10.7
       - attach_workspace:
           at: '~'
       - run:
@@ -311,7 +315,8 @@ jobs:
       LOCAL_IMAGE: relay
     working_directory: ~
     steps:
-      - setup_remote_docker
+      - setup_remote_docker:
+          version: 20.10.7
       - attach_workspace:
           at: '~'
       - run:
