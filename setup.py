@@ -63,7 +63,7 @@ setup(
         "marshmallow>=3.0.0b7",
         "marshmallow-oneofschema>=2.0.0",
         "flask-sockets",
-        "firebase-admin>=4.3,<5.0",
+        "firebase-admin>=5.1.0",
         "psycopg2",
         "psycogreen",
         "wrapt",
