@@ -32,7 +32,7 @@ parity.
     assert method == "eth_sendTransaction"
     if "nonce" not in params[0]:
         params[0]["nonce"] = int(
-            w3.manager.request_blocking("parity_nextNonce", [params[0]["from"]]), 16
+           w3.manager.request_blocking("eth_getTransactionCount", [params[0]["from"], "pending"])
         )
     nonce = params[0]["nonce"]
     logger.debug("_eth_send_transaction start: nonce=%s %s", nonce, params)

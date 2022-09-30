@@ -4,3 +4,4 @@ pendulum>=2.1.2  # Earlier versions fail to install with python 3.9
 gevent>=21.1.0  # Earlier versions fail with python 3.8
 httplib2 >= 0.19.0  # fixes vulnerability in httplib2
 trustlines-contracts-deploy>=2.0.0  # fixes resolver failing to find a compatible version with trustlines-contracts-bin
+web3>=5.31.0

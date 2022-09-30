@@ -19,6 +19,14 @@ RUN apt-get update && \
     python3.8 python3.8-distutils python3.8-dev python3-venv python3.8-venv git build-essential libpq-dev \
     && rm -rf /var/lib/apt/lists/*
 
+RUN whoami
+# Get Rust
+RUN curl https://sh.rustup.rs -sSf | bash -s -- -y
+
+ENV PATH="/root/.cargo/bin:${PATH}"
+
+RUN rustup default nightly
+
 RUN python3.8 -m venv /opt/relay
 RUN /opt/relay/bin/pip install -U pip wheel setuptools
 
