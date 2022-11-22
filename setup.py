@@ -55,7 +55,7 @@ setup(
         "networkx>=2.0",
         "trustlines-contracts-bin>=2.0.0,<2.1.0",
         "trustlines-contracts-deploy>=1.2.0,<2.1.0",
-        "contract-deploy-tools>=0.9.1,<0.11.0",
+        "contract-deploy-tools>=0.11.1",
         "sqlalchemy",
         "eth-utils",
         "tinyrpc",

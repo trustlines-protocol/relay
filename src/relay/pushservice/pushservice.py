@@ -140,7 +140,9 @@ def _build_data_message(client_token: str, event: Event) -> Optional[messaging.M
         android_config = messaging.AndroidConfig(priority="high")
         apns = messaging.APNSConfig(
             headers={"apns-push-type": "background", "apns-priority": "5"},
-            payload=messaging.APNSPayload(aps=messaging.Aps(content_available=True),),
+            payload=messaging.APNSPayload(
+                aps=messaging.Aps(content_available=True),
+            ),
         )
 
         return messaging.Message(

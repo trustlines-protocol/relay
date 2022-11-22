@@ -108,8 +108,7 @@ class TestDataReader:
         )
 
     def pytest_generate_tests(self, metafunc):
-        """read json files from testdata directory and generate tests from the testdata
-        """
+        """read json files from testdata directory and generate tests from the testdata"""
         for fixturename in metafunc.fixturenames:
             if fixturename in self.testdata:
                 param = getattr(self, f"make_param_{fixturename}", self.make_param)

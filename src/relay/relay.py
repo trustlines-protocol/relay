@@ -578,7 +578,9 @@ class TrustlinesRelay:
         ethindex_db = self.get_ethindex_db_for_currency_network(network_address)
         if type is not None:
             events = ethindex_db.get_network_events(
-                type, user_address, from_block=from_block,
+                type,
+                user_address,
+                from_block=from_block,
             )
         else:
             events = ethindex_db.get_all_network_events(
@@ -669,7 +671,9 @@ class TrustlinesRelay:
             address_to_contract_types=address_to_contract_types,
         )
         return ethindex.get_all_contract_events(
-            event_types, user_address=user_address, from_block=from_block,
+            event_types,
+            user_address=user_address,
+            from_block=from_block,
         )
 
     def get_user_token_events(
@@ -732,16 +736,22 @@ class TrustlinesRelay:
         ethindex_db = self.get_ethindex_db_for_exchange(exchange_address)
         if type is not None:
             events = ethindex_db.get_user_events(
-                event_type=type, user_address=user_address, from_block=from_block,
+                event_type=type,
+                user_address=user_address,
+                from_block=from_block,
             )
         else:
             events = ethindex_db.get_all_contract_events(
-                user_address=user_address, from_block=from_block,
+                user_address=user_address,
+                from_block=from_block,
             )
         return events
 
     def get_all_user_exchange_events(
-        self, user_address: str, type: str = None, from_block: int = 0,
+        self,
+        user_address: str,
+        type: str = None,
+        from_block: int = 0,
     ) -> List[BlockchainEvent]:
         assert is_checksum_address(user_address)
 
@@ -754,7 +764,8 @@ class TrustlinesRelay:
         )
 
     def _apply_feed_update_on_graph(
-        self, feed_update: Iterable[FeedUpdate],
+        self,
+        feed_update: Iterable[FeedUpdate],
     ):
         for update in feed_update:
             if update.address not in self.currency_network_graphs.keys():
@@ -765,7 +776,8 @@ class TrustlinesRelay:
             graph.update_from_feed(update)
 
     def _publish_feed_update_events(
-        self, feed_update: Iterable[FeedUpdate],
+        self,
+        feed_update: Iterable[FeedUpdate],
     ):
         # We want to publish only the latest update for each user / trustline
         feed_update = sorted(

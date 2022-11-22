@@ -2,13 +2,15 @@
 pip
 setuptools
 wheel
-pip-tools
+pip>=22.3.1
+pip-tools>=6.10.0
 black
 flake8
 flake8-string-format
 pytest
 pytest-cov
 mypy
-pre-commit
+identify>=1.5.12
+pre-commit>=2.20.0
 eth-index>=0.4.1
 tox

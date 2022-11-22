@@ -9,7 +9,7 @@ def node(web3):
 
 
 def test_tx_status_success(web3, node, accounts):
-    tx_hash = web3.eth.sendTransaction(
+    tx_hash = web3.eth.send_transaction(
         {"from": accounts[0], "to": accounts[1], "value": 10}
     )
     assert node.get_transaction_status(tx_hash) == TransactionStatus.SUCCESS
@@ -23,7 +23,7 @@ def test_tx_status_not_found(node):
 def test_tx_status_pending(web3, node, accounts, chain):
     chain.disable_auto_mine_transactions()
 
-    tx_hash = web3.eth.sendTransaction(
+    tx_hash = web3.eth.send_transaction(
         {"from": accounts[0], "to": accounts[1], "value": 10}
     )
     assert node.get_transaction_status(tx_hash) == TransactionStatus.PENDING

@@ -72,7 +72,7 @@ class CalculateFee(TestDataGenerator):
 
 
 class ImbalanceGenerated(TestDataGenerator):
-    MAX_BALANCE = 2 ** 71 - 1
+    MAX_BALANCE = 2**71 - 1
     MIN_BALANCE = -MAX_BALANCE
 
     balances = (
@@ -86,7 +86,7 @@ class ImbalanceGenerated(TestDataGenerator):
         MAX_BALANCE - 100,
         MAX_BALANCE,
     )
-    values = (0, 1, 10, 100, 1000, 2 ** 64 - 1)
+    values = (0, 1, 10, 100, 1000, 2**64 - 1)
 
     def generate_input_data(self):
         for balance in self.balances:

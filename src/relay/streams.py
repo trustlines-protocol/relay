@@ -107,7 +107,7 @@ class Subject(object):
 
     @staticmethod
     def _create_id() -> str:
-        return "0x{:016X}".format(random.randint(0, 16 ** 16 - 1))
+        return "0x{:016X}".format(random.randint(0, 16**16 - 1))
 
 
 class Subscription:

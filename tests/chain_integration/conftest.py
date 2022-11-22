@@ -1,4 +1,3 @@
-import eth_tester
 import pytest
 from tlbin import load_packaged_contracts
 from tldeploy.core import NetworkSettings, deploy_network, deploy_networks
@@ -28,12 +27,6 @@ NETWORK_SETTINGS = [
         name="Beers", symbol="BEER", decimals=0, expiration_time=EXPIRATION_TIME
     ),
 ]
-
-
-"""increate eth_tester's GAS_LIMIT
-Otherwise we can't deploy our contract"""
-assert eth_tester.backends.pyevm.main.GENESIS_GAS_LIMIT < 6 * 10 ** 6
-eth_tester.backends.pyevm.main.GENESIS_GAS_LIMIT = 8 * 10 ** 6
 
 
 @pytest.fixture()
@@ -87,7 +80,7 @@ class CurrencyNetworkProxy(currency_network_proxy.CurrencyNetworkProxy):
             transfer,
         ).transact({"from": from_})
 
-        self._web3.eth.waitForTransactionReceipt(txid)
+        self._web3.eth.wait_for_transaction_receipt(txid)
         return txid
 
     def update_trustline_function_call(
@@ -127,7 +120,7 @@ class CurrencyNetworkProxy(currency_network_proxy.CurrencyNetworkProxy):
 
     def cancel_trustline_update(self, from_, to):
         txid = self._proxy.functions.cancelTrustlineUpdate(to).transact({"from": from_})
-        self._web3.eth.waitForTransactionReceipt(txid)
+        self._web3.eth.wait_for_transaction_receipt(txid)
 
     def update_trustline_with_accept(
         self,
@@ -219,7 +212,7 @@ class CurrencyNetworkProxy(currency_network_proxy.CurrencyNetworkProxy):
         tx_id = self._proxy.functions.transfer(
             value, max_fee, path, extra_data
         ).transact({"from": from_})
-        self._web3.eth.waitForTransactionReceipt(tx_id)
+        self._web3.eth.wait_for_transaction_receipt(tx_id)
 
     def transfer_on_path(self, value, path, max_fee=None, extra_data=b""):
         if max_fee is None:
@@ -227,7 +220,7 @@ class CurrencyNetworkProxy(currency_network_proxy.CurrencyNetworkProxy):
         tx_id = self._proxy.functions.transfer(
             value, max_fee, path, extra_data
         ).transact({"from": path[0]})
-        self._web3.eth.waitForTransactionReceipt(tx_id)
+        self._web3.eth.wait_for_transaction_receipt(tx_id)
         return tx_id
 
     def transfer_receiver_pays_on_path(self, value, path, max_fee=None, extra_data=b""):
@@ -236,7 +229,7 @@ class CurrencyNetworkProxy(currency_network_proxy.CurrencyNetworkProxy):
         tx_id = self._proxy.functions.transferReceiverPays(
             value, max_fee, path, extra_data
         ).transact({"from": path[0]})
-        self._web3.eth.waitForTransactionReceipt(tx_id)
+        self._web3.eth.wait_for_transaction_receipt(tx_id)
         return tx_id
 
     def transfer_meta_transaction(self, value, max_fee, path, extra_data=b""):
@@ -292,7 +285,7 @@ class CurrencyNetworkProxy(currency_network_proxy.CurrencyNetworkProxy):
         tx_id = self._proxy.functions.increaseDebt(creditor, value).transact(
             {"from": debtor}
         )
-        self._web3.eth.waitForTransactionReceipt(tx_id)
+        self._web3.eth.wait_for_transaction_receipt(tx_id)
         return tx_id
 
     def get_debt(self, debtor, creditor):

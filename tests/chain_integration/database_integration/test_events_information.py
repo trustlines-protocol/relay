@@ -3,7 +3,6 @@ import time
 from enum import Enum, auto
 
 import pytest
-from tests.chain_integration.conftest import CurrencyNetworkProxy
 
 from relay.ethindex_db.events_informations import (
     EventsInformationFetcher,
@@ -12,6 +11,7 @@ from relay.ethindex_db.events_informations import (
 from relay.network_graph.graph import CurrencyNetworkGraph
 from relay.network_graph.interests import calculate_interests
 from relay.network_graph.payment_path import FeePayer
+from tests.chain_integration.conftest import CurrencyNetworkProxy
 
 ONE_YEAR_IN_SECONDS = 365 * 3600 * 24
 
@@ -22,7 +22,7 @@ def accrue_interests(currency_network, web3, chain, path, years):
     currency_network.transfer(path[0], 9, 1000, path)
 
     for year in years:
-        timestamp = web3.eth.getBlock("latest").timestamp
+        timestamp = web3.eth.get_block("latest").timestamp
         timestamp += ONE_YEAR_IN_SECONDS * year + 1
 
         chain.time_travel(timestamp)
@@ -274,7 +274,7 @@ def test_get_interests_received_during_opening_of_trustline(
     )
 
     path = [accounts[0], accounts[1], accounts[2], accounts[3]]
-    timestamp = web3.eth.getBlock("latest").timestamp
+    timestamp = web3.eth.get_block("latest").timestamp
     timestamp += ONE_YEAR_IN_SECONDS + 1
     chain.time_travel(timestamp)
     currency_network.transfer(path[0], 9, 1000, path, b"")
@@ -291,7 +291,7 @@ def test_get_interests_received_during_opening_of_trustline(
         initial_transfer, interest_rate, ONE_YEAR_IN_SECONDS
     )
     assert accrued_interests[0].interest_rate == interest_rate
-    assert accrued_interests[0].timestamp == web3.eth.getBlock("latest").timestamp
+    assert accrued_interests[0].timestamp == web3.eth.get_block("latest").timestamp
 
 
 def test_get_interests_paid_during_opening_of_trustline(
@@ -320,7 +320,7 @@ def test_get_interests_paid_during_opening_of_trustline(
     )
 
     path = [accounts[0], accounts[1], accounts[2], accounts[3]]
-    timestamp = web3.eth.getBlock("latest").timestamp
+    timestamp = web3.eth.get_block("latest").timestamp
     timestamp += ONE_YEAR_IN_SECONDS + 1
     chain.time_travel(timestamp)
     currency_network.transfer(path[0], 9, 1000, path, b"")
@@ -337,7 +337,7 @@ def test_get_interests_paid_during_opening_of_trustline(
         initial_transfer, interest_rate, ONE_YEAR_IN_SECONDS
     )
     assert accrued_interests[0].interest_rate == interest_rate
-    assert accrued_interests[0].timestamp == web3.eth.getBlock("latest").timestamp
+    assert accrued_interests[0].timestamp == web3.eth.get_block("latest").timestamp
 
 
 class LookupMethod(Enum):
@@ -585,7 +585,7 @@ def test_get_mediation_fees(
         [accounts[0], accounts[1], accounts[2]],
         fee_payer,
     )
-    timestamp = web3.eth.getBlock("latest")["timestamp"]
+    timestamp = web3.eth.get_block("latest")["timestamp"]
 
     wait_for_ethindex_to_sync()
     graph = CurrencyNetworkGraph(
@@ -632,19 +632,19 @@ def test_get_mediation_fees_with_pollution(
     )
 
     tx_hash0 = custom_make_transfer()
-    timestamp0 = web3.eth.getBlock("latest")["timestamp"]
+    timestamp0 = web3.eth.get_block("latest")["timestamp"]
 
     currency_network.update_trustline_and_reject(
         accounts[0], accounts[1], 100_000, 100_000
     )
     tx_hash1 = custom_make_transfer()
-    timestamp1 = web3.eth.getBlock("latest")["timestamp"]
+    timestamp1 = web3.eth.get_block("latest")["timestamp"]
 
     currency_network.update_trustline_with_accept(
         accounts[0], accounts[1], 10_000, 10_000
     )
     tx_hash2 = custom_make_transfer()
-    timestamp2 = web3.eth.getBlock("latest")["timestamp"]
+    timestamp2 = web3.eth.get_block("latest")["timestamp"]
 
     currency_network.transfer_on_path(123, [accounts[1], accounts[0]])
     currency_network.transfer_receiver_pays_on_path(
@@ -652,7 +652,7 @@ def test_get_mediation_fees_with_pollution(
     )
 
     tx_hash3 = custom_make_transfer()
-    timestamp3 = web3.eth.getBlock("latest")["timestamp"]
+    timestamp3 = web3.eth.get_block("latest")["timestamp"]
 
     # Pollution from opening trustline with a transfer
     open_trustline_transfer_value = 123
@@ -706,7 +706,7 @@ def test_get_mediation_fees_with_pollution(
     )
 
     tx_hash4 = custom_make_transfer()
-    timestamp4 = web3.eth.getBlock("latest")["timestamp"]
+    timestamp4 = web3.eth.get_block("latest")["timestamp"]
 
     wait_for_ethindex_to_sync()
     graph = CurrencyNetworkGraph(
@@ -974,11 +974,25 @@ def test_get_total_sum_transferred_trustline_update(
     value = 123
 
     currency_network.update_trustline_with_accept(
-        sender, receiver, 12345, 12345, 0, 0, False, value,
+        sender,
+        receiver,
+        12345,
+        12345,
+        0,
+        0,
+        False,
+        value,
     )
     currency_network.settle_and_close_trustline(sender, receiver)
     currency_network.update_trustline_with_accept(
-        sender, receiver, 12345, 12345, 0, 0, False, -value,
+        sender,
+        receiver,
+        12345,
+        12345,
+        0,
+        0,
+        False,
+        -value,
     )
 
     wait_for_ethindex_to_sync()
