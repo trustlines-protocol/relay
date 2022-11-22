@@ -167,7 +167,9 @@ class EthindexDB:
         contract_address = self._get_addr(contract_address)
         if user_address is None:
             return self.get_events(
-                event_type, from_block=from_block, contract_address=contract_address,
+                event_type,
+                from_block=from_block,
+                contract_address=contract_address,
             )
         query = EventsQuery(
             """blockNumber>=%s
@@ -478,7 +480,10 @@ class EthindexDB:
 
 class CurrencyNetworkEthindexDB(EthindexDB):
     def get_network_events(
-        self, event_type: str, user_address: str = None, from_block: int = 0,
+        self,
+        event_type: str,
+        user_address: str = None,
+        from_block: int = 0,
     ) -> List[BlockchainEvent]:
         return self.get_user_events(event_type, user_address, from_block)
 
@@ -494,7 +499,9 @@ class CurrencyNetworkEthindexDB(EthindexDB):
                 "Cannot get all network events if CurrencyNetworkEthindexDB address is not set."
             )
         return self.get_all_contract_events(
-            event_types=event_types, user_address=user_address, from_block=from_block,
+            event_types=event_types,
+            user_address=user_address,
+            from_block=from_block,
         )
 
     def get_trustline_events(

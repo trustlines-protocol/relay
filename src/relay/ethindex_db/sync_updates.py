@@ -80,7 +80,9 @@ def graph_update_getter():
     return get_graph_updates_feed
 
 
-def get_graph_updates_feed(conn,) -> List[FeedUpdate]:
+def get_graph_updates_feed(
+    conn,
+) -> List[FeedUpdate]:
     """Get a list of updates to be applied on the trustlines graphs to make them up to date with the chain"""
 
     last_synced_graph_id = get_latest_graph_sync_id()

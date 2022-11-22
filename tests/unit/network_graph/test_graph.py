@@ -1,13 +1,13 @@
 import time
 
 import pytest
-from tests.unit.network_graph.conftest import addresses
 
 from relay.blockchain.currency_network_proxy import Trustline
 from relay.network_graph.graph import (
     CurrencyNetworkGraphForTesting as CurrencyNetworkGraph,
 )
 from relay.network_graph.payment_path import FeePayer, PaymentPath
+from tests.unit.network_graph.conftest import addresses
 
 A, B, C, D, E, F, G, H = addresses
 
@@ -194,8 +194,10 @@ def test_close_trustline_no_cost_exact_amount(
     complex_community_with_trustlines_and_fees.update_balance(B, D, -10000)
     complex_community_with_trustlines_and_fees.update_balance(C, D, 10000)
     now = int(time.time())
-    payment_path = complex_community_with_trustlines_and_fees.close_trustline_path_triangulation(
-        now, A, B
+    payment_path = (
+        complex_community_with_trustlines_and_fees.close_trustline_path_triangulation(
+            now, A, B
+        )
     )
     assert payment_path == PaymentPath(
         fee=0, path=[A, C, D, B, A], value=10000, fee_payer=FeePayer.SENDER
@@ -213,8 +215,10 @@ def test_close_trustline_not_enough_capacity(
     complex_community_with_trustlines_and_fees.update_balance(B, D, -10000)
     complex_community_with_trustlines_and_fees.update_balance(C, D, 10000)
     now = int(time.time())
-    payment_path = complex_community_with_trustlines_and_fees.close_trustline_path_triangulation(
-        now, A, B
+    payment_path = (
+        complex_community_with_trustlines_and_fees.close_trustline_path_triangulation(
+            now, A, B
+        )
     )
     assert payment_path == PaymentPath(
         fee=0, path=[], value=100000, fee_payer=FeePayer.SENDER
@@ -232,8 +236,10 @@ def test_close_trustline_first_edge_insufficient_capacity(
     complex_community_with_trustlines_and_fees.update_balance(B, D, -10000)
     complex_community_with_trustlines_and_fees.update_balance(C, D, 10000)
     now = int(time.time())
-    payment_path = complex_community_with_trustlines_and_fees.close_trustline_path_triangulation(
-        now, A, B
+    payment_path = (
+        complex_community_with_trustlines_and_fees.close_trustline_path_triangulation(
+            now, A, B
+        )
     )
     assert payment_path.path == []
 
@@ -249,8 +255,10 @@ def test_close_trustline_last_edge_insufficient_capacity(
     complex_community_with_trustlines_and_fees.update_balance(B, D, -10000)
     complex_community_with_trustlines_and_fees.update_balance(C, D, 10000)
     now = int(time.time())
-    payment_path = complex_community_with_trustlines_and_fees.close_trustline_path_triangulation(
-        now, A, B
+    payment_path = (
+        complex_community_with_trustlines_and_fees.close_trustline_path_triangulation(
+            now, A, B
+        )
     )
     assert payment_path.path == []
 
@@ -301,7 +309,7 @@ def test_capacity_is_maximum(
     source,
     destination,
 ):
-    """Tests for some testdata that the maximum sendable amount is indeed the maximum """
+    """Tests for some testdata that the maximum sendable amount is indeed the maximum"""
     (
         sendable,
         max_path,
@@ -914,8 +922,10 @@ def test_send_more_with_fees(community_with_trustlines_and_fees):
 
 def test_close_trustline_zero_balance(complex_community_with_trustlines_and_fees):
     """H owes money to C and C wants to close the trustline"""
-    result = complex_community_with_trustlines_and_fees.close_trustline_path_triangulation(
-        timestamp=int(time.time()), source=C, target=H
+    result = (
+        complex_community_with_trustlines_and_fees.close_trustline_path_triangulation(
+            timestamp=int(time.time()), source=C, target=H
+        )
     )
     assert result == PaymentPath(fee=0, path=[], value=0, fee_payer=FeePayer.SENDER)
 
@@ -923,8 +933,10 @@ def test_close_trustline_zero_balance(complex_community_with_trustlines_and_fees
 def test_close_trustline_positive_balance(complex_community_with_trustlines_and_fees):
     """H owes money to C and C wants to close the trustline"""
     complex_community_with_trustlines_and_fees.update_balance(C, H, 5000)
-    result = complex_community_with_trustlines_and_fees.close_trustline_path_triangulation(
-        timestamp=int(time.time()), source=C, target=H
+    result = (
+        complex_community_with_trustlines_and_fees.close_trustline_path_triangulation(
+            timestamp=int(time.time()), source=C, target=H
+        )
     )
     assert result == PaymentPath(
         fee=198, path=[C, H, G, F, E, D, C], value=5000, fee_payer=FeePayer.RECEIVER
@@ -934,8 +946,10 @@ def test_close_trustline_positive_balance(complex_community_with_trustlines_and_
 def test_close_trustline_negative_balance(complex_community_with_trustlines_and_fees):
     """C owes money to H and C wants to close the trustline"""
     complex_community_with_trustlines_and_fees.update_balance(C, H, -5000)
-    result = complex_community_with_trustlines_and_fees.close_trustline_path_triangulation(
-        timestamp=int(time.time()), source=C, target=H
+    result = (
+        complex_community_with_trustlines_and_fees.close_trustline_path_triangulation(
+            timestamp=int(time.time()), source=C, target=H
+        )
     )
     assert result == PaymentPath(
         fee=261, path=[C, D, E, F, G, H, C], value=5000, fee_payer=FeePayer.SENDER
@@ -952,8 +966,10 @@ def test_close_trustline_with_cost_exact_amount(
     complex_community_with_trustlines_and_fees.update_balance(A, C, -10000)
     complex_community_with_trustlines_and_fees.update_balance(B, D, 10000)
     complex_community_with_trustlines_and_fees.update_balance(C, D, -10000)
-    result = complex_community_with_trustlines_and_fees.close_trustline_path_triangulation(
-        timestamp=int(time.time()), source=A, target=B
+    result = (
+        complex_community_with_trustlines_and_fees.close_trustline_path_triangulation(
+            timestamp=int(time.time()), source=A, target=B
+        )
     )
     assert result == PaymentPath(
         fee=309, path=[A, C, D, B, A], value=10000, fee_payer=FeePayer.SENDER
@@ -963,8 +979,10 @@ def test_close_trustline_with_cost_exact_amount(
 def test_close_trustline_multi(complex_community_with_trustlines_and_fees):
     """A owes money to H and A wants to close the trustline"""
     complex_community_with_trustlines_and_fees.update_balance(A, H, -5000)
-    result = complex_community_with_trustlines_and_fees.close_trustline_path_triangulation(
-        timestamp=int(time.time()), source=A, target=H
+    result = (
+        complex_community_with_trustlines_and_fees.close_trustline_path_triangulation(
+            timestamp=int(time.time()), source=A, target=H
+        )
     )
     assert result in [
         PaymentPath(

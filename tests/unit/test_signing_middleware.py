@@ -11,8 +11,7 @@ from relay import signing_middleware
 def parity_next_nonce(make_request, w3):
     """middleware that implements parity_nextNonce
 
-We need this, since we're talking to the eth_tester chain
-"""
+    We need this, since we're talking to the eth_tester chain"""
 
     def middleware(method, params):
         if method != "parity_nextNonce":

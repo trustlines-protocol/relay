@@ -182,7 +182,7 @@ def meta_transaction_update_trustline(currency_network, identity, trustline):
 
 
 def test_delegate_meta_transaction(delegate, identity, web3, signed_meta_transaction):
-    """"
+    """ "
     Tests that a transaction is sent by the delegate upon receiving a meta-transaction.
     """
 
@@ -196,7 +196,7 @@ def test_delegate_meta_transaction(delegate, identity, web3, signed_meta_transac
 def test_delegated_transaction_trustlines_flow(
     currency_network, identity, delegate, accounts
 ):
-    """"
+    """ "
     Tests that the relaying of the metatransaction by the relay server works on a currency network contract
     """
 

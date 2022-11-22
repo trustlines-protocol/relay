@@ -1,7 +1,6 @@
 from typing import cast
 
 import pytest
-from tests.chain_integration.conftest import CurrencyNetworkProxy
 
 from relay.blockchain.currency_network_events import (
     BalanceUpdateEvent,
@@ -20,6 +19,7 @@ from relay.ethindex_db.sync_updates import (
     write_graph_sync_id_file,
 )
 from relay.network_graph.graph import CurrencyNetworkGraph
+from tests.chain_integration.conftest import CurrencyNetworkProxy
 
 ZERO_ADDRESS = "0x0000000000000000000000000000000000000000"
 

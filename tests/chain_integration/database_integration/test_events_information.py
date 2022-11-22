@@ -3,7 +3,6 @@ import time
 from enum import Enum, auto
 
 import pytest
-from tests.chain_integration.conftest import CurrencyNetworkProxy
 
 from relay.ethindex_db.events_informations import (
     EventsInformationFetcher,
@@ -12,6 +11,7 @@ from relay.ethindex_db.events_informations import (
 from relay.network_graph.graph import CurrencyNetworkGraph
 from relay.network_graph.interests import calculate_interests
 from relay.network_graph.payment_path import FeePayer
+from tests.chain_integration.conftest import CurrencyNetworkProxy
 
 ONE_YEAR_IN_SECONDS = 365 * 3600 * 24
 
@@ -974,11 +974,25 @@ def test_get_total_sum_transferred_trustline_update(
     value = 123
 
     currency_network.update_trustline_with_accept(
-        sender, receiver, 12345, 12345, 0, 0, False, value,
+        sender,
+        receiver,
+        12345,
+        12345,
+        0,
+        0,
+        False,
+        value,
     )
     currency_network.settle_and_close_trustline(sender, receiver)
     currency_network.update_trustline_with_accept(
-        sender, receiver, 12345, 12345, 0, 0, False, -value,
+        sender,
+        receiver,
+        12345,
+        12345,
+        0,
+        0,
+        False,
+        -value,
     )
 
     wait_for_ethindex_to_sync()

@@ -530,13 +530,17 @@ def get_mediation_fee_from_balance_updates(
 
     first_balance_change = (
         graph.get_balance_with_interests(
-            first_event.from_, first_event.to, first_event.timestamp,
+            first_event.from_,
+            first_event.to,
+            first_event.timestamp,
         )
         - first_event.value
     )
     second_balance_change = (
         graph.get_balance_with_interests(
-            second_event.from_, second_event.to, second_event.timestamp,
+            second_event.from_,
+            second_event.to,
+            second_event.timestamp,
         )
         - second_event.value
     )

@@ -80,7 +80,7 @@ def test_example_file_matches_default_config(example_config_filepath):
 
 
 def test_uncommented_default_config_is_valid(uncommented_example_config_filepath):
-    """ Test that if you uncomment the not default fields, that the config is valid"""
+    """Test that if you uncomment the not default fields, that the config is valid"""
     load_config(uncommented_example_config_filepath)
 
 

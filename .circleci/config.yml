@@ -23,7 +23,7 @@ commands:
           name: Create python venv
           command: |
             python3.8 -m venv venv
-            venv/bin/pip install -U pip==21.2.4 wheel setuptools
+            venv/bin/pip install pip wheel setuptools
 
   config-path:
     description: "set environment variables and change PATH"
@@ -110,28 +110,6 @@ jobs:
           command: |
             twine check dist/*
 
-  run-flake8:
-    executor: ubuntu-builder
-    steps:
-      - attach_workspace:
-          at: '~'
-      - config-path
-      - run:
-          name: Run flake8
-          command: |
-            flake8 setup.py src tests
-
-  run-black:
-    executor: ubuntu-builder
-    steps:
-      - attach_workspace:
-          at: '~'
-      - config-path
-      - run:
-          name: Run black
-          command: |
-            black --check setup.py src tests
-
   run-pytest:
     executor: ubuntu-builder
     steps:
@@ -161,16 +139,7 @@ jobs:
             ./pytest --local-db True --cov=relay tests
             codecov
 
-  run-mypy:
-    executor: ubuntu-builder
-    steps:
-      - attach_workspace:
-          at: '~'
-      - config-path
-      - run:
-          name: Run mypy
-          command: |
-            mypy --ignore-missing-imports src/relay tests
+
 
   upload-pypi:
     executor: ubuntu-builder
@@ -343,11 +312,7 @@ jobs:
           name: Configuring PATH
           command: |
             echo 'export PATH=~/bin:~/repo/venv/bin:${PATH}' >> ${BASH_ENV}
-      - run:
-          name: Create python virtualenv
-          command: |
-            python3 -m venv venv
-            pip install -c dev-requirements.txt pip wheel setuptools
+      - create-venv
       - run:
           name: Install pre-commit
           command: |
@@ -384,6 +349,20 @@ jobs:
           name: Run isort
           command: |
             pre-commit run -a isort
+      - run:
+          name: Run black
+          command: |
+            pre-commit run -a black
+      - run:
+          name: Run flake8
+          command: |
+            pre-commit run -a flake8
+      - run:
+          name: Run mypy
+          command: |
+            pre-commit run -a mypy
+
+
 
 workflows:
   version: 2
@@ -407,18 +386,6 @@ workflows:
           filters:
             <<: *tagged-filter
 
-      - run-flake8:
-          requires:
-            - install
-          filters:
-            <<: *tagged-filter
-
-      - run-black:
-          requires:
-            - install
-          filters:
-            <<: *tagged-filter
-
       - pre-commit-checks:
           filters:
             <<: *tagged-filter
@@ -429,19 +396,10 @@ workflows:
           filters:
             <<: *tagged-filter
 
-      - run-mypy:
-          requires:
-            - install
-          filters:
-            <<: *tagged-filter
-
       - upload-pypi:
           requires:
-            - run-flake8
-            - run-black
             - pre-commit-checks
             - run-pytest
-            - run-mypy
             - build-sdist
           filters:
             <<: *tagged-filter
@@ -472,11 +430,8 @@ workflows:
             branches:
               only: master
           requires:
-            - run-flake8
-            - run-black
             - pre-commit-checks
             - run-pytest
-            - run-mypy
             - install
             - build-docker-image
           context: docker-credentials
@@ -487,11 +442,8 @@ workflows:
             branches:
               ignore: /.*/
           requires:
-            - run-flake8
-            - run-black
             - pre-commit-checks
             - run-pytest
-            - run-mypy
             - install
             - build-docker-image
           context: docker-credentials

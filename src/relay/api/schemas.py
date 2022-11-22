@@ -41,15 +41,15 @@ class MetaTransactionSchema(Schema):
         gas_price = data["gas_price"]
         gas_limit = data["gas_limit"]
         signature = data["signature"]
-        if not 0 <= value < 2 ** 256:
+        if not 0 <= value < 2**256:
             raise ValidationError(f"value={value} is out of bounds")
-        if not 0 <= nonce < 2 ** 256:
+        if not 0 <= nonce < 2**256:
             raise ValidationError(f"nonce={nonce} is out of bounds")
-        if not 0 <= base_fee < 2 ** 256:
+        if not 0 <= base_fee < 2**256:
             raise ValidationError(f"baseFee={base_fee} is out of bounds")
-        if not 0 <= gas_price < 2 ** 256:
+        if not 0 <= gas_price < 2**256:
             raise ValidationError(f"gas_price={gas_price} is out of bounds")
-        if not 0 <= gas_limit < 2 ** 256:
+        if not 0 <= gas_limit < 2**256:
             raise ValidationError(f"gas_limit={gas_limit} is out of bounds")
         if len(signature) != 65 and signature != hexbytes.HexBytes(""):
             raise ValidationError("signature must be 65 bytes")

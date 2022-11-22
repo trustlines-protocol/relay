@@ -63,11 +63,15 @@ class Node:
 
     def get_tx_infos(self, user_address, block_identifier="pending"):
         if self.is_parity and block_identifier == "pending":
-            nonce = self._web3.manager.request_blocking("eth_getTransactionCount", [user_address, block_identifier])
+            nonce = self._web3.manager.request_blocking(
+                "eth_getTransactionCount", [user_address, block_identifier]
+            )
 
             if isinstance(nonce, str):
                 nonce = int(
-                    self._web3.manager.request_blocking("eth_getTransactionCount", [user_address, block_identifier]),
+                    self._web3.manager.request_blocking(
+                        "eth_getTransactionCount", [user_address, block_identifier]
+                    ),
                     16,
                 )
 
@@ -101,7 +105,12 @@ class Node:
         return self._web3.eth.getBalance(address)
 
     def send_ether(self, address):
-        logger.warning("Balance of address " + str(address) + " " + str(self._web3.eth.getBalance(address)))
+        logger.warning(
+            "Balance of address "
+            + str(address)
+            + " "
+            + str(self._web3.eth.getBalance(address))
+        )
 
         if self._web3.eth.getBalance(address) <= 5:
             return self._web3.eth.sendTransaction(

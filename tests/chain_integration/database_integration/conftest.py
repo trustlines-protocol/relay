@@ -8,11 +8,11 @@ from subprocess import Popen
 import psycopg2
 import pytest
 from deploy_tools.plugin import EXPOSE_RPC_OPTION
-from tests.conftest import LOCAL_DATABASE_OPTION
 
 from relay.blockchain import currency_network_events
 from relay.ethindex_db import ethindex_db
 from relay.relay import ContractTypes, all_event_builders
+from tests.conftest import LOCAL_DATABASE_OPTION
 
 """
 The tests are running a postgres database and ethindex to tests out getting and processing event information.
@@ -261,7 +261,10 @@ def setup_database(use_local_database, environment_variables):
 
 @pytest.fixture(scope="session", autouse=True)
 def start_indexer(
-    pytestconfig, setup_database, environment_variables, address_file_path,
+    pytestconfig,
+    setup_database,
+    environment_variables,
+    address_file_path,
 ):
     subprocess.run(
         ["ethindex", "createtables"],

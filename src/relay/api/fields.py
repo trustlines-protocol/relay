@@ -73,7 +73,7 @@ class HexBytes(fields.Field):
 
 class HexEncodedBytes(fields.Field):
     """hex encoded bytes field, correctly round-trips. was needed because
-    HexBytes doesn't round trip correctly """
+    HexBytes doesn't round trip correctly"""
 
     def _serialize(self, value, attr, obj, **kwargs):
         if isinstance(value, hexbytes.HexBytes):

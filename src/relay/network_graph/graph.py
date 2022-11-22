@@ -150,7 +150,7 @@ class Account(object):
 
 
 class AccountSummary:
-    """Representing an account summary with interests """
+    """Representing an account summary with interests"""
 
     def __init__(
         self,

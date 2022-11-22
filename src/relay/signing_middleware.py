@@ -22,17 +22,18 @@ logger = logging.getLogger(__name__)
 def _eth_send_transaction(make_request, w3, method, params):
     """Run a eth_sendTransaction request
 
-determines next nonce to be used for the eth_sendTransaction
-request, sets that nonce and executes the request. The @synchronized
-decorator will make sure only one _eth_send_transaction runs at the same time.
+    determines next nonce to be used for the eth_sendTransaction
+    request, sets that nonce and executes the request. The @synchronized
+    decorator will make sure only one _eth_send_transaction runs at the same time.
 
-This uses the parity_nextNonce function, hence it only works with
-parity.
-"""
+    This uses the parity_nextNonce function, hence it only works with
+    parity."""
     assert method == "eth_sendTransaction"
     if "nonce" not in params[0]:
         params[0]["nonce"] = int(
-           w3.manager.request_blocking("eth_getTransactionCount", [params[0]["from"], "pending"])
+            w3.manager.request_blocking(
+                "eth_getTransactionCount", [params[0]["from"], "pending"]
+            )
         )
     nonce = params[0]["nonce"]
     logger.debug("_eth_send_transaction start: nonce=%s %s", nonce, params)
