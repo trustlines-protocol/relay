@@ -40,7 +40,7 @@ def w3(signing_account):
             "from": chain.get_accounts()[0],
             "to": signing_account.address,
             "gas": 21000,
-            "value": 10_000_000,
+            "value": 10_000_000_000_000_000_000,
         }
     )
     w3 = Web3(EthereumTesterProvider(chain))
@@ -50,7 +50,7 @@ def w3(signing_account):
 
 
 def test_eth_default_account(w3, signing_account):
-    assert w3.eth.defaultAccount == signing_account.address
+    assert w3.eth.default_account == signing_account.address
     with pytest.raises(RuntimeError):
         signing_middleware.install_signing_middleware(w3, signing_account)
 
@@ -74,7 +74,7 @@ example_send_tx_params = [
 
 
 def test_auto_signing(w3, signing_account):
-    signing_account_balance_before = w3.eth.getBalance(
+    signing_account_balance_before = w3.eth.get_balance(
         signing_account.address, block_identifier="latest"
     )
     receiver = eth_account.Account.create().address
@@ -89,13 +89,13 @@ def test_auto_signing(w3, signing_account):
         if params.set_from:
             d["from"] = signing_account.address
         print("send-tx:", d)
-        tx_hash = w3.eth.sendTransaction(d)
-        receipt = w3.eth.waitForTransactionReceipt(tx_hash)
+        tx_hash = w3.eth.send_transaction(d)
+        receipt = w3.eth.wait_for_transaction_receipt(tx_hash)
         assert receipt.status == 1
         sum_send += value
-        receiver_balance = w3.eth.getBalance(receiver, block_identifier="latest")
+        receiver_balance = w3.eth.get_balance(receiver, block_identifier="latest")
         assert receiver_balance == sum_send
-        signing_account_balance = w3.eth.getBalance(
+        signing_account_balance = w3.eth.get_balance(
             signing_account.address, block_identifier="latest"
         )
         assert signing_account_balance < signing_account_balance_before - sum_send

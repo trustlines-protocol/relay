@@ -26,7 +26,7 @@ def _eth_send_transaction(make_request, w3, method, params):
     request, sets that nonce and executes the request. The @synchronized
     decorator will make sure only one _eth_send_transaction runs at the same time.
 
-    This uses the parity_nextNonce function, hence it only works with
+    This uses the eth_getTransactionCount function, hence it only works with
     parity."""
     assert method == "eth_sendTransaction"
     if "nonce" not in params[0]:

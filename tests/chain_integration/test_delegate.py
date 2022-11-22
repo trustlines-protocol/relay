@@ -121,7 +121,7 @@ def identity_contract(
         identity_implementation.address,
         signature_of_owner_on_implementation,
     )
-    web3.eth.sendTransaction(
+    web3.eth.send_transaction(
         {"to": identity_contract.address, "from": owner, "value": 1_000_000}
     )
 
@@ -135,7 +135,7 @@ def identity(identity_contract, owner_key):
 
 @pytest.fixture()
 def chain_id(web3):
-    return int(web3.eth.chainId)
+    return int(web3.eth.chain_id)
 
 
 @pytest.fixture()
@@ -187,7 +187,7 @@ def test_delegate_meta_transaction(delegate, identity, web3, signed_meta_transac
     """
 
     tx_hash = delegate.send_signed_meta_transaction(signed_meta_transaction)
-    tx = web3.eth.getTransaction(tx_hash)
+    tx = web3.eth.get_transaction(tx_hash)
 
     assert tx["from"] == web3.eth.coinbase
     assert to_checksum_address(tx["to"]) == identity.address
@@ -240,25 +240,25 @@ def test_deploy_identity(
         identity_implementation.address,
         signature_of_owner_on_implementation,
     )
-    web3.eth.sendTransaction(
+    web3.eth.send_transaction(
         {"to": identity_contract_address, "from": accounts[0], "value": 1_000_000}
     )
 
     destination = accounts[3]
-    balance_before = web3.eth.getBalance(destination)
+    balance_before = web3.eth.get_balance(destination)
 
     meta_transaction = MetaTransaction(
         to=destination,
         value=1,
         currency_network_of_fees=currency_network.address,
-        chain_id=web3.eth.chainId,
+        chain_id=web3.eth.chain_id,
     )
     signed_meta_transaction = attr.evolve(
         meta_transaction, from_=identity_contract_address, nonce=0
     ).signed(owner_key)
     delegate.send_signed_meta_transaction(signed_meta_transaction)
 
-    balance_after = web3.eth.getBalance(destination)
+    balance_after = web3.eth.get_balance(destination)
 
     assert balance_after - balance_before == 1
 
@@ -444,8 +444,8 @@ def test_meta_transaction_fee_recipient_invalid(
             {"gas_price_method": GasPriceMethod.FIXED, "gas_price": 2_000_000_000},
             2_000_000_000,
         ),
-        # Assumes the default gas price of the chain is 1
-        ({"gas_price_method": GasPriceMethod.RPC}, 1),
+        # Assumes the default gas price of the chain is 1000000000
+        ({"gas_price_method": GasPriceMethod.RPC}, 1000000000),
         (
             {
                 "gas_price_method": GasPriceMethod.BOUND,
