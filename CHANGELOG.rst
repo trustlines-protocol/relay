@@ -4,6 +4,10 @@ Change Log
 `unreleased`_
 -------------------------------
 
+`0.23.0`_ (2022-12-16)
+-------------------------------
+- Updated: updated dependencies, notably `web3==5.31.0`
+- Updated: no longer use unlocked node to handle transactions, request nonce directly from node (mainly useful for TL e2e tests)
 
 `0.22.0`_ (2021-10-20)
 -------------------------------
@@ -306,4 +310,5 @@ Change Log
 .. _0.20.3: https://github.com/trustlines-protocol/relay/compare/0.20.2...0.20.3
 .. _0.21.0: https://github.com/trustlines-protocol/relay/compare/0.20.3...0.21.0
 .. _0.22.0: https://github.com/trustlines-protocol/relay/compare/0.21.0...0.22.0
-.. _unreleased: https://github.com/trustlines-protocol/relay/compare/0.22.0...master
+.. _0.23.0: https://github.com/trustlines-protocol/relay/compare/0.22.0...0.23.0
+.. _unreleased: https://github.com/trustlines-protocol/relay/compare/0.23.0...master
