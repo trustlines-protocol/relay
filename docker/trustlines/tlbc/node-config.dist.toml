@@ -1,9 +1,0 @@
-[parity]
-base_path = "/home/openethereum/.local/share/openethereum"
-chain = "/home/openethereum/.local/share/openethereum/trustlines-spec.json"
-keys_path = "/home/openethereum/.local/share/openethereum/custom/keys"
-db_path = "/home/openethereum/.local/share/openethereum/chains"
-
-[account]
-unlock = ["ENTER ADDRESS HERE"]
-password = ["/home/openethereum/.local/share/openethereum/custom/keys/pass.pwd"]
